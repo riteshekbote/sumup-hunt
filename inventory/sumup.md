@@ -53,3 +53,5 @@ www.sumup.com
 **Host:** `www.sumup.com` | **Ports:** [80, 443, 2082, 2083, 2086, 2087, 8080, 8443]
 **Non-web ports observed:** [2082, 2083, 2086, 2087, 8080, 8443]
 > NOTE: repeated identical non-web port sets (e.g. 2082,2083,2086,2087,8080,8443) across many hosts and wide port sets are likely a shared edge/proxy answering EOF, NOT confirmed real services. Verify with a proper port scanner (e.g. nmap) under authorization before treating as real. These are surface-map hints only, not findings.
+
+## 2026-09-02 21:55:21 UTC
