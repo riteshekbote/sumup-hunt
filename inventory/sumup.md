@@ -68,3 +68,8 @@ www.sumup.com
 - NEW Dedicated deep scan (2026-09-03) found **0 genuinely dedicated hosts** — all subdomains resolve to shared/CDN/wildcard IPs (Cloudflare, AWS ELB, iriscrm.com). Attack surface is wildcard-dominated; enu
 - NEW `portal.sumup.com` CNAME → `sumup.iriscrm.com` (third-party CRM). This introduces supply-chain/SSRF surface via webhook/callback endpoints on a non-SumUp domain.
 - CHANGED `api.sumup.com` returns 404 on root — suggests versioned API paths (/v1, /v2, /beta, /internal) are the real surface, not yet mapped.
+
+## 2026-09-03 19:59:04 UTC
+- NEW api.sumup.com: non-standard ports (2082/2083/2086/2087/8080/8443) detected; shared edge/proxy noted but verify with proper scan.
+- CHANGED admin.sumup.com: nginx/1.26.1 + AWS ELB (eu-west-1); 403 on root confirmed.
+- CHANGED portal.sumup.com: third-party CRM (iriscrm.com) CNAME confirmed; SSRF surface plausible via webhook/callback.
