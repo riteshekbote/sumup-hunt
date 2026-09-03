@@ -73,3 +73,22 @@ www.sumup.com
 - NEW api.sumup.com: non-standard ports (2082/2083/2086/2087/8080/8443) detected; shared edge/proxy noted but verify with proper scan.
 - CHANGED admin.sumup.com: nginx/1.26.1 + AWS ELB (eu-west-1); 403 on root confirmed.
 - CHANGED portal.sumup.com: third-party CRM (iriscrm.com) CNAME confirmed; SSRF surface plausible via webhook/callback.
+
+## 2026-09-03 22:32:22 UTC
+- NEW Dedicated deep scan (2026-09-03) found **0 genuinely dedicated hosts** — all subdomains resolve to shared/CDN/wildcard IPs (Cloudflare, AWS ELB, iriscrm.com). Attack surface is wildcard-dominated; enu
+- NEW `portal.sumup.com` CNAME → `sumup.iriscrm.com` (third-party CRM). This introduces supply-chain/SSRF surface via webhook/callback endpoints on a non-SumUp domain.
+- CHANGED `api.sumup.com` returns 404 on root — suggests versioned API paths (/v1, /v2, /beta, /internal) are the real surface, not yet mapped.
+- NEW api.sumup.com: non-standard ports (2082/2083/2086/2087/8080/8443) detected; shared edge/proxy noted but verify with proper scan.
+- CHANGED admin.sumup.com: nginx/1.26.1 + AWS ELB (eu-west-1); 403 on root confirmed.
+- CHANGED portal.sumup.com: third-party CRM (iriscrm.com) CNAME confirmed; SSRF surface plausible via webhook/callback.
+- NEW api.sumup.com: non-standard ports (2082/2083/2086/2087/8080/8443) detected; shared edge/proxy noted but verify with proper scan.
+- CHANGED admin.sumup.com: nginx/1.26.1 + AWS ELB (eu-west-1); 403 on root confirmed.
+- CHANGED portal.sumup.com: third-party CRM (iriscrm.com) CNAME confirmed; SSRF surface plausible via webhook/callback.
+- NEW auth.sumup.com OIDC/OAuth discovery docs fully exposed: `.well-known/openid-configuration` and `.well-known/oauth-authorization-server` return 200 with complete endpoint map + scope catalog. Live endp
+- NEW Scope catalog on auth.sumup.com enumerates the merchant API resource model: merchants/transactions/payouts/readers/checkouts/customers/api_keys/refunds/receipts/sales/roles + read/write variants — dir
+- NEW Security-relevant OAuth settings revealed: PAR endpoint `/oauth2/par` (404 via GET, POST-only), device flow `/oauth2/device`, `token_endpoint_auth_methods_supported` includes `"none"`, request_object 
+- CHANGED api.sumup.com: uniform 404 on ALL enumerated paths (v0/v0.1/v1/v2/merchants/checkouts/transactions/etc.) — unauthenticated surface fully gated at gateway; scope-derived paths also 404. API enumeration
+- NEW auth.sumup.com: OIDC discovery fully exposed (.well-known/openid-configuration + oauth-authorization-server return 200) revealing complete endpoint map (/oauth2/auth, /oauth2/token, /oauth2/par, /oaut
+- NEW auth.sumup.com: scope catalog documents merchant API resource model (merchants/transactions/payouts/readers/checkouts/customers/api_keys/refunds/receipts/sales/roles + read/write) — maps hidden api.su
+- NEW auth.sumup.com: security-relevant OAuth flags exposed — PAR + request_uri supported (require_request_uri_registration), device flow, token_endpoint_auth_methods incl "none", request_object alg incl "n
+- CHANGED api.sumup.com: uniform 404 on every enumerated path (v0/v0.1/v1/v2, scope-derived resources) — unauthenticated API surface fully gated; enumeration dead without auth.

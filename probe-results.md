@@ -41,3 +41,17 @@ https://api.sumup.com/health -> HTTP 404
 https://api.sumup.com/v2/ -> HTTP 404
 https://api.sumup.com/graphql -> HTTP 404
 https://admin.sumup.com/admin -> HTTP 403
+
+## 2026-09-03 22:32:38 UTC
+https://api.sumup.com/v1/ -> HTTP 404
+https://auth.sumup.com/flows/login -> HTTP 403
+https://admin.sumup.com/ -> HTTP 403
+https://api.sumup.com/v1/merchants -> HTTP 404
+https://api.sumup.com/v1/payments -> HTTP 404
+https://api.sumup.com/swagger.json -> HTTP 404
+https://api.sumup.com/openapi.json -> HTTP 404
+https://api.sumup.com/api-docs -> HTTP 404
+https://api.sumup.com/health -> HTTP 404
+https://api.sumup.com/v2/ -> HTTP 404
+https://api.sumup.com/graphql -> HTTP 404
+https://admin.sumup.com/admin -> HTTP 403

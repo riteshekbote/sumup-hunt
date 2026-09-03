@@ -1,4 +1,4 @@
-## 2026-09-03 19:58:39 UTC [target] (model nemotron3)
+## 2026-09-03 22:32:00 UTC [target] (model nemotron3)
 [PRIO] api.sumup.com,8.0,a=9,b=10,t=8,g=5,c=8,f=5
 [PRIO] auth.sumup.com,7.4,a=8,b=9,t=7,g=6,c=7,f=5
 [PRIO] portal.sumup.com,6.7,a=7,b=8,t=6,g=6,c=6,f=5
@@ -31,7 +31,7 @@ evidence_needed: Response headers showing auth mechanism (WWW-Authenticate, Set-
 verify_steps: HEAD https://admin.sumup.com/ → capture Server, WWW-Authenticate, Set-Cookie, X-Frame-Options. Repeat with Host: localhost, X-Forwarded-For: 127.0.0.1, X-Original-URL: / to probe auth bypass vectors passively.
 impact: Internal admin panel access → merchant data manipulation, payout tampering, device management — CRITICAL
 testability: PASSIVE
-[PARKED] SSRF via webhook/callback parameter on portal.sumup.com: confidence 45 < threshold for FINAL; third-party CNAME (iriscrm.com) ownership unconfirmed in-scope; verify_steps require form interaction (borderline active).
+[PARKED] SSRF via webhook/callback parameter on portal.sumup.com: confidence 45 < threshold; third-party CNAME (iriscrm.com) ownership unconfirmed in-scope; verify_steps require form interaction (borderline active).
 [FINAL] 1. API versioned endpoint IDOR/BOLA on merchant resources (confidence 65)
 [FINAL] 2. OAuth redirect_uri validation bypass on auth.sumup.com flows (confidence 55)
 [FINAL] 3. Admin panel authentication bypass or info leak on admin.sumup.com (confidence 45)
@@ -40,4 +40,5 @@ testability: PASSIVE
 [LEARN] ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
 [LEARN] REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-scope verified.
 [LEARN] ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
 [RISK] sumup: 75 — Core payment API (api.sumup.com) and auth server (auth.sumup.com) are high-value targets with confirmed live HTTP, Cloudflare/AWS edge, and standard OAuth/API patterns that historically yield IDOR/OAuth flaws. Wildcard-dominated DNS limits subdomain enum but concentrates attack surface on known hosts. Third-party portal (iriscrm.com) adds supply-chain risk if in-scope. Admin panel (admin.sumup.com) exposes internal tooling surface behind ELB/nginx.
