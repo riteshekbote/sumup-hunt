@@ -276,3 +276,103 @@ testability: PASSIVE
 [LEARN] ACCEPTED IDOR @ api.sumup.com: scope catalog names the API resource model, but all unauthenticated paths 404 — BOLA test requires a merchant OAuth token (AUTH_HELPED), not passive.
 [LEARN] REJECTED MISCONFIG @ auth.sumup.com: x-envoy-decorator-operation leaks k8s service name identity.svc.cluster.local — header/banner leak is explicit out-of-scope class.
 [RISK] SumUp: 28 — Cloudflare edge + Envoy/Istio + fully-gated API; unauthenticated surface thin (only OIDC discovery + login), real findings require a scoped merchant OAuth token; mature security posture.
+## 2026-09-04 00:35:55 UTC [target] (model bigpickle)
+[FINAL] 2. OAuth redirect_uri validation bypass on auth.sumup.com flows (confidence 55)
+[FINAL] 3. Admin panel authentication bypass or info leak on admin.sumup.com (confidence 45)
+[NEXT] PROBE: HEAD https://api.sumup.com/v1/ → observe status, Server header, WWW-Authenticate, rate-limit headers. If 404, repeat for /v2/, /beta/, /internal/, /swagger.json, /openapi.json, /api-docs.
+[LEARN] ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+[LEARN] ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+[LEARN] REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-scope verified.
+[LEARN] ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
+[RISK] sumup: 75 — Core payment API (api.sumup.com) and auth server (auth.sumup.com) are high-value targets with confirmed live HTTP, Cloudflare/AWS edge, and standard OAuth/API patterns that historically yield IDOR/OAuth flaws. Wildcard-dominated DNS limits subdomain enum but concentrates attack surface on known hosts. Third-party portal (iriscrm.com) adds supply-chain risk if in-scope. Admin panel (admin.sumup.com) exposes internal tooling surface behind ELB/nginx.
+[PRIO] api.sumup.com,8.0,a=9,b=10,t=8,g=5,c=8,f=5
+[PRIO] auth.sumup.com,7.4,a=8,b=9,t=7,g=6,c=7,f=5
+[PRIO] portal.sumup.com,6.7,a=7,b=8,t=6,g=6,c=6,f=5
+[PRIO] admin.sumup.com,5.8,a=6,b=7,t=5,g=3,c=8,f=5
+[PRIO] www.sumup.com,5.0,a=4,b=4,t=4,g=8,c=7,f=5
+[HYP] API versioned endpoint IDOR/BOLA on merchant resources
+class: IDOR
+asset: api.sumup.com
+confidence: 65
+reasoning: Root returns 404; payment APIs typically version at /v1 /v2 /beta /internal. Merchant-scoped resources (transactions, payouts, devices, readers) often use predictable IDs (merchant_id, transaction_id, reader_serial). Cloudflare WAF may not block parameter tampering on authenticated calls.
+evidence_needed: Discovery of versioned API paths + authenticated requests showing cross-merchant access via ID manipulation
+verify_steps: HEAD https://api.sumup.com/v1/ → observe status, Server, WWW-Authenticate, rate-limit headers. If 404, repeat for /v2/, /beta/, /internal/, /swagger.json, /openapi.json. Then GET discovered versioned endpoints to map resource paths.
+impact: Cross-merchant transaction/payout/device data access — HIGH (PCI/financial data)
+testability: PASSIVE
+[HYP] OAuth redirect_uri validation bypass on auth.sumup.com flows
+class: OAUTH
+asset: auth.sumup.com
+confidence: 55
+reasoning: auth.sumup.com redirects to /flows/login — indicates OAuth/OIDC authorization server. Common flaws: loose redirect_uri regex (subdomain bypass, path traversal), missing state validation, wildcard allowlist. Cloudflare fronting may mask origin validation logic.
+evidence_needed: Authorization endpoint accepting attacker-controlled redirect_uri with code leakage
+verify_steps: HEAD https://auth.sumup.com/flows/login → capture redirect chain, Location header, Set-Cookie. Then GET with test redirect_uri parameters (subdomain, path traversal, wildcard) to observe validation behavior passively.
+impact: Authorization code theft → account takeover for merchants — CRITICAL
+testability: PASSIVE
+[HYP] Admin panel authentication bypass or info leak on admin.sumup.com
+class: AUTH
+asset: admin.sumup.com
+confidence: 45
+reasoning: Returns 403 on nginx/1.26.1 behind AWS ELB — consistent with auth-gated internal tooling. 403 vs 302/401 may indicate IP allowlist, client cert, or header-based auth that could be misconfigured. ELB + nginx stack may leak internal headers or support X-Forwarded-For spoofing.
+evidence_needed: Response headers showing auth mechanism (WWW-Authenticate, Set-Cookie, X-Frame-Options), or status change with modified Host/X-Forwarded-For headers
+verify_steps: HEAD https://admin.sumup.com/ → capture Server, WWW-Authenticate, Set-Cookie, X-Frame-Options. Repeat with Host: localhost, X-Forwarded-For: 127.0.0.1, X-Original-URL: / to probe auth bypass vectors passively.
+impact: Internal admin panel access → merchant data manipulation, payout tampering, device management — CRITICAL
+testability: PASSIVE
+[PARKED] SSRF via webhook/callback parameter on portal.sumup.com: confidence 45 < threshold; third-party CNAME (iriscrm.com) ownership unconfirmed in-scope; verify_steps require form interaction (borderline active).
+[FINAL] 1. API versioned endpoint IDOR/BOLA on merchant resources (confidence 65)
+[FINAL] 2. OAuth redirect_uri validation bypass on auth.sumup.com flows (confidence 55)
+[FINAL] 3. Admin panel authentication bypass or info leak on admin.sumup.com (confidence 45)
+[NEXT] PROBE: HEAD https://api.sumup.com/v1/ → observe status, Server header, WWW-Authenticate, rate-limit headers. If 404, repeat for /v2/, /beta/, /internal/, /swagger.json, /openapi.json, /api-docs.
+[LEARN] ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+[LEARN] ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+[LEARN] REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-scope verified.
+[LEARN] ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
+[RISK] sumup: 75 — Core payment API (api.sumup.com) and auth server (auth.sumup.com) are high-value targets with confirmed live HTTP, Cloudflare/AWS edge, and standard OAuth/API patterns that historically yield IDOR/OAuth flaws. Wildcard-dominated DNS limits subdomain enum but concentrates attack surface on known hosts. Third-party portal (iriscrm.com) adds supply-chain risk if in-scope. Admin panel (admin.sumup.com) exposes internal tooling surface behind ELB/nginx.
+[NEW] me.sumup.com identified as a distinct merchant self-service asset served by Vercel (not Cloudflare/nginx/ELB). Root and /settings/oauth2-applications both 307 → auth.sumup.com OAuth with public `client_id=dashboard`, registered redirect_uri `https://me.sumup.com/api/sso/callback`.
+[NEW] Real public OAuth client `dashboard` exposed; its production scope catalog differs from OIDC discovery and developer docs: `openid offline classic accounting.read/write invoices.read/write api_keys api_keys:write readers.read/write lending.read/write receivables.read/write unified_customer_directory:read/write` — wider hidden API resource model.
+[NEW] OAuth `state` on the dashboard flow is an HS256-signed JWT carrying `appState{flow,pathname,queryParams}`; server enforces state≥8 chars.
+[CHANGED] auth.sumup.com redirect_uri validation CONFIRMED strict allowlist for `client_id=dashboard`: attacker host, subdomain-confusion, and path-traversal redirect_uri all rejected (`invalid_request` → error on server flow page, never redirected to unregistered URI); known-good `https://me.sumup.com/api/sso/callback` produces 303 to me.sumup.com callback. Naive redirect_uri bypass refuted.
+[CHANGED] /oauth2/par and /oauth2/device return 404 on OPTIONS (documented but not routed), while /oauth2/token and /oauth2/revoke return 200 on OPTIONS — PAR/device grant routes likely not deployed at routing level.
+[PRIO] auth.sumup.com,8.6,a=9,b=9,t=9,g=4,c=8,f=8
+[PRIO] me.sumup.com,7.9,a=7,b=9,t=8,g=6,c=8,f=8
+[PRIO] api.sumup.com,7.0,a=8,b=9,t=8,g=4,c=8,f=4
+[PRIO] admin.sumup.com,6.9,a=6,b=9,t=7,g=3,c=8,f=5
+[HYP] OAuth state JWT appState path sink on auth.sumup.com/me.sumup.com
+class: OATH
+asset: auth.sumup.com
+confidence: 45
+reasoning: state is an HS256 JWT with appState{flow,pathname:'/',queryParams:{}} issued by the dashboard backend and returned on the OAuth callback (me.sumup.com/api/sso/callback?state=...). The pathname/queryParams ride inside the signed state; if any downstream consumer trusts appState.pathname to drive a post-login redirect or UI step without re-validating, manipulation of the post-auth redirect sink is possible. HS256 forgery requires the app secret, so exploitability hinges on a weak secret or an accepted-lesser-alg path.
+evidence_needed: Verify callback re-validates state JWT signature AND uses appState.pathname for a redirect (open-redirect-to-self or flow-skip) — requires session or a way to observe post-login handling. Not resolvable by anonymous HEAD/GET alone.
+verify_steps: PASSIVE limit: GET /oauth2/auth with client_id=dashboard, known-good redirect_uri, crafted/forged state (alg=none header + forged appState) and observe whether the 303 callback reflects an altered error vs proceeds — a reflected difference indicates state is parsed/trusted. Note: forging requires secret; alg=none probe is a best-effort signal only.
+impact: Post-auth redirect/flow manipulation or state-session confusion → account takeover vector. Severity: high if actionable.
+testability: AUTH_HELPED
+[HYP] me.sumup.com Vercel surface / OAuth2-app-registration UX logic
+class: BUSLOGIC
+asset: me.sumup.com
+confidence: 50
+reasoning: me.sumup.com is a fresh, non-Cloudflare (Vercel) merchant asset with a self-service OAuth2 application registry (/settings/oauth2-applications) reachable only via authenticated dashboard OAuth. Vercel origin differs from the hardened Cloudflare/Envoy edge seen elsewhere; a newer asset is a plausible spot for exposed serverless functions, API routes, or permissive CORS on the SSO callback. Authenticated interaction needed.
+evidence_needed: Authenticated dashboard session to enumerate me.sumup.com/api/* routes and OAuth2-app registration fields (redirect_uri registration, scopes selectable).
+verify_steps: PASSIVE: GET https://me.sumup.com/api/sso/callback (anonymous) to observe error handling/CORS; GET https://me.sumup.com/_vercel/insights or well-known; enumerate /api/* anonymously for non-401 responses. Full test AUTH_HELPED.
+impact: Merchant self-service misconfig → OAuth app registration abuse, broad-scope token issuance, or data exposure. Severity: high.
+testability: AUTH_HELPED
+[HYP] api.sumup.com BOLA via dashboard-client scopes
+class: IDOR
+asset: api.sumup.com
+confidence: 60
+reasoning: Dashboard client scope catalog (accounting/invoices/api_keys/lending/receivables/unified_customer_directory/readers) maps the real hidden API resources; api.sumup.com 404s all anonymous paths. Cross-tenant BOLA requires a granted merchant token (from dashboard scope) then ID-swapping on resource ids.
+evidence_needed: Authenticated requests where changing resource id returns another tenant's data.
+verify_steps: Requires valid OAuth merchant token; cross-tenant id manipulation on scope-derived endpoints. Not passable without token.
+impact: Cross-tenant financial/PII data exposure. Severity: critical.
+testability: AUTH_HELPED
+[PARKED] OAuth redirect_uri validation bypass on auth.sumup.com: REFUTED for naive vectors — strict allowlist confirmed for client_id=dashboard (attacker-host/subdomain/path-traversal all rejected, errors on server page). No viable passive redirect_uri bypass.
+[PARKED] OAuth request_uri/PAR token theft: PAR+device routes return 404 on OPTIONS (unrouted) and redirect_uri is strictly allowlisted; requires a registered attacker client + key → not passive, low current yield.
+[PARKED] SSRF @ portal.sumup.com (iriscrm.com): third-party CNAME, in-scope unconfirmed, needs active interaction.
+[FINAL] 1. api.sumup.com scope-mapped BOLA (conf 60) — high financial value, needs merchant token (AUTH_HELPED).
+[FINAL] 2. me.sumup.com Vercel merchant surface / OAuth2-app-registration logic (conf 50) — new host, non-Cloudflare origin, fresh UX surface.
+[FINAL] 3. OAuth state JWT appState path sink (conf 45) — HS256 secret-dependent, weak passive signal.
+[NEXT] PROBE: GET https://me.sumup.com/api/sso/callback (anonymous, observe error taxonomy + CORS/allow headers), GET https://me.sumup.com/_vercel/* well-known + /api/* anonymous enumeration (non-401), OPTIONS https://me.sumup.com/api/sso/callback. Then confirm dashboard-client scope reality by re-fetching the me.sumup.com redirect and capturing the full state/scope for offline JWT analysis. ≤1 rps, GET/HEAD/OPTIONS only.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: redirect_uri is strictly allowlisted per client (client_id=dashboard confirmed) — naive redirect_uri/subdomain/path-traversal bypass refuted; errors surfaced on server flow page.
+[LEARN] ACCEPTED AUTH @ me.sumup.com: me.sumup.com is a distinct Vercel-served merchant self-service asset behind dashboard OAuth (client_id=dashboard) — new non-Cloudflare attack surface.
+[LEARN] ACCEPTED MISCONFIG @ auth.sumup.com: /oauth2/par & /oauth2/device documented but return 404 on OPTIONS (unrouted) while /oauth2/token & /oauth2/revoke return 200 — PAR/device grants likely not deployed at routing level.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: dashboard-client scope catalog (accounting/invoices/api_keys/lending/receivables/unified_customer_directory/readers) maps a broader hidden api.sumup.com resource model than OIDC discovery.
+[RISK] SumUp: 30 — Cloudflare+Envoy edge with strict OAuth redirect_uri allowlist and fully-gated api.sumup.com; anonymous surface thin and hardening effective (redirect_uri bypass refuted). Real findings concentrate in merchant-token-gated BOLA and the new Vercel-served me.sumup.com self-service surface.

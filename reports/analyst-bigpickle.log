@@ -714,3 +714,483 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] SumUp: 28 — Cloudflare edge + Envoy/Istio + fully-gated API; unauthenticated surface thin (only OIDC discovery + login), real findings require a scoped merchant OAuth token; mature security posture.
+===== ANALYST bigpickle 2026-09-04 00:36:06 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m✱ [0mGlob "**/*"[90m 49 matches[0m
+[0m→ [0mRead knowledge/index.md
+[0m→ [0mRead inventory/sumup.md
+[0m→ [0mRead scope.yml
+[0m→ [0mRead state_bigpickle.json
+[0m→ [0mRead probe-results.md
+[0m→ [0mRead reports/analyst-bigpickle.log
+[0m→ [0mRead leads/lead-bigpickle.md
+[0m→ [0mRead triage/run-2026-09-03-23-11.md
+I have the full context now. Let me check the certificate transparency / followup and understand any new signals since the last run. The last run was 2026-09-03 22:32. Let me check the most recent triage and any new leads from other agents, particularly whether the auth OAuth PROBE (the [NEXT] action) was actually executed and what it returned.
+
+Let me check recent triage and other agent leads for anything new about auth.sumup.com OAuth behavior.
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt; tail -80 reports/analyst-nemotron3.log 2>/dev/null; echo "=== LING3 ==="; tail -40 reports/analyst-ling3.log 2>/dev/null; echo "=== LAGUNA ==="; tail -40 reports/analyst-laguna.log 2>/dev/null; echo "=== LONGCAT ==="; tail -40 reports/analyst-longcat.log 2>/dev/null
+[FINAL] 2. OAuth redirect_uri validation bypass on auth.sumup.com flows (confidence 55)
+[FINAL] 3. Admin panel authentication bypass or info leak on admin.sumup.com (confidence 45)
+
+STEP 5 — NEXT ACTION
+[NEXT] PROBE: HEAD https://api.sumup.com/v1/ → observe status, Server header, WWW-Authenticate, rate-limit headers. If 404, repeat for /v2/, /beta/, /internal/, /swagger.json, /openapi.json, /api-docs.
+
+STEP 6 — LEARNING
+[LEARN] ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+[LEARN] ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+[LEARN] REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-scope verified.
+[LEARN] ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
+
+STEP 7 — RISK
+[RISK] sumup: 75 — Core payment API (api.sumup.com) and auth server (auth.sumup.com) are high-value targets with confirmed live HTTP, Cloudflare/AWS edge, and standard OAuth/API patterns that historically yield IDOR/OAuth flaws. Wildcard-dominated DNS limits subdomain enum but concentrates attack surface on known hosts. Third-party portal (iriscrm.com) adds supply-chain risk if in-scope. Admin panel (admin.sumup.com) exposes internal tooling surface behind ELB/nginx.
+===== ANALYST nemotron3 2026-09-03 22:32:22 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mdate -u +"%Y-%m-%d %H:%M:%S UTC"
+2026-09-03 22:30:47 UTC
+[0m
+**STEP 1 — DELTA**
+NO_DELTA — No new passive recon or probe results since 2026-09-03 19:59:04 UTC. Inventory, knowledge base, and hypotheses unchanged.
+
+**STEP 2 — PRIORITIZE**
+[PRIO] api.sumup.com,8.0,a=9,b=10,t=8,g=5,c=8,f=5
+[PRIO] auth.sumup.com,7.4,a=8,b=9,t=7,g=6,c=7,f=5
+[PRIO] portal.sumup.com,6.7,a=7,b=8,t=6,g=6,c=6,f=5
+[PRIO] admin.sumup.com,5.8,a=6,b=7,t=5,g=3,c=8,f=5
+[PRIO] www.sumup.com,5.0,a=4,b=4,t=4,g=8,c=7,f=5
+
+**STEP 3 — HYPOTHESES**
+[HYP] API versioned endpoint IDOR/BOLA on merchant resources
+class: IDOR
+asset: api.sumup.com
+confidence: 65
+reasoning: Root returns 404; payment APIs typically version at /v1 /v2 /beta /internal. Merchant-scoped resources (transactions, payouts, devices, readers) often use predictable IDs (merchant_id, transaction_id, reader_serial). Cloudflare WAF may not block parameter tampering on authenticated calls.
+evidence_needed: Discovery of versioned API paths + authenticated requests showing cross-merchant access via ID manipulation
+verify_steps: HEAD https://api.sumup.com/v1/ → observe status, Server, WWW-Authenticate, rate-limit headers. If 404, repeat for /v2/, /beta/, /internal/, /swagger.json, /openapi.json. Then GET discovered versioned endpoints to map resource paths.
+impact: Cross-merchant transaction/payout/device data access — HIGH (PCI/financial data)
+testability: PASSIVE
+
+[HYP] OAuth redirect_uri validation bypass on auth.sumup.com flows
+class: OAUTH
+asset: auth.sumup.com
+confidence: 55
+reasoning: auth.sumup.com redirects to /flows/login — indicates OAuth/OIDC authorization server. Common flaws: loose redirect_uri regex (subdomain bypass, path traversal), missing state validation, wildcard allowlist. Cloudflare fronting may mask origin validation logic.
+evidence_needed: Authorization endpoint accepting attacker-controlled redirect_uri with code leakage
+verify_steps: HEAD https://auth.sumup.com/flows/login → capture redirect chain, Location header, Set-Cookie. Then GET with test redirect_uri parameters (subdomain, path traversal, wildcard) to observe validation behavior passively.
+impact: Authorization code theft → account takeover for merchants — CRITICAL
+testability: PASSIVE
+
+[HYP] Admin panel authentication bypass or info leak on admin.sumup.com
+class: AUTH
+asset: admin.sumup.com
+confidence: 45
+reasoning: Returns 403 on nginx/1.26.1 behind AWS ELB — consistent with auth-gated internal tooling. 403 vs 302/401 may indicate IP allowlist, client cert, or header-based auth that could be misconfigured. ELB + nginx stack may leak internal headers or support X-Forwarded-For spoofing.
+evidence_needed: Response headers showing auth mechanism (WWW-Authenticate, Set-Cookie, X-Frame-Options), or status change with modified Host/X-Forwarded-For headers
+verify_steps: HEAD https://admin.sumup.com/ → capture Server, WWW-Authenticate, Set-Cookie, X-Frame-Options. Repeat with Host: localhost, X-Forwarded-For: 127.0.0.1, X-Original-URL: / to probe auth bypass vectors passively.
+impact: Internal admin panel access → merchant data manipulation, payout tampering, device management — CRITICAL
+testability: PASSIVE
+
+**STEP 4 — SELF-CRITIQUE**
+[PARKED] SSRF via webhook/callback parameter on portal.sumup.com: confidence 45 < threshold; third-party CNAME (iriscrm.com) ownership unconfirmed in-scope; verify_steps require form interaction (borderline active).
+[FINAL] 1. API versioned endpoint IDOR/BOLA on merchant resources (confidence 65)
+[FINAL] 2. OAuth redirect_uri validation bypass on auth.sumup.com flows (confidence 55)
+[FINAL] 3. Admin panel authentication bypass or info leak on admin.sumup.com (confidence 45)
+
+**STEP 5 — NEXT ACTION**
+[NEXT] PROBE: HEAD https://api.sumup.com/v1/ → observe status, Server header, WWW-Authenticate, rate-limit headers. If 404, repeat for /v2/, /beta/, /internal/, /swagger.json, /openapi.json, /api-docs.
+
+**STEP 6 — LEARNING**
+[LEARN] ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+[LEARN] ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+[LEARN] REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-scope verified.
+[LEARN] ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
+
+**STEP 7 — RISK**
+[RISK] sumup: 75 — Core payment API (api.sumup.com) and auth server (auth.sumup.com) are high-value targets with confirmed live HTTP, Cloudflare/AWS edge, and standard OAuth/API patterns that historically yield IDOR/OAuth flaws. Wildcard-dominated DNS limits subdomain enum but concentrates attack surface on known hosts. Third-party portal (iriscrm.com) adds supply-chain risk if in-scope. Admin panel (admin.sumup.com) exposes internal tooling surface behind ELB/nginx.
+=== LING3 ===
+===== ANALYST ling3 2026-09-03 17:25:51 UTC =====
+[91m[1mError: [0m{
+  "name": "UnknownError",
+  "data": {
+    "message": "Unexpected server error. Check server logs for details.",
+    "ref": "err_8a15ace6"
+  }
+}
+===== ANALYST ling3 2026-09-03 19:59:04 UTC =====
+[91m[1mError: [0m{
+  "name": "UnknownError",
+  "data": {
+    "message": "Unexpected server error. Check server logs for details.",
+    "ref": "err_14b985e0"
+  }
+}
+===== ANALYST ling3 2026-09-03 22:32:22 UTC =====
+[91m[1mError: [0m{
+  "name": "UnknownError",
+  "data": {
+    "message": "Unexpected server error. Check server logs for details.",
+    "ref": "err_d6ef4663"
+  }
+}
+=== LAGUNA ===
+===== ANALYST laguna 2026-09-03 17:25:51 UTC =====
+[91m[1mError: [0m{
+  "name": "UnknownError",
+  "data": {
+    "message": "Unexpected server error. Check server logs for details.",
+    "ref": "err_7fe83747"
+  }
+}
+===== ANALYST laguna 2026-09-03 19:59:04 UTC =====
+[91m[1mError: [0m{
+  "name": "UnknownError",
+  "data": {
+    "message": "Unexpected server error. Check server logs for details.",
+    "ref": "err_63268928"
+  }
+}
+===== ANALYST laguna 2026-09-03 22:32:22 UTC =====
+[91m[1mError: [0m{
+  "name": "UnknownError",
+  "data": {
+    "message": "Unexpected server error. Check server logs for details.",
+    "ref": "err_b62d045b"
+  }
+}
+=== LONGCAT ===
+===== ANALYST longcat 2026-09-03 17:25:51 UTC =====
+[91m[1mError: [0m{
+  "name": "UnknownError",
+  "data": {
+    "message": "Unexpected server error. Check server logs for details.",
+    "ref": "err_0dba57e3"
+  }
+}
+===== ANALYST longcat 2026-09-03 19:59:04 UTC =====
+[91m[1mError: [0m{
+  "name": "UnknownError",
+  "data": {
+    "message": "Unexpected server error. Check server logs for details.",
+    "ref": "err_56ffb741"
+  }
+}
+===== ANALYST longcat 2026-09-03 22:32:22 UTC =====
+[91m[1mError: [0m{
+  "name": "UnknownError",
+  "data": {
+    "message": "Unexpected server error. Check server logs for details.",
+    "ref": "err_cb39fda7"
+  }
+}
+[0m
+Now let me update my state and run some focused probes to advance the highest-value hypothesis. The [NEXT] action from my last run was to probe the OAuth authorization endpoint for redirect_uri validation on auth.sumup.com. Let me do that read-only probing now. I'll be careful to stay ≤1 rps and use GET/HEAD/OPTIONS only.
+
+Let me run the OAuth redirect_uri validation probes on auth.sumup.com.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt; 
+# Test OAuth /oauth2/auth redirect_uri validation: attacker-controlled redirect_uri with a bogus client_id vs a real public client
+echo "=== auth with attacker redirect_uri + bogus client ==="; 
+curl -s -o /dev/null -D - --max-time 15 "https://auth.sumup.com/oauth2/auth?response_type=code&client_id=testclient123&redirect_uri=https://attacker.example.com/cb&scope=openid" 2>&1 | grep -iE "HTTP/|location|error|content-type" | head -20
+sleep 1
+echo "=== auth with attacker redirect_uri, no client ==="; 
+curl -s -o /dev/null -D - --max-time 15 "https://auth.sumup.com/oauth2/auth?response_type=code&redirect_uri=https://attacker.example.com/cb&scope=openid" 2>&1 | grep -iE "HTTP/|location|error|content-type" | head -20
+sleep 1
+=== auth with attacker redirect_uri + bogus client ===
+HTTP/2 302 
+content-type: text/html; charset=utf-8
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_client&error_description=Client+authentication+failed+%28e.g.%2C+unknown+client%2C+no+client+authentication+included%2C+or+unsupported+authentication+method%29.+The+requested+OAuth+2.0+Client+does+not+exist.
+=== auth with attacker redirect_uri, no client ===
+HTTP/2 302 
+content-type: text/html; charset=utf-8
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_client&error_description=Client+authentication+failed+%28e.g.%2C+unknown+client%2C+no+client+authentication+included%2C+or+unsupported+authentication+method%29.+The+requested+OAuth+2.0+Client+does+not+exist.
+[0m
+The `/oauth2/auth` endpoint redirects to a server-side error flow (not to the attacker's redirect_uri) for invalid client. This confirms the server doesn't blindly redirect to attacker redirect_uri when client is invalid — but it does NOT tell us whether redirect_uri is validated for a VALID client. Key observation: the error is sent to `auth.sumup.com/flows/oauth2/error` — NOT to the attacker's redirect_uri. This is correct behavior (server-side error page).
+
+To test redirect_uri validation, I need a real public client_id. Let me look for one. The discovery mentions a service_documentation link to developer.sumup.com. Let me check if there's a public client id discoverable, and also probe OPTIONS on PAR/device endpoints.
+
+Let me check the developer docs for a public client_id and probe the PAR endpoint behavior.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+# OPTIONS on PAR and device endpoints to see ALLOW
+echo "=== OPTIONS /oauth2/par ==="; curl -s -X OPTIONS -o /dev/null -D - --max-time 15 "https://auth.sumup.com/oauth2/par" 2>&1 | grep -iE "HTTP/|allow|content-type" | head; sleep 1
+echo "=== OPTIONS /oauth2/device ==="; curl -s -X OPTIONS -o /dev/null -D - --max-time 15 "https://auth.sumup.com/oauth2/device" 2>&1 | grep -iE "HTTP/|allow|content-type" | head; sleep 1
+echo "=== OPTIONS /oauth2/token ==="; curl -s -X OPTIONS -o /dev/null -D - --max-time 15 "https://auth.sumup.com/oauth2/token" 2>&1 | grep -iE "HTTP/|allow|content-type" | head; sleep 1
+echo "=== OPTIONS /oauth2/revoke ==="; curl -s -X OPTIONS -o /dev/null -D - --max-time 15 "https://auth.sumup.com/oauth2/revoke" 2>&1 | grep -iE "HTTP/|allow|content-type" | head
+=== OPTIONS /oauth2/par ===
+HTTP/2 404 
+content-type: application/json
+=== OPTIONS /oauth2/device ===
+HTTP/2 404 
+content-type: application/json
+=== OPTIONS /oauth2/token ===
+HTTP/2 200 
+=== OPTIONS /oauth2/revoke ===
+HTTP/2 200
+[0m
+Interesting delta: `/oauth2/par` and `/oauth2/device` return 404 on OPTIONS (not 405/200), while `/oauth2/token` and `/oauth2/revoke` return 200 on OPTIONS. This suggests PAR and device endpoints may not actually be enabled at the routing level despite being documented, OR they reject non-POST differently. This is minor. Let me check the error body more precisely and look at what a POST to PAR returns (read-only error taxonomy, no token redemption).
+
+Actually, let me be careful — POST could trigger real behavior. But a POST to /oauth2/par with an invalid/missing client is safe (error taxonomy only, no data mutation). The rules allow POST for passive-safe error taxonomy. Let me do a minimal POST to PAR.
+
+Actually, the rules say GET/HEAD/OPTIONS only for live probes. POST /oauth2/par would be a mutating-ish call. Let me stay passive. The 404 on OPTIONS for PAR/device is a notable anomaly though — it suggests those documented endpoints are actually not deployed/routed, which reduces the request_uri/PAR hypothesis viability.
+
+Let me instead focus on finding a valid public client_id to test redirect_uri validation. Let me check developer.sumup.com which is referenced in scope.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+# Check developer.sumup.com - referenced in OAuth service_documentation
+for p in "" "tools/authorization/oauth"; do echo "=== developer.sumup.com/$p ==="; curl -s -o /dev/null -D - --max-time 15 "https://developer.sumup.com/$p" 2>&1 | grep -iE "HTTP/|location" | head -5; sleep 1; done
+=== developer.sumup.com/ ===
+HTTP/2 200 
+=== developer.sumup.com/tools/authorization/oauth ===
+HTTP/2 200
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+# Look for a public OAuth client_id in the developer docs / flow redirects
+echo "=== fetch dev oauth page, extract client_id / redirect_uri hints ==="; curl -s --max-time 20 "https://developer.sumup.com/tools/authorization/oauth" 2>&1 | grep -oiE "(client[_-]?id|redirect[_-]?uri|scope|response_type)=[A-Za-z0-9_%.:/-]+" | sort -u | head -30
+=== fetch dev oauth page, extract client_id / redirect_uri hints ===
+response_type=code
+scope=payments%20customers%20payment_instruments
+[0m
+The dev docs confirm the OAuth response_type=code flow and a scope set. But no literal public client_id embedded in the HTML. The dev page shows the standard redirect_uri for testing is likely `https://developer.sumup.com/oauth/callback` or similar. Let me look for redirect_uri values and any test client patterns in the docs page.
+
+Since I don't have a valid client_id, I cannot conclusively test redirect_uri validation passively. That's the fundamental limit — the request_uri/PAR hypothesis requires a valid registered client.
+
+Let me capture the developer page structure to find the documented redirect_uri for the sample flow, which would give me a "known-good" redirect_uri to compare against in error taxonomy.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+# Find the sample authorize URL / redirect_uri documented in dev docs
+curl -s --max-time 20 "https://developer.sumup.com/tools/authorization/oauth" 2>&1 | grep -oiE "https?://[a-zA-Z0-9./?=_%:&-]*oauth[a-zA-Z0-9./?=_%:&-]*" | head -20
+https://developer.sumup.com/tools/authorization/oauth/
+https://developer.sumup.com/tools/authorization/oauth/
+https://developer.sumup.com/og/tools/authorization/oauth.png
+https://developer.sumup.com/og/tools/authorization/oauth.png
+https://developer.sumup.com/og/tools/authorization/oauth.png
+https://developer.sumup.com/tools/authorization/oauth/index.md
+https://chatgpt.com/?q=Read%20https%3A%2F%2Fdeveloper.sumup.com%2Ftools%2Fauthorization%2Foauth%2Findex.md.%20I%20want%20to%20ask%20questions%20about%20it.
+https://claude.ai/new?q=Read%20https%3A%2F%2Fdeveloper.sumup.com%2Ftools%2Fauthorization%2Foauth%2Findex.md.%20I%20want%20to%20ask%20questions%20about%20it.
+https://oauth.net/code/
+https://me.sumup.com/settings/oauth2-applications
+https://me.sumup.com/settings/oauth2-applications
+https://github.com/sumup/sumup-developer/edit/main/src/content/docs/tools/authorization/oauth.mdx
+[0m
+There's an interesting reference: `https://me.sumup.com/settings/oauth2-applications` — an OAuth2 application management panel, and the docs page reference. There's also a raw markdown at `index.md`. Let me fetch the raw docs content which may include a sample client_id or redirect_uri used in their example flow. This could give me a known client to use for passive redirect_uri validation probing.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+curl -s --max-time 20 "https://developer.sumup.com/tools/authorization/oauth/index.md" 2>&1 | grep -oiE "(client[_-]?id|redirect[_-]?uri|authorize|auth/authorize|client_secret|APP_ID|app[_-]?id)[^,\"]{0,80}" | head -40
+authorize`
+authorize your application accordingly. The [requested scopes](#authorization-scopes) det
+authorize` with the required parameters.
+redirect_uri` value in the authorization request and token exchange.
+authorize?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=paym
+redirect_uri={REDIRECT_URI}
+client_id={CLIENT_ID}
+client_secret={CLIENT_SECRET}
+client_id={CLIENT_ID}
+client_secret={CLIENT_SECRET}
+authorize again.
+Authorized redirect URL | Yes | Redirect URL to register for your client application. Spe
+Authorized JavaScript Origin | No | Origin URI for browser-based web applications. SumUp 
+client_id
+client_secret
+redirect_uris
+[0m
+The docs confirm the developer flow: `authorize?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=payments customers payment_instruments`. This confirms the OAuth authorize endpoint and redirect_uri parameter. There's no hardcoded public test client_id — merchants must register their own OAuth2 app (via me.sumup.com/settings/oauth2-applications).
+
+The key finding: **redirect_uri is a per-registered-client value** (`Authorized redirect URL` must be registered). This means:
+1. The request_uri/PAR/redirect_uri bypass hypothesis is fundamentally not testable passively without a registered client_id + registered redirect_uri. AUTH_HELPED at best.
+2. redirect_uri is explicitly registered per client — so blind capture by attacker redirect_uri requires a client that registered an attacker URI (won't happen for legit clients) or a validation flaw. This lowers the passive viability significantly.
+
+Notably there's a NEW host surfaced: `me.sumup.com/settings/oauth2-applications` — the merchant OAuth2 application self-service panel. This is an in-scope company asset (me.sumup.com) not in the inventory. And the dev docs mention `payments`/`customers`/`payment_instruments` scope names which differ from the OIDC discovery scope catalog (`merchants.read`, `transactions.read`, etc.) — actual deployed API scopes differ from the discovery doc, confirming two separate scope systems.
+
+Let me check me.sumup.com briefly — it's a new asset with a self-service OAuth2 app registration surface (potentially interesting for supplying a valid client to test redirect_uri validation).
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+echo "=== me.sumup.com root ==="; curl -s -o /dev/null -D - --max-time 15 "https://me.sumup.com/" 2>&1 | grep -iE "HTTP/|location|server" | head; sleep 1
+echo "=== me.sumup.com/settings/oauth2-applications ==="; curl -s -o /dev/null -D - --max-time 15 "https://me.sumup.com/settings/oauth2-applications" 2>&1 | grep -iE "HTTP/|location|server" | head
+=== me.sumup.com root ===
+HTTP/2 307 
+location: https://auth.sumup.com/oauth2/auth?client_id=dashboard&code_challenge=7Y0-3gswBoMKQ_f14Xdw1yxMlgxLw5p8Nc9HxkIsMO0&code_challenge_method=S256&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&scope=openid+offline+classic+email+accounting.read+accounting.write+invoices.read+invoices.write+api_keys+api_keys%3Awrite+readers.read+readers.write+lending.read+lending.write+receivables.read+receivables.write+unified_customer_directory%3Aread+unified_customer_directory%3Awrite&skip_select_account=true&redirect_url=%2F&ui_locales=en-us&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBTdGF0ZSI6eyJmbG93IjoibG9naW4iLCJwYXRobmFtZSI6Ii8iLCJxdWVyeVBhcmFtcyI6e319LCJpYXQiOjE3ODg0ODIwNTksImV4cCI6MTc4ODQ4Mzg1OX0.AvuJ3aac9nUDqv-pXm7sLbOnAlay_ilsIDzATdYnxYw
+permissions-policy: accelerometer=(),autoplay=(),camera=(self),clipboard-read=(),clipboard-write=(self "https://chat.sumup.com"),fullscreen=(),geolocation=(),gyroscope=(),hid=(),interest-cohort=(),magnetometer=(),microphone=(self),payment=(),publickey-credentials-get=(self),screen-wake-lock=(self),serial=(),sync-xhr=(),usb=()
+server: Vercel
+=== me.sumup.com/settings/oauth2-applications ===
+HTTP/2 307 
+location: https://auth.sumup.com/oauth2/auth?client_id=dashboard&code_challenge=XHd1ZnT1SKxKxZnEIJTPIJ5FuSHkh9WSeKSROLqX4yA&code_challenge_method=S256&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&scope=openid+offline+classic+email+accounting.read+accounting.write+invoices.read+invoices.write+api_keys+api_keys%3Awrite+readers.read+readers.write+lending.read+lending.write+receivables.read+receivables.write+unified_customer_directory%3Aread+unified_customer_directory%3Awrite&skip_select_account=true&redirect_url=%2Fsettings%2Foauth2-applications&ui_locales=en-us&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBTdGF0ZSI6eyJmbG93IjoibG9naW4iLCJwYXRobmFtZSI6Ii9zZXR0aW5ncy9vYXV0aDItYXBwbGljYXRpb25zIiwicXVlcnlQYXJhbXMiOnt9fSwiaWF0IjoxNzg4NDgyMDYwLCJleHAiOjE3ODg0ODM4NjB9.YVPyd_bCas3ZK0WJ0BXf4HS2QqPykHQa1RCrvjvGdWI
+permissions-policy: accelerometer=(),autoplay=(),camera=(self),clipboard-read=(),clipboard-write=(self "https://chat.sumup.com"),fullscreen=(),geolocation=(),gyroscope=(),hid=(),interest-cohort=(),magnetometer=(),microphone=(self),payment=(),publickey-credentials-get=(self),screen-wake-lock=(self),serial=(),sync-xhr=(),usb=()
+server: Vercel
+[0m
+This is a significant new delta. I now have:
+
+1. **NEW host** `me.sumup.com` served by **Vercel** (not Cloudflare/nginx) — a distinct, modern hosting tech, in the merchant self-service surface. Redirects to auth.sumup.com OAuth.
+2. **Real public client_id exposed**: `client_id=dashboard` — this is a live, registered OAuth2 client used by the merchant dashboard. And its redirect_uri is `https://me.sumup.com/api/sso/callback`.
+3. **Real scope set** used in production: `openid offline classic email accounting.read accounting.write invoices.read invoices.write api_keys api_keys:write readers.read readers.write lending.read lending.write receivables.read receivables.write unified_customer_directory:read unified_customer_directory:write` — this is yet another scope catalog (dashboard client), different from OIDC discovery and developer docs.
+4. **state parameter is a JWT** signed HS256: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBTdGF0ZSI6eyJmbG93IjoibG9naW4iLCJwYXRobmFtZSI6Ii8iLCJxdWVyeVBhcmFtcyI6e319LCJpYXQiOjE3ODg0ODIwNTksImV4cCI6MTc4ODQ4Mzg1OX0.AvuJ3aac9nUDqv-pXm7sLbOnAlay_ilsIDzATdYnxYw` — HS256 JWT as OAuth state. **JWT alg confusion / key confusion potential** — the state JWT contains `appState`, `iat`, `exp`. If the `state` JWT is accepted with different algorithms (none/HS256 with weak secret), that's a JWT state-forgery vector. High-value.
+
+Now I have `client_id=dashboard` — I can now test **redirect_uri validation** passively: request `/oauth2/auth` with `client_id=dashboard` (valid) but in the redirect_uri I control attack vectors, and observe whether the server redirects to my URI (validation bypass) vs server error page. This is the key test for the OAuth hypothesis.
+
+Let me test redirect_uri validation with the real `dashboard` client. This is read-only GET (no token redemption).
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+CID="dashboard"
+# Test 1: valid client, attacker redirect_uri (open redirect / redirect_uri validation)
+echo "=== client=dashboard, redirect_uri=attacker ==="; curl -s -o /dev/null -D - --max-time 15 "https://auth.sumup.com/oauth2/auth?response_type=code&client_id=$CID&redirect_uri=https://attacker.example.com/cb&scope=openid" 2>&1 | grep -iE "HTTP/|location" | head -5; sleep 1
+# Test 2: valid client, empty/missing redirect_uri
+echo "=== client=dashboard, no redirect_uri ==="; curl -s -o /dev/null -D - --max-time 15 "https://auth.sumup.com/oauth2/auth?response_type=code&client_id=$CID&scope=openid" 2>&1 | grep -iE "HTTP/|location" | head -5; sleep 1
+# Test 3: valid client, subdomain-bypass redirect_uri
+echo "=== client=dashboard, subdomain redirect_uri ==="; curl -s -o /dev/null -D - --max-time 15 "https://auth.sumup.com/oauth2/auth?response_type=code&client_id=$CID&redirect_uri=https://me.sumup.com.evil.com/cb&scope=openid" 2>&1 | grep -iE "HTTP/|location" | head -5; sleep 1
+# Test 4: valid client, path-traversal redirect_uri on same host
+echo "=== client=dashboard, path-traversal redirect_uri ==="; curl -s -o /dev/null -D - --max-time 15 "https://auth.sumup.com/oauth2/auth?response_type=code&client_id=$CID&redirect_uri=https://me.sumup.com/api/sso/callback/../evil&scope=openid" 2>&1 | grep -iE "HTTP/|location" | head -5
+=== client=dashboard, redirect_uri=attacker ===
+HTTP/2 302 
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed.+The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+=== client=dashboard, no redirect_uri ===
+HTTP/2 302 
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed.+The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+=== client=dashboard, subdomain redirect_uri ===
+HTTP/2 302 
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed.+The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+=== client=dashboard, path-traversal redirect_uri ===
+HTTP/2 302 
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed.+The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[0m
+Strong results for the OAuth hypothesis:
+- With valid `client_id=dashboard`, all attacker-controlled redirect_uri variants (attacker host, subdomain confusion, path-traversal) are **rejected** with `invalid_request` → "redirect_uri does not match any of the OAuth 2.0 Client's pre-registered redirect urls", and the error is surfaced on the server-side error page, NOT redirected to the attacker URI.
+
+This means: **redirect_uri is strictly validated against the registered allowlist for the `dashboard` client.** The naive open-redirect/code-theft bypass does NOT work. This significantly lowers confidence in the redirect_uri-validation-bypass hypothesis. The server redirects errors to its own flow page, never to an unregistered URI.
+
+However, this gives me a powerful confirmation: the `dashboard` client has a known-good registered redirect_uri = `https://me.sumup.com/api/sso/callback`. Let me verify passing the exact known-good redirect_uri proceeds past client auth (to login), which confirms the allowlist match behavior differs from the reject behavior — a clean control.
+
+Also worth testing: `request_parameter_supported:true` + `request_object_signing_alg_values_supported:["RS256","none"]` and `dpop`. The request_uri/request object with alg=none is the more exotic vector. But testing a JWT request object requires generating a signed JWT with a client's key (not passive, can't obtain a client key). However, testing whether `/oauth2/auth` **accepts a request object with alg=none** (unsigned) would be revealing — but that's a POST/mutating-ish probe and requires careful construction. 
+
+Let me at least verify the known-good redirect_uri control, and then examine the HS256 state JWT more — that's the most promising new angle. The state JWT is signed HS256 with the app's secret. If I can't find the secret, HS256 itself isn't forgeable. But the JWT's presence as `state` is itself informative. Let me decode it (passive) and check the alg confusion potential more carefully.
+
+Let me verify known-good redirect_uri control and decode the state JWT.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+CID="dashboard"
+# Control: exact known-good registered redirect_uri
+echo "=== client=dashboard, known-good redirect_uri (me.sumup.com/api/sso/callback) ==="; curl -s -o /dev/null -D - --max-time 15 "https://auth.sumup.com/oauth2/auth?response_type=code&client_id=$CID&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&scope=openid" 2>&1 | grep -iE "HTTP/|location|set-cookie" | head -5; sleep 1
+# Decode the state JWT header/payload
+echo "=== decode state JWT ==="; python3 -c "
+import base64,json
+t='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBTdGF0ZSI6eyJmbG93IjoibG9naW4iLCJwYXRobmFtZSI6Ii8iLCJxdWVyeVBhcmFtcyI6e319LCJpYXQiOjE3ODg0ODIwNTksImV4cCI6MTc4ODQ4Mzg1OX0.AvuJ3aac9nUDqv-pXm7sLbOnAlay_ilsIDzATdYnxYw'
+def dec(x):
+    x+='='*(-len(x)%4); return base64.urlsafe_b64decode(x)
+h,p,s=t.split('.')
+print('HEADER:',json.loads(dec(h)))
+print('PAYLOAD:',json.loads(dec(p)))
+"
+=== client=dashboard, known-good redirect_uri (me.sumup.com/api/sso/callback) ===
+HTTP/2 303 
+location: https://me.sumup.com/api/sso/callback?error=invalid_state&error_description=The+state+is+missing+or+does+not+have+enough+characters+and+is+therefore+considered+too+weak.+Request+parameter+%27state%27+must+be+at+least+be+8+characters+long+to+ensure+sufficient+entropy.&state=
+set-cookie: __cf_bm=pyTqYnUZYdizQbk4WaU5QfyE8fsk0dGbMgmnJYog7XU-1788482089.3351321-1.0.1.1-2KuD7jtJG1UU6aeYyyGTKv8dLx_XuzaKZ9tsazzL7fS2rPUdlLVfpjZb0l1Cu1wScX8hFyUjE_waeDkddQ7Ogw4Fgr_LcKSki5Mq_9F4zsl46NpSs1osU0uT.LoqL1_xAJvbpwJSAgstpZWdkmmSTA; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Fri, 04 Sep 2026 01:04:49 GMT
+=== decode state JWT ===
+HEADER: {'alg': 'HS256', 'typ': 'JWT'}
+PAYLOAD: {'appState': {'flow': 'login', 'pathname': '/', 'queryParams': {}}, 'iat': 1788482059, 'exp': 1788483859}
+[0m
+[0m← [0mWrite state_bigpickle.json
+Wrote file successfully.
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt; cat >> knowledge/index.md <<'EOF'
+- 2026-09-04 ACCEPTED OATH @ auth.sumup.com: With valid public client_id=dashboard, redirect_uri is STRICTLY allowlisted — attacker-host/subdomain/path-traversal redirect_uri all rejected (invalid_request, error surfaced on server-side flow page, never redirected to unregistered URI). Naive OAuth redirect_uri bypass refuted.
+- 2026-09-04 ACCEPTED AUTH @ me.sumup.com: me.sumup.com is a distinct merchant self-service asset served by Vercel (not Cloudflare/nginx). 307 -> auth.sumup.com OAuth with client_id=dashboard + registered redirect_uri https://me.sumup.com/api/sso/callback.
+- 2026-09-04 ACCEPTED OATH @ auth.sumup.com: Public client_id=dashboard exposes a broad production scope catalog (openid offline classic accounting.read/write invoices.read/write api_keys api_keys:write readers.read/write lending.read/write receivables.read/write unified_customer_directory:read/write) — additional hidden API resource model beyond OIDC discovery doc.
+- 2026-09-04 ACCEPTED OATH @ auth.sumup.com: state parameter on dashboard OAuth flow is an HS256-signed JWT carrying appState{flow,pathname,queryParams}; server enforces state>=8 chars. state JWT forgery requires app secret (NOT passive).
+- 2026-09-04 ACCEPTED OATH @ auth.sumup.com: /oauth2/par and /oauth2/device return 404 on OPTIONS (documented but not routed/allowed), while /oauth2/token and /oauth2/revoke return 200 on OPTIONS. PAR/device endpoints likely not deployed at routing level.
+EOF
+echo "appended"
+appended
+[0m
+Key observations:
+
+1. **Known-good redirect_uri passes validation** — when I provide the exact registered `https://me.sumup.com/api/sso/callback`, the response is a **303 redirect back to me.sumup.com/api/sso/callback?error=invalid_state** (not the server error page). This is a clean control confirming the allowlist match is real and the earlier rejections were genuine validation failures. Reflecting errors (including error+state) back into the registered redirect_uri is standard.
+
+2. **`invalid_state` / state strength enforcement**: the response says "state must be at least 8 characters long". This means state entropy is enforced ≥8 chars — good hardening, but note state is JWT-based in the real flow. The dashboard passes an HS256-signed JWT as `state` with `appState` (pathname flow) — this is the client's own state token.
+
+3. The state JWT uses HS256 and contains an `appState` reflecting `pathname`/`queryParams`. This is a **backend-issued state token**. If the state validation on callback trusts `appState.pathname` to drive a post-login redirect (open-redirect-to-self / path sink), an attacker who can forge or influence it could redirect after login. But forging HS256 requires the secret. Not passive-testable.
+
+Critical realization for the OAuth hypothesis: redirect_uri is **strictly allowlisted** — the naive bypass fails cleanly. This **lowers confidence** in the redirect_uri-bypass hypothesis substantially. The earlier conf-60 hypothesis is now substantially refuted for the trivial vector. Remaining OAuth surface: request_object/PAR `alg=none` (needs valid client key, not passive), and the `state` JWT handling (needs to observe callback state validation).
+
+Let me consolidate. The most valuable NEW finding is the discovery of the `dashboard` client (+ its full production scope set), `me.sumup.com` on Vercel, and the strict redirect_uri validation. This is a strong delta. The dashboard client's scope list reveals additional real API surfaces: accounting, invoices, api_keys, lending, receivables, unified_customer_directory, readers — a broader resource model than the OIDC discovery doc listed.
+
+I've done meaningful passive probing. Let me also quickly check whether the `dashboard` client accepts a `token` (implicit) flow with fragment or the `none` auth-method with client_credentials, to map the grant surface — but without a shared secret, token issuance won't proceed. Not more value there.
+
+Let me write up the structured output now. First update state file and knowledge base.
+
+Let me update the state and knowledge files, then emit the structured ANALYST output.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt; cat >> probe-results.md <<'EOF'
+
+## 2026-09-04 (bigpickle)
+https://auth.sumup.com/oauth2/auth?client_id=testclient123&redirect_uri=https://attacker.example.com/cb -> 302 invalid_client (error on server flow page)
+https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https://attacker.example.com/cb -> 302 invalid_request redirect_uri not registered (server page)
+https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https://me.sumup.com.evil.com/cb -> 302 invalid_request (rejected, subdomain confusion)
+https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback/../evil -> 302 invalid_request (path traversal rejected)
+https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&scope=openid -> 303 back to me.sumup.com cb (invalid_state; allowlist MATCH control, state>=8 enforced)
+OPTIONS /oauth2/token -> 200 ; OPTIONS /oauth2/revoke -> 200 ; OPTIONS /oauth2/par -> 404 ; OPTIONS /oauth2/device -> 404
+https://me.sumup.com/ -> 307 -> auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&state=<HS256 JWT>
+https://me.sumup.com/settings/oauth2-applications -> 307 -> same auth flow
+https://developer.sumup.com/tools/authorization/oauth -> 200 (confirms response_type=code, scope=payments customers payment_instruments, redirect_uri registration model)
+EOF
+echo done
+done
+[0m
+Now emit the structured ANALYST output.
+
+---
+
+STEP 1 — DELTA
+[NEW] me.sumup.com identified as a distinct merchant self-service asset served by Vercel (not Cloudflare/nginx/ELB). Root and /settings/oauth2-applications both 307 → auth.sumup.com OAuth with public `client_id=dashboard`, registered redirect_uri `https://me.sumup.com/api/sso/callback`.
+[NEW] Real public OAuth client `dashboard` exposed; its production scope catalog differs from OIDC discovery and developer docs: `openid offline classic accounting.read/write invoices.read/write api_keys api_keys:write readers.read/write lending.read/write receivables.read/write unified_customer_directory:read/write` — wider hidden API resource model.
+[NEW] OAuth `state` on the dashboard flow is an HS256-signed JWT carrying `appState{flow,pathname,queryParams}`; server enforces state≥8 chars.
+[CHANGED] auth.sumup.com redirect_uri validation CONFIRMED strict allowlist for `client_id=dashboard`: attacker host, subdomain-confusion, and path-traversal redirect_uri all rejected (`invalid_request` → error on server flow page, never redirected to unregistered URI); known-good `https://me.sumup.com/api/sso/callback` produces 303 to me.sumup.com callback. Naive redirect_uri bypass refuted.
+[CHANGED] /oauth2/par and /oauth2/device return 404 on OPTIONS (documented but not routed), while /oauth2/token and /oauth2/revoke return 200 on OPTIONS — PAR/device grant routes likely not deployed at routing level.
+
+STEP 2 — PRIORITIZE
+[PRIO] auth.sumup.com,8.6,a=9,b=9,t=9,g=4,c=8,f=8
+[PRIO] me.sumup.com,7.9,a=7,b=9,t=8,g=6,c=8,f=8
+[PRIO] api.sumup.com,7.0,a=8,b=9,t=8,g=4,c=8,f=4
+[PRIO] admin.sumup.com,6.9,a=6,b=9,t=7,g=3,c=8,f=5
+
+STEP 3 — HYPOTHESES
+[HYP] OAuth state JWT appState path sink on auth.sumup.com/me.sumup.com
+class: OATH
+asset: auth.sumup.com
+confidence: 45
+reasoning: state is an HS256 JWT with appState{flow,pathname:'/',queryParams:{}} issued by the dashboard backend and returned on the OAuth callback (me.sumup.com/api/sso/callback?state=...). The pathname/queryParams ride inside the signed state; if any downstream consumer trusts appState.pathname to drive a post-login redirect or UI step without re-validating, manipulation of the post-auth redirect sink is possible. HS256 forgery requires the app secret, so exploitability hinges on a weak secret or an accepted-lesser-alg path.
+evidence_needed: Verify callback re-validates state JWT signature AND uses appState.pathname for a redirect (open-redirect-to-self or flow-skip) — requires session or a way to observe post-login handling. Not resolvable by anonymous HEAD/GET alone.
+verify_steps: PASSIVE limit: GET /oauth2/auth with client_id=dashboard, known-good redirect_uri, crafted/forged state (alg=none header + forged appState) and observe whether the 303 callback reflects an altered error vs proceeds — a reflected difference indicates state is parsed/trusted. Note: forging requires secret; alg=none probe is a best-effort signal only.
+impact: Post-auth redirect/flow manipulation or state-session confusion → account takeover vector. Severity: high if actionable.
+testability: AUTH_HELPED
+[HYP] me.sumup.com Vercel surface / OAuth2-app-registration UX logic
+class: BUSLOGIC
+asset: me.sumup.com
+confidence: 50
+reasoning: me.sumup.com is a fresh, non-Cloudflare (Vercel) merchant asset with a self-service OAuth2 application registry (/settings/oauth2-applications) reachable only via authenticated dashboard OAuth. Vercel origin differs from the hardened Cloudflare/Envoy edge seen elsewhere; a newer asset is a plausible spot for exposed serverless functions, API routes, or permissive CORS on the SSO callback. Authenticated interaction needed.
+evidence_needed: Authenticated dashboard session to enumerate me.sumup.com/api/* routes and OAuth2-app registration fields (redirect_uri registration, scopes selectable).
+verify_steps: PASSIVE: GET https://me.sumup.com/api/sso/callback (anonymous) to observe error handling/CORS; GET https://me.sumup.com/_vercel/insights or well-known; enumerate /api/* anonymously for non-401 responses. Full test AUTH_HELPED.
+impact: Merchant self-service misconfig → OAuth app registration abuse, broad-scope token issuance, or data exposure. Severity: high.
+testability: AUTH_HELPED
+[HYP] api.sumup.com BOLA via dashboard-client scopes
+class: IDOR
+asset: api.sumup.com
+confidence: 60
+reasoning: Dashboard client scope catalog (accounting/invoices/api_keys/lending/receivables/unified_customer_directory/readers) maps the real hidden API resources; api.sumup.com 404s all anonymous paths. Cross-tenant BOLA requires a granted merchant token (from dashboard scope) then ID-swapping on resource ids.
+evidence_needed: Authenticated requests where changing resource id returns another tenant's data.
+verify_steps: Requires valid OAuth merchant token; cross-tenant id manipulation on scope-derived endpoints. Not passable without token.
+impact: Cross-tenant financial/PII data exposure. Severity: critical.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+[PARKED] OAuth redirect_uri validation bypass on auth.sumup.com: REFUTED for naive vectors — strict allowlist confirmed for client_id=dashboard (attacker-host/subdomain/path-traversal all rejected, errors on server page). No viable passive redirect_uri bypass.
+[PARKED] OAuth request_uri/PAR token theft: PAR+device routes return 404 on OPTIONS (unrouted) and redirect_uri is strictly allowlisted; requires a registered attacker client + key → not passive, low current yield.
+[PARKED] SSRF @ portal.sumup.com (iriscrm.com): third-party CNAME, in-scope unconfirmed, needs active interaction.
+[FINAL] 1. api.sumup.com scope-mapped BOLA (conf 60) — high financial value, needs merchant token (AUTH_HELPED).
+[FINAL] 2. me.sumup.com Vercel merchant surface / OAuth2-app-registration logic (conf 50) — new host, non-Cloudflare origin, fresh UX surface.
+[FINAL] 3. OAuth state JWT appState path sink (conf 45) — HS256 secret-dependent, weak passive signal.
+
+STEP 5 — NEXT ACTION
+[NEXT] PROBE: GET https://me.sumup.com/api/sso/callback (anonymous, observe error taxonomy + CORS/allow headers), GET https://me.sumup.com/_vercel/* well-known + /api/* anonymous enumeration (non-401), OPTIONS https://me.sumup.com/api/sso/callback. Then confirm dashboard-client scope reality by re-fetching the me.sumup.com redirect and capturing the full state/scope for offline JWT analysis. ≤1 rps, GET/HEAD/OPTIONS only.
+
+STEP 6 — LEARNING
+[LEARN] ACCEPTED OATH @ auth.sumup.com: redirect_uri is strictly allowlisted per client (client_id=dashboard confirmed) — naive redirect_uri/subdomain/path-traversal bypass refuted; errors surfaced on server flow page.
+[LEARN] ACCEPTED AUTH @ me.sumup.com: me.sumup.com is a distinct Vercel-served merchant self-service asset behind dashboard OAuth (client_id=dashboard) — new non-Cloudflare attack surface.
+[LEARN] ACCEPTED MISCONFIG @ auth.sumup.com: /oauth2/par & /oauth2/device documented but return 404 on OPTIONS (unrouted) while /oauth2/token & /oauth2/revoke return 200 — PAR/device grants likely not deployed at routing level.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: dashboard-client scope catalog (accounting/invoices/api_keys/lending/receivables/unified_customer_directory/readers) maps a broader hidden api.sumup.com resource model than OIDC discovery.
+
+STEP 7 — RISK
+[RISK] SumUp: 30 — Cloudflare+Envoy edge with strict OAuth redirect_uri allowlist and fully-gated api.sumup.com; anonymous surface thin and hardening effective (redirect_uri bypass refuted). Real findings concentrate in merchant-token-gated BOLA and the new Vercel-served me.sumup.com self-service surface.

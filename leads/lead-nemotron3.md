@@ -129,3 +129,48 @@ testability: PASSIVE
 [LEARN] ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
 [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
 [RISK] sumup: 75 — Core payment API (api.sumup.com) and auth server (auth.sumup.com) are high-value targets with confirmed live HTTP, Cloudflare/AWS edge, and standard OAuth/API patterns that historically yield IDOR/OAuth flaws. Wildcard-dominated DNS limits subdomain enum but concentrates attack surface on known hosts. Third-party portal (iriscrm.com) adds supply-chain risk if in-scope. Admin panel (admin.sumup.com) exposes internal tooling surface behind ELB/nginx.
+## 2026-09-04 00:31:41 UTC [target] (model nemotron3)
+[PRIO] auth.sumup.com,8.2,a=9,b=10,t=9,g=7,c=8,f=6
+[PRIO] api.sumup.com,7.1,a=8,b=10,t=6,g=3,c=7,f=5
+[PRIO] admin.sumup.com,5.5,a=6,b=8,t=5,g=3,c=7,f=5
+[PRIO] portal.sumup.com,6.0,a=7,b=7,t=6,g=5,c=6,f=5
+[HYP] OAuth token_endpoint_auth_methods=none enables public client impersonation
+class: AUTH
+asset: auth.sumup.com
+confidence: 70
+reasoning: Both discovery docs list "none" in token_endpoint_auth_methods_supported — allows token endpoint calls without client authentication. Combined with PAR (pushed_authorization_request_endpoint) and request_object_signing_alg_values_supported including "none", a malicious client could register or reuse a public client_id and obtain tokens via PAR + token endpoint without client_secret.
+evidence_needed: Successful token request to /oauth2/token with client_id only (no client_secret) using authorization_code from PAR flow
+verify_steps: POST https://auth.sumup.com/oauth2/par with minimal request (client_id, redirect_uri, response_type=code, code_challenge) → observe if request_uri returned. Then POST https://auth.sumup.com/oauth2/token with grant_type=authorization_code, code=<from PAR>, client_id=<same>, no client_secret.
+impact: Client impersonation → merchant account takeover via OAuth flow — CRITICAL
+testability: AUTH_HELPED
+[HYP] OAuth redirect_uri validation bypass via loose regex on auth.sumup.com
+class: OAUTH
+asset: auth.sumup.com
+confidence: 60
+reasoning: Discovery docs show redirect_uri registration required (require_request_uri_registration=true) but validation logic untested. Cloudflare fronts the auth server; common bypasses: subdomain takeover (evil.sumup.com), path traversal (/../), wildcard match (https://app.sumup.com.attacker.com), open redirect on registered domain. Scope catalog shows high-value merchant scopes.
+evidence_needed: Authorization request to /oauth2/auth with attacker-controlled redirect_uri returning authorization code to attacker domain
+verify_steps: GET https://auth.sumup.com/oauth2/auth?client_id=test&redirect_uri=https://evil.com&response_type=code&scope=merchants.read → observe redirect behavior. Test variants: https://sumup.com.evil.com, https://app.sumup.com/../evil.com, https://sub.sumup.com (if subdomain takeover possible).
+impact: Authorization code theft → merchant account takeover — CRITICAL
+testability: PASSIVE
+[HYP] API versioned endpoint IDOR/BOLA on merchant resources via authenticated calls
+class: IDOR
+asset: api.sumup.com
+confidence: 55
+reasoning: Auth discovery reveals complete merchant resource model (merchants/transactions/payouts/readers/checkouts/customers/api_keys/refunds/receipts/sales/roles + read/write). All unauthenticated paths 404. BOLA requires merchant OAuth token. x-envoy-decorator-operation leaks internal k8s routing (apigateway2-headless.identity.svc.cluster.local) — may indicate internal API structure.
+evidence_needed: Authenticated cross-merchant access via ID manipulation (merchant_id, transaction_id, reader_serial) on versioned endpoints
+verify_steps: Obtain valid merchant OAuth token (AUTH_HELPED). GET https://api.sumup.com/v1/merchants/{other_merchant_id}/transactions → observe 403 vs 200. Repeat for /v1/transactions/{txn_id}, /v1/readers/{serial}, /v1/payouts/{id}.
+impact: Cross-merchant financial data access (transactions, payouts, readers) — HIGH (PCI/financial)
+testability: AUTH_HELPED
+[PARKED] Admin panel authentication bypass on admin.sumup.com: confidence 35 < 40; all header spoofing attempts return identical 403 with nginx/1.26.1 headers — no auth mechanism leak, no status change.
+[PARKED] SSRF via portal.sumup.com webhook: confidence 40; third-party CNAME (iriscrm.com) ownership unconfirmed in-scope; requires form interaction (active).
+[PARKED] k8s service name leak via x-envoy-decorator-operation on api.sumup.com: REJECTED class (MISCONFIG — header/banner leak explicit out-of-scope per program note).
+[FINAL] 1. OAuth token_endpoint_auth_methods=none enables public client impersonation (confidence 70)
+[FINAL] 2. OAuth redirect_uri validation bypass on auth.sumup.com (confidence 60)
+[FINAL] 3. API versioned endpoint IDOR/BOLA on merchant resources (confidence 55)
+[NEXT] PROBE: POST https://auth.sumup.com/oauth2/par with `client_id=test&redirect_uri=https://example.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256` → capture request_uri response; then POST https://auth.sumup.com/oauth2/token with `grant_type=authorization_code&code=<from_par>&client_id=test&code_verifier=test_verifier` (no client_secret) to test "none" auth method.
+[LEARN] ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" — public client impersonation vector; requires live PAR+token flow test.
+[LEARN] ACCEPTED OAUTH @ auth.sumup.com: Full discovery docs expose PAR, device flow, request_object alg "none", scope catalog mapping 1:1 to merchant API resources.
+[LEARN] REJECTED MISCONFIG @ api.sumup.com: x-envoy-decorator-operation leaks apigateway2-headless.identity.svc.cluster.local — header/banner leak is explicit out-of-scope class.
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths 404 unauthenticated; scope catalog from auth.sumup.com defines resource model but requires merchant token.
+[LEARN] REJECTED AUTH @ admin.sumup.com: Header spoofing (Host, X-Forwarded-For, X-Original-URL) yields identical 403 — no auth bypass via passive header manipulation.
+[RISK] sumup: 80 — Auth server (auth.sumup.com) exposes critical OAuth misconfigurations (token_endpoint_auth_methods=none, request_object alg=none, PAR, device flow) with full scope catalog mapping to payment API resources. API gateway (api.sumup.com) fully gated but resource model known. Admin panel hardened. Third-party portal adds supply-chain risk. High-value financial attack surface concentrated on known hosts.

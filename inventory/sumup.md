@@ -92,3 +92,10 @@ www.sumup.com
 - NEW auth.sumup.com: scope catalog documents merchant API resource model (merchants/transactions/payouts/readers/checkouts/customers/api_keys/refunds/receipts/sales/roles + read/write) — maps hidden api.su
 - NEW auth.sumup.com: security-relevant OAuth flags exposed — PAR + request_uri supported (require_request_uri_registration), device flow, token_endpoint_auth_methods incl "none", request_object alg incl "n
 - CHANGED api.sumup.com: uniform 404 on every enumerated path (v0/v0.1/v1/v2, scope-derived resources) — unauthenticated API surface fully gated; enumeration dead without auth.
+
+## 2026-09-04 00:36:06 UTC
+- NEW me.sumup.com identified as a distinct merchant self-service asset served by Vercel (not Cloudflare/nginx/ELB). Root and /settings/oauth2-applications both 307 → auth.sumup.com OAuth with public `clien
+- NEW Real public OAuth client `dashboard` exposed; its production scope catalog differs from OIDC discovery and developer docs: `openid offline classic accounting.read/write invoices.read/write api_keys ap
+- NEW OAuth `state` on the dashboard flow is an HS256-signed JWT carrying `appState{flow,pathname,queryParams}`; server enforces state≥8 chars.
+- CHANGED auth.sumup.com redirect_uri validation CONFIRMED strict allowlist for `client_id=dashboard`: attacker host, subdomain-confusion, and path-traversal redirect_uri all rejected (`invalid_request` → error
+- CHANGED /oauth2/par and /oauth2/device return 404 on OPTIONS (documented but not routed), while /oauth2/token and /oauth2/revoke return 200 on OPTIONS — PAR/device grant routes likely not deployed at routing 

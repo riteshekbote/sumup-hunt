@@ -55,3 +55,17 @@ https://api.sumup.com/health -> HTTP 404
 https://api.sumup.com/v2/ -> HTTP 404
 https://api.sumup.com/graphql -> HTTP 404
 https://admin.sumup.com/admin -> HTTP 403
+
+## 2026-09-04 00:36:25 UTC
+https://auth.sumup.com/oauth2/par -> HTTP 404
+https://auth.sumup.com/oauth2/token -> HTTP 405
+https://app.sumup.com.attacker.com -> ERR <urlopen error [SSL: TLSV1_ALERT_INTERNAL_ERROR] t
+https://auth.sumup.com/oauth2/auth?client_id=test&redirect_uri=https://evil.com&response_type=code&scope=merchants.read -> HTTP 405
+https://sumup.com.evil.com -> ERR <urlopen error [Errno -2] Name or service not know
+https://app.sumup.com/../evil.com -> ERR <urlopen error [Errno -2] Name or service not know
+https://sub.sumup.com -> ERR <urlopen error [Errno -2] Name or service not know
+https://api.sumup.com/v1/merchants/{other_merchant_id -> HTTP 404
+https://api.sumup.com/v1/ -> HTTP 404
+https://auth.sumup.com/flows/login -> HTTP 403
+https://admin.sumup.com/ -> HTTP 403
+https://me.sumup.com/api/sso/callback` -> HTTP 404
