@@ -69,3 +69,10 @@ https://api.sumup.com/v1/ -> HTTP 404
 https://auth.sumup.com/flows/login -> HTTP 403
 https://admin.sumup.com/ -> HTTP 403
 https://me.sumup.com/api/sso/callback` -> HTTP 404
+
+## 2026-09-04 05:13:02 UTC
+https://auth.sumup.com/oauth2/par -> HTTP 404
+https://auth.sumup.com/oauth2/token -> HTTP 405
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://me.sumup.com/_vercel/insights -> HTTP 404
+https://api.sumup.com/v1/merchants/{other_merchant_id -> HTTP 404

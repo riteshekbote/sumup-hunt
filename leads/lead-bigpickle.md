@@ -376,3 +376,33 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED MISCONFIG @ auth.sumup.com: /oauth2/par & /oauth2/device documented but return 404 on OPTIONS (unrouted) while /oauth2/token & /oauth2/revoke return 200 — PAR/device grants likely not deployed at routing level.
 [LEARN] ACCEPTED OATH @ auth.sumup.com: dashboard-client scope catalog (accounting/invoices/api_keys/lending/receivables/unified_customer_directory/readers) maps a broader hidden api.sumup.com resource model than OIDC discovery.
 [RISK] SumUp: 30 — Cloudflare+Envoy edge with strict OAuth redirect_uri allowlist and fully-gated api.sumup.com; anonymous surface thin and hardening effective (redirect_uri bypass refuted). Real findings concentrate in merchant-token-gated BOLA and the new Vercel-served me.sumup.com self-service surface.
+## 2026-09-04 05:08:44 UTC [target] (model bigpickle)
+[HYP] me.sumup.com Vercel surface / OAuth2-app-registration UX logic
+class: BUSLOGIC
+asset: me.sumup.com
+confidence: 50
+reasoning: me.sumup.com is a fresh, non-Cloudflare (Vercel) merchant asset with a self-service OAuth2 application registry reachable only via authenticated dashboard OAuth. Vercel origin differs from hardened Cloudflare/Envoy edge; newer asset is a plausible spot for exposed serverless functions, API routes, or permissive CORS on the SSO callback.
+evidence_needed: Authenticated dashboard session to enumerate me.sumup.com/api/* routes and OAuth2-app registration fields (redirect_uri registration, scopes selectable).
+verify_steps: PASSIVE: GET https://me.sumup.com/api/sso/callback (anonymous) to observe error handling/CORS; GET https://me.sumup.com/_vercel/insights or well-known; enumerate /api/* anonymously for non-401 responses. Full test AUTH_HELPED.
+impact: Merchant self-service misconfig → OAuth app registration abuse, broad-scope token issuance, or data exposure. Severity: high.
+testability: AUTH_HELPED
+[HYP] api.sumup.com BOLA via dashboard-client scopes
+class: IDOR
+asset: api.sumup.com
+confidence: 60
+reasoning: Dashboard client scope catalog maps real hidden API resources; api.sumup.com 404s all anonymous paths. Cross-tenant BOLA requires granted merchant token then ID-swapping on resource ids.
+evidence_needed: Authenticated requests where changing resource id returns another tenant's data.
+verify_steps: Requires valid OAuth merchant token; cross-tenant id manipulation on scope-derived endpoints. Not passable without token.
+impact: Cross-tenant financial/PII data exposure. Severity: critical.
+testability: AUTH_HELPED
+[HYP] OAuth state JWT appState path sink on auth.sumup.com/me.sumup.com
+class: OATH
+asset: auth.sumup.com
+confidence: 45
+reasoning: state is an HS256 JWT with appState{flow,pathname:'/',queryParams:{}}; if any downstream consumer trusts appState.pathname for post-login redirect without re-validating, manipulation possible. HS256 forgery requires weak secret.
+evidence_needed: Verify callback re-validates state JWT signature AND uses appState.pathname for redirect — requires session or way to observe post-login handling.
+verify_steps: PASSIVE: GET /oauth2/auth with client_id=dashboard, known-good redirect_uri, crafted state (alg=none header + forged appState) — observe whether 303 callback reflects altered error vs proceeds; a reflected difference indicates state is parsed/trusted.
+impact: Post-auth redirect/flow manipulation or state-session confusion → account takeover vector. Severity: high if actionable.
+testability: AUTH_HELPED
+[NEXT] PROBE: GET https://me.sumup.com/api/sso/callback (anonymous, observe error taxonomy + CORS/allow headers), GET https://me.sumup.com/_vercel/insights or well-known, enumerate /api/* for non-401 responses. Then confirm dashboard-client scope reality by re-fetching the me.sumup.com redirect and capturing full state/scope for offline JWT analysis. ≤1 rps, GET/HEAD/OPTIONS only.
+[RISK] SumUp: 30 — Cloudflare+Envoy edge with strict OAuth redirect_uri allowlist and fully-gated api.sumup.com; anonymous surface thin. Real findings concentrate in merchant-token-gated BOLA and the new Vercel-served me.sumup.com self-service surface.
