@@ -406,3 +406,32 @@ impact: Post-auth redirect/flow manipulation or state-session confusion → acco
 testability: AUTH_HELPED
 [NEXT] PROBE: GET https://me.sumup.com/api/sso/callback (anonymous, observe error taxonomy + CORS/allow headers), GET https://me.sumup.com/_vercel/insights or well-known, enumerate /api/* for non-401 responses. Then confirm dashboard-client scope reality by re-fetching the me.sumup.com redirect and capturing full state/scope for offline JWT analysis. ≤1 rps, GET/HEAD/OPTIONS only.
 [RISK] SumUp: 30 — Cloudflare+Envoy edge with strict OAuth redirect_uri allowlist and fully-gated api.sumup.com; anonymous surface thin. Real findings concentrate in merchant-token-gated BOLA and the new Vercel-served me.sumup.com self-service surface.
+## 2026-09-04 09:55:05 UTC [target] (model bigpickle)
+[HYP] api.sumup.com BOLA via dashboard-client per-client scope catalog
+class: IDOR
+asset: api.sumup.com
+confidence: 60
+reasoning: Dashboard client uses 17 custom per-client scopes (accounting/invoices/api_keys/readers/lending/receivables/unified_customer_directory r/w) that are NOT in OIDC discovery scopes_supported — these map the real hidden API resource model. api.sumup.com 404s all anonymous paths. Cross-tenant BOLA requires granted merchant token then ID-swapping on resource ids.
+evidence_needed: Authenticated requests where changing resource id returns another tenant's data.
+verify_steps: Requires valid OAuth merchant token from dashboard scope grant; cross-tenant id manipulation on scope-derived endpoints. Not passable without token.
+impact: Cross-tenant financial/PII data exposure. Severity: critical.
+testability: AUTH_HELPED
+[HYP] me.sumup.com Vercel merchant self-service surface — OAuth2 app registration logic
+class: BUSLOGIC
+asset: me.sumup.com
+confidence: 55
+reasoning: me.sumup.com is a Next.js Vercel deployment (non-Cloudflare) serving merchant self-service behind dashboard OAuth. /settings/oauth2-applications provides OAuth2 app registration UI. Per-client scope model means registered apps could potentially request scopes beyond dashboard's registered set if validation is weak. Vercel origin differs from hardened Cloudflare/Envoy edge; newer asset is plausible spot for exposed serverless functions or permissive CORS.
+evidence_needed: Authenticated session to enumerate /api/* routes, test OAuth2 app registration fields (redirect_uri validation, scope selector, PKCE enforcement).
+verify_steps: PASSIVE: Already confirmed /api/sso/callback returns 403, /api/sso/login returns 307, /_vercel/insights returns 404. No anonymous routes found. Full test AUTH_HELPED: enumerate /api/* with session cookie, test OAuth2 app registration for redirect_uri bypass, scope escalation, PKCE bypass.
+impact: OAuth app registration abuse → broad-scope token issuance, merchant data exposure. Severity: high.
+testability: AUTH_HELPED
+[HYP] auth.sumup.com request_object alg=none unsigned request object acceptance
+class: OATH
+asset: auth.sumup.com
+confidence: 42
+reasoning: OIDC discovery declares request_object_signing_alg_values_supported=[RS256, none] — request objects with alg:none are accepted by spec. If any flow accepts an unsigned request_object carrying attacker-controlled claims (redirect_uri, scope), the server may trust attacker-specified parameters. This is separate from the state JWT (HS256) and the token_endpoint_auth_methods=none (public client). However, redirect_uri is strictly allowlisted per client, limiting exploitation.
+evidence_needed: Verify whether any interactive flow actually processes request_object parameter (auth endpoint, PAR, or device flow); craft request_object with alg:none and malicious claims.
+verify_steps: PASSIVE: GET /oauth2/auth?client_id=dashboard&request_uri=urn:ietf:params:oauth:request_uri:test&request_object_signing_alg=none — observe whether request_object is processed or ignored. Needs AUTH_HELPED to craft signed+unsigned request_object with code grant.
+impact: Parameter injection via unsigned request_object → scope escalation or redirect manipulation. Severity: medium-high if actionable.
+testability: AUTH_HELPED
+[RISK] SumUp: 28 — Cloudflare+Envoy edge with strict OAuth redirect_uri allowlist, per-client scope validation, and fully-gated api.sumup.com. Anonymous surface is maximally thin after 8 cycles of probing. All remaining high-value leads (BOLA, OAuth app registration, request_object alg=none) require authenticated merchant sessions. The program's real attack surface is behind the dashboard OAuth gate; passive-only recon has exhausted what's discoverable without credentials. Risk decreased from 30 to 28 as additional hardening signals (strict scope validation, device flow non-functional, dynamic registration dead) confirm defense-in-depth posture.

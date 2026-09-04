@@ -1271,3 +1271,552 @@ testability: AUTH_HELPED
 ## STEP 7 — RISK
 
 [RISK] SumUp: 30 — Cloudflare+Envoy edge with strict OAuth redirect_uri allowlist and fully-gated api.sumup.com; anonymous surface thin. Real findings concentrate in merchant-token-gated BOLA and the new Vercel-served me.sumup.com self-service surface.
+===== ANALYST bigpickle 2026-09-04 09:55:16 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m• [0mExplore sumup workspace[90m Explore Agent[0m
+[0m✓ [0mExplore sumup workspace[90m Explore Agent[0m
+[0m→ [0mRead leads/lead-bigpickle.md[90m [offset=350][0m
+[0m→ [0mRead reports/hypotheses.md[90m [offset=60][0m
+[0m→ [0mRead probe-results.md[90m [offset=1][0m
+[0m→ [0mRead reports/analyst-bigpickle.log[90m [offset=1200][0m
+[0m→ [0mRead triage/run-2026-09-04-06-02.md[90m [offset=1][0m
+[0m
+[0m# [0mTodos
+[•] STEP 1 — DELTA: compare inventory+knowledge+last leads against current surface
+[ ] STEP 2 — PRIORITIZE: score top assets 0-10 on axes
+[ ] STEP 3 — HYPOTHESES: top 3 assets, max 1 hypothesis each
+[ ] STEP 4 — SELF-CRITIQUE: drop confidence<40 or REJECTED-class
+[ ] STEP 5 — NEXT ACTION: one concrete probe/scan/human action
+[ ] STEP 6 — LEARNING: [LEARN] REJECTED/ACCEPTED entries
+[ ] STEP 7 — RISK: [RISK] program score + reason
+[0m
+[0m$ [0mcurl -sS -o /dev/null -w "HTTP %{http_code} | %{redirect_url} | Content-Type: %{content_type} | Server: %{header_json}" -X OPTIONS -H "Origin: https://evil.com" -H "Access-Control-Request-Method: GET" https://me.sumup.com/api/sso/callback 2>&1
+HTTP 307 | https://me.sumup.com/ | Content-Type:  | Server: {"cache-control":["private, no-cache, no-store, must-revalidate"],
+"date":["Fri, 04 Sep 2026 09:50:22 GMT"],
+"location":["/"],
+"permissions-policy":["accelerometer=(),autoplay=(),camera=(self),clipboard-read=(),clipboard-write=(self \"https://chat.sumup.com\"),fullscreen=(),geolocation=(),gyroscope=(),hid=(),interest-cohort=(),magnetometer=(),microphone=(self),payment=(),publickey-credentials-get=(self),screen-wake-lock=(self),serial=(),sync-xhr=(),usb=()"],
+"referrer-policy":["no-referrer-when-downgrade"],
+"server":["Vercel"],
+"strict-transport-security":["max-age=63072000"],
+"x-content-type-options":["nosniff"],
+"x-dns-prefetch-control":["on"],
+"x-frame-options":["SAMEORIGIN"],
+"x-matched-path":["/api/sso/callback"],
+"x-robots-tag":["noindex, nofollow"],
+"x-vercel-cache":["MISS"],
+"x-vercel-id":["sfo1::dub1::gzl2r-1788515422348-3a0518af735a"],
+"x-xss-protection":["1; mode=block"]
+}
+[0m
+[0m$ [0mcurl -sS -D- -o /dev/null -w "\nHTTP %{http_code}" -X HEAD -H "Origin: https://evil.com" https://me.sumup.com/ 2>&1 | head -30
+HTTP/2 307 
+age: 0
+cache-control: public, max-age=0, must-revalidate
+date: Fri, 04 Sep 2026 09:50:23 GMT
+location: https://auth.sumup.com/oauth2/auth?client_id=dashboard&code_challenge=Nz17LLGQb_rDqL_x_0pmwcWx6OVnXWK-IPRgeCgAyBA&code_challenge_method=S256&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&scope=openid+offline+classic+email+accounting.read+accounting.write+invoices.read+invoices.write+api_keys+api_keys%3Awrite+readers.read+readers.write+lending.read+lending.write+receivables.read+receivables.write+unified_customer_directory%3Aread+unified_customer_directory%3Awrite&skip_select_account=true&redirect_url=%2F&ui_locales=en-us&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBTdGF0ZSI6eyJmbG93IjoibG9naW4iLCJwYXRobmFtZSI6Ii8iLCJxdWVyeVBhcmFtcyI6e319LCJpYXQiOjE3ODg1MTU0MjMsImV4cCI6MTc4ODUxNzIyM30.AnPLpkaixJInx6ItQ2wHpocK8Ms5Q86AnTGH0mw2TGU
+permissions-policy: accelerometer=(),autoplay=(),camera=(self),clipboard-read=(),clipboard-write=(self "https://chat.sumup.com"),fullscreen=(),geolocation=(),gyroscope=(),hid=(),interest-cohort=(),magnetometer=(),microphone=(self),payment=(),publickey-credentials-get=(self),screen-wake-lock=(self),serial=(),sync-xhr=(),usb=()
+referrer-policy: no-referrer-when-downgrade
+server: Vercel
+set-cookie: oidc:code_verifier=xFE173yzdOV29L_wTiK7GXvBmE81HChLWl_FtzLXVB8; Path=/; HttpOnly
+strict-transport-security: max-age=63072000
+x-content-type-options: nosniff
+x-dns-prefetch-control: on
+x-frame-options: SAMEORIGIN
+x-matched-path: /api/sso/login
+x-robots-tag: noindex, nofollow
+x-vercel-cache: MISS
+x-vercel-id: sfo1::dub1::r4tjf-1788515422918-2b1e90ccecbf
+x-xss-protection: 1; mode=block
+
+
+HTTP 307
+[0m
+Let me run the passive probes from the last cycle's NEXT action to gather fresh data.
+[0m$ [0mfor path in /api/auth /api/user /api/me /api/merchants /api/settings /api/health /api/status /api/v1 /api/v2 /api/graphql /_next/data /_vercel /sitemap.xml /robots.txt /manifest.json; do code=$(curl -sS -o /dev/null -w "%{http_code}" "https://me.sumup.com${path}" 2>/dev/null); echo "me.sumup.com${path} -> HTTP ${code}"; sleep 1; done
+me.sumup.com/api/auth -> HTTP 404
+me.sumup.com/api/user -> HTTP 404
+me.sumup.com/api/me -> HTTP 404
+me.sumup.com/api/merchants -> HTTP 404
+me.sumup.com/api/settings -> HTTP 404
+me.sumup.com/api/health -> HTTP 404
+me.sumup.com/api/status -> HTTP 404
+me.sumup.com/api/v1 -> HTTP 404
+me.sumup.com/api/v2 -> HTTP 404
+me.sumup.com/api/graphql -> HTTP 404
+me.sumup.com/_next/data -> HTTP 404
+me.sumup.com/_vercel -> HTTP 307
+me.sumup.com/sitemap.xml -> HTTP 307
+me.sumup.com/robots.txt -> HTTP 200
+me.sumup.com/manifest.json -> HTTP 307
+[0m
+[0m$ [0mcurl -sS https://me.sumup.com/robots.txt 2>&1
+(no output)
+[0m
+[0m$ [0m# Decode the state JWT
+STATE="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBTdGF0ZSI6eyJmbG93IjoibG9naW4iLCJwYXRobmFtZSI6Ii8iLCJxdWVyeVBhcmFtcyI6e319LCJpYXQiOjE3ODg1MTU0MjMsImV4cCI6MTc4ODUxNzIyM30.AnPLpkaixJInx6ItQ2wHpocK8Ms5Q86AnTGH0mw2TGU"
+echo "=== HEADER ==="
+echo "$STATE" | cut -d. -f1 | base64 -d 2>/dev/null || echo "$STATE" | cut -d. -f1 | base64 -d 2>/dev/null | python3 -c "import sys,json; print(json.dumps(json.loads(sys.stdin.read()),indent=2))" 2>/dev/null
+echo ""
+echo "=== PAYLOAD ==="
+echo "$STATE" | cut -d. -f2 | python3 -c "import sys,base64,json; d=sys.stdin.read().strip(); d+='='*(4-len(d)%4); print(json.dumps(json.loads(base64.urlsafe_b64decode(d)),indent=2))" 2>/dev/null
+echo ""
+echo "=== FULL DECODE ==="
+echo "$STATE" | python3 -c "
+import sys,base64,json
+token=sys.stdin.read().strip()
+parts=token.split('.')
+for i,label in enumerate(['header','payload','signature']):
+    if i<2:
+        p=parts[i]+'='*(4-len(parts[i])%4)
+        print(f'=== {label.upper()} ===')
+        print(json.dumps(json.loads(base64.urlsafe_b64decode(p)),indent=2))
+    else:
+        print(f'=== SIGNATURE ({len(parts[i])} chars) ===')
+        print(parts[i])
+"
+=== HEADER ===
+{"alg":"HS256","typ":"JWT"}
+=== PAYLOAD ===
+{
+  "appState": {
+    "flow": "login",
+    "pathname": "/",
+    "queryParams": {}
+  },
+  "iat": 1788515423,
+  "exp": 1788517223
+}
+
+=== FULL DECODE ===
+=== HEADER ===
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+=== PAYLOAD ===
+{
+  "appState": {
+    "flow": "login",
+    "pathname": "/",
+    "queryParams": {}
+  },
+  "iat": 1788515423,
+  "exp": 1788517223
+}
+=== SIGNATURE (43 chars) ===
+AnPLpkaixJInx6ItQ2wHpocK8Ms5Q86AnTGH0mw2TGU
+[0m
+[0m$ [0m# Check for interesting patterns on me.sumup.com
+for path in /api/sso/login /api/sso /api/health /api/debug /api/config /api/version /api/info /.well-known/openid-configuration /env /config /debug /metrics /prometheus; do
+  code=$(curl -sS -o /tmp/resp_body -w "%{http_code}" "https://me.sumup.com${path}" 2>/dev/null)
+  size=$(wc -c < /tmp/resp_body 2>/dev/null)
+  ct=$(curl -sS -o /dev/null -w "%{content_type}" "https://me.sumup.com${path}" 2>/dev/null)
+  echo "me.sumup.com${path} -> HTTP ${code} | ${size}B | ${ct}"
+  sleep 1
+done
+me.sumup.com/api/sso/login -> HTTP 307 | 760B | 
+me.sumup.com/api/sso -> HTTP 404 | 9B | text/plain;charset=UTF-8
+me.sumup.com/api/health -> HTTP 404 | 9B | text/plain;charset=UTF-8
+me.sumup.com/api/debug -> HTTP 404 | 9B | text/plain;charset=UTF-8
+me.sumup.com/api/config -> HTTP 404 | 9B | text/plain;charset=UTF-8
+me.sumup.com/api/version -> HTTP 404 | 9B | text/plain;charset=UTF-8
+me.sumup.com/api/info -> HTTP 404 | 9B | text/plain;charset=UTF-8
+me.sumup.com/.well-known/openid-configuration -> HTTP 404 | 15769B | text/html; charset=utf-8
+me.sumup.com/env -> HTTP 307 | 784B | 
+me.sumup.com/config -> HTTP 307 | 791B | 
+me.sumup.com/debug -> HTTP 307 | 789B | 
+me.sumup.com/metrics -> HTTP 307 | 793B | 
+me.sumup.com/prometheus -> HTTP 307 | 800B |
+[0m
+[0m$ [0mcurl -sS -D- "https://me.sumup.com/.well-known/openid-configuration" 2>&1 | head -40
+HTTP/2 404 
+age: 0
+cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+content-type: text/html; charset=utf-8
+date: Fri, 04 Sep 2026 09:51:50 GMT
+link: </_next/static/chunks/0uqaxihal0x-2.css>; rel=preload; as="style", </_next/static/chunks/2tp7i_-9rsez0.css>; rel=preload; as="style"
+permissions-policy: accelerometer=(),autoplay=(),camera=(self),clipboard-read=(),clipboard-write=(self "https://chat.sumup.com"),fullscreen=(),geolocation=(),gyroscope=(),hid=(),interest-cohort=(),magnetometer=(),microphone=(self),payment=(),publickey-credentials-get=(self),screen-wake-lock=(self),serial=(),sync-xhr=(),usb=()
+referrer-policy: no-referrer-when-downgrade
+server: Vercel
+strict-transport-security: max-age=63072000
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+x-content-type-options: nosniff
+x-dns-prefetch-control: on
+x-frame-options: SAMEORIGIN
+x-matched-path: /_not-found
+x-next-error-status: 404
+x-powered-by: Next.js
+x-robots-tag: noindex, nofollow
+x-vercel-cache: MISS
+x-vercel-id: sfo1::dub1::qgw4k-1788515510274-e5a09b5225a0
+x-xss-protection: 1; mode=block
+
+<!DOCTYPE html><html id="__next_error__"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/><link rel="preload" as="script" fetchPriority="low" href="/_next/static/chunks/1d3wobgnkskku.js"/><script src="/_next/static/chunks/2qna89cxxww9_.js" async=""></script><script src="/_next/static/chunks/24g3ucp238-4s.js" async=""></script><script src="/_next/static/chunks/0f45mml88_7fg.js" async=""></script><script src="/_next/static/chunks/1oyo_26stzzm1.js" async=""></script><script src="/_next/static/chunks/306p8ohudm708.js" async=""></script><script src="/_next/static/chunks/39ejqownm4myf.js" async=""></script><script src="/_next/static/chunks/1iz_p3cmr4day.js" async=""></script><script src="/_next/static/chunks/turbopack-0-sz0sxp-lsb1.js" async=""></script><script src="/_next/static/chunks/0z6l0cqnl5gcs.js" async=""></script><script src="/_next/static/chunks/05tgx25vcylwe.js" async=""></script><script src="/_next/static/chunks/1-ett_9fdvvi3.js" async=""></script><script src="/_next/static/chunks/0s0z2u98dyr7u.js" async=""></script><link rel="preload" href="/_next/static/chunks/0uqaxihal0x-2.css" as="style"/><link rel="preload" href="/_next/static/chunks/2tp7i_-9rsez0.css" as="style"/><meta name="robots" content="noindex"/><title>SumUp</title><link rel="manifest" href="https://static.sumup.com/favicons/site.webmanifest"/><link rel="shortcut icon" href="https://static.sumup.com/favicons/favicon.ico"/><link rel="icon" href="https://static.sumup.com/favicons/favicon.svg" type="image/svg+xml"/><link rel="icon" href="https://static.sumup.com/favicons/favicon-32x32.png" type="image/png"/><link rel="apple-touch-icon" href="https://static.sumup.com/favicons/apple-touch-icon.png"/><meta name="theme-color" content="#fff" media="(prefers-color-scheme: light)"/><meta name="theme-color" content="#171d24" media="(prefers-color-scheme: dark)"/><meta name="color-scheme" content="system"/><script src="/_next/static/chunks/0cz1d0mv5g_q7.js" noModule=""></script></head><body><div hidden=""><!--$--><!--/$--></div><script src="/_next/static/chunks/1d3wobgnkskku.js" id="_R_" async=""></script><script>(self.__next_f=self.__next_f||[]).push([0])</script><script>self.__next_f.push([1,"1:\"$Sreact.fragment\"\n3:I[7339756,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"default\"]\n4:I[8837457,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"default\"]\n6:I[3897367,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"OutletBoundary\"]\n7:\"$Sreact.suspense\"\na:I[3897367,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"ViewportBoundary\"]\nc:I[3897367,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"MetadataBoundary\"]\ne:I[4168027,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"default\",1]\n10:I[5027201,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"IconMark\"]\n:HL[\"/_next/static/chunks/0uqaxihal0x-2.css\",\"style\"]\n:HL[\"/_next/static/chunks/2tp7i_-9rsez0.css\",\"style\"]\n:HL[\"/_next/static/chunks/1giupzqfwp4k1.css\",\"style\"]\n:HL[\"/_next/static/chunks/3q0hlaj1z-1bx.css\",\"style\"]\n"])</script><script>self.__next_f.push([1,"0:{\"P\":null,\"c\":[\"\",\".well-known\",\"openid-configuration\"],\"q\":\"\",\"i\":false,\"f\":[[[\"\",{\"children\":[\"/_not-found\",{\"children\":[\"__PAGE__\",{}]}]},\"$undefined\",\"$undefined\",16],[[\"$\",\"$1\",\"c\",{\"children\":[[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/chunks/0uqaxihal0x-2.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\",\"nonce\":\"$undefined\"}],[\"$\",\"link\",\"1\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/chunks/2tp7i_-9rsez0.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\",\"nonce\":\"$undefined\"}],[\"$\",\"script\",\"script-0\",{\"src\":\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"async\":true,\"nonce\":\"$undefined\"}],[\"$\",\"script\",\"script-1\",{\"src\":\"/_next/static/chunks/05tgx25vcylwe.js\",\"async\":true,\"nonce\":\"$undefined\"}],[\"$\",\"script\",\"script-2\",{\"src\":\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"async\":true,\"nonce\":\"$undefined\"}],[\"$\",\"script\",\"script-3\",{\"src\":\"/_next/static/chunks/0s0z2u98dyr7u.js\",\"async\":true,\"nonce\":\"$undefined\"}]],\"$L2\"]}],{\"children\":[[\"$\",\"$1\",\"c\",{\"children\":[null,[\"$\",\"$L3\",null,{\"parallelRouterKey\":\"children\",\"error\":\"$undefined\",\"errorStyles\":\"$undefined\",\"errorScripts\":\"$undefined\",\"template\":[\"$\",\"$L4\",null,{}],\"templateStyles\":\"$undefined\",\"templateScripts\":\"$undefined\",\"notFound\":\"$undefined\",\"forbidden\":\"$undefined\",\"unauthorized\":\"$undefined\"}]]}],{\"children\":[[\"$\",\"$1\",\"c\",{\"children\":[\"$L5\",[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/chunks/1giupzqfwp4k1.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\",\"nonce\":\"$undefined\"}],[\"$\",\"link\",\"1\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/chunks/3q0hlaj1z-1bx.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\",\"nonce\":\"$undefined\"}],[\"$\",\"script\",\"script-0\",{\"src\":\"/_next/static/chunks/2lnaaxil3520f.js\",\"async\":true,\"nonce\":\"$undefined\"}],[\"$\",\"script\",\"script-1\",{\"src\":\"/_next/static/chunks/3q_0t4d7zts34.js\",\"async\":true,\"nonce\":\"$undefined\"}],[\"$\",\"script\",\"script-2\",{\"src\":\"/_next/static/chunks/4149vob4y280a.js\",\"async\":true,\"nonce\":\"$undefined\"}],[\"$\",\"script\",\"script-3\",{\"src\":\"/_next/static/chunks/41i4hb1ltdk66.js\",\"async\":true,\"nonce\":\"$undefined\"}],[\"$\",\"script\",\"script-4\",{\"src\":\"/_next/static/chunks/2368_a9a5fr_c.js\",\"async\":true,\"nonce\":\"$undefined\"}],[\"$\",\"script\",\"script-5\",{\"src\":\"/_next/static/chunks/4394i70ar6-8v.js\",\"async\":true,\"nonce\":\"$undefined\"}],[\"$\",\"script\",\"script-6\",{\"src\":\"/_next/static/chunks/2wj1f1oc68b22.js\",\"async\":true,\"nonce\":\"$undefined\"}],[\"$\",\"script\",\"script-7\",{\"src\":\"/_next/static/chunks/28w1vmxhdo0jf.js\",\"async\":true,\"nonce\":\"$undefined\"}],[\"$\",\"script\",\"script-8\",{\"src\":\"/_next/static/chunks/2vlthnpy42i6q.js\",\"async\":true,\"nonce\":\"$undefined\"}]],[\"$\",\"$L6\",null,{\"children\":[\"$\",\"$7\",null,{\"name\":\"Next.MetadataOutlet\",\"children\":\"$@8\"}]}]]}],{},null,false,null]},null,false,\"$@9\"]},null,false,null],[\"$\",\"$1\",\"h\",{\"children\":[[\"$\",\"meta\",null,{\"name\":\"robots\",\"content\":\"noindex\"}],[\"$\",\"$La\",null,{\"children\":\"$Lb\"}],[\"$\",\"div\",null,{\"hidden\":true,\"children\":[\"$\",\"$Lc\",null,{\"children\":[\"$\",\"$7\",null,{\"name\":\"Next.Metadata\",\"children\":\"$Ld\"}]}]}],null]}],false]],\"m\":\"$undefined\",\"G\":[\"$e\",[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/chunks/0uqaxihal0x-2.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\",\"nonce\":\"$undefined\"}],[\"$\",\"link\",\"1\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/chunks/2tp7i_-9rsez0.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\",\"nonce\":\"$undefined\"}]]],\"S\":false,\"h\":null,\"s\":\"$undefined\",\"l\":\"$undefined\",\"p\":\"$undefined\",\"d\":\"$undefined\",\"b\":\"PokiOSV3MtpvD0VuEi5aj\"}\n"])</script><script>self.__next_f.push([1,"f:[]\n9:\"$Wf\"\nd:[[\"$\",\"title\",\"0\",{\"children\":\"SumUp\"}],[\"$\",\"link\",\"1\",{\"rel\":\"manifest\",\"href\":\"https://static.sumup.com/favicons/site.webmanifest\",\"crossOrigin\":\"$undefined\"}],[\"$\",\"link\",\"2\",{\"rel\":\"shortcut icon\",\"href\":\"https://static.sumup.com/favicons/favicon.ico\"}],[\"$\",\"link\",\"3\",{\"rel\":\"icon\",\"href\":\"https://static.sumup.com/favicons/favicon.svg\",\"type\":\"image/svg+xml\"}],[\"$\",\"link\",\"4\",{\"rel\":\"icon\",\"href\":\"https://static.sumup.com/favicons/favicon-32x32.png\",\"type\":\"image/png\"}],[\"$\",\"link\",\"5\",{\"rel\":\"apple-touch-icon\",\"href\":\"https://static.sumup.com/favicons/apple-touch-icon.png\"}],[\"$\",\"$L10\",\"6\",{}]]\n5:E{\"digest\":\"2004614060\"}\n"])</script><script>self.__next_f.push([1,"11:I[3091526,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"PreloadResources\"]\n12:I[480126,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"ColorSchemeOverride\"]\n13:I[8937889,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"Polyfills\"]\n14:I[8386970,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"OtelClientInit\"]\n15:I[957215,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"SpeedInsights\"]\n16:I[4148532,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"I18nProvider\"]\n17:I[7185283,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"default\"]\n18:I[4012985,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"NuqsAdapter\"]\n19:I[8758298,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\",\"/_next/static/chunks/2g8h5cwi9o8ik.js\",\"/_next/static/chunks/2lnaaxil3520f.js\",\"/_next/static/chunks/28w1vmxhdo0jf.js\",\"/_next/static/chunks/4394i70ar6-8v.js\"],\"default\"]\n1b:I[7553133,[\"/_next/static/chunks/0z6l0cqnl5gcs.js\",\"/_next/static/chunks/05tgx25vcylwe.js\",\"/_next/static/chunks/1-ett_9fdvvi3.js\",\"/_next/static/chunks/0s0z2u98dyr7u.js\"],\"CookieConsentScript\"]\n:HL[\"/_next/static/chunks/3aftnj6oyl4_r.css\",\"style\"]\n1c:[\"$\",\"iframe\",null,{\"src\":\"//www.googletagmanager.com/ns.html?id=GTM-ZC88\",\"height\":\"0\",\"width\":\"0\",\"style\":{\"display\":\"none\",\"visibility\":\"hidden\"}}]\n"])</script><script>self.__next_f.push([1,"2:[\"$\",\"html\",null,{\"lang\":\"$undefined\",\"data-color-scheme\":\"system\",\"suppressHydrationWarning\":true,\"data-elbglobals\":\"status:200\",\"children\":[[\"$\",\"head\",null,{\"children\":[\"$\",\"meta\",null,{\"charSet\":\"UTF-8\"}]}],[\"$\",\"$L11\",null,{}],[\"$\",\"$L12\",null,{}],[\"$\",\"$L13\",null,{}],[\"$\",\"body\",null,{\"suppressHydrationWarning\":true,\"children\":[[\"$\",\"$L14\",null,{\"merchantCode\":\"$undefined\",\"merchantCountry\":\"$undefined\",\"locale\":\"$undefined\",\"userId\":\"$undefined\"}],[\"$\",\"$L15\",null,{\"sampleRate\":0.1}],[\"$\",\"div\",null,{\"id\":\"root\",\"children\":[\"$\",\"$L16\",null,{\"locale\":\"$undefined\",\"formattingLocale\":\"$undefined\",\"children\":[\"$\",\"$L17\",null,{\"children\":[\"$\",\"$L18\",null,{\"children\":[\"$\",\"$L3\",null,{\"parallelRouterKey\":\"children\",\"error\":\"$19\",\"errorStyles\":[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/chunks/3q0hlaj1z-1bx.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\",\"nonce\":\"$undefined\"}],[\"$\",\"link\",\"1\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/chunks/3aftnj6oyl4_r.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\",\"nonce\":\"$undefined\"}]],\"errorScripts\":[[\"$\",\"script\",\"script-0\",{\"src\":\"/_next/static/chunks/2g8h5cwi9o8ik.js\",\"async\":true}],[\"$\",\"script\",\"script-1\",{\"src\":\"/_next/static/chunks/2lnaaxil3520f.js\",\"async\":true}],[\"$\",\"script\",\"script-2\",{\"src\":\"/_next/static/chunks/28w1vmxhdo0jf.js\",\"async\":true}],[\"$\",\"script\",\"script-3\",{\"src\":\"/_next/static/chunks/4394i70ar6-8v.js\",\"async\":true}]],\"template\":[\"$\",\"$L4\",null,{}],\"templateStyles\":\"$undefined\",\"templateScripts\":\"$undefined\",\"notFound\":[\"$L1a\",[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/chunks/1giupzqfwp4k1.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\",\"nonce\":\"$undefined\"}],[\"$\",\"link\",\"1\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/chunks/3q0hlaj1z-1bx.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\",\"nonce\":\"$undefined\"}]]],\"forbidden\":\"$undefined\",\"unauthorized\":\"$undefined\"}]}]}]}]}],[\"$\",\"$L1b\",null,{}],[[\"$\",\"script\",null,{\"type\":\"text/javascript\",\"dangerouslySetInnerHTML\":{\"__html\":\"function getCategories(){try{var e=decodeURIComponent(document.cookie);return/groups=([C\\\\d\\\\:\\\\,]+)/.exec(e)[1].split(\\\",\\\").reduce(function(e,t){var a=t.split(\\\":\\\");return e[a[0]]=a[1],e},{})}catch(e){return{C0001:\\\"1\\\"}}}function gtag(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[];var categories=getCategories();gtag(\\\"consent\\\",\\\"default\\\",{analytics_storage:\\\"1\\\"===categories.C0002?\\\"granted\\\":\\\"denied\\\",ad_storage:\\\"1\\\"===categories.C0004?\\\"granted\\\":\\\"denied\\\",ad_user_data:\\\"1\\\"===categories.C0004?\\\"granted\\\":\\\"denied\\\",ad_personalization:\\\"1\\\"===categories.C0004?\\\"granted\\\":\\\"denied\\\"}),\\\"1\\\"!==categories.C0004\u0026\u0026gtag(\\\"set\\\",\\\"ads_data_redaction\\\",!0);\"}}],[\"$\",\"script\",null,{\"type\":\"text/javascript\",\"dangerouslySetInnerHTML\":{\"__html\":\"(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'\u0026l='+l:'';j.async=true;j.src='//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-ZC88');\"}}],[\"$\",\"noscript\",null,{\"children\":\"$1c\"}]],[\"$\",\"script\",null,{\"type\":\"text/javascript\",\"src\":\"https://static.sumup.com/legacy-browsers/check-support.js\"}]]}]]}]\n"])</script><script>self.__next_f.push([1,"8:null\nb:[[\"$\",\"meta\",\"0\",{\"charSet\":\"utf-8\"}],[\"$\",\"meta\",\"1\",{\"name\":\"viewport\",\"content\":\"width=device-width, initial-scale=1, viewport-fit=cover\"}],[\"$\",\"meta\",\"2\",{\"name\":\"theme-color\",\"content\":\"#fff\",\"media\":\"(prefers-color-scheme: light)\"}],[\"$\",\"meta\",\"3\",{\"name\":\"theme-color\",\"content\":\"#171d24\",\"media\":\"(prefers-color-scheme: dark)\"}],[\"$\",\"meta\",\"4\",{\"name\":\"color-scheme\",\"content\":\"system\"}]]\n"])</script><script>self.__next_f.push([1,"1a:E{\"digest\":\"3671270508\"}\n"])</script></body></html>
+[0m
+[0m$ [0m# Check the /api/sso/login 307 response headers in detail
+curl -sS -D- -o /dev/null "https://me.sumup.com/api/sso/login" 2>&1
+HTTP/2 307 
+age: 0
+cache-control: private, no-cache, no-store, must-revalidate
+date: Fri, 04 Sep 2026 09:51:50 GMT
+location: https://auth.sumup.com/oauth2/auth?client_id=dashboard&code_challenge=cdt_XH7YU06u3AcAlTNBrlYT0kXCJ9az8DM341iBnSw&code_challenge_method=S256&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&scope=openid+offline+classic+email+accounting.read+accounting.write+invoices.read+invoices.write+api_keys+api_keys%3Awrite+readers.read+readers.write+lending.read+lending.write+receivables.read+receivables.write+unified_customer_directory%3Aread+unified_customer_directory%3Awrite&skip_select_account=true&ui_locales=en-us&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBTdGF0ZSI6eyJmbG93IjoibG9naW4iLCJwYXRobmFtZSI6Ii8iLCJxdWVyeVBhcmFtcyI6e319LCJpYXQiOjE3ODg1MTU1MTAsImV4cCI6MTc4ODUxNzMxMH0.12yw5WmVCXKsh5v47u4L4NpDKGE77Iumkr2aNWxR5sg
+permissions-policy: accelerometer=(),autoplay=(),camera=(self),clipboard-read=(),clipboard-write=(self "https://chat.sumup.com"),fullscreen=(),geolocation=(),gyroscope=(),hid=(),interest-cohort=(),magnetometer=(),microphone=(self),payment=(),publickey-credentials-get=(self),screen-wake-lock=(self),serial=(),sync-xhr=(),usb=()
+referrer-policy: no-referrer-when-downgrade
+server: Vercel
+set-cookie: oidc:code_verifier=j0goMJ4jRibLRQrNQdVa3XgIhDol_Hkb3T40Jf3dvVU; Path=/; HttpOnly
+strict-transport-security: max-age=63072000
+x-content-type-options: nosniff
+x-dns-prefetch-control: on
+x-frame-options: SAMEORIGIN
+x-matched-path: /api/sso/login
+x-robots-tag: noindex, nofollow
+x-vercel-cache: MISS
+x-vercel-id: sfo1::dub1::dvt5s-1788515510870-0b23ca93b875
+x-xss-protection: 1; mode=block
+[0m
+[0m$ [0m# Check CORS on me.sumup.com/api/sso/login with various origins
+for origin in "https://evil.com" "https://me.sumup.com" "null" "https://sumup.com"; do
+  echo "=== Origin: $origin ==="
+  curl -sS -D- -o /dev/null -X OPTIONS -H "Origin: ${origin}" -H "Access-Control-Request-Method: POST" "https://me.sumup.com/api/sso/login" 2>&1 | grep -i "access-control\|HTTP/"
+  sleep 1
+done
+=== Origin: https://evil.com ===
+HTTP/2 307 
+=== Origin: https://me.sumup.com ===
+HTTP/2 307 
+=== Origin: null ===
+HTTP/2 307 
+=== Origin: https://sumup.com ===
+HTTP/2 307
+[0m
+[0m$ [0m# Test if auth.sumup.com validates scope strictly against client registration
+# Try requesting extra scopes beyond dashboard's registered set
+ENCODED_REDIRECT=$(python3 -c "import urllib.parse; print(urllib.parse.quote('https://me.sumup.com/api/sso/callback', safe=''))")
+curl -sS -D- -o /dev/null -w "\nHTTP %{http_code}" "https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=${ENCODED_REDIRECT}&response_type=code&scope=openid+offline+super_admin+admin+internal+debug+webhook.write" 2>&1 | head -20
+HTTP/2 303 
+date: Fri, 04 Sep 2026 09:52:18 GMT
+content-length: 0
+location: https://me.sumup.com/api/sso/callback?error=invalid_scope&error_description=The+requested+scope+is+invalid%2C+unknown%2C+or+malformed.+The+OAuth+2.0+Client+is+not+allowed+to+request+scope+%27super_admin%27.&state=
+cache-control: no-store
+pragma: no-cache
+x-envoy-upstream-service-time: 5
+server: cloudflare
+x-request-id: d591f389-3a3a-9198-87bd-7bca1741e015
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+set-cookie: __cf_bm=uE3dYHzjuyVAizrehrd3who7m2WFg2kFz56XZTuJCFU-1788515538.6696682-1.0.1.1-M4kVOL7I6J0BjKvocbxD.dk4VWMO9Rpl3iSPdWq..foDWYtN0kgP5PBwPz51QlVskl6qaQBCqMTi6UBgSPOGdRL2Z5biPkk1rBInhX1r9C.CdYDTV7mseBl5HqPA7N9RkRFyq4mRBOTu2oii6FILWw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Fri, 04 Sep 2026 10:22:18 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=8HLJ7HQGAGdy%2F7whOMcUWNJctrquXy24zVaB9e4XSG6C%2FCYaI1MlyqLG0TIg9ajnrN67B3se0sp8qxtgpPjjK6CFyaEwRJnByIHOpiORt0y9ROecmjzcEx9YUViTAYpt"}]}
+cf-ray: a35c19c4a8f21fa8-SJC
+
+
+HTTP 303
+[0m
+[0m$ [0m# Test if scope is reflected in error response (scope injection signal)
+ENCODED_REDIRECT=$(python3 -c "import urllib.parse; print(urllib.parse.quote('https://me.sumup.com/api/sso/callback', safe=''))")
+curl -sS "https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=${ENCODED_REDIRECT}&response_type=code&scope=openid+super_admin" 2>&1 | grep -oP '(scope|Scope|SCOPE|invalid_scope|unauthorized_client|invalid_client)[^"<]*' | head -10
+(no output)
+[0m
+[0m$ [0m# Check if auth.sumup.com has additional OIDC endpoints not in discovery
+for path in /oauth2/introspect /oauth2/userinfo /oauth2/jwks /oauth2/revoke /oauth2/device /oauth2/register /.well-known/jwks.json /.well-known/oauth-authorization-server /oauth2/.well-known /api/v1/userinfo /api/v1/me /api/v1/scopes; do
+  code=$(curl -sS -o /tmp/auth_resp -w "%{http_code}" "https://auth.sumup.com${path}" 2>/dev/null)
+  ct=$(curl -sS -o /dev/null -w "%{content_type}" "https://auth.sumup.com${path}" 2>/dev/null)
+  echo "auth.sumup.com${path} -> HTTP ${code} | ${ct}"
+  sleep 1
+done
+auth.sumup.com/oauth2/introspect -> HTTP 404 | text/html; charset=utf-8
+auth.sumup.com/oauth2/userinfo -> HTTP 404 | text/html; charset=utf-8
+auth.sumup.com/oauth2/jwks -> HTTP 404 | text/html; charset=utf-8
+auth.sumup.com/oauth2/revoke -> HTTP 405 | text/plain; charset=utf-8
+auth.sumup.com/oauth2/device -> HTTP 404 | application/json
+auth.sumup.com/oauth2/register -> HTTP 404 | application/json
+auth.sumup.com/.well-known/jwks.json -> HTTP 200 | application/json
+auth.sumup.com/.well-known/oauth-authorization-server -> HTTP 200 | application/json
+auth.sumup.com/oauth2/.well-known -> HTTP 404 | text/html; charset=utf-8
+auth.sumup.com/api/v1/userinfo -> HTTP 404 | text/plain; charset=utf-8
+auth.sumup.com/api/v1/me -> HTTP 404 | text/plain; charset=utf-8
+auth.sumup.com/api/v1/scopes -> HTTP 404 | text/plain; charset=utf-8
+[0m
+[0m$ [0mcurl -sS "https://auth.sumup.com/.well-known/jwks.json" 2>&1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps(d,indent=2)[:3000])"
+{
+  "keys": [
+    {
+      "alg": "RS256",
+      "e": "AQAB",
+      "kid": "public:38618372-f016-4e5d-97b2-d043a975d243",
+      "kty": "RSA",
+      "n": "sLwnKrTWt5tNIZ-iXjDyO9nbSdE6zxXteb5HZeSq7HQ-Ard-osjsKUPDJSrph5W2c23RmrIr0qASoYsCZoNhidB9Fh0DF1rfqNp9bG5E6toGRfnp7mQhavnFQgx6-odPZ0oQmcv4QnzudRcZw-Gw2g9UpnV_GnkXcRH9DjXXzR32QW9sqguSW9a39uOibvuoJPX7EAZJ_llDLE5vU7Do30Lu5ZaEGK-qZIjTCrB2oDgmxGWZ9gmLffaApmXYq2y2bnA3g5IcVCNl6-2Hr98PT61KlLPYTmUfAARMRoixj4VyktV3bfmA5v5rgzxd4_8bhUuyBopy8F-l-u9HigOFqDOfbJKC5K2IzScDKbcpqS8uYXu4NnF4K9T4RM0NVc35T48j_o0vW03M-RIaDBLJIv8ddfNvVvq0YNLSA_K1OIlSeAZ40Ttz3ubR0r0XajaisFpCAK2SJuNZtxUrcxldVWWNlNonmU7hfb8Qm5YnAn3tHVHqakNaCeIB6kmi57U_Wn7xpOo31vBSFcFcLtC2bkHTQi75U6FTCQLK0Q3t3lEeDoVYJJY4HyQoLQvw_IFmwtuTmL4RaLW8JCvs2TemI1avDA2YePQr7gzXic0zSVVHHfvy0umFAi4f2TCeTGEgnSXkuVKYcgxS71Eo9Mdyo5Q8TaZby_LiAAaBGGoO5F0",
+      "use": "sig",
+      "x5c": [
+        "MIIE7jCCAtagAwIBAgIQTK2taoBeLAyilNpsSSk/xjANBgkqhkiG9w0BAQsFADAzMQswCQYDVQQGEwJJUjEPMA0GA1UEBxMGRHVibGluMRMwEQYDVQQKEwpTdW1VcCBMdGQuMB4XDTI0MDMyMjE0MDUyOFoXDTI5MDMyMTE0MDUyOFowMzELMAkGA1UEBhMCSVIxDzANBgNVBAcTBkR1YmxpbjETMBEGA1UEChMKU3VtVXAgTHRkLjCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBALC8Jyq01rebTSGfol4w8jvZ20nROs8V7Xm+R2Xkqux0PgK3fqLI7ClDwyUq6YeVtnNt0ZqyK9KgEqGLAmaDYYnQfRYdAxda36jafWxuROraBkX56e5kIWr5xUIMevqHT2dKEJnL+EJ87nUXGcPhsNoPVKZ1fxp5F3ER/Q41180d9kFvbKoLklvWt/bjom77qCT1+xAGSf5ZQyxOb1Ow6N9C7uWWhBivqmSI0wqwdqA4JsRlmfYJi332gKZl2Ktstm5wN4OSHFQjZevth6/fD0+tSpSz2E5lHwAETEaIsY+FcpLVd235gOb+a4M8XeP/G4VLsgaKcvBfpfrvR4oDhagzn2ySguStiM0nAym3KakvLmF7uDZxeCvU+ETNDVXN+U+PI/6NL1tNzPkSGgwSySL/HXXzb1b6tGDS0gPytTiJUngGeNE7c97m0dK9F2o2orBaQgCtkibjWbcVK3MZXVVljZTaJ5lO4X2/EJuWJwJ97R1R6mpDWgniAepJoue1P1p+8aTqN9bwUhXBXC7Qtm5B00Iu+VOhUwkCytEN7d5RHg6FWCSWOB8kKC0L8PyBZsLbk5i+EWi1vCQr7Nk3piNWrwwNmHj0K+4M14nNM0lVRx378tLphQIuH9kwnkxhIJ0l5LlSmHIMUu9RKPTHcqOUPE2mW8vy4gAGgRhqDuRdAgMBAAEwDQYJKoZIhvcNAQELBQADggIBAGrl0wgsiDfkZqdP0PxTdNdULXxLis8m2uI5zmTP5fNEZlwmCe0/l7QqNgUObfn2F2J8yVRfyOQub+LSGuXGiuTDSn3tKsxlblFQpsGb+Z694hau8CcyU33b9NhsH+M2qnrxNhSIkHzeZZ9IMXG+d7Ron2TtCqSdeny7P9jnxxz1TUysD2qQeWwAc3zF8AuUP1VAzaVm70bGX/2iHQ3R7RIG09AvNjbFgGsan6kZWrH4r0jyqKyiQ2D9DWYKqd2y2TC8nNIEGWdhoU90MHFnYQBfJxzEP2Tpj1JdPHgW9OOCLE3z8AN2UKCx6OmhIuhu3hBR94OqJXvfEXlywjhcBHp2iLl5SQH7Tx+aCAjsEC5koLb0OMYStujFMw9HUoXOTmrNEXbVdjVcH6gszLqZOTFqYHV/xAVyQmiTJlym4hCduWM6T8l6KxxNO6clyguFUyCNIagKhnb7dV9Ak8xDNa2GwzMGu/y/vHCH1w/EQU2uqekfOb8G7NrC4JvCMvIdgcI5loiRCSJoHp8rQ0tzQtjDGKF70xHVlI76LYU7pL+1IP0W4T3gYNUfTcFQd50wXgZQuwt+usV7yaYy12X0q+gatKhsIcc9EwjjjN6pKRcbQiYskPnx50TZv0NxtGEuh1MOMz+LuGQCV1ZhvDDFkEz4/xB4uZ2Of2WQuPVxLve3"
+      ],
+      "x5t": "WaQxd9_X4aoiPPyuKAbZ6WxtzwM"
+    },
+    {
+      "alg": "RS256",
+      "e": "AQAB",
+      "kid": "public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9",
+      "kty": "RSA",
+      "n": "rFOEuNrayyHI3hPLfmGU_v6flL-aWSDOwMUe9M3rtTD5s3xb13nipxR_i6a-7SI9Qz-VIoYEfzGXTqRHYe7OgE2PJk76NKJiiYM3UYdlfG1hDl7g7ODcIIC--Ft21THYeUXE4VsTS6N-1vDzkpjYyxvpz82LZY6-EG0mju3HUDnDCcSUF6YXPbqnr61QojbzNkh78wZ1KbdjrP0h7wgxLa6xdO1WBoebPmx3r
+[0m
+[0m$ [0m# Check /oauth2/register and /oauth2/device JSON responses (they return JSON, not HTML)
+curl -sS -D- "https://auth.sumup.com/oauth2/register" 2>&1 | head -20
+echo "---"
+curl -sS -D- "https://auth.sumup.com/oauth2/device" 2>&1 | head -20
+HTTP/2 404 
+date: Fri, 04 Sep 2026 09:52:52 GMT
+content-type: application/json
+content-length: 24
+x-envoy-upstream-service-time: 7
+server: cloudflare
+x-request-id: 9dbbd4e9-52bd-9ae8-9808-ad3f16804bad
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+set-cookie: __cf_bm=EJRql4z3Vg.ZrLd_aQnYUqbpPVcPDmWYB_gGC4Lbzjc-1788515572.0925245-1.0.1.1-.CYQi3MPuRwStIpzQVl1t4yvLL9BB3krIcJ82NW9cVFU2nL1o1xsPLK7qxMA75bgQeuwTOxSUL4vksRXYRps8CBttS2XBu9NSLeFIBy38UwskezhvwxJ_7QvzQ5euixZuXIzfyEpTASV5N2b7yMEOg; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Fri, 04 Sep 2026 10:22:52 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=jqWERWSAyDlpgaUdOBu52Mpb%2B3FJJ9n8ug7ncWIkxoZYa%2BdCXYEI0Ey25jsxRE6pNgz9WB%2BOQ0C4RdBABq6msYVbrzx0B0gXfk6mTj4zAhtA30MEWNYxNk3cZN%2FMdmOd"}]}
+cf-ray: a35c1a959f2d15f3-SJC
+
+{"message":"Not Found"}
+---
+HTTP/2 404 
+date: Fri, 04 Sep 2026 09:52:52 GMT
+content-type: application/json
+content-length: 24
+x-envoy-upstream-service-time: 11
+server: cloudflare
+x-request-id: 3ba8f72a-2e4c-9419-a3a8-0fde8dbaf651
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+set-cookie: __cf_bm=PPnl3gG9MiECSV6xxcpF1l5gUTSW0EtpnBCsKjjBip8-1788515572.3042145-1.0.1.1-fKacRuoiBSP1_YricUN42U50Nt7vzGMxfzhq0Eifgi0MOjcFdM25TslxE0jMA77eQYvpu6aeZ7PlFk4Jc421KJz2fre.VcoBbkM.PSVc0IlcI61Mx7Mp1Xg9XrnFPo1lzYyhOhNVqjAsGldTK2YwQw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Fri, 04 Sep 2026 10:22:52 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=kp%2BN6jc6VGrqMQ7vDTlaBri%2BHOfz8FMdcQqO7YJGf0WN9nzk6mMAohhiZat9v1geK5RD%2BCIo5LO0X4UwGsuISGtKtVztG9PSmH8D4gL4VPghJZP%2BY149Pq2tx%2FgLYPbb"}]}
+cf-ray: a35c1a96eb03af0d-SJC
+
+{"message":"Not Found"}
+[0m
+[0m$ [0m# Test error response with state parameter — does the state get reflected?
+ENCODED_REDIRECT=$(python3 -c "import urllib.parse; print(urllib.parse.quote('https://me.sumup.com/api/sso/callback', safe=''))")
+STATE="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBTdGF0ZSI6eyJmbG93IjoibG9naW4iLCJwYXRobmFtZSI6Ii8iLCJxdWVyeVBhcmFtcyI6e319LCJpYXQiOjE3ODg1MTU0MjMsImV4cCI6MTc4ODUxNzIyM30.AnPLpkaixJInx6ItQ2wHpocK8Ms5Q86AnTGH0mw2TGU"
+curl -sS -D- -o /dev/null "https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=${ENCODED_REDIRECT}&response_type=code&scope=openid+super_admin&state=${STATE}" 2>&1 | grep -i "location\|HTTP/"
+HTTP/2 303 
+location: https://me.sumup.com/api/sso/callback?error=invalid_scope&error_description=The+requested+scope+is+invalid%2C+unknown%2C+or+malformed.+The+OAuth+2.0+Client+is+not+allowed+to+request+scope+%27super_admin%27.&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBTdGF0ZSI6eyJmbG93IjoibG9naW4iLCJwYXRobmFtZSI6Ii8iLCJxdWVyeVBhcmFtcyI6e319LCJpYXQiOjE3ODg1MTU0MjMsImV4cCI6MTc4ODUxNzIyM30.AnPLpkaixJInx6ItQ2wHpocK8Ms5Q86AnTGH0mw2TGU
+[0m
+[0m$ [0m# Fetch full OIDC discovery for scope catalog comparison
+curl -sS "https://auth.sumup.com/.well-known/openid-configuration" 2>&1 | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+print('=== ENDPOINTS ===')
+for k,v in d.items():
+    if 'endpoint' in k.lower() or 'url' in k.lower() or k.endswith('_endpoint'):
+        print(f'  {k}: {v}')
+print()
+print('=== SCOPES ===')
+if 'scopes_supported' in d:
+    print(f'  {d[\"scopes_supported\"]}')
+print()
+print('=== SECURITY ===')
+for k in ['token_endpoint_auth_methods_supported','response_types_supported','grant_types_supported','code_challenge_methods_supported','request_object_signing_alg_values_supported','request_object_signing_alg_supported']:
+    if k in d:
+        print(f'  {k}: {d[k]}')
+" 2>&1
+=== ENDPOINTS ===
+  authorization_endpoint: https://auth.sumup.com/oauth2/auth
+  token_endpoint: https://auth.sumup.com/oauth2/token
+  userinfo_endpoint: https://auth.sumup.com/userinfo
+  token_endpoint_auth_methods_supported: ['client_secret_post', 'client_secret_basic', 'private_key_jwt', 'none']
+  revocation_endpoint: https://auth.sumup.com/oauth2/revoke
+  end_session_endpoint: https://auth.sumup.com/oauth2/sessions/logout
+  nonce_endpoint: https://auth.sumup.com/oauth2/nonce
+
+=== SCOPES ===
+  ['offline_access', 'offline', 'openid', 'email', 'classic']
+
+=== SECURITY ===
+  token_endpoint_auth_methods_supported: ['client_secret_post', 'client_secret_basic', 'private_key_jwt', 'none']
+  response_types_supported: ['code', 'code id_token', 'id_token', 'token id_token', 'token', 'token id_token code']
+  grant_types_supported: ['authorization_code', 'implicit', 'client_credentials', 'refresh_token']
+  code_challenge_methods_supported: ['plain', 'S256']
+  request_object_signing_alg_values_supported: ['RS256', 'none']
+[0m
+[0m$ [0m# Check if me.sumup.com has any static files or env dumps exposed
+for path in /env.js /config.js /_next/static/__ENV.js /_next/static/chunks/__ENV.js /.env /env /config /settings /account /dashboard /profile /api/config /api/env /api/health /api/version; do
+  resp=$(curl -sS -w "\n%{http_code}" "https://me.sumup.com${path}" 2>/dev/null)
+  code=$(echo "$resp" | tail -1)
+  body=$(echo "$resp" | head -5)
+  if [ "$code" != "307" ] && [ "$code" != "404" ]; then
+    echo "HIT me.sumup.com${path} -> HTTP ${code}"
+    echo "$body"
+    echo "---"
+  fi
+  sleep 0.5
+done
+(no output)
+[0m
+[0m$ [0m# Check if api.sumup.com has any version-specific paths with different behavior
+for path in /v0 /v0.1 /v1 /v1/ /v2 /v2/ /beta /internal /graphql /rest /rpc /.well-known /status /health /info /metrics /debug; do
+  code=$(curl -sS -o /dev/null -w "%{http_code}" "https://api.sumup.com${path}" 2>/dev/null)
+  if [ "$code" != "404" ]; then
+    echo "HIT api.sumup.com${path} -> HTTP ${code}"
+  fi
+  sleep 0.5
+done
+echo "Done"
+Done
+[0m
+[0m# [0mTodos
+[✓] STEP 1 — DELTA: compare inventory+knowledge+last leads against current surface
+[•] STEP 2 — PRIORITIZE: score top assets 0-10 on axes
+[ ] STEP 3 — HYPOTHESES: top 3 assets, max 1 hypothesis each
+[ ] STEP 4 — SELF-CRITIQUE: drop confidence<40 or REJECTED-class
+[ ] STEP 5 — NEXT ACTION: one concrete probe/scan/human action
+[ ] STEP 6 — LEARNING: [LEARN] REJECTED/ACCEPTED entries
+[ ] STEP 7 — RISK: [RISK] program score + reason
+[0m
+[0m$ [0m# Test /oauth2/register with POST (dynamic client registration)
+curl -sS -D- -X POST -H "Content-Type: application/json" -d '{"redirect_uris":["https://evil.com/callback"],"client_name":"test","grant_types":["authorization_code"],"response_types":["code"]}' "https://auth.sumup.com/oauth2/register" 2>&1 | head -20
+HTTP/2 404 
+date: Fri, 04 Sep 2026 09:54:02 GMT
+content-type: application/json
+content-length: 24
+x-envoy-upstream-service-time: 14
+server: cloudflare
+x-request-id: a3179424-5a68-93df-88eb-25ad6b8225be
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+set-cookie: __cf_bm=xnLB.WXbyd6eG8GSgW0ziQZiXY412NvIIKr9CsVfH70-1788515642.7694025-1.0.1.1-PVRcvGugWCsOjOQLEUmwP3OQMGhNBlwhkMXjUTaWKGQqtSP0pJMXB8Ogt10aqzmgQRUxsb0_QUU4oRABu2sji7TRL.O2zrPv2nEOtbzGyN8jcaUzDoJ0N2bMMf8XeXU.a1yz0VpvsSBTnO8byk2K4g; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Fri, 04 Sep 2026 10:24:02 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=Uwx4XORnFLHpqcm0IXWwR4XKeBMUWVveW33W2IgJ0oxJOzhs4Rt%2BhuiTAIT38VDJKS2vuoMNNX3M4GpTSAUlc65LVoObyCKfLBXwji9et1o4LYZI0kL9Gi6gCHCucqRn"}]}
+cf-ray: a35c1c4f4be11588-SJC
+
+{"message":"Not Found"}
+[0m
+[0m$ [0m# Test /oauth2/device with POST (device authorization flow)
+curl -sS -D- -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "client_id=dashboard&scope=openid" "https://auth.sumup.com/oauth2/device" 2>&1 | head -20
+HTTP/2 400 
+date: Fri, 04 Sep 2026 09:54:03 GMT
+content-type: application/json
+content-length: 303
+x-envoy-upstream-service-time: 2
+server: cloudflare
+x-request-id: b53ec5ca-aa31-9677-ac53-2e9f71c37a5f
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=.volMsVQ.mpg3AC1H15_PIcS93ZYtV9EHWWh34lXY3E-1788515643.2476294-1.0.1.1-t5ZDiyRzU19AFA_G9yVqXCrEGoPbeThZwWJkGZzM90EvCi0b_ayfgSn_SGclpREgN6v2Ttc__EVT5KZB2kwOnW_ddUuq7N9F.yihLefJgUoduqOq5Gi21kgDx4ko1c2zDJN3EC8r3GQFGUCErcpyew; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Fri, 04 Sep 2026 10:24:03 GMT
+set-cookie: _cfuvid=Yc8q9aGUr4dEGr3LnnJhRVh7XxFyt4Sy8qPLUssYFJU-1788515643.2476294-1.0.1.1-C_lpskI2mr8U0.Q2BwSi2EKgrXpxFrcoZGMyu7Yo0ME; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=BVC%2Fc1urjr4Ldv1TjB8sf7n%2BaLLGqqmKrUeVQZO8s%2BtwM1oYbrYyLE5Wncf3xyqtLf4PTetg4xvsFjad%2Bg%2Bu4kbOpcd1kpFF%2F8UZSZ80yQDe%2BGayQbF2cXDvM59WAS5b"}]}
+cf-ray: a35c1c524d81fa7a-SJC
+
+{"error":"invalid_request","error_description":"The request is missing a required parameter, includes an unsupported parameter value (other than grant type), repeats a parameter, includes multiple credentials, utilizes more than one mechanism for authenticating the client, or is otherwise malformed."}
+[0m
+[0m$ [0m# Test proper device authorization request with dashboard client
+curl -sS -D- -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "client_id=dashboard&scope=openid+offline" "https://auth.sumup.com/oauth2/device" 2>&1
+HTTP/2 400 
+date: Fri, 04 Sep 2026 09:54:11 GMT
+content-type: application/json
+content-length: 303
+x-envoy-upstream-service-time: 3
+server: cloudflare
+x-request-id: 7673259f-88a9-934d-ae83-f81ae306db31
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=I3082UimvvYZ7geFR6xEiPtCD0lITlqoPCaI3zgxi7I-1788515651.1518729-1.0.1.1-ncSTnvdEPCy9Fb_fsZ1gMQVwDDTXLt6pVJjVpX3MwHnZN5YzEVrM0qZZWGG8pj986fJSekN9UACeMZYW4C9dFbZvWYaw9qBh7_WuWh_g55ubtSZqkryuipNRPkBvTH0Zp3zXPs5XsKX3jWmmV_360Q; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Fri, 04 Sep 2026 10:24:11 GMT
+set-cookie: _cfuvid=Qm5Fh9YJfA3xWzUpOrG9_zTN_1RoYQ6AufD6xQ5yxO8-1788515651.1518729-1.0.1.1-sqRZCB0UBsz4gTqjx0TCDaLQ06fR63U7TBqD2jD8c.M; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=S3zOMSJv1lqNUITvHhvEm0wFf3TJuJ2y5AaRtS1bTX21caKMWrcrGurlr5mw%2FcBsJZiPys6MpJHuUaBlmWAm3Q%2Ba9s9Vbm2XKl916mnI2Cg4lMH43eJM%2Bz84%2BkgBUndF"}]}
+cf-ray: a35c1c83ad7b1588-SJC
+
+{"error":"invalid_request","error_description":"The request is missing a required parameter, includes an unsupported parameter value (other than grant type), repeats a parameter, includes multiple credentials, utilizes more than one mechanism for authenticating the client, or is otherwise malformed."}
+[0m
+[0m$ [0m# Device flow with unknown client_id — check for different error
+curl -sS -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "client_id=nonexistent_client_12345&scope=openid" "https://auth.sumup.com/oauth2/device" 2>&1
+{"error":"invalid_request","error_description":"The request is missing a required parameter, includes an unsupported parameter value (other than grant type), repeats a parameter, includes multiple credentials, utilizes more than one mechanism for authenticating the client, or is otherwise malformed."}
+[0m
+[0m# [0mTodos
+[✓] STEP 1 — DELTA: compare inventory+knowledge+last leads against current surface
+[✓] STEP 2 — PRIORITIZE: score top assets 0-10 on axes
+[✓] STEP 3 — HYPOTHESES: top 3 assets, max 1 hypothesis each
+[✓] STEP 4 — SELF-CRITIQUE: drop confidence<40 or REJECTED-class
+[✓] STEP 5 — NEXT ACTION: one concrete probe/scan/human action
+[✓] STEP 6 — LEARNING: [LEARN] REJECTED/ACCEPTED entries
+[✓] STEP 7 — RISK: [RISK] program score + reason
+[0m
+## STEP 1 — DELTA
+
+- [NEW] auth.sumup.com OIDC discovery scopes_supported = `[offline_access, offline, openid, email, classic]` — only 5 global scopes; dashboard client uses 17 custom per-client scopes (accounting/invoices/api_keys/readers/lending/receivables/unified_customer_directory r/w) NOT in discovery.
+- [NEW] auth.sumup.com userinfo_endpoint (`/userinfo`), end_session_endpoint (`/oauth2/sessions/logout`), nonce_endpoint (`/oauth2/nonce`) discovered in OIDC metadata.
+- [NEW] auth.sumup.com request_object_signing_alg_values_supported includes `"none"` — unsigned request objects accepted by spec.
+- [NEW] auth.sumup.com grant_types_supported includes `"client_credentials"` and `"implicit"` — broader than dashboard usage (authorization_code only).
+- [NEW] /oauth2/device endpoint IS LIVE — accepts POST, returns proper OAuth 400 error JSON ({"error":"invalid_request",...}). Not a dead route. But returns same error for both known/unknown client_ids — device flow likely not fully deployed at routing level.
+- [NEW] me.sumup.com confirmed Next.js (`x-powered-by: Next.js`) with RSC data leak in 404 pages (GTM-ZC88, merchantCode/userId/locale props `$undefined`, digest codes).
+- [CHANGED] /oauth2/register returns JSON 404 (`{"message":"Not Found"}`) — dead route; /oauth2/device returns JSON 400 — live but non-functional.
+
+## STEP 2 — PRIORITIZE
+
+- `api.sumup.com`,8.0,a=8,b=9,t=8,g=4,c=8,f=4
+- `me.sumup.com`,7.9,a=7,b=8,t=8,g=5,c=7,f=8
+- `auth.sumup.com`,8.6,a=9,b=9,t=9,g=4,c=8,f=8
+- `admin.sumup.com`,6.9,a=6,b=9,t=7,g=3,c=8,f=5
+
+## STEP 3 — HYPOTHESES
+
+[HYP] api.sumup.com BOLA via dashboard-client per-client scope catalog
+class: IDOR
+asset: api.sumup.com
+confidence: 60
+reasoning: Dashboard client uses 17 custom per-client scopes (accounting/invoices/api_keys/readers/lending/receivables/unified_customer_directory r/w) that are NOT in OIDC discovery scopes_supported — these map the real hidden API resource model. api.sumup.com 404s all anonymous paths. Cross-tenant BOLA requires granted merchant token then ID-swapping on resource ids.
+evidence_needed: Authenticated requests where changing resource id returns another tenant's data.
+verify_steps: Requires valid OAuth merchant token from dashboard scope grant; cross-tenant id manipulation on scope-derived endpoints. Not passable without token.
+impact: Cross-tenant financial/PII data exposure. Severity: critical.
+testability: AUTH_HELPED
+
+[HYP] me.sumup.com Vercel merchant self-service surface — OAuth2 app registration logic
+class: BUSLOGIC
+asset: me.sumup.com
+confidence: 55
+reasoning: me.sumup.com is a Next.js Vercel deployment (non-Cloudflare) serving merchant self-service behind dashboard OAuth. /settings/oauth2-applications provides OAuth2 app registration UI. Per-client scope model means registered apps could potentially request scopes beyond dashboard's registered set if validation is weak. Vercel origin differs from hardened Cloudflare/Envoy edge; newer asset is plausible spot for exposed serverless functions or permissive CORS.
+evidence_needed: Authenticated session to enumerate /api/* routes, test OAuth2 app registration fields (redirect_uri validation, scope selector, PKCE enforcement).
+verify_steps: PASSIVE: Already confirmed /api/sso/callback returns 403, /api/sso/login returns 307, /_vercel/insights returns 404. No anonymous routes found. Full test AUTH_HELPED: enumerate /api/* with session cookie, test OAuth2 app registration for redirect_uri bypass, scope escalation, PKCE bypass.
+impact: OAuth app registration abuse → broad-scope token issuance, merchant data exposure. Severity: high.
+testability: AUTH_HELPED
+
+[HYP] auth.sumup.com request_object alg=none unsigned request object acceptance
+class: OATH
+asset: auth.sumup.com
+confidence: 42
+reasoning: OIDC discovery declares request_object_signing_alg_values_supported=[RS256, none] — request objects with alg:none are accepted by spec. If any flow accepts an unsigned request_object carrying attacker-controlled claims (redirect_uri, scope), the server may trust attacker-specified parameters. This is separate from the state JWT (HS256) and the token_endpoint_auth_methods=none (public client). However, redirect_uri is strictly allowlisted per client, limiting exploitation.
+evidence_needed: Verify whether any interactive flow actually processes request_object parameter (auth endpoint, PAR, or device flow); craft request_object with alg:none and malicious claims.
+verify_steps: PASSIVE: GET /oauth2/auth?client_id=dashboard&request_uri=urn:ietf:params:oauth:request_uri:test&request_object_signing_alg=none — observe whether request_object is processed or ignored. Needs AUTH_HELPED to craft signed+unsigned request_object with code grant.
+impact: Parameter injection via unsigned request_object → scope escalation or redirect manipulation. Severity: medium-high if actionable.
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+
+- `[PARKED] OAuth state JWT appState path sink` (conf 45): HS256 signature verified server-side; client-side pathname trust unverified. No proof state is parsed/trusted for redirect. Confidence too low.
+- `[PARKED] OAuth redirect_uri validation bypass`: REFUTED — strict allowlist confirmed for client_id=dashboard.
+- `[PARKED] OAuth request_uri/PAR token theft`: PAR/device routes return 404/400 (non-functional); redirect_uri allowlisted.
+- `[PARKED] SSRF @ portal.sumup.com`: Third-party CNAME, in-scope unconfirmed.
+
+**Survivors ranked:**
+1. [FINAL] api.sumup.com scope-mapped BOLA (conf 60) — critical financial value, needs merchant token (AUTH_HELPED).
+2. [FINAL] me.sumup.com Vercel merchant surface / OAuth2-app-registration logic (conf 55) — non-Cloudflare origin, fresh UX surface.
+3. [FINAL] auth.sumup.com request_object alg=none (conf 42) — spec-declared, needs live test.
+
+## STEP 5 — NEXT ACTION
+
+[HUMAN] All three FINAL hypotheses require authenticated sessions (AUTH_HELPED) that passive-only probes cannot obtain. api.sumup.com returns 404 on all anonymous paths; me.sumup.com requires dashboard OAuth to reach /settings/oauth2-applications; auth.sumup.com request_object testing requires PKCE flow with crafted JWT. Recommend: human obtains a SumUp merchant account + dashboard session, then tests (1) BOLA by swapping merchant IDs on api.sumup.com endpoints with dashboard scope token, (2) OAuth2 app registration on me.sumup.com for redirect_uri/scope/PKCE bypass, (3) request_object alg=none on auth.sumup.com /oauth2/auth.
+
+## STEP 6 — LEARNING
+
+- [LEARN] ACCEPTED BUSLOGIC @ auth.sumup.com: OIDC discovery scopes_supported is minimal (5 global scopes) — dashboard client uses 17 custom per-client scopes not in discovery. Per-client scope model confirmed; scope validation is strict (super_admin rejected with invalid_scope).
+- [LEARN] ACCEPTED MISCONFIG @ auth.sumup.com: /oauth2/device IS LIVE — accepts POST, returns proper OAuth 400 JSON (not 404). However, returns same error for known/unknown client_ids — device flow not fully deployed at routing level.
+- [LEARN] ACCEPTED OATH @ auth.sumup.com: request_object_signing_alg_values_supported includes "none" — unsigned request objects accepted by spec. Combined with strict redirect_uri allowlist, exploitation requires live PKCE test.
+- [LEARN] ACCEPTED BUSLOGIC @ me.sumup.com: Confirmed Next.js (x-powered-by: Next.js) with RSC data in 404 pages. /api/sso/login is the sole functional API route (307 → OAuth flow). All other /api/* paths return 404 (9B text/plain). No anonymous data exposure.
+- [LEARN] ACCEPTED OATH @ auth.sumup.com: /oauth2/register returns JSON 404 (dead route); /oauth2/device returns JSON 400 (live but non-functional). Dynamic client registration not available.
+
+## STEP 7 — RISK
+
+[RISK] SumUp: 28 — Cloudflare+Envoy edge with strict OAuth redirect_uri allowlist, per-client scope validation, and fully-gated api.sumup.com. Anonymous surface is maximally thin after 8 cycles of probing. All remaining high-value leads (BOLA, OAuth app registration, request_object alg=none) require authenticated merchant sessions. The program's real attack surface is behind the dashboard OAuth gate; passive-only recon has exhausted what's discoverable without credentials. Risk decreased from 30 to 28 as additional hardening signals (strict scope validation, device flow non-functional, dynamic registration dead) confirm defense-in-depth posture.

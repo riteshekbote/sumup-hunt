@@ -76,3 +76,10 @@ https://auth.sumup.com/oauth2/token -> HTTP 405
 https://me.sumup.com/api/sso/callback -> HTTP 403
 https://me.sumup.com/_vercel/insights -> HTTP 404
 https://api.sumup.com/v1/merchants/{other_merchant_id -> HTTP 404
+
+## 2026-09-04 09:55:25 UTC
+https://auth.sumup.com/oauth2/par -> HTTP 404
+https://auth.sumup.com/oauth2/token -> HTTP 405
+https://api.sumup.com/v1/merchants/{other_merchant_id -> HTTP 404
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://me.sumup.com/_vercel/insights -> HTTP 404
