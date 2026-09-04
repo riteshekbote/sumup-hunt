@@ -38,3 +38,29 @@ reasoning: The `.dev.vars` file (Cloudflare Workers local secrets file) is commi
 impact: Low
 verify_steps: 1) Verify the file exists at `https://github.com/sumup/sumup-mcp/blob/main/.dev.vars`. 2) Check git history to confirm it was never modified with actual secrets. 3) Confirm `.dev.vars` is missing from `.gitignore`.
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-04 19:12:31 UTC
+class: SECRET
+asset: sumup-plugin-medusa/examples/docker/medusa/medusa-config.ts:12-13
+confidence: 75
+reasoning: JWT_SECRET, COOKIE_SECRET, MEDUSA_ADMIN_PASSWORD, SUPERADMIN_PASSWORD all default to "supersecret" when env vars are unset. These are real fallback values in production-adjacent config (not test mocks). The entrypoint.sh seeds an admin user with this password on first boot. If a developer deploys via docker-compose without overriding env vars, the admin dashboard and JWT signing are protected by this trivially guessable value.
+impact: medium — requires deploying the example Docker stack unchanged; affects demo/starter setups shipped by SumUp
+verify_steps: (1) Check if any SumUp-managed demo/staging deployments use these defaults; (2) Search internal deployment configs for MEDUSA_ADMIN_PASSWORD or SUPERADMIN_PASSWORD defaults; (3) Confirm the example.env is the only file providing these defaults
+class: SECRET
+asset: sumup-plugin-vendure/examples/docker/example.env:8-9
+confidence: 70
+reasoning: POSTGRES_USER=vendure, POSTGRES_PASSWORD=vendure are hardcoded defaults used as env var fallbacks. Combined with HYP-001, a docker-compose up exposes Postgres with trivial credentials. The docker-compose.yml uses these as variable defaults too.
+impact: low — only affects local/example Docker deployments; Postgres is not directly internet-facing in this config
+verify_steps: (1) Confirm no SumUp-managed instances use these defaults; (2) Check if the Postgres port is exposed externally in any deployment
+class: MISCONFIG
+asset: sumup-android-tap-to-pay/build.gradle.kts:18
+confidence: 90
+reasoning: The URL `https://tap-to-pay-sdk.fleet.live.sumup.net/` reveals an internal Maven artifact server hostname and its infrastructure naming convention (Fleet = likely a continuous delivery platform). This endpoint serves the proprietary Tap-to-Pay SDK binary. While the server requires Maven credentials (env-var based), the hostname itself leaks internal infrastructure details that could aid targeted attacks against SumUp's build/deploy infrastructure.
+impact: low — the endpoint requires credentials; the URL itself is not exploitable but aids recon
+verify_steps: (1) Confirm this is the only public reference; (2) Check if the Fleet server has additional exposed endpoints; (3) Verify auth requirements on this Maven repo
+class: MISCONFIG
+asset: sumup-rs/sdk/tests/client.rs:59-60
+confidence: 85
+reasoning: The string `https://mock.sumup.internal` appears in test code, revealing an internal DNS naming convention for mock services. This is test-only code but leaks infrastructure naming patterns.
+impact: very low — purely informational; test code only
+verify_steps: (1) Verify the internal domain doesn't resolve from outside; (2) Check if more internal hostnames appear in other repos
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
