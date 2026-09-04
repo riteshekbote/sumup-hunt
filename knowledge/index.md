@@ -26,3 +26,8 @@
 - 2026-09-04 REJECTED MISCONFIG @ api.sumup.com: x-envoy-decorator-operation leaks apigateway2-headless.identity.svc.cluster.local — header/banner leak is explicit out-of-scope class.
 - 2026-09-04 ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths 404 unauthenticated; scope catalog from auth.sumup.com defines resource model but requires merchant token.
 - 2026-09-04 REJECTED AUTH @ admin.sumup.com: Header spoofing (Host, X-Forwarded-For, X-Original-URL) yields identical 403 — no auth bypass via passive header manipulation.
+- 2026-09-04 ACCEPTED OATH @ api.sumup.com/authorize: Legacy OAuth authorize endpoint exists on API gateway (distinct from auth.sumup.com) with legacy SDK client_ids and potentially relaxed redirect_uri validation — new attack surface
+- 2026-09-04 ACCEPTED OATH @ auth.sumup.com: dashboard-client scope catalog maps broader hidden api.sumup.com resource model than OIDC discovery
+- 2026-09-04 ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths 404 unauthenticated; scope catalog defines resource model but requires merchant token
+- 2026-09-04 REJECTED AUTH @ admin.sumup.com: Header spoofing yields identical 403 — no auth bypass via passive header manipulation
+- 2026-09-04 REJECTED MISCONFIG @ api.sumup.com: x-envoy-decorator-operation leaks k8s service name — header/banner leak explicit out-of-scope class

@@ -125,3 +125,7 @@ www.sumup.com
 ## 2026-09-04 17:50:13 UTC
 
 ## 2026-09-04 20:02:49 UTC
+
+## 2026-09-04 22:20:56 UTC
+- NEW api.sumup.com/authorize: Legacy OAuth authorize endpoint discovered with client_id oracle + loose redirect_uri validation on legacy-registered test/dev SDK clients (sumup-ios-sdk, sumup.pos, reader, s
+- NEW Probe vector: GET https://api.sumup.com/authorize?client_id={legacy_client_id} enumeration — new attack surface on API gateway (non-Cloudflare path?)

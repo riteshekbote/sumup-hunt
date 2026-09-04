@@ -113,3 +113,13 @@ https://dashboard.sumup.com/callback&response_type=code&code_challenge=E9Melhoa2
 https://api.sumup.com/authorize?client_id={known -> HTTP 404
 https://api.sumup.com/authorize?client_id={l -> HTTP 404
 https://developer.sumup.com/sitemap.xml -> HTTP 404
+
+## 2026-09-04 22:21:10 UTC
+https://api.sumup.com/authorize?client_id={legacy_client_id -> HTTP 404
+https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri=https://attacker.com/callback&response_type=code&scope=classic -> HTTP 404
+https://auth.sumup.com/oauth2/par -> HTTP 404
+https://dashboard.sumup.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256 -> HTTP 403
+https://auth.sumup.com/oauth2/token -> HTTP 405
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://me.sumup.com/_vercel/insights -> HTTP 404
+https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri=https://example.com/callback&response_type=code&scope=classic -> HTTP 404

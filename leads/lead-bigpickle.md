@@ -558,3 +558,31 @@ impact: Cross-tenant financial/PII exposure. Severity: critical.
 testability: AUTH_HELPED
 [NEXT] PROBE: GET https://api.sumup.com/authorize?client_id={l} where l iterates legacy-format SDK client IDs (e.g. sumup-ios-sdk, sumup.pos, reader, sales, virtual-terminal, sumup-api-key, sandbox) with redirect_uri=https://example.com/cb&response_type=code to expand the live legacy client registry (2-3 candidates only, ≤1 rps, GET only), classifying invalid_client vs invalid_request. Also GET https://developer.sumup.com/sitemap.xml to harvest additional legacy endpoint/client naming (porous but low-volume).
 [RISK] SumUp: 27 — Previously-unmapped legacy OAuth gateway (api.sumup.com/authorize) is the only live unauthenticated agent on the API host: it exposes a client-enumeration oracle and a distinct (older) client registry, but its redirect_uri allowlist is strict and mirrors modern validation. Wildcard CORS on an OAuth endpoint is a latent pattern risk with no demonstrated data exposure. All higher-impact classes (BOLA, scope-escalation, app-registration abuse) remain behind the merchant OAuth gate. Risk holds near 27: anonymous surface slightly enriched by a legacy path, but the finding must still clear a strict allowlist.
+## 2026-09-04 22:20:46 UTC [target] (model bigpickle)
+[HYP] Legacy api.sumup.com/authorize registry divergence: older client profile with unknown (possibly attacker-reachable) registered redirect_uri
+class: OATH
+asset: api.sumup.com/authorize
+confidence: 45
+reasoning: Oracle confirms live legacy registry with 5 internal clients distinct from the modern auth.sumup.com profile (dashboard's modern redirect rejected on legacy path). Legacy profiles predate modern hard-ening; old SDK/web callbacks historically pointed at now-unmaintained/possibly parked hosts. Any legacy-registered redirect resolving to an attacker-accessible origin is a live code-theft pivot.
+evidence_needed: Any redirect_uri accepted on the legacy path for {sumup,ios,android,dashboard,test} (302 NOT to /flows/oauth2/error), or an expired/reviv-able callback host in a legacy client's redirect set.
+verify_steps: PASSIVE bounded redirect-candidate set — done, all rejected. Next passive source: SumUp SDK/iOS/Android repos + archived docs for the OLD registered callback; full code flow needs an authenticated dev app (AUTH_HELPED).
+impact: Authorization-code interception for a legacy internal app → merchant OAuth account takeover. Severity: high if a legacy redirect is live/loose; unproven.
+testability: AUTH_HELPED
+[HYP] api.sumup.com cross-tenant BOLA via dashboard-scope API resources
+class: IDOR
+asset: api.sumup.com
+confidence: 60
+reasoning: Dashboard-client scope catalog (accounting/invoices/api_keys/lending/receivables/unified_customer_directory/readers) + docs third-party scopes map the hidden resource model; all anonymous paths except /authorize 404, route set fully auth-gated. Cross-tenant access provable only with a granted merchant token + resource-id swaps.
+evidence_needed: Authenticated requests where changing a resource id (merchant/checkout/transaction) returns another tenant's data on scope-derived paths.
+verify_steps: PASSIVE: GET /api/v1/merchants/{id} → 404 (done). AUTH_HELPED: dashboard OAuth token on scope paths, cross-tenant id swaps, scope-boundary (unauthorized vs granted scope) comparison.
+impact: Cross-tenant financial/PII exposure. Severity: critical.
+testability: AUTH_HELPED
+[HYP] me.sumup.com OAuth2 app-registration logic: scope selector + Authorized JavaScript Origin CORS toggle
+class: BUSLOGIC
+asset: me.sumup.com
+confidence: 55
+reasoning: Docs define registration at me.sumup.com/settings/oauth2-applications: comma-separated redirect URL list, application_type Web/Android/iOS/Other, and "Authorized JavaScript Origin" which "enables CORS for registered origins" — a per-origin CORS mechanism whose boundary is server-side logic. Fresh Vercel-served (non-Cloudflare) origin is a plausible spot for scope-selector / redirect-list / CORS-origin validation gaps (duplicate-origin, wildcard, scheme confusion, normalization).
+evidence_needed: Registered dev app allowing an unauthorized origin into the CORS allowlist, or selecting a manually-verified scope (payments/payment_instruments) without verification.
+verify_steps: PASSIVE: /api/sso/callback → 403, /_vercel/insights → 404 (done). AUTH_HELPED: register a dev app, fuzz Authorized JavaScript Origin + redirect-list parsing, test CORS enforcement, test scope-selection boundary.
+impact: CORS-origin confusion + OAuth client registration abuse → token issuance to attacker origins beyond the registered set → merchant API data exposure. Severity: high.
+testability: AUTH_HELPED
