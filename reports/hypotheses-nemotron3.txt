@@ -1,13 +1,11 @@
-## 2026-09-04 09:49:01 UTC [target] (model nemotron3)
-[NEW] auth.sumup.com: OIDC discovery fully exposed with PAR, device flow, `token_endpoint_auth_methods=["none"]`, `request_object_signing_alg_values_supported=["none"]` — all documented but PAR/device return 404 on OPTIONS (unrouted)
-[NEW] me.sumup.com: Distinct Vercel-served merchant self-service asset (non-Cloudflare origin) with OAuth2 application registry at `/settings/oauth2-applications` behind `client_id=dashboard`
-[NEW] Real public OAuth client `dashboard` exposed with production scope catalog: `accounting.read/write invoices.read/write api_keys:write readers.read/write lending.read/write receivables.read/write unified_customer_directory:read/write` — broader than OIDC discovery
-[CHANGED] auth.sumup.com redirect_uri validation: Strict allowlist confirmed for `client_id=dashboard` — attacker host, subdomain-confusion, path-traversal all rejected with `invalid_request` on server flow page
-[CHANGED] api.sumup.com: All versioned paths return 404 unauthenticated; scope catalog from auth.sumup.com defines resource model but requires merchant token
-[CHANGED] admin.sumup.com: Header spoofing (Host, X-Forwarded-For, X-Original-URL) yields identical 403 — no auth bypass via passive header manipulation
-[PRIO] auth.sumup.com,8.4,a=9,b=10,t=9,g=4,c=8,f=8
-[PRIO] me.sumup.com,7.8,a=7,b=9,t=8,g=6,c=8,f=8
-[PRIO] api.sumup.com,7.2,a=8,b=10,t=7,g=3,c=8,f=5
+## 2026-09-04 14:14:22 UTC [target] (model nemotron3)
+[NEW] me.sumup.com/api/sso/callback returns 403 (not 404) on anonymous GET — Vercel serverless function exists and enforces auth at edge
+[NEW] auth.sumup.com/oauth2/token returns 405 on GET (method not allowed) — confirms POST-only token endpoint, consistent with OAuth2 spec
+[CHANGED] auth.sumup.com/oauth2/par returns 404 on GET — PAR endpoint documented but not accessible via GET (POST-only per spec), routing unconfirmed
+[CHANGED] api.sumup.com/v1/merchants/{other_merchant_id} returns 404 unauthenticated — versioned resource paths fully gated, no info leak on ID format
+[PRIO] auth.sumup.com,8.5,a=9,b=10,t=9,g=4,c=9,f=8
+[PRIO] me.sumup.com,7.9,a=7,b=9,t=8,g=6,c=8,f=8
+[PRIO] api.sumup.com,7.3,a=8,b=10,t=7,g=3,c=8,f=5
 [PRIO] admin.sumup.com,5.9,a=6,b=8,t=5,g=3,c=7,f=5
 [PRIO] portal.sumup.com,5.5,a=6,b=6,t=5,g=5,c=6,f=5
 [HYP] OAuth token_endpoint_auth_methods=none enables public client impersonation via PAR flow
@@ -37,7 +35,6 @@ evidence_needed: Anonymous GET/OPTIONS to /api/* routes returning non-401; CORS 
 verify_steps: GET https://me.sumup.com/api/sso/callback (anonymous) → observe status, error body, CORS headers. OPTIONS https://me.sumup.com/api/sso/callback → capture Access-Control-Allow-Origin, Access-Control-Allow-Credentials. GET https://me.sumup.com/_vercel/insights and /api/* enumeration for non-401 responses.
 impact: Merchant self-service misconfig → OAuth app registration abuse, broad-scope token issuance, or data exposure — HIGH
 testability: PASSIVE
-[PARKED] OAuth redirect_uri validation bypass on auth.sumup.com: REFUTED for naive vectors — strict allowlist confirmed for client_id=dashboard (attacker-host/subdomain/path-traversal all rejected with invalid_request on server page). No viable passive redirect_uri bypass; confidence dropped below threshold.
 [PARKED] OAuth PAR/device flow token theft: PAR and device endpoints return 404 on OPTIONS (unrouted at gateway); redirect_uri strictly allowlisted; requires registered attacker client + key — not passive, low current yield.
 [PARKED] SSRF via portal.sumup.com webhook: third-party CNAME (iriscrm.com) ownership unconfirmed in-scope; requires form interaction (active).
 [PARKED] k8s service name leak via x-envoy-decorator-operation on api.sumup.com: REJECTED class (MISCONFIG — header/banner leak explicit out-of-scope per program note).

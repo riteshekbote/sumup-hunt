@@ -290,3 +290,58 @@ testability: PASSIVE
 [LEARN] REJECTED AUTH @ admin.sumup.com: Header spoofing (Host, X-Forwarded-For, X-Original-URL) yields identical 403 — no auth bypass via passive header manipulation.
 [LEARN] REJECTED MISCONFIG @ api.sumup.com: x-envoy-decorator-operation leaks apigateway2-headless.identity.svc.cluster.local — header/banner leak is explicit out-of-scope class.
 [RISK] sumup: 78 — Auth server (auth.sumup.com) exposes critical OAuth misconfigurations (token_endpoint_auth_methods=none, request_object alg=none, PAR documented) with full scope catalog mapping to payment API resources. API gateway (api.sumup.com) fully gated but resource model known via dashboard scopes. New Vercel-served me.sumup.com adds fresh non-Cloudflare attack surface with OAuth2 app registration UX. Admin panel hardened. Third-party portal adds supply-chain risk if in-scope confirmed. High-value financial attack surface concentrated on known hosts.
+## 2026-09-04 14:14:22 UTC [target] (model nemotron3)
+[NEW] me.sumup.com/api/sso/callback returns 403 (not 404) on anonymous GET — Vercel serverless function exists and enforces auth at edge
+[NEW] auth.sumup.com/oauth2/token returns 405 on GET (method not allowed) — confirms POST-only token endpoint, consistent with OAuth2 spec
+[CHANGED] auth.sumup.com/oauth2/par returns 404 on GET — PAR endpoint documented but not accessible via GET (POST-only per spec), routing unconfirmed
+[CHANGED] api.sumup.com/v1/merchants/{other_merchant_id} returns 404 unauthenticated — versioned resource paths fully gated, no info leak on ID format
+[PRIO] auth.sumup.com,8.5,a=9,b=10,t=9,g=4,c=9,f=8
+[PRIO] me.sumup.com,7.9,a=7,b=9,t=8,g=6,c=8,f=8
+[PRIO] api.sumup.com,7.3,a=8,b=10,t=7,g=3,c=8,f=5
+[PRIO] admin.sumup.com,5.9,a=6,b=8,t=5,g=3,c=7,f=5
+[PRIO] portal.sumup.com,5.5,a=6,b=6,t=5,g=5,c=6,f=5
+[HYP] OAuth token_endpoint_auth_methods=none enables public client impersonation via PAR flow
+class: AUTH
+asset: auth.sumup.com
+confidence: 70
+reasoning: Discovery docs list "none" in token_endpoint_auth_methods_supported; PAR endpoint documented (/oauth2/par); request_object_signing_alg_values_supported includes "none". A public client (no secret) could obtain tokens via PAR + token endpoint without client_secret.
+evidence_needed: Successful token request to /oauth2/token with client_id only (no client_secret) using authorization_code from PAR flow
+verify_steps: POST https://auth.sumup.com/oauth2/par with client_id=test&redirect_uri=https://example.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256 → capture request_uri. Then POST https://auth.sumup.com/oauth2/token with grant_type=authorization_code&code=<from_par>&client_id=test&code_verifier=test_verifier (no client_secret).
+impact: Client impersonation → merchant account takeover via OAuth flow — CRITICAL
+testability: AUTH_HELPED
+[HYP] API scope-mapped BOLA on merchant resources via dashboard-client scopes
+class: IDOR
+asset: api.sumup.com
+confidence: 60
+reasoning: Dashboard client scope catalog (accounting/invoices/api_keys/lending/receivables/unified_customer_directory/readers) maps 1:1 to hidden api.sumup.com resources. All unauthenticated paths 404. Cross-tenant BOLA requires valid merchant OAuth token (from dashboard scopes) then ID manipulation on resource identifiers (merchant_id, transaction_id, reader_serial, payout_id).
+evidence_needed: Authenticated cross-merchant access via ID manipulation on versioned endpoints returning 200 vs 403
+verify_steps: Obtain valid merchant OAuth token with dashboard scopes (AUTH_HELPED). GET https://api.sumup.com/v1/merchants/{other_merchant_id}/transactions → observe 403 vs 200. Repeat for /v1/transactions/{txn_id}, /v1/readers/{serial}, /v1/payouts/{id}, /v1/invoices/{id}.
+impact: Cross-merchant financial/PII data exposure (transactions, payouts, readers, invoices) — CRITICAL (PCI/financial)
+testability: AUTH_HELPED
+[HYP] me.sumup.com Vercel origin exposes serverless API routes or permissive CORS on SSO callback
+class: BUSLOGIC
+asset: me.sumup.com
+confidence: 55
+reasoning: me.sumup.com is a fresh Vercel-served asset (non-Cloudflare/Envoy edge) with merchant self-service OAuth2 app registry. Vercel serverless functions at /api/* may expose debug endpoints, permissive CORS, or logic flaws in the SSO callback (/api/sso/callback) that handles the dashboard OAuth flow.
+evidence_needed: Anonymous GET/OPTIONS to /api/* routes returning non-401; CORS headers allowing credentialed cross-origin; error taxonomy differences revealing stack traces
+verify_steps: GET https://me.sumup.com/api/sso/callback (anonymous) → observe status, error body, CORS headers. OPTIONS https://me.sumup.com/api/sso/callback → capture Access-Control-Allow-Origin, Access-Control-Allow-Credentials. GET https://me.sumup.com/_vercel/insights and /api/* enumeration for non-401 responses.
+impact: Merchant self-service misconfig → OAuth app registration abuse, broad-scope token issuance, or data exposure — HIGH
+testability: PASSIVE
+[PARKED] OAuth PAR/device flow token theft: PAR and device endpoints return 404 on OPTIONS (unrouted at gateway); redirect_uri strictly allowlisted; requires registered attacker client + key — not passive, low current yield.
+[PARKED] SSRF via portal.sumup.com webhook: third-party CNAME (iriscrm.com) ownership unconfirmed in-scope; requires form interaction (active).
+[PARKED] k8s service name leak via x-envoy-decorator-operation on api.sumup.com: REJECTED class (MISCONFIG — header/banner leak explicit out-of-scope per program note).
+[PARKED] Admin panel auth bypass on admin.sumup.com: header spoofing (Host, X-Forwarded-For, X-Original-URL) yields identical 403 — no auth mechanism leak, no status change; confidence 35 < 40.
+[FINAL] 1. OAuth token_endpoint_auth_methods=none enables public client impersonation (confidence 70)
+[FINAL] 2. API scope-mapped BOLA on merchant resources (confidence 60)
+[FINAL] 3. me.sumup.com Vercel surface / OAuth2-app-registration logic (confidence 55)
+[NEXT] PROBE: POST https://auth.sumup.com/oauth2/par with `client_id=test&redirect_uri=https://example.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256` → capture request_uri response; then POST https://auth.sumup.com/oauth2/token with `grant_type=authorization_code&code=<from_par>&client_id=test&code_verifier=test_verifier` (no client_secret) to test "none" auth method.
+[LEARN] ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" — public client impersonation vector; requires live PAR+token flow test.
+[LEARN] ACCEPTED OAUTH @ auth.sumup.com: Full discovery docs expose PAR, device flow, request_object alg "none", scope catalog mapping 1:1 to merchant API resources.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: redirect_uri is strictly allowlisted per client (client_id=dashboard confirmed) — naive redirect_uri/subdomain/path-traversal bypass refuted; errors surfaced on server flow page.
+[LEARN] ACCEPTED AUTH @ me.sumup.com: me.sumup.com is a distinct Vercel-served merchant self-service asset behind dashboard OAuth (client_id=dashboard) — new non-Cloudflare attack surface.
+[LEARN] ACCEPTED MISCONFIG @ auth.sumup.com: /oauth2/par & /oauth2/device documented but return 404 on OPTIONS (unrouted) while /oauth2/token & /oauth2/revoke return 200 — PAR/device grants likely not deployed at routing level.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: dashboard-client scope catalog (accounting/invoices/api_keys/lending/receivables/unified_customer_directory/readers) maps a broader hidden api.sumup.com resource model than OIDC discovery.
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths 404 unauthenticated; scope catalog from auth.sumup.com defines resource model but requires merchant token.
+[LEARN] REJECTED AUTH @ admin.sumup.com: Header spoofing (Host, X-Forwarded-For, X-Original-URL) yields identical 403 — no auth bypass via passive header manipulation.
+[LEARN] REJECTED MISCONFIG @ api.sumup.com: x-envoy-decorator-operation leaks apigateway2-headless.identity.svc.cluster.local — header/banner leak is explicit out-of-scope class.
+[RISK] sumup: 78 — Auth server (auth.sumup.com) exposes critical OAuth misconfigurations (token_endpoint_auth_methods=none, request_object alg=none, PAR documented) with full scope catalog mapping to payment API resources. API gateway (api.sumup.com) fully gated but resource model known via dashboard scopes. New Vercel-served me.sumup.com adds fresh non-Cloudflare attack surface with OAuth2 app registration UX. Admin panel hardened. Third-party portal adds supply-chain risk if in-scope confirmed. High-value financial attack surface concentrated on known hosts.
