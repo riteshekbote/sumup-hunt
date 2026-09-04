@@ -481,3 +481,50 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths 404 unauthenticated; scope catalog from auth.sumup.com defines resource model but requires merchant token.
 [LEARN] REJECTED AUTH @ admin.sumup.com: Header spoofing (Host, X-Forwarded-For, X-Original-URL) yields identical 403 — no auth bypass via passive header manipulation.
 [RISK] SumUp: 28 — Cloudflare+Envoy edge with strict OAuth redirect_uri allowlist, per-client scope validation, and fully-gated api.sumup.com. Anonymous surface is maximally thin after 8 cycles of probing. All remaining high-value leads (BOLA, OAuth app registration, request_object alg=none) require authenticated merchant sessions. The program's real attack surface is behind the dashboard OAuth gate; passive-only recon has exhausted what's discoverable without credentials. Risk decreased from 30 to 28 as additional hardening signals (strict scope validation, device flow non-functional, dynamic registration dead) confirm defense-in-depth posture.
+## 2026-09-04 17:42:53 UTC [target] (model bigpickle)
+[PRIO] auth.sumup.com,8.5,axis:attack_surface=9,business_value=9,tech_exposure=9,gate_ease=6,cloud_surface=8,freshness=7
+[PRIO] me.sumup.com,7.5,axis:attack_surface=7,business_value=8,tech_exposure=8,gate_ease=5,cloud_surface=7,freshness=9
+[PRIO] api.sumup.com,6.0,axis:attack_surface=5,business_value=9,tech_exposure=7,gate_ease=2,cloud_surface=6,freshness=6
+[PRIO] admin.sumup.com,4.0,axis:attack_surface=3,business_value=6,tech_exposure=4,gate_ease=2,cloud_surface=4,freshness=5
+[PRIO] portal.sumup.com,3.0,axis:attack_surface=3,business_value=4,tech_exposure=3,gate_ease=3,cloud_surface=2,freshness=4
+[HYP] auth.sumup.com OAuth token_endpoint_auth_methods=none enables public client impersonation via PAR flow
+class: OATH
+asset: auth.sumup.com
+confidence: 70
+reasoning: OIDC discovery declares token_endpoint_auth_methods_supported=["none"] and PAR endpoint /oauth2/par documented but returns 404 on OPTIONS (unrouted). If PAR flow is partially implemented at POST-only routing level, unsigned request with client_id=dashboard and attacker-controlled scope could bypass authentication. redirect_uri is strictly allowlisted, limiting code theft but not scope escalation.
+evidence_needed: Live POST to /oauth2/par with client_id=dashboard, response_type=code, code_challenge, code_challenge_method=S256, and malformed scope parameters to observe error taxonomy and whether PAR accepts unsigned requests.
+verify_steps: PASSIVE: GET /oauth2/par to confirm 404; POST with Content-Type: application/x-www-form-urlencoded body: client_id=dashboard&redirect_uri=https://dashboard.sumup.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJGuAC2I2g2sZMk&code_challenge_method=S256&scope=openid+accounting.read — observe response (404 vs 400 vs 201).
+impact: Public client impersonation → scope escalation without client_secret → merchant data exposure via scope-derived API resources. Severity: high.
+testability: AUTH_HELPED
+[HYP] api.sumup.com BOLA via dashboard-client per-client scope catalog
+class: IDOR
+asset: api.sumup.com
+confidence: 60
+reasoning: auth.sumup.com OIDC discovery exposes scope catalog mapping 1:1 to api.sumup.com resources (merchants/transactions/payouts/readers/checkouts/customers/api_keys/refunds/receipts/sales/roles). If per-client scope validation is weak, dashboard OAuth token could access resources beyond registered scope. All versioned paths 404 unauthenticated, requiring merchant token.
+evidence_needed: Authenticated session to enumerate /api/* routes, test scope boundary enforcement with dashboard token.
+verify_steps: PASSIVE: GET /api/v1/merchants/{id} to confirm 404; AUTH_HELPED: Use dashboard OAuth token to query scope-derived paths and test cross-scope access.
+impact: Cross-scope resource access → merchant data exposure. Severity: high.
+testability: AUTH_HELPED
+[HYP] me.sumup.com Vercel merchant self-service OAuth2 app registration logic flaw
+class: BUSLOGIC
+asset: me.sumup.com
+confidence: 55
+reasoning: me.sumup.com is a Next.js Vercel deployment (non-Cloudflare origin) serving merchant self-service behind dashboard OAuth. /settings/oauth2-applications provides OAuth2 app registration UI. Per-client scope model means registered apps could potentially request scopes beyond dashboard's registered set if validation is weak. Vercel serverless functions may expose unauthenticated API routes or permissive CORS on SSO callback.
+evidence_needed: Authenticated session to enumerate /api/* routes, test OAuth2 app registration fields (redirect_uri validation, scope selector, PKCE enforcement).
+verify_steps: PASSIVE: GET https://me.sumup.com/api/sso/callback to observe error handling/CORS headers; GET https://me.sumup.com/_vercel/insights or well-known; enumerate /api/* anonymously for non-401 responses.
+impact: OAuth app registration abuse → broad-scope token issuance, merchant data exposure. Severity: high.
+testability: AUTH_HELPED
+[PARKED] api.sumup.com BOLA: Requires authenticated session to test scope boundary; passive-only recon exhausted. Confidence 60 but testability low without credentials.
+[PARKED] me.sumup.com OAuth2 registration: Requires authenticated session to enumerate routes and test registration logic. Confidence 55 but testability low without credentials.
+[FINAL] Survivors ranked:
+[NEXT] PROBE: POST https://auth.sumup.com/oauth2/par with `client_id=dashboard&redirect_uri=https://dashboard.sumup.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJGuAC2I2g2sZMk&code_challenge_method=S256&scope=openid+accounting.read` — observe response (404 vs 400 vs 201). ≤1 rps, POST only.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: redirect_uri is strictly allowlisted per client (client_id=dashboard confirmed) — naive redirect_uri/subdomain/path-traversal bypass refuted; errors surfaced on server flow page.
+[LEARN] ACCEPTED AUTH @ me.sumup.com: me.sumup.com is a distinct Vercel-served merchant self-service asset behind dashboard OAuth (client_id=dashboard) — new non-Cloudflare attack surface.
+[LEARN] ACCEPTED MISCONFIG @ auth.sumup.com: /oauth2/par & /oauth2/device documented but return 404 on OPTIONS (unrouted) while /oauth2/token & /oauth2/revoke return 200 — PAR/device grants likely not deployed at routing level.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: dashboard-client scope catalog (accounting/invoices/api_keys/lending/receivables/unified_customer_directory/readers) maps a broader hidden api.sumup.com resource model than OIDC discovery.
+[LEARN] ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" — public client impersonation vector; requires live PAR+token flow test.
+[LEARN] ACCEPTED OAUTH @ auth.sumup.com: Full discovery docs expose PAR, device flow, request_object alg "none", scope catalog mapping 1:1 to merchant API resources.
+[LEARN] REJECTED MISCONFIG @ api.sumup.com: x-envoy-decorator-operation leaks apigateway2-headless.identity.svc.cluster.local — header/banner leak is explicit out-of-scope class.
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths 404 unauthenticated; scope catalog from auth.sumup.com defines resource model but requires merchant token.
+[LEARN] REJECTED AUTH @ admin.sumup.com: Header spoofing (Host, X-Forwarded-For, X-Original-URL) yields identical 403 — no auth bypass via passive header manipulation.
+[RISK] SumUp: 28 — Cloudflare+Envoy edge with strict OAuth redirect_uri allowlist, per-client scope validation, and fully-gated api.sumup.com. Anonymous surface is maximally thin after 8 cycles of probing. All remaining high-value leads (BOLA, OAuth app registration, request_object alg=none) require authenticated merchant sessions. The program's real attack surface is behind the dashboard OAuth gate; passive-only recon has exhausted what's discoverable without credentials. Risk decreased from 30 to 28 as additional hardening signals (strict scope validation, device flow non-functional, dynamic registration dead) confirm defense-in-depth posture.

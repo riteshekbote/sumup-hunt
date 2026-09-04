@@ -92,3 +92,12 @@ https://me.sumup.com/api/sso/callback -> HTTP 403
 https://me.sumup.com/_vercel/insights -> HTTP 404
 https://dashboard.sumup.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJGuAC2I2g2sZMk&code_challenge_method=S256&scope=openid+accounting.read -> HTTP 403
 https://dashboard.sumup.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJGuAC2I2g2sZMk&code_challenge_method=S256&scope=openid+accounting.read` -> HTTP 403
+
+## 2026-09-04 17:50:25 UTC
+https://auth.sumup.com/oauth2/par -> HTTP 404
+https://auth.sumup.com/oauth2/token -> HTTP 405
+https://api.sumup.com/v1/merchants/{other_merchant_id -> HTTP 404
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://me.sumup.com/_vercel/insights -> HTTP 404
+https://dashboard.sumup.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJGuAC2I2g2sZMk&code_challenge_method=S256&scope=openid+accounting.read -> HTTP 403
+https://dashboard.sumup.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJGuAC2I2g2sZMk&code_challenge_method=S256&scope=openid+accounting.read` -> HTTP 403
