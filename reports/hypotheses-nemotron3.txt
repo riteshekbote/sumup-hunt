@@ -1,4 +1,4 @@
-## 2026-09-04 17:50:05 UTC [target] (model nemotron3)
+## 2026-09-04 19:57:43 UTC [target] (model nemotron3)
 [PRIO] auth.sumup.com,8.5,a=9,b=10,t=9,g=4,c=9,f=8
 [PRIO] me.sumup.com,7.9,a=7,b=9,t=8,g=6,c=8,f=8
 [PRIO] api.sumup.com,7.3,a=8,b=10,t=7,g=3,c=8,f=5
@@ -10,7 +10,7 @@ asset: auth.sumup.com
 confidence: 70
 reasoning: Discovery docs list "none" in token_endpoint_auth_methods_supported; PAR endpoint documented (/oauth2/par); request_object_signing_alg_values_supported includes "none". A public client (no secret) could obtain tokens via PAR + token endpoint without client_secret.
 evidence_needed: Successful token request to /oauth2/token with client_id only (no client_secret) using authorization_code from PAR flow
-verify_steps: POST https://auth.sumup.com/oauth2/par with client_id=test&redirect_uri=https://example.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256 → capture request_uri. Then POST https://auth.sumup.com/oauth2/token with grant_type=authorization_code&code=<from_par>&client_id=test&code_verifier=test_verifier (no client_secret).
+verify_steps: POST https://auth.sumup.com/oauth2/par with client_id=dashboard&redirect_uri=https://dashboard.sumup.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256 → capture request_uri. Then POST https://auth.sumup.com/oauth2/token with grant_type=authorization_code&code=<from_par>&client_id=dashboard&code_verifier=test_verifier (no client_secret).
 impact: Client impersonation → merchant account takeover via OAuth flow — CRITICAL
 testability: AUTH_HELPED
 [HYP] API scope-mapped BOLA on merchant resources via dashboard-client scopes
@@ -38,7 +38,7 @@ testability: PASSIVE
 [FINAL] 1. OAuth token_endpoint_auth_methods=none enables public client impersonation (confidence 70)
 [FINAL] 2. API scope-mapped BOLA on merchant resources (confidence 60)
 [FINAL] 3. me.sumup.com Vercel surface / OAuth2-app-registration logic (confidence 55)
-[NEXT] PROBE: POST https://auth.sumup.com/oauth2/par with `client_id=test&redirect_uri=https://example.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256` → capture request_uri response; then POST https://auth.sumup.com/oauth2/token with `grant_type=authorization_code&code=<from_par>&client_id=test&code_verifier=test_verifier` (no client_secret) to test "none" auth method.
+[NEXT] PROBE: POST https://auth.sumup.com/oauth2/par with `client_id=dashboard&redirect_uri=https://dashboard.sumup.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256` → capture request_uri response; then POST https://auth.sumup.com/oauth2/token with `grant_type=authorization_code&code=<from_par>&client_id=dashboard&code_verifier=test_verifier` (no client_secret) to test "none" auth method.
 [LEARN] ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" — public client impersonation vector; requires live PAR+token flow test.
 [LEARN] ACCEPTED OAUTH @ auth.sumup.com: Full discovery docs expose PAR, device flow, request_object alg "none", scope catalog mapping 1:1 to merchant API resources.
 [LEARN] ACCEPTED OATH @ auth.sumup.com: redirect_uri is strictly allowlisted per client (client_id=dashboard confirmed) — naive redirect_uri/subdomain/path-traversal bypass refuted; errors surfaced on server flow page.

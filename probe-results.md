@@ -101,3 +101,15 @@ https://me.sumup.com/api/sso/callback -> HTTP 403
 https://me.sumup.com/_vercel/insights -> HTTP 404
 https://dashboard.sumup.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJGuAC2I2g2sZMk&code_challenge_method=S256&scope=openid+accounting.read -> HTTP 403
 https://dashboard.sumup.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJGuAC2I2g2sZMk&code_challenge_method=S256&scope=openid+accounting.read` -> HTTP 403
+
+## 2026-09-04 20:03:04 UTC
+https://auth.sumup.com/oauth2/par -> HTTP 404
+https://dashboard.sumup.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256 -> HTTP 403
+https://auth.sumup.com/oauth2/token -> HTTP 405
+https://api.sumup.com/v1/merchants/{other_merchant_id -> HTTP 404
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://me.sumup.com/_vercel/insights -> HTTP 404
+https://dashboard.sumup.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256` -> HTTP 403
+https://api.sumup.com/authorize?client_id={known -> HTTP 404
+https://api.sumup.com/authorize?client_id={l -> HTTP 404
+https://developer.sumup.com/sitemap.xml -> HTTP 404

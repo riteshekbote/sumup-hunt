@@ -123,3 +123,5 @@ www.sumup.com
 - CHANGED api.sumup.com/v1/merchants/{other_merchant_id} returns 404 unauthenticated — versioned resource paths fully gated, no info leak on ID format
 
 ## 2026-09-04 17:50:13 UTC
+
+## 2026-09-04 20:02:49 UTC

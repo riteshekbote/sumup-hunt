@@ -528,3 +528,33 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths 404 unauthenticated; scope catalog from auth.sumup.com defines resource model but requires merchant token.
 [LEARN] REJECTED AUTH @ admin.sumup.com: Header spoofing (Host, X-Forwarded-For, X-Original-URL) yields identical 403 — no auth bypass via passive header manipulation.
 [RISK] SumUp: 28 — Cloudflare+Envoy edge with strict OAuth redirect_uri allowlist, per-client scope validation, and fully-gated api.sumup.com. Anonymous surface is maximally thin after 8 cycles of probing. All remaining high-value leads (BOLA, OAuth app registration, request_object alg=none) require authenticated merchant sessions. The program's real attack surface is behind the dashboard OAuth gate; passive-only recon has exhausted what's discoverable without credentials. Risk decreased from 30 to 28 as additional hardening signals (strict scope validation, device flow non-functional, dynamic registration dead) confirm defense-in-depth posture.
+## 2026-09-04 20:02:36 UTC [target] (model bigpickle)
+[HYP] Legacy api.sumup.com/authorize client_id oracle + loose redirect_uri on legacy-registered test/dev OAuth clients
+class: OATH
+asset: api.sumup.com/authorize
+confidence: 55
+reasoning: Legacy endpoint issues distinct error taxonomy (invalid_client 'does not exist' vs invalid_request 'redirect does not match'), confirming live legacy clients dashboard/test/sumup/ios/android that are NOT registered on the modern auth.sumup.com registry. A live test client ('test') exists on this path; if any legacy-registered client had a loose/expired redirect_uri (local redirect, wildcard, old SDK callback domain), the code flow could be hijacked. Standard variants all rejected so far, but registry is unknown and endpoint is a distinct code path.
+evidence_needed: A valid (client_id, redirect_uri) pair on the legacy registry that yields a 302 to the auth flow (not error), or any redirect_uri validation difference vs /oauth2/auth.
+verify_steps: PASSIVE GET https://api.sumup.com/authorize?client_id={known}&redirect_uri={candidate}&response_type=code — classify invalid_client vs invalid_request; extend candidate list sourced from public SDK repos/old docs (searchable client IDs), ≤1 rps.
+impact: Authorization-code interception for a legacy-registered app (code theft → OAuth ATO of the connecting merchant). Severity: high if a loose redirect exists.
+testability: AUTH_HELPED
+[HYP] Wildcard CORS on legacy OAuth authorize endpoint enables cross-origin OAuth error/state observation
+class: MISCONFIG
+asset: api.sumup.com/authorize
+confidence: 45
+reasoning: All legacy-authorize responses (including 302 error redirects that reflect attacker-visible query params) include access-control-allow-origin: * with max-age, while the modern auth.sumup.com/oauth2/auth does NOT — a divergence proving the header is endpoint-specific, not edge-wide. Combined with response cookies set on Domain=sumup.com (SameSite=None), a malicious origin can read redirect responses to a cross-site request; standalone CORS-wildcard is out-of-scope class but becomes reportable only if chained to a data-bearing response (code/state reflection), which requires a valid redirect_uri to demonstrate.
+evidence_needed: A request that returns a sensitive token/code/state in a CORS-readable response on the legacy path; currently only error redirects observed (no code in 302 without valid auth).
+verify_steps: PASSIVE: verify CORS header persists with Origin header supplied via curl -H "Origin: https://evil.example" on /authorize error branches; confirm no ACAO on auth.sumup.com/oauth2/auth for contrast. Full chain requires AUTH_HELPED.
+impact: Cross-origin read of OAuth flow artifacts if any legacy flow reflects codes/states; currently unproven — dormant. Severity: medium.
+testability: AUTH_HELPED
+[HYP] api.sumup.com BOLA via dashboard-client per-client scope catalog
+class: IDOR
+asset: api.sumup.com
+confidence: 60
+reasoning: auth.sumup.com OIDC discovery + dashboard client scope catalog map 1:1 to api.sumup.com resources; all versioned paths 404 anonymous and the only live path is the legacy OAuth authorize gateway. Cross-tenant BOLA still requires a granted merchant token.
+evidence_needed: Authenticated requests where changing a resource id returns another tenant's data.
+verify_steps: PASSIVE: GET /api/v1/merchants/{id} 404 (done); AUTH_HELPED: use dashboard OAuth token on scope-derived paths, cross-tenant id swaps.
+impact: Cross-tenant financial/PII exposure. Severity: critical.
+testability: AUTH_HELPED
+[NEXT] PROBE: GET https://api.sumup.com/authorize?client_id={l} where l iterates legacy-format SDK client IDs (e.g. sumup-ios-sdk, sumup.pos, reader, sales, virtual-terminal, sumup-api-key, sandbox) with redirect_uri=https://example.com/cb&response_type=code to expand the live legacy client registry (2-3 candidates only, ≤1 rps, GET only), classifying invalid_client vs invalid_request. Also GET https://developer.sumup.com/sitemap.xml to harvest additional legacy endpoint/client naming (porous but low-volume).
+[RISK] SumUp: 27 — Previously-unmapped legacy OAuth gateway (api.sumup.com/authorize) is the only live unauthenticated agent on the API host: it exposes a client-enumeration oracle and a distinct (older) client registry, but its redirect_uri allowlist is strict and mirrors modern validation. Wildcard CORS on an OAuth endpoint is a latent pattern risk with no demonstrated data exposure. All higher-impact classes (BOLA, scope-escalation, app-registration abuse) remain behind the merchant OAuth gate. Risk holds near 27: anonymous surface slightly enriched by a legacy path, but the finding must still clear a strict allowlist.
