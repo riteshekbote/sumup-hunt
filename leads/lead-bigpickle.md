@@ -702,3 +702,46 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED MISCONFIG @ web.sumup.com: 77.246.42.130 is in Rackspace lease pool UK-RACKSPACE-20070509 (Rackspace Ltd.), not a SumUp-owned netblock — supporting infrastructure for a takeover lead but no claimable service state observed.
 [RISK] SumUp: 52 — Core correction this run: the api.sumup.com/authorize gateway is NOT dead (an unexpanded placeholder URL poisoned the KB), and is a genuine live anonymous agent on the highest-value host. It contributes a client_id oracle, a divergent legacy client registry, and an endpoint-specific ACAO:* CORS divergence — all real, all passive-verified. However every path still funnels into auth.sumup.com's strict validation state, no code/state has been observed on the legacy path, and the high-impact chains (legacy redirect code theft, BOLA) remain AUTH_HELPED. web.sumup.com adds a Rackspace-hosted dormant takeover candidate. Risk rose from 26/27 toward 52 reflecting one real live-surface correction and a confirmed third-party-hosted abandoned host, tempered by no demonstrated data exposure.
 ## 2026-09-05 12:09:19 UTC [target] (model bigpickle)
+## 2026-09-05 15:23:44 UTC [target] (model bigpickle)
+[PRIO] api.sumup.com,7.6,a=8,b=10,t=8,g=5,c=8,f=8
+[PRIO] auth.sumup.com,7.4,a=8,b=9,t=9,g=3,c=8,f=5
+[PRIO] me.sumup.com,6.2,a=6,b=8,t=8,g=5,c=8,f=5
+[PRIO] web.sumup.com,5.4,a=4,b=6,t=4,g=6,c=6,f=9
+[HYP] api.sumup.com/authorize legacy redirect-set divergence → hidden legacy callback host
+class: OATH
+asset: api.sumup.com/authorize
+confidence: 55
+reasoning: Live 302→auth error gateway confirmed distinct from auth.sumup.com; client_id oracle shows `dashboard` registered here yet rejects its modern registered callback (me.sumup.com/api/sso/callback) which auth.sumup.com 303s to. The legacy per-client redirect allowlist therefore differs; an older/parked callback host in that set is a plausible code-theft pivot if it resolves to an attacker-accessible origin. Endpoint also carries ACAO:* (cross-origin readable) and Domain=sumup.com SameSite=None cookies.
+evidence_needed: One redirect_uri accepted on the legacy path for a registered client (302 to callback/state path, not redirect-mismatch), or recovery of the legacy dashboard callback host resolving to a claimable/parked origin.
+verify_steps: PASSIVE bounded set run (15+ common hosts all rejected). Next RAG: SumUp public SDKs/docs for legacy callback constants (github.com/sumup/*), crt.sh for legacy callback subdomains; then GET http(s)://recovered-host and assess parked/claimable DNS state. Full code flow AUTH_HELPED. No live claims vs non-SumUp infra without ownership resolve.
+impact: Authorization-code interception for a legacy internal app → merchant OAuth account takeover. Severity: high if a legacy redirect is live/loose; currently unproven — dormant.
+testability: AUTH_HELPED
+[HYP] api.sumup.com cross-tenant BOLA via dashboard-scope API resources
+class: IDOR
+asset: api.sumup.com
+confidence: 55
+reasoning: All anonymous paths except /authorize and .well-known/security.txt return 404; dashboard-client scope catalog maps the hidden resource model; cross-tenant access provable only with a granted merchant token + resource-id swaps.
+evidence_needed: Authenticated requests where changing a resource id returns another tenant's data on scope-derived paths.
+verify_steps: PASSIVE complete (uniform 404s). AUTH_HELPED: dashboard OAuth token on scope paths, cross-tenant id swaps, scope-boundary comparison.
+impact: Cross-tenant financial/PII exposure. Severity: critical.
+testability: AUTH_HELPED
+[HYP] Wildcard CORS on api.sumup.com/authorize chained to a data-bearing redirect
+class: MISCONFIG
+asset: api.sumup.com/authorize
+confidence: 40
+reasoning: ACAO:* + Domain=sumup.com SameSite=None cookies on the legacy OAuth gateway, but only error redirects observed (no code/state). Standalone ACAO:* is not reportable; it matters only if a 3xx/body on this path carries a code/state readable cross-origin.
+evidence_needed: A legacy-path response returning a code/state with ACAO:* present (with Origin header supplied).
+verify_steps: Dependent on hypothesis #1's redirect discovery; then repeat the winning request with Origin: https://evil.example and confirm ACAO persists on a data-bearing response. PASSIVE-first.
+impact: Cross-origin read of OAuth flow artifacts → code theft → ATO. Severity: medium-high, currently latent.
+testability: AUTH_HELPED
+[FINAL] 1. api.sumup.com/authorize legacy redirect-set divergence (conf 55) — live, oracle-confirmed, distinct registry; concrete passive evidence.
+[FINAL] 2. api.sumup.com BOLA (conf 55) — needs merchant token, standard high-value.
+[PARKED] Wildcard-CORS chain (conf 40) — borderline; strictly a dependency of #1, no standalone value. Drop if #1 fails to find a code-emitting redirect.
+[PARKED] web.sumup.com takeover: RDAP confirms Rackspace third-party lease pool but host non-responsive; no claimable service state; PoC requires observing future takeover state or third-party infra interaction — parked pending nightly re-probe + HUMAN escalation.
+[PARKED] PAR/device-flow "none" auth, request_object alg=none, state-JWT forgery — all previously refuted/thresholded; no new evidence.
+[NEXT] RAG: harvest legacy SumUp OAuth callback constants from public SDKs/docs (github.com/sumup repos, archived SumUp mobile/web docs, crt.sh historical certs for *.sumup.com callback-named subdomains) to rebuild the legacy `dashboard`-era redirect allowlist; PASSIVE-verify any recovered host for parked/claimable state before further /authorize tests. ≤1 rps, GET only.
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Endpoint is LIVE (302→auth.sumup.com/flows/oauth2/error), not 404 — the recorded "legacy authorize dead" logged an unexpanded `{legacy_client_id` placeholder URL. Exposes a client_id oracle (invalid_client vs invalid_request) and `dashboard` is registered here with a redirect allowlist divergent from modern auth.sumup.com (modern callback rejected).
+[LEARN] ACCEPTED MISCONFIG @ api.sumup.com/authorize: access-control-allow-origin:* + broad allow-methods + max-age on legacy OAuth gateway responses, absent on auth.sumup.com/oauth2/auth — endpoint-specific CORS divergence; sets optimizely_experiment_user + __cf_bm on Domain=sumup.com (SameSite=None) cross-site readable.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: modern dashboard client registered redirect confirmed live — https://me.sumup.com/api/sso/callback returns 303 invalid_state object (state≥8 enforced) on the accepted host, proving the same URI is NOT accepted on the legacy api path.
+[LEARN] ACCEPTED MISCONFIG @ web.sumup.com: 77.246.42.130 is in Rackspace lease pool UK-RACKSPACE-20070509 (Rackspace Ltd.), not a SumUp-owned netblock — supporting infrastructure for a takeover lead but no claimable service state observed.
+[RISK] SumUp: 52 — Core correction this run: the api.sumup.com/authorize gateway is NOT dead (an unexpanded placeholder URL poisoned the KB), and is a genuine live anonymous agent on the highest-value host. It contributes a client_id oracle, a divergent legacy client registry, and an endpoint-specific ACAO:* CORS divergence — all real, all passive-verified. However every path still funnels into auth.sumup.com's strict validation state, no code/state has been observed on the legacy path, and the high-impact chains (legacy redirect code theft, BOLA) remain AUTH_HELPED. web.sumup.com adds a Rackspace-hosted dormant takeover candidate. Risk rose from 26/27 toward 52 reflecting one real live-surface correction and a confirmed third-party-hosted abandoned host, tempered by no demonstrated data exposure.
