@@ -214,3 +214,24 @@
 - LEARN: REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (403, no CORS headers)
 - LEARN: ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
 - LEARN: REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfir
+
+## RANKED HYPOTHESES 2026-09-05 08:45:15 UTC
+- [55] api.sumup.com/authorize: api.sumup.com/authorize ORACLE + legacy redirect-set divergence → hidden legacy callback host (from art/lead_bigpickle.txt)
+- [50] auth.sumup.com: OAuth PAR request_uri registration bypass via unauthenticated client (from art/lead_nemotron3.txt)
+- NEXT(hypotheses-bigpickle.txt): RAG: enumerate SumUp legacy OAuth callback constants from public SDK/docs (github.com/sumup SDKS + archived SumUp mobile-web docs) to reconstruct the legacy `da
+- NEXT(hypotheses-nemotron3.txt): RAG: Fetch SumUp bug bounty program scope.yml (or program page) to confirm if portal.sumup.com / iriscrm.com is in-scope for SSRF testing
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Endpoint is LIVE (302→auth.sumup.com/flows/oauth2/error), not 404; the earlier "404 for all legacy client_ids" log ran 
+- LEARN: ACCEPTED MISCONFIG @ api.sumup.com/authorize: access-control-allow-origin:* + broad allow-methods + max-age on legacy OAuth gateway responses, absent on auth.su
+- LEARN: ACCEPTED OATH @ auth.sumup.com: modern dashboard client registered redirect confirmed live — https://me.sumup.com/api/sso/callback yields 303 invalid_state (sta
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Endpoint is LIVE (302→auth.sumup.com/flows/oauth2/error), not 404 — the recorded "legacy authorize dead" logged an unex
+- LEARN: ACCEPTED MISCONFIG @ api.sumup.com/authorize: access-control-allow-origin:* + broad allow-methods + max-age on legacy OAuth gateway responses, absent on auth.su
+- LEARN: ACCEPTED OATH @ auth.sumup.com: modern dashboard client registered redirect confirmed live — https://me.sumup.com/api/sso/callback returns 303 invalid_state obj
+- LEARN: ACCEPTED MISCONFIG @ web.sumup.com: 77.246.42.130 is in Rackspace lease pool UK-RACKSPACE-20070509 (Rackspace Ltd.), not a SumUp-owned netblock — supporting inf
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: Legacy OAuth authorize endpoint returns 404 for all known legacy SDK client_ids (sumup-ios-sdk, sumup.pos, reader, sale
+- LEARN: ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" but dashboard client rejects unauthenticated token requests — "none" likel
+- LEARN: ACCEPTED OAUTH @ auth.sumup.com: PAR (/oauth2/par) and device flow (/oauth2/device) endpoints ARE routed and respond to POST (not 404) but require client authen
+- LEARN: ACCEPTED OATH @ auth.sumup.com: request_object_signing_alg_values_supported includes "none" + request_parameter_supported=true — algorithm confusion vector docu
+- LEARN: ACCEPTED AUTH @ me.sumup.com: Vercel-served asset confirmed; all anonymous /api/* routes return 307 to OAuth flow — no debug endpoints or permissive CORS found 
+- LEARN: REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (307 redirect, no CORS headers)
+- LEARN: ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
+- LEARN: REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfir

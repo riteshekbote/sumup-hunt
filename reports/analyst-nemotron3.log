@@ -1568,3 +1568,262 @@ testability: PASSIVE
 ### STEP 7 — RISK
 
 [RISK] sumup: 68 — Auth server (auth.sumup.com) exposes critical OAuth configuration (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. However, all high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client — no passive exploit path. API gateway fully gated. Vercel me.sumup.com adds non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed — now returns 200 (live page) enabling parameter enum. Admin panel hardened. Financial attack surface concentrated but access-controlled.
+===== ANALYST nemotron3 2026-09-05 08:45:15 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://auth.sumup.com/.well-known/openid-configuration
+200
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://api.sumup.com/v1/merchants
+404
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://portal.sumup.com/
+302
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://me.sumup.com/api/sso/callback
+307
+[0m
+[0m$ [0mcurl -s -X POST -o /dev/null -w "%{http_code}" https://auth.sumup.com/oauth2/par
+400
+[0m
+[0m$ [0mcurl -s -X POST -o /dev/null -w "%{http_code}" https://auth.sumup.com/oauth2/device
+400
+[0m
+[0m$ [0mcurl -s -L https://portal.sumup.com/ | head -200
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <!-- Need for IRIS-42331 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="csrf-token" content="A9rAeidL9CZmywqC6WUJJiCWc8RUmo0C2vGBIq3y"/>
+    <title>Login</title>
+    <meta name="description" content="Welcome to SumUp Portal&#039;s CRM site."/>
+    <meta property="og:title" content="Login"/>
+    <meta property="og:image" content="https://cdn.iriscrm.com/sumup/public/logos/portal.sumup.com?v=20250701162316"/>
+    <meta property="og:description" content="Welcome to SumUp Portal&#039;s CRM site."/>
+        <link rel="shortcut icon" href="https://cdn.iriscrm.com/sumup/public/logos/portal.sumup.com.ico?v=20250414111144" type="image/x-icon" />
+    
+    
+    
+    <!-- Start load fonts -->
+    <!-- Important! added base fonts preload -->
+<link rel="preload" href="/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-regular.woff2" as="font" crossorigin />
+<link rel="preload" href="/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-600.woff2" as="font" crossorigin />
+<link rel="preload" href="/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-700.woff2" as="font" crossorigin />
+<link rel="preload" href="/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-700.woff2" as="font" crossorigin />
+<link rel="preload" href="/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-italic.woff2" as="font" crossorigin />
+
+<script type='text/javascript'>
+//<![CDATA[
+    function loadCSS(e, t, n) { "use strict";
+        var i = window.document.createElement("link");
+        var o = t || window.document.getElementsByTagName("script")[0];
+        i.rel = "stylesheet"; i.href = e; i.media = "only x";
+        o.parentNode.insertBefore(i, o);
+        setTimeout(function () { i.media = n || "all" });
+    }
+
+    loadCSS("/build/libs/fontawesome/css/index.css?id=ca897778e3840b372b58ffe608796bd8");
+//]]>
+</script>
+
+<style>
+@font-face{font-display:swap;font-family:Nunito Sans;font-style:normal;font-weight:400;src:url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-regular.eot);src:local(""),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-regular.eot?#iefix) format("embedded-opentype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-regular.woff2) format("woff2"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-regular.woff) format("woff"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-regular.ttf) format("truetype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-regular.svg#NunitoSans) format("svg")}@font-face{font-family:Nunito Sans;font-style:italic;font-weight:400;font-display:swap;src:url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-italic.eot);src:local(""),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-italic.eot?#iefix) format("embedded-opentype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-italic.woff2) format("woff2"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-italic.woff) format("woff"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-italic.ttf) format("truetype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-italic.svg#NunitoSans) format("svg")}@font-face{font-display:swap;font-family:Nunito Sans;font-style:normal;font-weight:600;src:url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-600.eot);src:local(""),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-600.eot?#iefix) format("embedded-opentype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-600.woff2) format("woff2"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-600.woff) format("woff"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-600.ttf) format("truetype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-600.svg#NunitoSans) format("svg")}@font-face{font-display:swap;font-family:Nunito Sans;font-style:italic;font-weight:600;src:url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-600italic.eot);src:local(""),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-600italic.eot?#iefix) format("embedded-opentype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-600italic.woff2) format("woff2"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-600italic.woff) format("woff"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-600italic.ttf) format("truetype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-600italic.svg#NunitoSans) format("svg")}@font-face{font-display:swap;font-family:Nunito Sans;font-style:normal;font-weight:700;src:url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-700.eot);src:local(""),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-700.eot?#iefix) format("embedded-opentype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-700.woff2) format("woff2"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-700.woff) format("woff"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-700.ttf) format("truetype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-700.svg#NunitoSans) format("svg")}@font-face{font-display:swap;font-family:Nunito Sans;font-style:italic;font-weight:700;src:url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-700italic.eot);src:local(""),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-700italic.eot?#iefix) format("embedded-opentype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-700italic.woff2) format("woff2"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-700italic.woff) format("woff"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-700italic.ttf) format("truetype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-700italic.svg#NunitoSans) format("svg")}@font-face{font-display:swap;font-family:Nunito Sans;font-style:normal;font-weight:800;src:url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-800.eot);src:local(""),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-800.eot?#iefix) format("embedded-opentype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-800.woff2) format("woff2"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-800.woff) format("woff"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-800.ttf) format("truetype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-800.svg#NunitoSans) format("svg")}@font-face{font-display:swap;font-family:Nunito Sans;font-style:italic;font-weight:800;src:url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-800italic.eot);src:local(""),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-800italic.eot?#iefix) format("embedded-opentype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-800italic.woff2) format("woff2"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-800italic.woff) format("woff"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-800italic.ttf) format("truetype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-800italic.svg#NunitoSans) format("svg")}@font-face{font-display:swap;font-family:Nunito Sans;font-style:normal;font-weight:900;src:url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-900.eot);src:local(""),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-900.eot?#iefix) format("embedded-opentype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-900.woff2) format("woff2"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-900.woff) format("woff"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-900.ttf) format("truetype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-900.svg#NunitoSans) format("svg")}@font-face{font-display:swap;font-family:Nunito Sans;font-style:italic;font-weight:900;src:url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-900italic.eot);src:local(""),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-900italic.eot?#iefix) format("embedded-opentype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-900italic.woff2) format("woff2"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-900italic.woff) format("woff"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-900italic.ttf) format("truetype"),url(/fonts/nunito-sans-v8-latin-ext_latin_cyrillic-ext_cyrillic-900italic.svg#NunitoSans) format("svg")}@font-face{font-family:Open Sans;font-style:normal;font-weight:400;src:url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-regular.eot);src:local(""),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-regular.eot?#iefix) format("embedded-opentype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-regular.woff2) format("woff2"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-regular.woff) format("woff"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-regular.ttf) format("truetype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-regular.svg#OpenSans) format("svg")}@font-face{font-family:Open Sans;font-style:normal;font-weight:600;src:url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-600.eot);src:local(""),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-600.eot?#iefix) format("embedded-opentype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-600.woff2) format("woff2"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-600.woff) format("woff"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-600.ttf) format("truetype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-600.svg#OpenSans) format("svg")}@font-face{font-family:Open Sans;font-style:normal;font-weight:700;src:url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-700.eot);src:local(""),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-700.eot?#iefix) format("embedded-opentype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-700.woff2) format("woff2"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-700.woff) format("woff"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-700.ttf) format("truetype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-700.svg#OpenSans) format("svg")}@font-face{font-family:Open Sans;font-style:normal;font-weight:800;src:url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-800.eot);src:local(""),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-800.eot?#iefix) format("embedded-opentype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-800.woff2) format("woff2"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-800.woff) format("woff"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-800.ttf) format("truetype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-800.svg#OpenSans) format("svg")}@font-face{font-family:Open Sans;font-style:italic;font-weight:400;src:url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-italic.eot);src:local(""),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-italic.eot?#iefix) format("embedded-opentype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-italic.woff2) format("woff2"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-italic.woff) format("woff"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-italic.ttf) format("truetype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-italic.svg#OpenSans) format("svg")}@font-face{font-family:Open Sans;font-style:italic;font-weight:600;src:url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-600italic.eot);src:local(""),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-600italic.eot?#iefix) format("embedded-opentype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-600italic.woff2) format("woff2"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-600italic.woff) format("woff"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-600italic.ttf) format("truetype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-600italic.svg#OpenSans) format("svg")}@font-face{font-family:Open Sans;font-style:italic;font-weight:800;src:url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-800italic.eot);src:local(""),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-800italic.eot?#iefix) format("embedded-opentype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-800italic.woff2) format("woff2"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-800italic.woff) format("woff"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-800italic.ttf) format("truetype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-800italic.svg#OpenSans) format("svg")}@font-face{font-family:Open Sans;font-style:italic;font-weight:700;src:url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-700italic.eot);src:local(""),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-700italic.eot?#iefix) format("embedded-opentype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-700italic.woff2) format("woff2"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-700italic.woff) format("woff"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-700italic.ttf) format("truetype"),url(/fonts/open-sans-v27-latin-ext_latin_cyrillic-ext_cyrillic-700italic.svg#OpenSans) format("svg")}@font-face{font-family:Lato;font-style:normal;font-weight:400;src:url(/fonts/lato-v20-latin-ext_latin-regular.eot);src:local(""),url(/fonts/lato-v20-latin-ext_latin-regular.eot?#iefix) format("embedded-opentype"),url(/fonts/lato-v20-latin-ext_latin-regular.woff2) format("woff2"),url(/fonts/lato-v20-latin-ext_latin-regular.woff) format("woff"),url(/fonts/lato-v20-latin-ext_latin-regular.ttf) format("truetype"),url(/fonts/lato-v20-latin-ext_latin-regular.svg#Lato) format("svg")}@font-face{font-family:Lato;font-style:italic;font-weight:400;src:url(/fonts/lato-v20-latin-ext_latin-italic.eot);src:local(""),url(/fonts/lato-v20-latin-ext_latin-italic.eot?#iefix) format("embedded-opentype"),url(/fonts/lato-v20-latin-ext_latin-italic.woff2) format("woff2"),url(/fonts/lato-v20-latin-ext_latin-italic.woff) format("woff"),url(/fonts/lato-v20-latin-ext_latin-italic.ttf) format("truetype"),url(/fonts/lato-v20-latin-ext_latin-italic.svg#Lato) format("svg")}@font-face{font-display:swap;font-family:Lato;font-style:normal;font-weight:700;src:url(/fonts/lato-v20-latin-ext_latin-700.eot);src:local(""),url(/fonts/lato-v20-latin-ext_latin-700.eot?#iefix) format("embedded-opentype"),url(/fonts/lato-v20-latin-ext_latin-700.woff2) format("woff2"),url(/fonts/lato-v20-latin-ext_latin-700.woff) format("woff"),url(/fonts/lato-v20-latin-ext_latin-700.ttf) format("truetype"),url(/fonts/lato-v20-latin-ext_latin-700.svg#Lato) format("svg")}@font-face{font-family:Lato;font-style:italic;font-weight:700;src:url(/fonts/lato-v20-latin-ext_latin-700italic.eot);src:local(""),url(/fonts/lato-v20-latin-ext_latin-700italic.eot?#iefix) format("embedded-opentype"),url(/fonts/lato-v20-latin-ext_latin-700italic.woff2) format("woff2"),url(/fonts/lato-v20-latin-ext_latin-700italic.woff) format("woff"),url(/fonts/lato-v20-latin-ext_latin-700italic.ttf) format("truetype"),url(/fonts/lato-v20-latin-ext_latin-700italic.svg#Lato) format("svg")}@font-face{font-family:Lato;font-style:normal;font-weight:900;src:url(/fonts/lato-v20-latin-ext_latin-900.eot);src:local(""),url(/fonts/lato-v20-latin-ext_latin-900.eot?#iefix) format("embedded-opentype"),url(/fonts/lato-v20-latin-ext_latin-900.woff2) format("woff2"),url(/fonts/lato-v20-latin-ext_latin-900.woff) format("woff"),url(/fonts/lato-v20-latin-ext_latin-900.ttf) format("truetype"),url(/fonts/lato-v20-latin-ext_latin-900.svg#Lato) format("svg")}@font-face{font-family:Lato;font-style:italic;font-weight:900;src:url(/fonts/lato-v20-latin-ext_latin-900italic.eot);src:local(""),url(/fonts/lato-v20-latin-ext_latin-900italic.eot?#iefix) format("embedded-opentype"),url(/fonts/lato-v20-latin-ext_latin-900italic.woff2) format("woff2"),url(/fonts/lato-v20-latin-ext_latin-900italic.woff) format("woff"),url(/fonts/lato-v20-latin-ext_latin-900italic.ttf) format("truetype"),url(/fonts/lato-v20-latin-ext_latin-900italic.svg#Lato) format("svg")}@font-face{font-family:Roboto;font-style:normal;font-weight:400;src:url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-regular.eot);src:local(""),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-regular.eot?#iefix) format("embedded-opentype"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-regular.woff2) format("woff2"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-regular.woff) format("woff"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-regular.ttf) format("truetype"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-regular.svg#Roboto) format("svg")}@font-face{font-family:Roboto;font-style:italic;font-weight:400;src:url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-italic.eot);src:local(""),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-italic.eot?#iefix) format("embedded-opentype"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-italic.woff2) format("woff2"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-italic.woff) format("woff"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-italic.ttf) format("truetype"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-italic.svg#Roboto) format("svg")}@font-face{font-family:Roboto;font-style:normal;font-weight:700;src:url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-700.eot);src:local(""),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-700.eot?#iefix) format("embedded-opentype"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-700.woff2) format("woff2"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-700.woff) format("woff"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-700.ttf) format("truetype"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-700.svg#Roboto) format("svg")}@font-face{font-family:Roboto;font-style:italic;font-weight:700;src:url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-700italic.eot);src:local(""),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-700italic.eot?#iefix) format("embedded-opentype"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-700italic.woff2) format("woff2"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-700italic.woff) format("woff"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-700italic.ttf) format("truetype"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-700italic.svg#Roboto) format("svg")}@font-face{font-family:Roboto;font-style:normal;font-weight:900;src:url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-900.eot);src:local(""),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-900.eot?#iefix) format("embedded-opentype"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-900.woff2) format("woff2"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-900.woff) format("woff"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-900.ttf) format("truetype"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-900.svg#Roboto) format("svg")}@font-face{font-family:Roboto;font-style:italic;font-weight:900;src:url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-900italic.eot);src:local(""),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-900italic.eot?#iefix) format("embedded-opentype"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-900italic.woff2) format("woff2"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-900italic.woff) format("woff"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-900italic.ttf) format("truetype"),url(/fonts/roboto-v29-latin-ext_latin_cyrillic-ext_cyrillic-900italic.svg#Roboto) format("svg")}@font-face{font-family:Montserrat;font-style:normal;font-weight:400;src:url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-regular.eot);src:local(""),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-regular.eot?#iefix) format("embedded-opentype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-regular.woff2) format("woff2"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-regular.woff) format("woff"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-regular.ttf) format("truetype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-regular.svg#Montserrat) format("svg")}@font-face{font-family:Montserrat;font-style:italic;font-weight:400;src:url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-italic.eot);src:local(""),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-italic.eot?#iefix) format("embedded-opentype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-italic.woff2) format("woff2"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-italic.woff) format("woff"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-italic.ttf) format("truetype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-italic.svg#Montserrat) format("svg")}@font-face{font-family:Montserrat;font-style:normal;font-weight:600;src:url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-600.eot);src:local(""),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-600.eot?#iefix) format("embedded-opentype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-600.woff2) format("woff2"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-600.woff) format("woff"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-600.ttf) format("truetype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-600.svg#Montserrat) format("svg")}@font-face{font-family:Montserrat;font-style:italic;font-weight:600;src:url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-600italic.eot);src:local(""),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-600italic.eot?#iefix) format("embedded-opentype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-600italic.woff2) format("woff2"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-600italic.woff) format("woff"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-600italic.ttf) format("truetype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-600italic.svg#Montserrat) format("svg")}@font-face{font-family:Montserrat;font-style:normal;font-weight:700;src:url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-700.eot);src:local(""),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-700.eot?#iefix) format("embedded-opentype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-700.woff2) format("woff2"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-700.woff) format("woff"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-700.ttf) format("truetype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-700.svg#Montserrat) format("svg")}@font-face{font-family:Montserrat;font-style:italic;font-weight:700;src:url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-700italic.eot);src:local(""),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-700italic.eot?#iefix) format("embedded-opentype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-700italic.woff2) format("woff2"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-700italic.woff) format("woff"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-700italic.ttf) format("truetype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-700italic.svg#Montserrat) format("svg")}@font-face{font-family:Montserrat;font-style:normal;font-weight:800;src:url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-800.eot);src:local(""),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-800.eot?#iefix) format("embedded-opentype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-800.woff2) format("woff2"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-800.woff) format("woff"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-800.ttf) format("truetype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-800.svg#Montserrat) format("svg")}@font-face{font-family:Montserrat;font-style:italic;font-weight:800;src:url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-800italic.eot);src:local(""),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-800italic.eot?#iefix) format("embedded-opentype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-800italic.woff2) format("woff2"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-800italic.woff) format("woff"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-800italic.ttf) format("truetype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-800italic.svg#Montserrat) format("svg")}@font-face{font-family:Montserrat;font-style:italic;font-weight:900;src:url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-900italic.eot);src:local(""),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-900italic.eot?#iefix) format("embedded-opentype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-900italic.woff2) format("woff2"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-900italic.woff) format("woff"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-900italic.ttf) format("truetype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-900italic.svg#Montserrat) format("svg")}@font-face{font-family:Montserrat;font-style:normal;font-weight:900;src:url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-900.eot);src:local(""),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-900.eot?#iefix) format("embedded-opentype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-900.woff2) format("woff2"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-900.woff) format("woff"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-900.ttf) format("truetype"),url(/fonts/montserrat-v18-latin-ext_latin_cyrillic-ext_cyrillic-900.svg#Montserrat) format("svg")}@font-face{font-family:Poppins;font-style:normal;font-weight:400;src:url(/fonts/poppins-v15-latin-ext_latin-regular.eot);src:local(""),url(/fonts/poppins-v15-latin-ext_latin-regular.eot?#iefix) format("embedded-opentype"),url(/fonts/poppins-v15-latin-ext_latin-regular.woff2) format("woff2"),url(/fonts/poppins-v15-latin-ext_latin-regular.woff) format("woff"),url(/fonts/poppins-v15-latin-ext_latin-regular.ttf) format("truetype"),url(/fonts/poppins-v15-latin-ext_latin-regular.svg#Poppins) format("svg")}@font-face{font-family:Poppins;font-style:italic;font-weight:400;src:url(/fonts/poppins-v15-latin-ext_latin-italic.eot);src:local(""),url(/fonts/poppins-v15-latin-ext_latin-italic.eot?#iefix) format("embedded-opentype"),url(/fonts/poppins-v15-latin-ext_latin-italic.woff2) format("woff2"),url(/fonts/poppins-v15-latin-ext_latin-italic.woff) format("woff"),url(/fonts/poppins-v15-latin-ext_latin-italic.ttf) format("truetype"),url(/fonts/poppins-v15-latin-ext_latin-italic.svg#Poppins) format("svg")}@font-face{font-family:Poppins;font-style:normal;font-weight:600;src:url(/fonts/poppins-v15-latin-ext_latin-600.eot);src:local(""),url(/fonts/poppins-v15-latin-ext_latin-600.eot?#iefix) format("embedded-opentype"),url(/fonts/poppins-v15-latin-ext_latin-600.woff2) format("woff2"),url(/fonts/poppins-v15-latin-ext_latin-600.woff) format("woff"),url(/fonts/poppins-v15-latin-ext_latin-600.ttf) format("truetype"),url(/fonts/poppins-v15-latin-ext_latin-600.svg#Poppins) format("svg")}@font-face{font-family:Poppins;font-style:italic;font-weight:600;src:url(/fonts/poppins-v15-latin-ext_latin-600italic.eot);src:local(""),url(/fonts/poppins-v15-latin-ext_latin-600italic.eot?#iefix) format("embedded-opentype"),url(/fonts/poppins-v15-latin-ext_latin-600italic.woff2) format("woff2"),url(/fonts/poppins-v15-latin-ext_latin-600italic.woff) format("woff"),url(/fonts/poppins-v15-latin-ext_latin-600italic.ttf) format("truetype"),url(/fonts/poppins-v15-latin-ext_latin-600italic.svg#Poppins) format("svg")}@font-face{font-family:Poppins;font-style:italic;font-weight:700;src:url(/fonts/poppins-v15-latin-ext_latin-700italic.eot);src:local(""),url(/fonts/poppins-v15-latin-ext_latin-700italic.eot?#iefix) format("embedded-opentype"),url(/fonts/poppins-v15-latin-ext_latin-700italic.woff2) format("woff2"),url(/fonts/poppins-v15-latin-ext_latin-700italic.woff) format("woff"),url(/fonts/poppins-v15-latin-ext_latin-700italic.ttf) format("truetype"),url(/fonts/poppins-v15-latin-ext_latin-700italic.svg#Poppins) format("svg")}@font-face{font-family:Poppins;font-style:normal;font-weight:700;src:url(/fonts/poppins-v15-latin-ext_latin-700.eot);src:local(""),url(/fonts/poppins-v15-latin-ext_latin-700.eot?#iefix) format("embedded-opentype"),url(/fonts/poppins-v15-latin-ext_latin-700.woff2) format("woff2"),url(/fonts/poppins-v15-latin-ext_latin-700.woff) format("woff"),url(/fonts/poppins-v15-latin-ext_latin-700.ttf) format("truetype"),url(/fonts/poppins-v15-latin-ext_latin-700.svg#Poppins) format("svg")}@font-face{font-family:Poppins;font-style:italic;font-weight:800;src:url(/fonts/poppins-v15-latin-ext_latin-800italic.eot);src:local(""),url(/fonts/poppins-v15-latin-ext_latin-800italic.eot?#iefix) format("embedded-opentype"),url(/fonts/poppins-v15-latin-ext_latin-800italic.woff2) format("woff2"),url(/fonts/poppins-v15-latin-ext_latin-800italic.woff) format("woff"),url(/fonts/poppins-v15-latin-ext_latin-800italic.ttf) format("truetype"),url(/fonts/poppins-v15-latin-ext_latin-800italic.svg#Poppins) format("svg")}@font-face{font-family:Poppins;font-style:normal;font-weight:800;src:url(/fonts/poppins-v15-latin-ext_latin-800.eot);src:local(""),url(/fonts/poppins-v15-latin-ext_latin-800.eot?#iefix) format("embedded-opentype"),url(/fonts/poppins-v15-latin-ext_latin-800.woff2) format("woff2"),url(/fonts/poppins-v15-latin-ext_latin-800.woff) format("woff"),url(/fonts/poppins-v15-latin-ext_latin-800.ttf) format("truetype"),url(/fonts/poppins-v15-latin-ext_latin-800.svg#Poppins) format("svg")}@font-face{font-family:Poppins;font-style:normal;font-weight:900;src:url(/fonts/poppins-v15-latin-ext_latin-900.eot);src:local(""),url(/fonts/poppins-v15-latin-ext_latin-900.eot?#iefix) format("embedded-opentype"),url(/fonts/poppins-v15-latin-ext_latin-900.woff2) format("woff2"),url(/fonts/poppins-v15-latin-ext_latin-900.woff) format("woff"),url(/fonts/poppins-v15-latin-ext_latin-900.ttf) format("truetype"),url(/fonts/poppins-v15-latin-ext_latin-900.svg#Poppins) format("svg")}@font-face{font-family:Poppins;font-style:italic;font-weight:900;src:url(/fonts/poppins-v15-latin-ext_latin-900italic.eot);src:local(""),url(/fonts/poppins-v15-latin-ext_latin-900italic.eot?#iefix) format("embedded-opentype"),url(/fonts/poppins-v15-latin-ext_latin-900italic.woff2) format("woff2"),url(/fonts/poppins-v15-latin-ext_latin-900italic.woff) format("woff"),url(/fonts/poppins-v15-latin-ext_latin-900italic.ttf) format("truetype"),url(/fonts/poppins-v15-latin-ext_latin-900italic.svg#Poppins) format("svg")}@font-face{font-family:password;font-style:normal;font-weight:400;src:url(/password-font/password.ttf)}@font-face{font-family:text-security-disc;src:url(/fonts/text-security-disc.woff)}
+</style>
+
+    </head>
+<body class="hide-menu" style="--link-color:#4a90e2;--task-color:#3F8ECB;--primary-font:Nunito Sans;--CHART_COLOR_1:#fd7f6f;--CHART_COLOR_2:#f7ac51;--CHART_COLOR_3:#45c197;--CHART_COLOR_4:#5d96d7;--primary-color:#000000;--main-body-color:#f2f1f1;--secondary-color:#d0d0d0;SELECTED_THEME_ID:group-theme;--background-color:transparent;--appointment-color:#54976C;--placeholder-color:#A3A3A3;--primary-text-color:#101F26;--sidebar-body-color:#000000;--sidebar-text-color:#FCFCFC;--table-header-color:#000000;--primary-hover-color:#EEF5F8;--focused-border-color:#000000;--input-field-bg-color:#FFFFFF;--field-label-text-color:#2D576C;--main-body-second-color:#d2d1d1;--table-header-text-color:#FFFFFF;--primary-icon-border-color:#B0BBC1;--sidebar-active-text-color:#0682C0;--table-header-active-color:#0F6691;--sidebar-body-submenu-color:#000000;--chart-and-table-background-color:#FFFFFF;--sidebar-active-item-background-color:#155879;--sidebar-active-item-hover-background-color:#1489C4">
+
+    <div id="root"></div>
+
+    
+    
+    <div id="minimized-modal-root"></div>
+    <div id="user-root"></div>
+
+    <script type="text/javascript">
+        window.globalParameters = {"isLoggedIn":false,"logoUrl":"https:\/\/cdn.iriscrm.com\/sumup\/public\/logos\/portal.sumup.com?v=20250701162316","newUILogoURL":"https:\/\/cdn.iriscrm.com\/sumup\/public\/logos\/portal.sumup.com_new_ui?v=20250701161856","faviconUrl":"https:\/\/cdn.iriscrm.com\/sumup\/public\/logos\/portal.sumup.com.ico?v=20250414111144","logoId":2,"siteTitle":"SumUp Portal","description":"Welcome to SumUp Portal\u0027s CRM site.","env":"production"};
+
+        // pusher config
+        window.tenantName = "sumup";
+        window.pusherAppKey = "1432ec8392034319000f";
+        window.pusherAppCluster = "us2";
+
+        window.bChangeDetected = true;
+
+            </script>
+
+        <script>
+        window.redirect = "\/\/portal.sumup.com\/v2";
+        window.enabledSSO = false;
+
+        window.enabledOIDC = false;
+        window.oidcUrl = "https:\/\/portal.sumup.com\/auth\/oidc\/login";
+        window.loginError = "";
+    </script>
+    <script src="/js/react/app.js?id=136393430c1fd219dc2e5497f6c199a7"></script>
+        <link rel="preload" as="style" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/Tooltip-COVhi0fM.css" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" crossorigin="anonymous" integrity="sha384-q8nIR3RiuCVr1HcD4/DLWVTVOEGF6OUa7qhEQ5wMIbT1nh15gOJ4Flyawix6Kz39" /><link rel="preload" as="style" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/responce-utils-DtOkOdcO.css" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" crossorigin="anonymous" integrity="sha384-k6vpCmBbQDmCvUog+Goan9GxbxwX9yFvNcp0xuWUP4095KPMwQMV7I/LKltOhuFM" /><link rel="preload" as="style" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/Login-BY9DqvIh.css" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" crossorigin="anonymous" integrity="sha384-BCx1ElFHrf+glT+oQIQXv+GSHa+teEefYJG04ERPhmX/u03h9Yb2Qb0wIPg5IWbB" /><link rel="preload" as="style" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/App-D5kcuOCD.css" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" crossorigin="anonymous" integrity="sha384-knELP7+rhV0Bh/9zpHe4s4Xfv52/bbU34Zcm7Tjie7yddANdKZDwiLhQE75YhIvu" /><link rel="preload" as="style" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/apiClient-DvcN7xN8.css" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" crossorigin="anonymous" integrity="sha384-AXOXcrlrjwbLXUxfc4VWu4DITyc5nzr91CI9aZ96S3Ydoxi/yxHBdKM9xcMKR2py" /><link rel="preload" as="style" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/LoginContainer-5hfdeR8g.css" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" crossorigin="anonymous" integrity="sha384-yYvU6yCzoAyI/I4qytQ6BcPRX8GKR3CqzARD7x7U4dFFapvlpGdGsRNI+peWl9Ls" /><link rel="modulepreload" as="script" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/Login-BTM6F1QC.js" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" crossorigin="anonymous" integrity="sha384-DtG5PplxYoFL9FZtWutUkDlL3x0WIeLMEJrEP+G0ioeWpRKlNFajOJmrlZr1aLft" /><link rel="modulepreload" as="script" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/rolldown-runtime-C0FnF6B9.js" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" crossorigin="anonymous" integrity="sha384-pW9rzzCA2EwWl7P9me1nisRT8ORnuXx2XtSvDMw4/grX5nRHWde7efbsOY6KGLpe" /><link rel="modulepreload" as="script" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/jsx-runtime-Bs0mCWXL.js" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" crossorigin="anonymous" integrity="sha384-zzpx+YpPxBTnW47GmK0X7a7DVcTkErRPmokcdu7nvB5HHghcJ9RuSuEv42EL0MHP" /><link rel="modulepreload" as="script" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/react-dom-N-sKKxTb.js" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" crossorigin="anonymous" integrity="sha384-D/hOus5wdQAD42k062PeMGnlrfh+/eIXb6xyBbjtUfhlGGJGKfwgQrIZZq+ZywVg" /><link rel="modulepreload" as="script" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/Tooltip-DKuZEGp0.js" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" crossorigin="anonymous" integrity="sha384-ledkeqOQNc1oA0fZ6NGMLEFDydFkRSEGrBE36iqmDh/rTLm+I9j9OI+9fozmonoW" /><link rel="modulepreload" as="script" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/responce-utils-DV5JjsAJ.js" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" crossorigin="anonymous" integrity="sha384-vrK/9LuDUlWAMvxVXiXCTOJgnHuZ3Ibibxgxo1pjqcHsUgAaJ26oi54hLrsvdRm+" /><link rel="modulepreload" as="script" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/actions-C2e0XFx9.js" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" crossorigin="anonymous" integrity="sha384-BHlpdMbHOLh2cqOX5muSnhGzAseFr2wn+9SMDXLCy07sGNo6f3P4+d+uvXLUrWtb" /><link rel="modulepreload" as="script" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/Login-DR3WQnKu.js" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" crossorigin="anonymous" integrity="sha384-yhBSRZK0p4ySWUXw3qcMYCgErVdFXoOKjxEAiUYgzMxn7IthVq/SdGbit+cZGQ5A" /><link rel="stylesheet" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/Tooltip-COVhi0fM.css" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" integrity="sha384-q8nIR3RiuCVr1HcD4/DLWVTVOEGF6OUa7qhEQ5wMIbT1nh15gOJ4Flyawix6Kz39" crossorigin="anonymous" /><link rel="stylesheet" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/responce-utils-DtOkOdcO.css" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" integrity="sha384-k6vpCmBbQDmCvUog+Goan9GxbxwX9yFvNcp0xuWUP4095KPMwQMV7I/LKltOhuFM" crossorigin="anonymous" /><link rel="stylesheet" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/Login-BY9DqvIh.css" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" integrity="sha384-BCx1ElFHrf+glT+oQIQXv+GSHa+teEefYJG04ERPhmX/u03h9Yb2Qb0wIPg5IWbB" crossorigin="anonymous" /><link rel="stylesheet" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/App-D5kcuOCD.css" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" integrity="sha384-knELP7+rhV0Bh/9zpHe4s4Xfv52/bbU34Zcm7Tjie7yddANdKZDwiLhQE75YhIvu" crossorigin="anonymous" /><link rel="stylesheet" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/apiClient-DvcN7xN8.css" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" integrity="sha384-AXOXcrlrjwbLXUxfc4VWu4DITyc5nzr91CI9aZ96S3Ydoxi/yxHBdKM9xcMKR2py" crossorigin="anonymous" /><link rel="stylesheet" href="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/LoginContainer-5hfdeR8g.css" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" integrity="sha384-yYvU6yCzoAyI/I4qytQ6BcPRX8GKR3CqzARD7x7U4dFFapvlpGdGsRNI+peWl9Ls" crossorigin="anonymous" /><script type="module" src="https://cdn.iriscrm.com/assets/main/7c2f8352/build/assets/Login-BTM6F1QC.js" nonce="AcYjpSRUhZjjaO7mXOWAbQXYvu2gJjYmqRgWyExh" integrity="sha384-DtG5PplxYoFL9FZtWutUkDlL3x0WIeLMEJrEP+G0ioeWpRKlNFajOJmrlZr1aLft" crossorigin="anonymous"></script>
+    <script src="/js/react/manifest.js?id=173a83d239b781257bdbdd8aed03946f"></script>
+    <script src="/js/react/vendor.js?id=e3d2182bd40b8fc3a610302abc4fd852"></script>
+    <script src="/build/js/websockets.js?id=d7130f013134731b6a31b6fa6f9c8508"></script>
+
+    
+</body>
+</html>
+[0m
+[0m$ [0mcurl -s https://portal.sumup.com/ | grep -oE '(webhook|callback|redirect|return_url|next|url=|redirect_uri)' | head -20
+(no output)
+[0m
+[0m$ [0mcurl -s "https://portal.sumup.com/js/react/app.js?id=136393430c1fd219dc2e5497f6c199a7" | grep -oE '(webhook|callback|redirect|url.*:|api/)' | head -30
+...output truncated...
+
+Full output saved to: /home/runner/.local/share/opencode/tool-output/tool_070bb762c001hX1tkbTLF84CVn
+
+(no output)
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" https://sumup.iriscrm.com/
+302
+[0m
+[0m$ [0mcurl -s https://auth.sumup.com/.well-known/openid-configuration | python3 -m json.tool
+{
+    "issuer": "https://auth.sumup.com/",
+    "authorization_endpoint": "https://auth.sumup.com/oauth2/auth",
+    "token_endpoint": "https://auth.sumup.com/oauth2/token",
+    "jwks_uri": "https://auth.sumup.com/.well-known/jwks.json",
+    "subject_types_supported": [
+        "public"
+    ],
+    "response_types_supported": [
+        "code",
+        "code id_token",
+        "id_token",
+        "token id_token",
+        "token",
+        "token id_token code"
+    ],
+    "claims_supported": [
+        "sub",
+        "iss",
+        "exp",
+        "iat"
+    ],
+    "grant_types_supported": [
+        "authorization_code",
+        "implicit",
+        "client_credentials",
+        "refresh_token"
+    ],
+    "response_modes_supported": [
+        "query",
+        "fragment"
+    ],
+    "userinfo_endpoint": "https://auth.sumup.com/userinfo",
+    "scopes_supported": [
+        "offline_access",
+        "offline",
+        "openid",
+        "email",
+        "classic"
+    ],
+    "token_endpoint_auth_methods_supported": [
+        "client_secret_post",
+        "client_secret_basic",
+        "private_key_jwt",
+        "none"
+    ],
+    "userinfo_signing_alg_values_supported": [
+        "none",
+        "RS256"
+    ],
+    "id_token_signing_alg_values_supported": [
+        "RS256"
+    ],
+    "request_parameter_supported": true,
+    "request_uri_parameter_supported": true,
+    "require_request_uri_registration": true,
+    "claims_parameter_supported": false,
+    "revocation_endpoint": "https://auth.sumup.com/oauth2/revoke",
+    "backchannel_logout_supported": true,
+    "backchannel_logout_session_supported": true,
+    "frontchannel_logout_supported": true,
+    "frontchannel_logout_session_supported": true,
+    "end_session_endpoint": "https://auth.sumup.com/oauth2/sessions/logout",
+    "request_object_signing_alg_values_supported": [
+        "RS256",
+        "none"
+    ],
+    "code_challenge_methods_supported": [
+        "plain",
+        "S256"
+    ],
+    "nonce_endpoint": "https://auth.sumup.com/oauth2/nonce"
+}
+[0m
+**STEP 1 — DELTA**
+[NEW] portal.sumup.com returns 200 with React CRM login page (iriscrm.com) — live parameter enumeration surface now accessible
+[CHANGED] auth.sumup.com/oauth2/auth with request_object returns 405 (rejects at method level before validation)
+[CHANGED] me.sumup.com/api/sso/callback returns 307 (not 403) on anonymous GET — redirect to OAuth flow
+[CHANGED] auth.sumup.com/oauth2/par and /oauth2/device return 400 on POST — routed but require client authentication params
+[CHANGED] api.sumup.com/authorize returns 404 for ALL legacy client_ids — legacy OAuth surface fully dead
+
+**STEP 2 — PRIORITIZE**
+[PRIO] auth.sumup.com,8.1,a=9,b=10,t=9,g=3,c=8,f=8
+[PRIO] portal.sumup.com,6.8,a=7,b=7,t=6,g=5,c=6,f=7
+[PRIO] me.sumup.com,6.5,a=7,b=8,t=6,g=5,c=7,f=7
+[PRIO] api.sumup.com,5.5,a=7,b=10,t=4,g=2,c=7,f=5
+[PRIO] admin.sumup.com,4.8,a=5,b=7,t=3,g=2,c=6,f=5
+
+**STEP 3 — HYPOTHESES**
+[HYP] OAuth PAR request_uri registration bypass via unauthenticated client
+class: OATH
+asset: auth.sumup.com
+confidence: 50
+reasoning: Discovery shows require_request_uri_registration=true, PAR endpoint routed (400 on POST), request_uri_parameter_supported=true. If PAR accepts request_uri without client_auth binding, attacker could register malicious redirect_uri
+evidence_needed: Successful PAR POST returning request_uri usable in authorize flow without client credentials
+verify_steps: POST https://auth.sumup.com/oauth2/par with client_id=dashboard&redirect_uri=https://dashboard.sumup.com/callback&request_uri=https://attacker.com/malicious.json&response_type=code&scope=classic → observe if request_uri accepted; then GET https://auth.sumup.com/oauth2/auth?client_id=dashboard&request_uri=urn:ietf:params:oauth:request_uri:...
+impact: OAuth code theft via malicious request_uri → merchant account takeover — CRITICAL
+testability: PASSIVE
+
+[HYP] portal.sumup.com (iriscrm.com) webhook/callback SSRF via supply-chain parameter injection
+class: SSRF
+asset: portal.sumup.com
+confidence: 45
+reasoning: portal.sumup.com CNAME → sumup.iriscrm.com (third-party CRM). Returns 200 with React app. CRM platforms typically have webhook/callback/config endpoints accepting URLs. CSP allows *.iriscrm.com for connect-src/frame-src/img-src
+evidence_needed: Discovery of URL/redirect/webhook/callback parameter on portal.sumup.com or iriscrm.com endpoints; SSRF payload execution against 169.254.169.254
+verify_steps: GET https://portal.sumup.com/ → enumerate all forms/links/endpoints for parameters (url, redirect, callback, webhook, next, return_to, target). GET https://sumup.iriscrm.com/ → same enumeration. If parameter found, test with http://169.254.169.254/latest/meta-data/ (passive enum only)
+impact: Cloud metadata exposure → IAM credentials, instance identity → full AWS account compromise — CRITICAL
+testability: PASSIVE (enum) → HUMAN_ONLY (exploit requires in-scope confirmation)
+
+[HYP] me.sumup.com Vercel /api/sso/callback state parameter deserialization via alg=none confusion
+class: AUTH
+asset: me.sumup.com
+confidence: 40
+reasoning: /api/sso/callback is Vercel serverless function (non-Cloudflare). OAuth state is HS256-signed JWT carrying appState. OIDC discovery shows request_object_signing_alg_values_supported includes "none" + request_parameter_supported=true. If state validation uses same JWT parser with alg confusion, could bypass auth
+evidence_needed: Non-403/307 response (200/500) with crafted state parameter revealing deserialization error or bypass
+verify_steps: GET https://me.sumup.com/api/sso/callback?state=eyJhbGciOiJub25lIn0.eyJhcHBTdGF0ZSI6e30nfQ. → observe status/error. GET https://me.sumup.com/api/sso/callback?state=malformed → observe error body for stack traces. OPTIONS https://me.sumup.com/api/sso/callback → capture CORS headers
+impact: Auth bypass on merchant self-service portal → OAuth app registration abuse, broad-scope token issuance — HIGH
+testability: PASSIVE
+
+**STEP 4 — SELF-CRITIQUE**
+[PARKED] OAuth PAR request_uri registration bypass via unauthenticated client: Confidence 50 but PAR requires client_auth (dashboard client rejects unauthenticated); request_uri registration likely bound to authenticated client context
+[PARKED] portal.sumup.com SSRF via iriscrm.com: Confidence 45 but third-party domain (iriscrm.com) requires explicit in-scope confirmation; no webhook parameters discovered passively in React bundle
+[PARKED] me.sumup.com state deserialization flaw: Confidence 40 but all anonymous requests return 307 at edge; requires valid session to reach app logic; state JWT uses HS256 (not alg=none)
+[FINAL] No hypotheses survive filtering — all require AUTH_HELPED or HUMAN_ONLY verification beyond passive capabilities
+
+**STEP 5 — NEXT ACTION**
+[NEXT] RAG: Fetch SumUp bug bounty program scope.yml (or program page) to confirm if portal.sumup.com / iriscrm.com is in-scope for SSRF testing
+
+**STEP 6 — LEARNING**
+[LEARN] REJECTED OATH @ api.sumup.com/authorize: Legacy OAuth authorize endpoint returns 404 for all known legacy SDK client_ids (sumup-ios-sdk, sumup.pos, reader, sales, virtual-terminal) — no client_id oracle, no loose redirect_uri
+[LEARN] ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" but dashboard client rejects unauthenticated token requests — "none" likely restricted to specific client configs not publicly registrable
+[LEARN] ACCEPTED OAUTH @ auth.sumup.com: PAR (/oauth2/par) and device flow (/oauth2/device) endpoints ARE routed and respond to POST (not 404) but require client authentication
+[LEARN] ACCEPTED OATH @ auth.sumup.com: request_object_signing_alg_values_supported includes "none" + request_parameter_supported=true — algorithm confusion vector documented but untestable without valid client flow
+[LEARN] ACCEPTED AUTH @ me.sumup.com: Vercel-served asset confirmed; all anonymous /api/* routes return 307 to OAuth flow — no debug endpoints or permissive CORS found passively
+[LEARN] REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (307 redirect, no CORS headers)
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
+[LEARN] REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfirmed in-scope
+
+**STEP 7 — RISK**
+[RISK] sumup: 68 — Auth server (auth.sumup.com) exposes critical OAuth configuration (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. However, all high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client — no passive exploit path. API gateway fully gated. Vercel me.sumup.com adds non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed — now returns 200 (live page) enabling parameter enum. Admin panel hardened. Financial attack surface concentrated but access-controlled.

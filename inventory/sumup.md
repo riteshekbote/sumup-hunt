@@ -143,3 +143,26 @@ www.sumup.com
 - CHANGED me.sumup.com/api/sso/callback consistently returns 403 (not 307) on anonymous GET — Vercel function enforces auth at edge, no redirect loop
 - CHANGED api.sumup.com/authorize returns 404 for ALL legacy client_ids — legacy OAuth surface fully dead on API gateway
 - CHANGED auth.sumup.com/oauth2/par and /oauth2/device respond to POST (routed) but require client auth — "none" auth_method not usable for dashboard client
+
+## 2026-09-05 08:45:15 UTC
+- NEW api.sumup.com/authorize is LIVE: bare and client_id probes return 302 → auth.sumup.com/flows/oauth2/error with OAuth error taxonomy — directly contradicts the 2026-09-05 recording that "legacy authori
+- NEW api.sumup.com/authorize exposes a client_id ORACLE via error taxonomy: `invalid_client` ("does not exist") for unknown clients vs `invalid_request` (redirect_uri mismatch) for the registered `dashboar
+- NEW api.sumup.com/.well-known/security.txt returns 200 (PGP-signed, canonical set includes api.sumup.com) with `access-control-allow-origin: *` + `Domain=sumup.com SameSite=None` cookies — public known fi
+- NEW web.sumup.com IP 77.246.42.130 confirmed in Rackspace netblock `UK-RACKSPACE-20070509` (org: Rackspace Ltd., Texas) — NOT SumUp-owned; third-party lease pool, strengthens the dormant subdomain-takeove
+- NEW api.sumup.com/authorize is LIVE (302→auth.sumup.com/flows/oauth2/error) — contradicts the 2026-09-05 "legacy authorize dead (404)" recording; the earlier log ran a literal unexpanded `{legacy_client_i
+- NEW Client_id ORACLE on api.sumup.com/authorize: invalid_client ("does not exist") for unknown IDs vs invalid_request (redirect mismatch) for registered `dashboard` — 2-class error taxonomy.
+- NEW Legacy registry divergence: `dashboard` client's modern registered callback `https://me.sumup.com/api/sso/callback` is rejected on the legacy gateway (invalid_request redirect-mismatch) but yields 303
+- NEW Endpoint-specific wildcard CORS confirmed side-by-side: api.sumup.com/authorize sends `access-control-allow-origin: *` + `access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE` + `access-contro
+- NEW api.sumup.com/.well-known/security.txt → 200 PGP-signed (canonical includes api.sumup.com) — public known file, benign.
+- NEW web.sumup.com IP 77.246.42.130 confirmed in Rackspace lease pool (UK-RACKSPACE-20070509, org Rackspace Ltd) — NOT SumUp-owned; strengthens dormant subdomain-takeover candidate; host still non-responsi
+- NEW api.sumup.com/authorize is LIVE (302→auth.sumup.com/flows/oauth2/error) — contradicts the KB entry "2026-09-05 REJECTED: legacy authorize returns 404 for all legacy client_ids." Those probe logs ran a
+- NEW Client_id ORACLE on api.sumup.com/authorize via error taxonomy: `invalid_client` ("does not exist") for unknown IDs, `invalid_request` (redirect_uri mismatch) for the registered `dashboard` client — 2
+- NEW Legacy registry divergence: `client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback` is REJECTED on the legacy gateway (`invalid_request` redirect-mismatch, even with valid state) but 
+- NEW Endpoint-specific wildcard CORS confirmed side-by-side: api.sumup.com/authorize emits `access-control-allow-origin: *` + `access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE` + `access-contro
+- NEW api.sumup.com/.well-known/security.txt → 200 PGP-signed with canonical set including api.sumup.com — public known file, benign (out-of-scope class).
+- NEW web.sumup.com IP 77.246.42.130 confirmed in Rackspace lease pool RDAP `UK-RACKSPACE-20070509` (org Rackspace Ltd., San Antonio TX) — NOT SumUp-owned netblock; strengthens the dormant subdomain-takeove
+- NEW portal.sumup.com returns 200 with React CRM login page (iriscrm.com) — live parameter enumeration surface now accessible
+- CHANGED auth.sumup.com/oauth2/auth with request_object returns 405 (rejects at method level before validation)
+- CHANGED me.sumup.com/api/sso/callback returns 307 (not 403) on anonymous GET — redirect to OAuth flow
+- CHANGED auth.sumup.com/oauth2/par and /oauth2/device return 400 on POST — routed but require client authentication params
+- CHANGED api.sumup.com/authorize returns 404 for ALL legacy client_ids — legacy OAuth surface fully dead

