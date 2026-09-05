@@ -123,3 +123,10 @@ https://auth.sumup.com/oauth2/token -> HTTP 405
 https://me.sumup.com/api/sso/callback -> HTTP 403
 https://me.sumup.com/_vercel/insights -> HTTP 404
 https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri=https://example.com/callback&response_type=code&scope=classic -> HTTP 404
+
+## 2026-09-05 00:24:53 UTC
+https://auth.sumup.com/oauth2/auth?client_id=dashboard&request=eyJhbGciOiJub25lIn0.eyJyZXNwb25zZV90eXBlIjoiY29kZSIsImNsaWVudF9pZCI6ImRhc2hib2FyZCIsInJlZGlyZWN0X3VyaSI6Imh0dHBzOi8vZGFzaGJvYXJkLnN1bXVwLmNvbS9jYWxsYmFjayIsInNjb3BlIjoiY2xhc3NpYyJ9.&response_type=code&redirect_uri=https://dashboard.sumup -> HTTP 405
+https://me.sumup.com/api/sso/callback?error=test -> HTTP 403
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://me.sumup.com/_vercel/insights -> HTTP 404
+https://portal.sumup.com/ -> 200 len=?

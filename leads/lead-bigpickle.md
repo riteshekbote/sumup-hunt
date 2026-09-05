@@ -586,3 +586,4 @@ evidence_needed: Registered dev app allowing an unauthorized origin into the COR
 verify_steps: PASSIVE: /api/sso/callback → 403, /_vercel/insights → 404 (done). AUTH_HELPED: register a dev app, fuzz Authorized JavaScript Origin + redirect-list parsing, test CORS enforcement, test scope-selection boundary.
 impact: CORS-origin confusion + OAuth client registration abuse → token issuance to attacker origins beyond the registered set → merchant API data exposure. Severity: high.
 testability: AUTH_HELPED
+## 2026-09-05 00:15:56 UTC [target] (model bigpickle)

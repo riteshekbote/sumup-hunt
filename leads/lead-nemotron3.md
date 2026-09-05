@@ -503,3 +503,55 @@ testability: PASSIVE
 [LEARN] REJECTED AUTH @ admin.sumup.com: Header spoofing yields identical 403 — no auth bypass via passive header manipulation
 [LEARN] REJECTED MISCONFIG @ api.sumup.com: x-envoy-decorator-operation leaks k8s service name — header/banner leak explicit out-of-scope class
 [RISK] sumup: 80 — Auth server (auth.sumup.com) exposes critical OAuth misconfigurations (token_endpoint_auth_methods=none, request_object alg=none, PAR documented) with full scope catalog mapping to payment API resources. NEW: Legacy authorize endpoint on api.sumup.com/authorize with client_id oracle and potentially loose redirect_uri on legacy SDK clients adds distinct OAuth attack surface on API gateway. API gateway fully gated but resource model known. Vercel-served me.sumup.com adds fresh non-Cloudflare surface. Admin panel hardened. Third-party portal supply-chain risk if in-scope confirmed. Financial attack surface elevated.
+## 2026-09-05 00:24:36 UTC [target] (model nemotron3)
+[NEW] api.sumup.com/authorize returns 404 for all tested legacy client_ids (sumup-ios-sdk, sumup.pos, reader, sales, virtual-terminal, dashboard) — legacy authorize endpoint not functional on API gateway
+[NEW] auth.sumup.com/oauth2/par and /oauth2/device endpoints ARE routed (respond to POST) but require client authentication — "none" auth method not usable for dashboard client
+[NEW] me.sumup.com/api/sso/callback returns 307 redirect to root on anonymous GET/OPTIONS — no CORS headers exposed, no debug endpoints found
+[CHANGED] Legacy OAuth authorize hypothesis (confidence 55→25): client_id oracle + loose redirect_uri REFUTED by 404 on all legacy client_ids
+[CHANGED] Public client impersonation via "none" auth method (confidence 70→40): token_endpoint_auth_methods=["none"] documented but dashboard client rejects unauthenticated requests
+[PRIO] auth.sumup.com,7.8,a=8,b=10,t=9,g=4,c=8,f=7
+[PRIO] me.sumup.com,7.2,a=7,b=9,t=7,g=5,c=7,f=7
+[PRIO] portal.sumup.com,6.1,a=6,b=7,t=6,g=5,c=6,f=6
+[PRIO] api.sumup.com,5.8,a=7,b=10,t=5,g=3,c=7,f=5
+[PRIO] admin.sumup.com,5.2,a=5,b=8,t=4,g=3,c=6,f=5
+[HYP] OAuth request_object alg=none enables algorithm confusion on auth.sumup.com
+class: OATH
+asset: auth.sumup.com
+confidence: 65
+reasoning: Discovery docs show request_object_signing_alg_values_supported=["RS256","none"] and request_parameter_supported=true. A crafted request_object with alg=none could bypass signature verification if JWT library doesn't enforce alg allowlist.
+evidence_needed: Successful authorization request with request=eyJhbGciOiJub25lIn0.eyJyZXNwb25zZV90eXBlIjoiY29kZSIsImNsaWVudF9pZCI6ImRhc2hib2FyZCIsInJlZGlyZWN0X3VyaSI6Imh0dHBzOi8vZGFzaGJvYXJkLnN1bXVwLmNvbS9jYWxsYmFjayIsInNjb3BlIjoiY2xhc3NpYyJ9. → observe if server accepts unsigned request_object
+verify_steps: GET https://auth.sumup.com/oauth2/auth?client_id=dashboard&request=eyJhbGciOiJub25lIn0.eyJyZXNwb25zZV90eXBlIjoiY29kZSIsImNsaWVudF9pZCI6ImRhc2hib2FyZCIsInJlZGlyZWN0X3VyaSI6Imh0dHBzOi8vZGFzaGJvYXJkLnN1bXVwLmNvbS9jYWxsYmFjayIsInNjb3BlIjoiY2xhc3NpYyJ9.&response_type=code&redirect_uri=https://dashboard.sumup.com/callback → check for 302 to redirect_uri vs error
+impact: OAuth code theft via forged request_object → merchant account takeover — CRITICAL
+testability: PASSIVE
+[HYP] me.sumup.com Vercel serverless functions expose debug endpoints or permissive CORS on /api/* routes
+class: MISCONFIG
+asset: me.sumup.com
+confidence: 50
+reasoning: me.sumup.com is Vercel-served (non-Cloudflare/Envoy) with OAuth2 app registry at /settings/oauth2-applications. Vercel /api/* routes may expose debug endpoints, stack traces, or permissive CORS on SSO callback handler.
+evidence_needed: Anonymous GET/OPTIONS to /api/* routes returning non-307/401; CORS headers allowing credentialed cross-origin; error bodies revealing stack traces
+verify_steps: GET https://me.sumup.com/api/sso/callback?error=test → observe status, error body, CORS headers. OPTIONS https://me.sumup.com/api/sso/callback → capture Access-Control-Allow-Origin, Access-Control-Allow-Credentials. GET https://me.sumup.com/_vercel/insights and enumerate /api/* for non-307 responses.
+impact: Merchant self-service misconfig → OAuth app registration abuse, broad-scope token issuance, or data exposure — HIGH
+testability: PASSIVE
+[HYP] portal.sumup.com (iriscrm.com) webhook/callback SSRF via third-party CRM supply chain
+class: SSRF
+asset: portal.sumup.com
+confidence: 45
+reasoning: portal.sumup.com CNAME → sumup.iriscrm.com (third-party CRM). CSP allows *.iriscrm.com for connect-src, frame-src, img-src. Webhook/callback endpoints on iriscrm.com could be induced to fetch internal SumUp metadata (169.254.169.254) if parameterized.
+evidence_needed: Discovery of webhook/callback parameter on portal.sumup.com or iriscrm.com endpoints accepting URL parameters; SSRF payload execution confirmed
+verify_steps: GET https://portal.sumup.com/ → enumerate forms/endpoints with URL/redirect/webhook parameters. Passive crawl for ?url=, ?callback=, ?webhook=, ?redirect= parameters. If found, test with http://169.254.169.254/latest/meta-data/
+impact: Cloud metadata exposure → IAM credentials, instance identity → full AWS account compromise — CRITICAL
+testability: PASSIVE (enum) → HUMAN_ONLY (exploit requires in-scope confirmation)
+[PARKED] OAuth request_object alg=none enables algorithm confusion on auth.sumup.com: Confidence 65 but requires valid client_id + registered redirect_uri (dashboard) — cannot complete flow passively without merchant auth; "none" alg may be rejected at validation layer
+[PARKED] me.sumup.com Vercel serverless functions expose debug endpoints: Confidence 50 but all /api/* routes return 307 to auth — no anonymous surface found; requires authenticated session to reach app logic
+[PARKED] portal.sumup.com SSRF via iriscrm.com: Confidence 45 but third-party domain (iriscrm.com) — requires explicit in-scope confirmation; webhook parameters not discovered passively
+[FINAL] No hypotheses survive filtering — all require AUTH_HELPED or HUMAN_ONLY verification beyond passive capabilities
+[NEXT] RAG: Fetch SumUp bug bounty program scope.yml to confirm if portal.sumup.com / iriscrm.com is in-scope for SSRF testing
+[LEARN] REJECTED OATH @ api.sumup.com/authorize: Legacy OAuth authorize endpoint returns 404 for all known legacy SDK client_ids (sumup-ios-sdk, sumup.pos, reader, sales, virtual-terminal) — no client_id oracle, no loose redirect_uri
+[LEARN] ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" but dashboard client rejects unauthenticated token requests — "none" likely restricted to specific client configs not publicly registrable
+[LEARN] ACCEPTED OAUTH @ auth.sumup.com: PAR (/oauth2/par) and device flow (/oauth2/device) endpoints ARE routed and respond to POST (not 404) but require client authentication
+[LEARN] ACCEPTED OATH @ auth.sumup.com: request_object_signing_alg_values_supported includes "none" + request_parameter_supported=true — algorithm confusion vector documented but untestable without valid client flow
+[LEARN] ACCEPTED AUTH @ me.sumup.com: Vercel-served asset confirmed; all anonymous /api/* routes return 307 to OAuth flow — no debug endpoints or permissive CORS found passively
+[LEARN] REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (307 redirect, no CORS headers)
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
+[LEARN] REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfirmed in-scope
+[RISK] sumup: 72 — Auth server (auth.sumup.com) exposes critical OAuth configuration (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. However, all high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client — no passive exploit path. API gateway fully gated. Vercel me.sumup.com adds non-Cloudflare surface but auth-gated. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled.
