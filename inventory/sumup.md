@@ -195,3 +195,28 @@ www.sumup.com
 - CHANGED auth.sumup.com/oauth2/par and /oauth2/device return 400 on POST (routed, require client_auth) — not 404 as previously logged
 - CHANGED me.sumup.com/api/sso/callback returns 307 on anonymous GET (redirect to OAuth flow) — not 403
 - CHANGED portal.sumup.com returns 200 with React CRM login (iriscrm.com) — live parameter enumeration surface accessible
+
+## 2026-09-05 21:50:26 UTC
+- NEW api.sumup.com/authorize confirmed LIVE (302→auth.sumup.com/flows/oauth2/error) with client_id oracle: `invalid_client` for unknown IDs vs `invalid_request` (redirect_uri mismatch) for registered `dash
+- NEW Legacy/modern redirect_uri divergence confirmed: `dashboard` client's modern callback `https://me.sumup.com/api/sso/callback` accepted on auth.sumup.com (302→login flow) but REJECTED on api.sumup.com/
+- NEW api.sumup.com/authorize exposes endpoint-specific wildcard CORS (`access-control-allow-origin: *`, broad allow-methods, max-age=300) + `SameSite=None; Domain=sumup.com` cookies — absent on auth.sumup.
+- CHANGED auth.sumup.com/oauth2/par and /oauth2/device return 400 on POST (routed, require client_auth) — not 404 as previously logged
+- CHANGED me.sumup.com/api/sso/callback returns 307 on anonymous GET (redirect to OAuth flow) — not 403
+- CHANGED portal.sumup.com returns 200 with React CRM login (iriscrm.com) — live parameter enumeration surface accessible
+- NEW crt.sh passive CT sweep (4422 certs → 257 unique names): first records of checkout.sumup.com (Vercel 76.76.21.61), read-api.sumup.com + sf-gateway-api.sumup.com (Cloudflare, root 404), app-auth.sumup.
+- CHANGED Legacy api.sumup.com/authorize ground truth re-confirmed by raw curl: LIVE (302→auth error flow with `error=` taxonomy). The 19:35 probe-log "HTTP 404" lines were redirect-following harness artifacts,
+- NEW sumup-ios-sdk → `invalid_client` ("does not exist") on legacy gateway — legacy SDK clients NOT registered there; only `dashboard` known-registered on the legacy path.
+- CHANGED Legacy redirect oracle re-tested +18 new combos this session (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, sumup://, sumup-pos://, com.sumup.pos://, api.sumup.com×3, www.sumup.
+- CHANGED checkout.sumup.com: uniform 403 text/plain on all paths (/, assets/*, sdk.js, api/*) — Vercel edge-gated, posture identical to me.sumup.com.
+- NEW api.sumup.com/authorize confirmed LIVE (302→auth.sumup.com/flows/oauth2/error) with client_id oracle: `invalid_client` for unknown IDs vs `invalid_request` (redirect_uri mismatch) for registered `dash
+- NEW Legacy/modern redirect_uri divergence confirmed: `dashboard` client's modern callback `https://me.sumup.com/api/sso/callback` accepted on auth.sumup.com (302→login flow) but REJECTED on api.sumup.com/
+- NEW api.sumup.com/authorize exposes endpoint-specific wildcard CORS (`access-control-allow-origin: *`, broad allow-methods, max-age=300) + `SameSite=None; Domain=sumup.com` cookies — absent on auth.sumup.
+- CHANGED auth.sumup.com/oauth2/par and /oauth2/device return 400 on POST (routed, require client_auth) — not 404 as previously logged
+- CHANGED me.sumup.com/api/sso/callback returns 307 on anonymous GET (redirect to OAuth flow) — not 403
+- CHANGED portal.sumup.com returns 200 with React CRM login (iriscrm.com) — live parameter enumeration surface accessible
+- NEW api.sumup.com/authorize confirmed LIVE (302→auth.sumup.com/flows/oauth2/error) with client_id oracle: `invalid_client` for unknown IDs vs `invalid_request` (redirect_uri mismatch) for registered `dash
+- NEW Legacy/modern redirect_uri divergence confirmed: `dashboard` client's modern callback `https://me.sumup.com/api/sso/callback` accepted on auth.sumup.com (302→login flow) but REJECTED on api.sumup.com/
+- NEW api.sumup.com/authorize exposes endpoint-specific wildcard CORS (`access-control-allow-origin: *`, broad allow-methods, max-age=300) + `SameSite=None; Domain=sumup.com` cookies — absent on auth.sumup.
+- CHANGED auth.sumup.com/oauth2/par and /oauth2/device return 400 on POST (routed, require client_auth) — not 404 as previously logged
+- CHANGED me.sumup.com/api/sso/callback returns 307 on anonymous GET (redirect to OAuth flow) — not 403
+- CHANGED portal.sumup.com returns 200 with React CRM login (iriscrm.com) — live parameter enumeration surface accessible
