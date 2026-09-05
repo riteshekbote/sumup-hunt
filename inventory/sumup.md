@@ -166,3 +166,10 @@ www.sumup.com
 - CHANGED me.sumup.com/api/sso/callback returns 307 (not 403) on anonymous GET — redirect to OAuth flow
 - CHANGED auth.sumup.com/oauth2/par and /oauth2/device return 400 on POST — routed but require client authentication params
 - CHANGED api.sumup.com/authorize returns 404 for ALL legacy client_ids — legacy OAuth surface fully dead
+
+## 2026-09-05 12:10:03 UTC
+- NEW api.sumup.com/authorize is LIVE (302→auth.sumup.com/flows/oauth2/error) with client_id oracle (invalid_client vs invalid_request) and legacy redirect-set divergence (modern me.sumup.com callback rejec
+- NEW api.sumup.com/authorize exposes wildcard CORS (access-control-allow-origin:*, broad allow-methods, max-age) + SameSite=None cookies on Domain=sumup.com — absent on auth.sumup.com/oauth2/auth
+- NEW portal.sumup.com returns 200 with React CRM login (iriscrm.com) — live parameter enumeration surface accessible
+- CHANGED auth.sumup.com/oauth2/par and /oauth2/device return 400 on POST (routed, require client_auth) — not 404
+- CHANGED me.sumup.com/api/sso/callback returns 307 on anonymous GET (redirect to OAuth flow) — not 403
