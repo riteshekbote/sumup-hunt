@@ -170,3 +170,16 @@ https://dashboard.sumup.com/callback&request_uri=https://attacker.com/malicious.
 https://auth.sumup.com/oauth2/auth?client_id=dashboard&request_uri=urn:ietf:params:oauth:request_uri: -> HTTP 404
 https://portal.sumup.com/ -> 200 len=?
 https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://dashboard.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+
+## 2026-09-05 17:52:53 UTC
+https://me.sumup.com/api/sso/callback` -> HTTP 404
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://dashboard.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://app.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri= -> HTTP 404
+https://auth.sumup.com/oauth2/par -> HTTP 404
+https://dashboard.sumup.com/callback&request_uri=https://attacker.com/malicious.json&response_type=code&scope=classic -> HTTP 403
+https://auth.sumup.com/oauth2/auth?client_id=dashboard&request_uri=urn:ietf:params:oauth:request_uri: -> HTTP 404
+https://portal.sumup.com/ -> 200 len=?
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://legacy.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://me.sumup.com/api/sso/callback&scope=openid+classic&state=test12345678 -> HTTP 404

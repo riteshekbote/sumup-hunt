@@ -4556,3 +4556,176 @@ testability: AUTH_HELPED
 ```
 [RISK] SumUp: 52 — Core correction this run: the api.sumup.com/authorize gateway is NOT dead (an unexpanded placeholder URL poisoned the KB), and is a genuine live anonymous agent on the highest-value host. It contributes a client_id oracle, a divergent legacy client registry, and an endpoint-specific ACAO:* CORS divergence — all real, all passive-verified. However every path still funnels into auth.sumup.com's strict validation state, no code/state has been observed on the legacy path, and the high-impact chains (legacy redirect code theft, BOLA) remain AUTH_HELPED. web.sumup.com adds a Rackspace-hosted dormant takeover candidate. Risk rose from 26/27 toward 52 reflecting one real live-surface correction and a confirmed third-party-hosted abandoned host, tempered by no demonstrated data exposure.
 ```
+===== ANALYST bigpickle 2026-09-05 17:52:35 UTC =====
+[0m
+> build · big-pickle
+[0m
+I'll analyze the current state and continue the hunt. Let me review the knowledge base and last leads to determine the delta and next steps.
+
+The key insight from the last session: the `api.sumup.com/authorize` legacy OAuth endpoint is LIVE with a client_id oracle and redirect-set divergence from modern auth.sumup.com. The next action is to do RAG to harvest legacy SumUp OAuth callback constants from public SDKs/docs.
+
+Let me run the RAG step to try to recover the legacy callback host.
+[0m◈ [0mParallel Web Search "SumUp OAuth2 client_id dashboard redirect_uri callback developer docs"
+[0m◈ [0mParallel Web Search "SumUp OAuth callback redirect_uri sumup.com callback github SDK authorize"
+The RAG search confirms the current developer docs use `api.sumup.com/authorize` with per-registered redirect_uri (strict allowlist). No legacy callback host constants exposed yet. Let me probe the `api.sumup.com/authorize` endpoint with the current proven-useful candidate redirects to test the legacy redirect-set divergence. I have a client_id oracle confirmed. Let me verify the divergence more precisely with a controlled passive test — testing whether a *known-current* registered redirect like the developer-docs registration works, and re-confirming the modern dashboard callback is rejected.
+
+Let me run the passive probes per the NEXT action plan.
+[0m
+[0m$ [0mecho "=== Legacy authorize oracle: unknown client_id ===" ; curl -s -o /dev/null -w "HTTP %{http_code} -> %{redirect_url}\n" "https://api.sumup.com/authorize?response_type=code&client_id=sumup-definitely-unknown-client-xyz&redirect_uri=https://evil.example/cb&scope=payments&state=test1234" ; echo "=== Legacy authorize: dashboard + modern me.sumup.com callback (expected invalid_request) ===" ; curl -s -D - -o /dev/null "https://api.sumup.com/authorize?response_type=code&client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&scope=openid+classic&state=test12345678" | head -20
+=== Legacy authorize oracle: unknown client_id ===
+HTTP 302 -> https://auth.sumup.com/flows/oauth2/error?error=invalid_client&error_description=The+requested+OAuth+2.0+Client+does+not+exist.
+=== Legacy authorize: dashboard + modern me.sumup.com callback (expected invalid_request) ===
+HTTP/2 302 
+date: Sat, 05 Sep 2026 17:39:15 GMT
+content-length: 0
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+x-envoy-upstream-service-time: 5
+server: cloudflare
+x-request-id: 29030419-7a9e-9e92-890d-1a45359fd898
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+cf-cache-status: DYNAMIC
+set-cookie: optimizely_experiment_user=9933d8b6-3722-48b8-b8eb-8c3f9e278f6f; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 17:39:15 GMT; Secure; SameSite=None
+set-cookie: __cf_bm=H_4TwtRnif_xHz8h4lU9NzEwUkgOv918tjhPipGj3Ss-1788629955.1879022-1.0.1.1-zUbQnkRMX9adEid4HJKz4cPucbA7JdEkHOOd6Zs02.eNUJllXGhVhVCDHvCgjzHbabw38gWJaDZwqCStrJgaiCpjvbNS4UPq0JKIqusl7aqBr2qNpHufCdz7YhcjkZkMEF3tdpZ_5ZivIt0IGWZzDA; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 05 Sep 2026 18:09:15 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=5vpthTDvp%2BHOon1sA4tvgmIW3pJ8C5uTHAqw%2B7K8vGUSGQwnbLGmQKb%2BSQ9N0rM6RVEtXlhjfXYFE1brmFfcoOuMsskCA8B%2FJmfIyV3yOk2EDU%2BGq5AvkaPrEMS1fTA%3D"}]}
+cf-ray: a3670323eae8289e-IAD
+[0m
+The oracle is confirmed again. The legacy path rejects `me.sumup.com/api/sso/callback` for `dashboard`, while unknown client yields `invalid_client`. This confirms the divergent registry.
+
+Now, the key question: what redirect_uri is registered for `dashboard` on the *legacy* gateway? The modern path uses `me.sumup.com/api/sso/callback`. Legacy likely points to an older dashboard host. Common SumUp legacy dashboard OAuth callback possibilities: `dashboard.sumup.com`, `app.sumup.com`, `app-sumup.com` variants, `my.sumup.com`, `secure.sumup.com`. Let me test a bounded passive set to try to find the legacy registered host. I'll use the `invalid_request` (redirect mismatch) vs the oracle to detect which redirect_host is accepted.
+
+The error taxonomy is: `invalid_client` for unknown client_id, `invalid_request` for registered client + bad redirect. When a good redirect is supplied, we'd get a 302 to the callback/state path rather than the error page. Let me test candidate hosts.
+[0m$ [0mcl="dashboard"; st="test12345678"; scope="openid+classic"
+for host in dashboard.sumup.com app.sumup.com app-sumup.com my.sumup.com secure.sumup.com me.sumup.com www.sumup.com; do
+  for path in "/callback" "" "/api/callback" "/oauth/callback" "/"; do
+    uri="https://${host}${path}"
+    code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://api.sumup.com/authorize?response_type=code&client_id=${cl}&redirect_uri=${uri}&scope=${scope}&state=${st}")
+    loc=$(curl -s -o /dev/null -w "%{redirect_url}" --max-time 10 "https://api.sumup.com/authorize?response_type=code&client_id=${cl}&redirect_uri=${uri}&scope=${scope}&state=${st}")
+    # detect if error contains invalid_request (mismatch) vs something else
+    body=$(curl -s --max-time 10 -o /dev/null -w "%{redirect_url}" "https://api.sumup.com/authorize?response_type=code&client_id=${cl}&redirect_uri=${uri}&scope=${scope}&state=${st}")
+    echo "[$code] $uri -> $loc"
+  done
+done 2>&1 | tee /tmp/legacy_probe.txt | head -60
+[302] https://dashboard.sumup.com/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://dashboard.sumup.com -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://dashboard.sumup.com/api/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://dashboard.sumup.com/oauth/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://dashboard.sumup.com/ -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://app.sumup.com/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://app.sumup.com -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://app.sumup.com/api/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://app.sumup.com/oauth/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://app.sumup.com/ -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://app-sumup.com/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://app-sumup.com -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://app-sumup.com/api/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://app-sumup.com/oauth/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://app-sumup.com/ -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://my.sumup.com/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://my.sumup.com -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://my.sumup.com/api/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://my.sumup.com/oauth/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://my.sumup.com/ -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://secure.sumup.com/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://secure.sumup.com -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://secure.sumup.com/api/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://secure.sumup.com/oauth/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://secure.sumup.com/ -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://me.sumup.com/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://me.sumup.com -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://me.sumup.com/api/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://me.sumup.com/oauth/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://me.sumup.com/ -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://www.sumup.com/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://www.sumup.com -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://www.sumup.com/api/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://www.sumup.com/oauth/callback -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[302] https://www.sumup.com/ -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[0m
+All candidate redirect URIs on the `dashboard` client return `invalid_request` (redirect mismatch). The legacy registry doesn't accept a bare-host/common-path on those candidate hosts either. 
+
+Important observation: since the legacy gateway is literally an envoy proxy that forwards `/authorize` to `auth.sumup.com`'s OAuth identity service (`apigateway2-headless.identity.svc.cluster.local:8080/*`), the "divergence" may simply be that `dashboard` client's *currently registered* redirect on the identity service differs from what we've tested — but note `me.sumup.com/api/sso/callback` was rejected here while ACCEPTED on the modern auth.sumup.com path.
+
+Wait — this is a critical realization. The modern auth.sumup.com flow (me.sumup.com/api/sso/callback → 303 invalid_state) and the legacy api.sumup.com/authorize path BOTH funnel into the same identity service. But the legacy path rejects `me.sumup.com/api/sso/callback`. This divergence is real and confirmed. However, without discovering the specific accepted host, this remains dormant.
+
+Given this is a bounded enumeration that keeps yielding `invalid_request`, I've reached the practical limit of passive enumeration. The `state` value validation: an accepted redirect would need me to actually authenticate. This is AUTH_HELPED territory for the code itself, but the host discovery via the oracle is the passive part.
+
+Let me check whether `dashboard` client might be a *different* registered redirect entirely. Let me test whether the legacy gateway accepts the callback with `localhost` or a different scope, and also test whether a `code_challenge`/no-state variant changes behavior. Actually, the most valuable remaining passive probe: does the divergence hold when I use the EXACT same parameters that succeed on modern? Let me verify the modern path acceptance as a side-by-side control, then finalize.
+
+Let me check the modern control to nail the divergence as a crisp, reportable fact.
+[0m$ [0mecho "=== CONTROL: modern auth.sumup.com oauth2/auth with dashboard + me.sumup callback ===" ; curl -s -o /dev/null -w "HTTP %{http_code} -> %{redirect_url}\n" --max-time 10 "https://auth.sumup.com/oauth2/auth?response_type=code&client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&scope=openid+classic&state=test12345678"
+=== CONTROL: modern auth.sumup.com oauth2/auth with dashboard + me.sumup callback ===
+HTTP 302 -> https://auth.sumup.com/flows/auth-callback?login_challenge=73620c59bf3e40178180662d1248b0f1
+[0m
+This is a decisive, crisp result. On the **modern** `auth.sumup.com/oauth2/auth` path, `client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback` is **ACCEPTED** (302 → `auth-callback?login_challenge=...`, the real login continuation flow). On the **legacy** `api.sumup.com/authorize` path, the *identical* request is **REJECTED** (`invalid_request` redirect mismatch).
+
+This cleanly confirms the legacy gateway/enovy proxies `/authorize` to a *different* identity-service routing/validation that has a divergent (or no) `dashboard` redirect registration — even though it's the same `dashboard` client identity. The divergence is now confirmed as a hard fact with a side-by-side control.
+
+However, I must be careful about the interpretation. The legacy path errored on `me.sumup.com/api/sso/callback` — but this could mean the legacy identity routing has a *stale/older* redirect set for `dashboard`, OR that it's a genuinely different client registry context. Either way, no code has been emitted and no data exposure demonstrated. The high-impact chain (code theft) remains unproven and requires discovering an accepted redirect host on the legacy path (likely a retired SumUp dashboard host), which I could not recover passively from common candidates.
+
+I've now reached the disciplined conclusion: this divergence is real and confirmed via clean control, but it's a latent/dormant finding — no exploitable accepted redirect exists that I can find passively, and enumerating further (huge host space, AUTH_HELPED for any code) has diminishing returns. Let me produce the structured output.
+
+---
+
+STEP 1 — DELTA:
+- [NEW] api.sumup.com/authorize legacy vs auth.sumup.com/oauth2/auth redirect-divergence now CONFIRMED via side-by-side control: identical `dashboard`+`me.sumup.com/api/sso/callback` accepted (302 auth-callback) on modern, rejected (invalid_request) on legacy.
+- [NEW] RAG pass (SumUp dev docs/SDKs) surfaced only current strict per-registration redirect model (`api.sumup.com/authorize` + registered redirect_uri); no legacy callback host constants in public SDKs.
+- [CHANGED] Legacy redirect-host enumeration (dashboard/app/my/secure/me/www.sumup.com × path variants) — all `invalid_request`; no accepted legacy callback host recoverable passively.
+
+STEP 2 — PRIORITIZE:
+- [PRIO] api.sumup.com,7.6,a=8,b=10,t=8,g=5,c=8,f=8
+- [PRIO] auth.sumup.com,7.4,a=8,b=9,t=9,g=3,c=8,f=5
+- [PRIO] me.sumup.com,6.2,a=6,b=8,t=8,g=5,c=8,f=5
+- [PRIO] web.sumup.com,5.4,a=4,b=6,t=4,g=6,c=6,f=9
+
+STEP 3 — HYPOTHESES:
+[HYP] Legacy api.sumup.com/authorize redirect-set divergence confirmed but no accepted callback host recovered (dormant)
+class: OATH
+asset: api.sumup.com/authorize
+confidence: 55
+reasoning: Side-by-side control proves identical request (client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&scope=openid+classic&state=test12345678) is ACCEPTED on auth.sumup.com/oauth2/auth (302→auth-callback?login_challenge=...) but REJECTED on api.sumup.com/authorize (invalid_request). Legacy envoy (server: cloudflare, x-envoy-decorator-operation apigateway2-headless.identity.svc.cluster.local:8080/*) forwards /authorize into identity service but validates against a divergent/stale dashboard redirect set. Client_id oracle (invalid_client vs invalid_request) reconfirmed. All common legacy callback hosts (dashboard/app/my/secure/me/www.sumup.com × callback variants) return invalid_request. Endpoint emits ACAO:* + SameSite=None Domain=sumup.com cookies.
+evidence_needed: One redirect_uri accepted on the legacy path for dashboard (302 to callback/state, not error), or recovery of a retired legacy dashboard host that is a registered redirect AND resolves to a claimable/parked origin.
+verify_steps: RAG exhausted public SDK/docs constants; bounded host enumeration exhausted common candidates. Remaining vector: enumerate broader legacy subdomain space (crt.sh historical cert subdomains of *.sumup.com) for callback-named hosts, then oracle-test each; full code flow requires merchant auth (AUTH_HELPED). No live claims vs non-SumUp infra.
+impact: Authorization-code interception on a legacy registered client → merchant OAuth account takeover. Severity: high if a legacy live/loose redirect is found; currently unproven/dormant.
+testability: AUTH_HELPED
+
+[HYP] api.sumup.com cross-tenant BOLA via dashboard-scope API resources
+class: IDOR
+asset: api.sumup.com
+confidence: 55
+reasoning: All anonymous paths except /authorize and .well-known/security.txt return uniform 404; dashboard-client scope catalog (accounting/invoices/api_keys/lending/receivables/unified_customer_directory/readers) maps hidden resource model; cross-tenant access provable only with a granted token + resource-id swaps.
+evidence_needed: Authenticated requests where changing an id returns another tenant's data on scope-derived paths.
+verify_steps: PASSIVE complete (uniform 404s). AUTH_HELPED: dashboard OAuth token on scope paths, cross-tenant id swaps, scope-boundary comparison.
+impact: Cross-tenant financial/PII exposure. Severity: critical.
+testability: AUTH_HELPED
+
+[HYP] Wildcard CORS on api.sumup.com/authorize chained to code/state-bearing redirect
+class: MISCONFIG
+asset: api.sumup.com/authorize
+confidence: 40
+reasoning: ACAO:* + broad allow-methods + max-age + SameSite=None Domain=sumup.com cookies present on legacy path, absent on modern auth path; Standalone ACAO:* is not reportable (REJECTED class) — meaningful only if a response on this path carries a code/state readable cross-origin. No code/state observed to date.
+evidence_needed: A legacy-path response returning code/state with ACAO:* present under an Origin header.
+verify_steps: Dependent on finding an accepted legacy redirect (hypothesis #1). PASSIVE-first; no data-bearing response observed yet.
+impact: Cross-origin read of OAuth artifacts → code theft → ATO. Severity: medium-high, latent.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE:
+- [FINAL] 1. api.sumup.com/authorize legacy redirect-set divergence (conf 55) — divergence now CONFIRMED with clean side-by-side control; remains dormant (no accepted legacy callback host found). This is the strongest, most-concrete finding.
+- [FINAL] 2. api.sumup.com BOLA (conf 55) — standard high-value, needs merchant token (AUTH_HELPED).
+- [PARKED] Wildcard-CORS chain (conf 40) — ACAO:* standalone is REJECTED class; strictly a dependency of #1; no code/state observed. Drop if #1 fails to find code-emitting redirect.
+- [PARKED] web.sumup.com takeover (conf ~30) — Rackspace third-party lease confirmed but host non-responsive, no claimable service state, PoC requires observing future takeover or third-party-infra interaction; parked pending nightly re-probe + HUMAN escalation.
+- [PARKED] PAR/device "none" auth, request_object alg=none, state-JWT forgery — previously refuted/thresholded; no new evidence this run.
+
+STEP 5 — NEXT ACTION:
+[NEXT] RAG: enumerate crt.sh historical certificate subdomains of *.sumup.com (both q=%.sumup.com current + historical) and filter for OAuth-callback-shaped hosts (oauth, auth-callback, sso, login, callback, dashboard, app, my, secure, id, identity, account, signin, connect); oracle-test top candidates on api.sumup.com/authorize (client_id=dashboard) for a non-invalid_request (accepted) redirect. ≤1 rps, GET only, no auth.
+
+STEP 6 — LEARNING:
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Side-by-side control confirms identical dashboard+me.sumup.com/api/sso/callback request is ACCEPTED (302→auth-callback login_challenge) on auth.sumup.com/oauth2/auth but REJECTED (invalid_request) on legacy api.sumup.com/authorize — divergent redirect-set is a hard, controlled, reproducible fact.
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/authorize: RAG of public SumUp SDKs/docs (github.com/sumup: sumup-php, sumup-dotnet, sumup-go, sumup-developer, developer.sumup.com) yields only the CURRENT strict per-registration model — no legacy callback host constants exist in public SDKs; legacy-host recovery must come from passive CT/subdomain enumeration, not code.
+[LEARN] REJECTED OATH @ api.sumup.com/authorize: Bounded legacy-callback host enumeration (dashboard/app/app-sumup/my/secure/me/www.sumup.com × /callback|/api/callback|/oauth/callback|/|bare) — all `invalid_request`; no accepted legacy redirect recoverable from common candidates.
+
+STEP 7 — RISK:
+[RISK] SumUp: 50 — The legacy-vs-modern redirect divergence on the highest-value OAuth device is now a confirmed, controlled, side-by-side fact (not speculative), which is genuinely reportable as a hardening/observational discrepancy even without a demonstrated code theft. However, every high-impact chain (legacy redirect code theft, cross-tenant BOLA) still terminates at AUTH_HELPED, no code/state or cross-tenant data observed, and no claimable third-party takeover state exists on web.sumup.com. Risk held ~50 (from 52): one correction up (confirmed divergence) balanced by the confirmed absence of any accepted legacy callback host in the commonly-enumerable surface and no demonstrated exposure.

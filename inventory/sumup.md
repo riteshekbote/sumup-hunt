@@ -180,3 +180,10 @@ www.sumup.com
 - NEW portal.sumup.com returns 200 with React CRM login (iriscrm.com) — live parameter enumeration surface now accessible
 - CHANGED auth.sumup.com/oauth2/par and /oauth2/device return 400 on POST (routed, require client_auth) — not 404
 - CHANGED me.sumup.com/api/sso/callback returns 307 on anonymous GET (redirect to OAuth flow) — not 403
+
+## 2026-09-05 17:52:35 UTC
+- NEW api.sumup.com/authorize confirmed LIVE (302→auth.sumup.com/flows/oauth2/error) with client_id oracle: `invalid_client` for unknown IDs vs `invalid_request` (redirect_uri mismatch) for registered `dash
+- NEW Legacy/modern redirect_uri divergence confirmed: `dashboard` client's modern callback `https://me.sumup.com/api/sso/callback` accepted on auth.sumup.com (302→login flow) but REJECTED on api.sumup.com/
+- NEW api.sumup.com/authorize exposes endpoint-specific wildcard CORS (`access-control-allow-origin: *`, broad allow-methods, max-age=300) + `SameSite=None; Domain=sumup.com` cookies — absent on auth.sumup.
+- CHANGED auth.sumup.com/oauth2/par and /oauth2/device return 400 on POST (routed, require client_auth) — not 404 as previously logged
+- CHANGED me.sumup.com/api/sso/callback returns 307 on anonymous GET (redirect to OAuth flow) — not 403

