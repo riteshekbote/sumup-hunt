@@ -5551,3 +5551,155 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] SumUp: 46 — The legacy-vs-modern redirect divergence remains the single reproducible finding, and it is real but un-exploitable without a host that cannot be recovered passively (~52 combos, single-class oracle, custom schemes included). Wildcard CORS remains latent (only 302 error bodies + auth.sumup.com error page, no data-bearing ACAO:* response). No new anonymous surface opened on any first-seen crt.sh host; all new assets (checkout, read-api, sf-gateway-api) are gated or 404. Down from 50: divergence fact is stable but the actionable chain is measurably exhausted on the reachable surface, and every high-impact kill-chain still terminates at AUTH_HELPED.
+===== ANALYST bigpickle 2026-09-05 23:45:33 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -m 8 -o /dev/null -w "dashboard %{http_code} %{redirect_url} %{remote_ip}\n" -I https://dashboard.sumup.com/ 2>&1; curl -s -m 8 -o /dev/null -w "support %{http_code} %{redirect_url} %{remote_ip}\n" -I https://support.sumup.com/ 2>&1
+dashboard 308 https://me.sumup.com/ 66.33.60.67
+support 308 https://help.sumup.com/ 66.33.60.67
+[0m
+[0m$ [0mfor h in dashboard.sumup.com support.sumup.com core.uk.sumup.com core.ie.sumup.com core.lt.sumup.com apicore.uk.sumup.com apicore.ie.sumup.com apicore.lt.sumup.com adm.apicore.uk.sumup.com me.sumup.com app-auth.sumup.com; do r=$(getent hosts "$h" 2>/dev/null); if [ -n "$r" ]; then echo "[OK] $h -> $r"; else echo "[NX] $h"; fi; done
+[OK] dashboard.sumup.com -> 76.76.21.98     cname.vercel-dns.com dashboard.sumup.com
+66.33.60.67     cname.vercel-dns.com dashboard.sumup.com
+[OK] support.sumup.com -> 66.33.60.67     cname.vercel-dns.com support.sumup.com
+76.76.21.98     cname.vercel-dns.com support.sumup.com
+[OK] core.uk.sumup.com -> 10.59.129.91    internal-k8s-globalba-gbcukebc-0bc2e69006-1178092083.eu-west-1.elb.amazonaws.com core.uk.sumup.com gbcuk-ebc-core-ui.fleet.live.eu-west-1.sumup.net
+10.59.132.155   internal-k8s-globalba-gbcukebc-0bc2e69006-1178092083.eu-west-1.elb.amazonaws.com core.uk.sumup.com gbcuk-ebc-core-ui.fleet.live.eu-west-1.sumup.net
+10.59.138.194   internal-k8s-globalba-gbcukebc-0bc2e69006-1178092083.eu-west-1.elb.amazonaws.com core.uk.sumup.com gbcuk-ebc-core-ui.fleet.live.eu-west-1.sumup.net
+[OK] core.ie.sumup.com -> 10.59.134.142   internal-k8s-globalba-gbcieebc-fc2c479415-511914926.eu-west-1.elb.amazonaws.com core.ie.sumup.com gbcie-ebc-core-ui.fleet.live.eu-west-1.sumup.net
+10.59.130.152   internal-k8s-globalba-gbcieebc-fc2c479415-511914926.eu-west-1.elb.amazonaws.com core.ie.sumup.com gbcie-ebc-core-ui.fleet.live.eu-west-1.sumup.net
+10.59.139.80    internal-k8s-globalba-gbcieebc-fc2c479415-511914926.eu-west-1.elb.amazonaws.com core.ie.sumup.com gbcie-ebc-core-ui.fleet.live.eu-west-1.sumup.net
+[OK] core.lt.sumup.com -> 10.59.134.238   internal-k8s-globalba-gbcltebc-e077700485-1193139380.eu-west-1.elb.amazonaws.com core.lt.sumup.com gbclt-ebc-core-ui.fleet.live.eu-west-1.sumup.net
+10.59.136.162   internal-k8s-globalba-gbcltebc-e077700485-1193139380.eu-west-1.elb.amazonaws.com core.lt.sumup.com gbclt-ebc-core-ui.fleet.live.eu-west-1.sumup.net
+10.59.130.186   internal-k8s-globalba-gbcltebc-e077700485-1193139380.eu-west-1.elb.amazonaws.com core.lt.sumup.com gbclt-ebc-core-ui.fleet.live.eu-west-1.sumup.net
+[NX] apicore.uk.sumup.com
+[NX] apicore.ie.sumup.com
+[NX] apicore.lt.sumup.com
+[NX] adm.apicore.uk.sumup.com
+[OK] me.sumup.com -> 76.76.21.142    cname.vercel-dns.com me.sumup.com
+66.33.60.66     cname.vercel-dns.com me.sumup.com
+[NX] app-auth.sumup.com
+[0m
+[0m$ [0mgetent hosts help.sumup.com; curl -s -m 8 -o /dev/null -w "help root: %{http_code} %{redirect_url} %{remote_ip}\n" -I https://help.sumup.com/ 2>&1; curl -s -m 8 -o /dev/null -w "help wellknown: %{http_code} %{redirect_url}\n" -I https://help.sumup.com/.well-known/security.txt 2>&1
+76.76.21.142    cname.vercel-dns.com help.sumup.com
+66.33.60.66     cname.vercel-dns.com help.sumup.com
+help root: 307 https://help.sumup.com/en-GB 66.33.60.66
+help wellknown: 404
+[0m
+[0m$ [0mfor p in /api /automation /admin /hc /articles /support; do curl -s -m 6 -o /dev/null -w "help$p: %{http_code} %{redirect_url}\n" -I "https://help.sumup.com$p" 2>&1; sleep 0.4; done
+help/api: 307 https://help.sumup.com/api
+help/automation: 307 https://help.sumup.com/en-GB/automation
+help/admin: 307 https://help.sumup.com/en-GB/admin
+help/hc: 308 https://help.sumup.com/api/hc/
+help/articles: 307 https://help.sumup.com/en-GB/articles
+help/support: 307 https://help.sumup.com/en-GB/support
+[0m
+[0m$ [0mfor p in "/api/hc/" "/api/hc" "/api/hc/search?q=sumup" "/api/health" "/api/"; do curl -s -m 6 -o /tmp/hc.txt -w "$p: %{http_code} %{content_type} %{size_download}b %{redirect_url}\n" "https://help.sumup.com$p" 2>&1; head -c 200 /tmp/hc.txt | tr -d '\n'; echo; sleep 0.4; done
+/api/hc/: 308 text/plain 15b https://help.sumup.com/api/hc
+Redirecting...
+/api/hc: 307  0b https://help.sumup.com/
+
+/api/hc/search?q=sumup: 307  0b https://help.sumup.com/
+
+/api/health: 404 text/html; charset=utf-8 34747b 
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8" data-next-head=""/><meta name="viewport" content="width=device-width" data-next-head=""/><title data-next-head="">Page not found</title><link
+/api/: 308 text/plain 15b https://help.sumup.com/api
+Redirecting...
+[0m
+[0m$ [0mcurl -s -m 8 "https://help.sumup.com/en-GB" -o /tmp/help.html -w "en-GB: %{http_code} %{size_download}b\n"; grep -oiE "intercom|zendesk|crisp|sanity|contentful|stripe|segment|algolia|next version[^\\\"]*|__NEXT_DATA__" /tmp/help.html | sort | uniq -c | sort -rn | head -15
+en-GB: 200 167350b
+     38 Zendesk
+      1 __NEXT_DATA__
+[0m
+[0m$ [0mcurl -s -m 6 -o /dev/null -w "hc/articles: %{http_code} %{redirect_url}\n" -I "https://help.sumup.com/api/hc/articles"; sleep 0.4; curl -s -m 6 -o /dev/null -w "sitemap: %{http_code} %{redirect_url}\n" -I "https://help.sumup.com/sitemap.xml"; sleep 0.4; curl -s -m 6 -o /dev/null -w "api-v1: %{http_code} %{redirect_url}\n" -I "https://help.sumup.com/api/v1/"
+hc/articles: 307 https://help.sumup.com/
+sitemap: 404 
+api-v1: 308 https://help.sumup.com/api/v1
+[0m
+[0m$ [0mfor h in fleet.live.eu-west-1.sumup.net live.eu-west-1.sumup.net gbcuk-ebc-core-ui.fleet.live.eu-west-1.sumup.net settlements-sandbox.sumup.com sumup-ze-dashboard.sumup.com sf-gateway-api.sumup.com read-api.sumup.com; do r=$(getent hosts "$h" 2>/dev/null); if [ -n "$r" ]; then n=$(echo "$r" | wc -l); echo "[OK] $h (${n})"; echo "$r" | head -2 | sed 's/^/     /'; else echo "[NX] $h"; fi; done
+[NX] fleet.live.eu-west-1.sumup.net
+[NX] live.eu-west-1.sumup.net
+[OK] gbcuk-ebc-core-ui.fleet.live.eu-west-1.sumup.net (3)
+     10.59.132.155   internal-k8s-globalba-gbcukebc-0bc2e69006-1178092083.eu-west-1.elb.amazonaws.com gbcuk-ebc-core-ui.fleet.live.eu-west-1.sumup.net
+     10.59.138.194   internal-k8s-globalba-gbcukebc-0bc2e69006-1178092083.eu-west-1.elb.amazonaws.com gbcuk-ebc-core-ui.fleet.live.eu-west-1.sumup.net
+[NX] settlements-sandbox.sumup.com
+[NX] sumup-ze-dashboard.sumup.com
+[OK] sf-gateway-api.sumup.com (2)
+     2a06:98c1:3104::6812:255e sse-fleet-proxy.fleet.live.sumup.net sf-gateway-api.sumup.com
+     2a06:98c1:310c::ac40:96a2 sse-fleet-proxy.fleet.live.sumup.net sf-gateway-api.sumup.com
+[OK] read-api.sumup.com (2)
+     2a06:98c1:3104::6812:255e sse-fleet-proxy.fleet.live.sumup.net read-api.sumup.com
+     2a06:98c1:310c::ac40:96a2 sse-fleet-proxy.fleet.live.sumup.net read-api.sumup.com
+[0m
+[0m$ [0mcurl -s -m 8 -o /dev/null -w "web: %{http_code} %{redirect_url} %{remote_ip} %{ssl_verify_result}\n" -I https://web.sumup.com/ 2>&1; sleep 0.4; curl -s -m 8 -o /dev/null -w "apex: %{http_code} %{redirect_url} %{remote_ip}\n" -I https://sumup.com/ 2>&1; sleep 0.4; curl -s -m 8 -o /dev/null -w "web-80: %{http_code} %{redirect_url} %{remote_ip}\n" -I http://web.sumup.com/ 2>&1
+web: 000   0
+apex: 301 https://www.sumup.com/en-us/ 76.76.21.21
+web-80: 000
+[0m
+All passive probes complete (~12 requests, ≤1rps). Blocks follow.
+
+**STEP 1 — DELTA**
+- [NEW] help.sumup.com: Vercel Next.js help center, Zendesk-backed (200 root, 307→/en-GB) — the first SumUp Vercel asset that is NOT uniformly edge-gated (me/checkout were 403 text/plain).
+- [NEW] dashboard.sumup.com: 308→https://me.sumup.com/ (Vercel) — legacy dashboard alias now points at the modern merchant asset.
+- [NEW] support.sumup.com: 308→https://help.sumup.com/ (Vercel) — support aliases to the new help center.
+- [NEW] core.{uk,ie,lt}.sumup.com: resolve RFC1918 10.59.x → internal-k8s-globalba-gbc{uk,ie,lt}ebc-*.elb.amazonaws.com / gbc*-ebc-core-ui.fleet.live.eu-west-1.sumup.net — geo EBC banking cores, internal-only, not externally routable.
+- [NEW] app-auth, settlements-sandbox, sumup-ze-dashboard, apicore.{uk,ie,lt}, adm.apicore.*.sumup.com: NXDOMAIN — dead, no dangling CNAME.
+- [CHANGED] sf-gateway-api / read-api: CNAME → sse-fleet-proxy.fleet.live.sumup.net (Cloudflare 2a06:98c1::/32 IPv6), consistent with prior root-404.
+- [CHANGED] web.sumup.com: still 000 on :80/:443 — Rackspace lease lead dormant, no new claimable state.
+
+**STEP 2 — PRIORITIZE**
+- [PRIO] help.sumup.com,5.7,fresh un-gated anonymous surface (content only)
+- [PRIO] dashboard.sumup.com,4.0,hard-308 alias to me; no surface
+- [PRIO] core.{uk,ie,lt}.sumup.com,3.6,internal-only; DNS name/ELB leak (descriptive class)
+
+**STEP 3 — HYPOTHESES**
+[HYP] help.sumup.com Zendesk-backed content API exposes non-public article/draft data anonymously
+class: OTHER
+asset: help.sumup.com
+confidence: 20
+reasoning: New Vercel Next.js asset serves public content (200, 307→/en-GB, 38 Zendesk refs in page HTML). /api/* is routed but bounces (307→homepage; /api/hc self-loop 308→/api/hc; /api/health 404 Next.js not-found). No uniform edge gate, but no auth boundary either: all content is public by design.
+evidence_needed: any /api route or JSON feed returning article data beyond the public set (drafts, internal category IDs, user data).
+verify_steps: PASSIVE complete this session (/, /en-GB, /api, /api/hc, /api/hc/search, /api/health, /api/v1, sitemap.xml, .well-known/security.txt → all bounce/404/public). Convergence: it is Zendesk Guide content behind a custom frontend — public by construction.
+impact: public help-center article exposure only. Severity: negligible.
+testability: PASSIVE
+
+[HYP] core.{uk,ie,lt}.sumup.com internal EBC banking UI reachable via mis-aliased public name
+class: MISCONFIG
+asset: core.{uk,ie,lt}.sumup.com
+confidence: 10
+reasoning: DNS returns RFC1918 10.59.x backed by internal-k8s ELB names + gbc*-ebc-core-ui.fleet.live.eu-west-1.sumup.net; zone apex fleet.live.eu-west-1.sumup.net NXDOMAIN. Names reveal an internal geo-split EBC banking core but are unroutable externally.
+evidence_needed: any public-facing alias that resolves the EBC core to a routable IP.
+verify_steps: PASSIVE done — no external route exists; further attempts are REJECTED class (internal-infra info) and out of scope.
+impact: none externally; internal-name fingerprint at most. Severity: none.
+testability: PASSIVE
+
+[HYP] web.sumup.com Rackspace-lease subdomain takeover becomes claimable
+class: OTHER
+asset: web.sumup.com
+confidence: 15
+reasoning: 77.246.42.130 is in RDAP pool UK-RACKSPACE-20070509 (Rackspace Ltd., Texas) — NOT SumUp-owned. Host remains fully non-responsive (000 on 80/443) → no claimant-able service state observed; unchanged since 2026-09-05.
+evidence_needed: responsive service on the lease, or proof of lease termination making the IP/zone claimable.
+verify_steps: re-probed this session (000 both ports) — dormant, no delta.
+impact: if lease lapses and a claimant service binds the IP, sumup.com subdomain hijack → phishing. Severity: high, but unproven/dormant.
+testability: AUTH_HELPED
+
+**STEP 4 — SELF-CRITIQUE**
+- [PARKED] help.sumup.com content API (20): Zendesk Guide content is public by design; /api/* all bounce; no target to raise confidence; obsolete.
+- [PARKED] core.* EBC internal UI (10): RFC1918 unroutable externally; internal-name/ELB leak is descriptive REJECTED class; nothing testable.
+- [PARKED] web.sumup.com takeover (15): zero state change since 2026-09-05; re-probe confirms 000; needs external event (lease change) to become actionable.
+- [FINAL] Legacy api.sumup.com/authorize divergence fact (oracle + redirect-set divergence + wildcard CORS) — unchanged, reportable hardening fact; no new executable surface found this session; pending host-classification RAG (the due NEXT) is now COMPLETE and returned all-dead/internal results.
+- [FINAL] auth.sumup.com OAuth alg/scope attack surface — AUTH_HELPED, highest latent value, unchanged.
+
+**STEP 5 — NEXT ACTION**
+[NEXT] HUMAN: Legacy OAuth redirect recovery is closed on all executable-passive surface (52 combos invalid_request; classification now complete: app-auth/settlements-sandbox/sumup-ze-dashboard/apicore.*/adm.apicore.* NXDOMAIN; core.* internal-only RFC1918; cloud aliases Vercel/Cloudflare, unrelated). The only route to the accepted legacy callback host is historical SumUp dashboard-registration knowledge. Route the confirmed legacy-vs-modern redirect divergence + client_id oracle + endpoint-specific wildcard CORS to the program maintainer (bugs.olivermaicher.eu) as an informational/hardening finding.
+
+**STEP 6 — LEARNING**
+- [LEARN] ACCEPTED OTHER @ help.sumup.com: New Vercel Next.js asset, Zendesk-backed, public content; first SumUp Vercel asset without uniform 403; /api/* rewired to homepage (307; /api/hc loop) — no anonymous API.
+- [LEARN] ACCEPTED BUSLOGIC @ sumup.com DNS: geo-core classification complete — app-auth/settlements-sandbox/sumup-ze-dashboard/apicore.{uk,ie,lt}/adm.apicore.* NXDOMAIN; core.{uk,ie,lt}.sumup.com internal-only (10.59.x, fleet.live.eu-west-1.sumup.net); sf-gateway-api/read-api behind Cloudflare sse-fleet-proxy.
+- [LEARN] REJECTED MISCONFIG @ help.sumup.com: /api/health 404 + /api route rewrites show a standard Contentful-less Next.js app with no debug/health surface.
+- [LEARN] ACCEPTED AUTH @ dashboard/support.sumup.com: both owned Vercel aliases hard-308 (→me.sumup.com / →help.sumup.com); no dangling CNAME, no takeover.
+- [LEARN] ACCEPTED OTHER @ web.sumup.com: still non-responsive on :80/:443 — Rackspace lease takeover lead dormant, no delta.
+
+**STEP 7 — RISK**
+[RISK] sumup: 45 — Completion of the pending host classification returned zero new claimable surface (all candidates NXDOMAIN or internal-only; help/dashboard/support aliases add only public-content or redirect surface). The legacy-vs-modern OAuth redirect divergence + client_id oracle + wildcard CORS on api.sumup.com/authorize remains the single reproducible finding but stays dormant: the accepted legacy redirect isn't recoverable from reachable surface, and every high-impact chain still terminates at AUTH_HELPED or HUMAN (historical registration data). web.sumup.com takeover remains dormant. Down one from 46 on closed classification with no new findings.

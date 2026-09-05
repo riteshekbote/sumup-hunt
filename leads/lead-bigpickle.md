@@ -952,3 +952,33 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OATH @ api.sumup.com/authorize: sumup-ios-sdk and unknown IDs → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered; only dashboard confirmed registered.
 [LEARN] ACCEPTED AUTH @ checkout.sumup.com: New Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as me.sumup.com; no anonymous surface.
 [RISK] SumUp: 46 — The legacy-vs-modern redirect divergence remains the single reproducible finding, and it is real but un-exploitable without a host that cannot be recovered passively (~52 combos, single-class oracle, custom schemes included). Wildcard CORS remains latent (only 302 error bodies + auth.sumup.com error page, no data-bearing ACAO:* response). No new anonymous surface opened on any first-seen crt.sh host; all new assets (checkout, read-api, sf-gateway-api) are gated or 404. Down from 50: divergence fact is stable but the actionable chain is measurably exhausted on the reachable surface, and every high-impact kill-chain still terminates at AUTH_HELPED.
+## 2026-09-05 23:45:23 UTC [target] (model bigpickle)
+[HYP] help.sumup.com Zendesk-backed content API exposes non-public article/draft data anonymously
+class: OTHER
+asset: help.sumup.com
+confidence: 20
+reasoning: New Vercel Next.js asset serves public content (200, 307→/en-GB, 38 Zendesk refs in page HTML). /api/* is routed but bounces (307→homepage; /api/hc self-loop 308→/api/hc; /api/health 404 Next.js not-found). No uniform edge gate, but no auth boundary either: all content is public by design.
+evidence_needed: any /api route or JSON feed returning article data beyond the public set (drafts, internal category IDs, user data).
+verify_steps: PASSIVE complete this session (/, /en-GB, /api, /api/hc, /api/hc/search, /api/health, /api/v1, sitemap.xml, .well-known/security.txt → all bounce/404/public). Convergence: it is Zendesk Guide content behind a custom frontend — public by construction.
+impact: public help-center article exposure only. Severity: negligible.
+testability: PASSIVE
+[HYP] core.{uk,ie,lt}.sumup.com internal EBC banking UI reachable via mis-aliased public name
+class: MISCONFIG
+asset: core.{uk,ie,lt}.sumup.com
+confidence: 10
+reasoning: DNS returns RFC1918 10.59.x backed by internal-k8s ELB names + gbc*-ebc-core-ui.fleet.live.eu-west-1.sumup.net; zone apex fleet.live.eu-west-1.sumup.net NXDOMAIN. Names reveal an internal geo-split EBC banking core but are unroutable externally.
+evidence_needed: any public-facing alias that resolves the EBC core to a routable IP.
+verify_steps: PASSIVE done — no external route exists; further attempts are REJECTED class (internal-infra info) and out of scope.
+impact: none externally; internal-name fingerprint at most. Severity: none.
+testability: PASSIVE
+[HYP] web.sumup.com Rackspace-lease subdomain takeover becomes claimable
+class: OTHER
+asset: web.sumup.com
+confidence: 15
+reasoning: 77.246.42.130 is in RDAP pool UK-RACKSPACE-20070509 (Rackspace Ltd., Texas) — NOT SumUp-owned. Host remains fully non-responsive (000 on 80/443) → no claimant-able service state observed; unchanged since 2026-09-05.
+evidence_needed: responsive service on the lease, or proof of lease termination making the IP/zone claimable.
+verify_steps: re-probed this session (000 both ports) — dormant, no delta.
+impact: if lease lapses and a claimant service binds the IP, sumup.com subdomain hijack → phishing. Severity: high, but unproven/dormant.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Legacy OAuth redirect recovery is closed on all executable-passive surface (52 combos invalid_request; classification now complete: app-auth/settlements-sandbox/sumup-ze-dashboard/apicore.*/adm.apicore.* NXDOMAIN; core.* internal-only RFC1918; cloud aliases Vercel/Cloudflare, unrelated). The only route to the accepted legacy callback host is historical SumUp dashboard-registration knowledge. Route the confirmed legacy-vs-modern redirect divergence + client_id oracle + endpoint-specific wildcard CORS to the program maintainer (bugs.olivermaicher.eu) as an informational/hardening finding.
+[RISK] sumup: 45 — Completion of the pending host classification returned zero new claimable surface (all candidates NXDOMAIN or internal-only; help/dashboard/support aliases add only public-content or redirect surface). The legacy-vs-modern OAuth redirect divergence + client_id oracle + wildcard CORS on api.sumup.com/authorize remains the single reproducible finding but stays dormant: the accepted legacy redirect isn't recoverable from reachable surface, and every high-impact chain still terminates at AUTH_HELPED or HUMAN (historical registration data). web.sumup.com takeover remains dormant. Down one from 46 on closed classification with no new findings.
