@@ -282,3 +282,21 @@
 - LEARN: REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (307 redirect, no CORS headers)
 - LEARN: ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
 - LEARN: REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfir
+
+## RANKED HYPOTHESES 2026-09-05 19:34:42 UTC
+- [75] api.sumup.com/authorize: Legacy OAuth authorize endpoint client_id oracle + redirect_uri allowlist divergence enables callback host enumeration (from art/lead_nemotron3.txt)
+- [55] api.sumup.com/authorize: Legacy api.sumup.com/authorize redirect-set divergence — callback host enumeration via crt.sh historical subdomains (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): RAG: fetch crt.sh for q=%.sumup.com (current + historical certificates), extract all unique subdomains, filter for OAuth-callback-shaped names (oauth, auth, sso
+- NEXT(hypotheses-nemotron3.txt): PROBE: GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://legacy.sumup.com/callback&response_type=code&scope=classic&state=test1234567
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: Common legacy callback host candidates (dashboard/app/my/secure/me/www.sumup.com × callback paths) all return invalid_r
+- LEARN: ACCEPTED BUSLOGIC @ api.sumup.com/authorize: RAG of public SumUp SDKs/docs yields only the current strict per-registration model — no legacy callback host const
+- LEARN: ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live — https://me.sumup.com/api/sso/callback returns 302→login flow on the accepted h
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Side-by-side control confirms identical dashboard+me.sumup.com/api/sso/callback request ACCEPTED on auth.sumup.com/oaut
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Endpoint LIVE with client_id oracle (invalid_client vs invalid_request) and legacy redirect-set divergence — modern das
+- LEARN: ACCEPTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS (access-control-allow-origin:*) + broad allow-methods + max-age + SameSite=None cookies on Domain=su
+- LEARN: ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live on modern auth server — https://me.sumup.com/api/sso/callback returns 302→login 
+- LEARN: ACCEPTED AUTH @ auth.sumup.com: PAR (/oauth2/par) and device flow (/oauth2/device) routed (400 on POST) but require client authentication — "none" auth_method n
+- LEARN: ACCEPTED AUTH @ me.sumup.com: Vercel-served asset; anonymous /api/* routes return 307 to OAuth flow — no debug endpoints or permissive CORS
+- LEARN: REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (307 redirect, no CORS headers)
+- LEARN: ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
+- LEARN: REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfir

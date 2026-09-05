@@ -4729,3 +4729,63 @@ STEP 6 — LEARNING:
 
 STEP 7 — RISK:
 [RISK] SumUp: 50 — The legacy-vs-modern redirect divergence on the highest-value OAuth device is now a confirmed, controlled, side-by-side fact (not speculative), which is genuinely reportable as a hardening/observational discrepancy even without a demonstrated code theft. However, every high-impact chain (legacy redirect code theft, cross-tenant BOLA) still terminates at AUTH_HELPED, no code/state or cross-tenant data observed, and no claimable third-party takeover state exists on web.sumup.com. Risk held ~50 (from 52): one correction up (confirmed divergence) balanced by the confirmed absence of any accepted legacy callback host in the commonly-enumerable surface and no demonstrated exposure.
+===== ANALYST bigpickle 2026-09-05 19:34:42 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m• [0mCheck leads and state files[90m Explore Agent[0m
+[0m✓ [0mCheck leads and state files[90m Explore Agent[0m
+[DELTA] NO_DELTA
+
+[PRIO] api.sumup.com/authorize,8.0,OAuth+client_id oracle+wildcard CORS+callback divergence — highest-value live anonymous endpoint
+[PRIO] api.sumup.com,5.5,scope catalog maps resource model but fully gated unauth
+[PRIO] auth.sumup.com,5.0,strict redirect validation confirmed; PAR/device require client_auth
+[PRIO] me.sumup.com,5.0,Vercel edge-gated; OAuth app registry behind dashboard
+[PRIO] portal.sumup.com,3.5,iriscrm.com third-party CNAME; no confirmed in-scope params
+[PRIO] admin.sumup.com,3.0,nginx 403; header spoofing exhausted
+
+[HYP] Legacy api.sumup.com/authorize redirect-set divergence — callback host enumeration via crt.sh historical subdomains
+class: OATH
+asset: api.sumup.com/authorize
+confidence: 55
+reasoning: Endpoint LIVE (302→auth error). client_id oracle confirmed (invalid_client vs invalid_request). Modern dashboard callback rejected on legacy gateway; accepted on modern auth.sumup.com. RAG of public SDKs/docs exhausted — no legacy constants. Common host × path candidates exhausted. Next surface: crt.sh historical cert subdomains of *.sumup.com filtered for callback-shaped hosts (oauth, auth-callback, sso, login, callback, dashboard, app, my, secure, identity, account, signin, connect, id) to expand the oracle test set.
+evidence_needed: One redirect_uri from a crt.sh-derived subdomain accepted on legacy path (302→callback with code/state), OR recovery of a retired host registered in the legacy dashboard redirect allowlist.
+verify_steps: Fetch crt.sh q=%.sumup.com (both current and historical), filter for callback-shaped hostnames, then oracle-test each: GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://{candidate}&response_type=code&scope=classic&state=test12345678 — observe invalid_request (rejected) vs 302→callback (accepted). ≤1 rps, GET only, no auth.
+impact: Authorization-code interception on legacy registered client → merchant OAuth account takeover. Severity: high if a live/loose legacy redirect is found; currently unproven/dormant.
+testability: AUTH_HELPED
+
+[HYP] api.sumup.com cross-tenant BOLA via dashboard-scope API resources
+class: IDOR
+asset: api.sumup.com
+confidence: 50
+reasoning: All anonymous paths except /authorize and .well-known/security.txt return uniform 404. Dashboard-client scope catalog (accounting/invoices/api_keys/lending/receivables/unified_customer_directory/readers) maps hidden resource model. Cross-tenant access provable only with a granted token + resource-id swaps. Requires authenticated session.
+evidence_needed: Authenticated requests where changing a resource id returns another tenant's data on scope-derived paths.
+verify_steps: PASSIVE complete (uniform 404s). AUTH_HELPED: obtain dashboard OAuth token, test each scope path with cross-tenant id swaps, compare response bodies/sizes.
+impact: Cross-tenant financial/PII exposure. Severity: critical.
+testability: AUTH_HELPED
+
+[HYP] Wildcard CORS on api.sumup.com/authorize chained to code/state-bearing redirect
+class: MISCONFIG
+asset: api.sumup.com/authorize
+confidence: 40
+reasoning: ACAO:* + broad allow-methods + max-age + SameSite=None Domain=sumup.com cookies confirmed on legacy path; absent on auth.sumup.com/oauth2/auth. Standalone ACAO:* is REJECTED class (not reportable alone). Only meaningful if a response on this path carries a code/state readable cross-origin. No code/state observed to date on any response from this endpoint.
+evidence_needed: A legacy-path response returning code/state with ACAO:* present under an Origin header.
+verify_steps: Dependent on hypothesis #1 finding an accepted legacy redirect. PASSIVE-first; no data-bearing response observed yet.
+impact: Cross-origin read of OAuth artifacts → code theft → ATO. Severity: medium-high, latent.
+testability: AUTH_HELPED
+
+[PARKED] Wildcard CORS chain (conf 40): Standalone ACAO:* is REJECTED class; no data-bearing redirect found; dependent on #1. Drop if #1 fails to recover an accepted legacy redirect.
+[PARKED] web.sumup.com takeover: Rackspace third-party lease pool confirmed; host non-responsive; no claimable service state. Parked pending nightly re-probe.
+
+[FINAL] 1. api.sumup.com/authorize callback-host enum via crt.sh (conf 55) — highest priority; passive-first with a concrete next action.
+[FINAL] 2. api.sumup.com BOLA (conf 50) — AUTH_HELPED only; standard high-value.
+[FINAL] 3. Wildcard CORS chain (conf 40) — latent, dependent on #1.
+
+[NEXT] RAG: fetch crt.sh for q=%.sumup.com (current + historical certificates), extract all unique subdomains, filter for OAuth-callback-shaped names (oauth, auth, sso, login, callback, dashboard, app, my, secure, identity, account, signin, connect, id, portal, internal, legacy), deduplicate, then oracle-test the top 20 candidates against api.sumup.com/authorize with client_id=dashboard. ≤1 rps, GET only.
+
+[LEARN] REJECTED OATH @ api.sumup.com/authorize: Common legacy callback host candidates (dashboard/app/my/secure/me/www.sumup.com × callback paths) all return invalid_request — no accepted legacy redirect recoverable from common enumeration.
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/authorize: RAG of public SumUp SDKs/docs yields only the current strict per-registration model — no legacy callback host constants exist in public code; legacy-host recovery requires passive CT/subdomain enumeration.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live — https://me.sumup.com/api/sso/callback returns 302→login flow on the accepted host; this same URI is NOT accepted on legacy gateway (divergence confirmed).
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Side-by-side control confirms identical dashboard+me.sumup.com/api/sso/callback request ACCEPTED on auth.sumup.com/oauth2/auth but REJECTED on legacy api.sumup.com/authorize — divergent redirect-set is a hard, controlled, reproducible fact.
+
+[RISK] SumUp: 50 — Legacy-vs-modern redirect divergence on the highest-value OAuth device is now a confirmed, controlled, side-by-side fact, genuinely reportable as a hardening discrepancy even without a demonstrated code theft. Client_id oracle is confirmed. However every high-impact chain (legacy redirect code theft, cross-tenant BOLA) still terminates at AUTH_HELPED, no code/state or cross-tenant data observed, and no accepted legacy callback host recovered from common candidates. Wildcard CORS is latent (no data-bearing response). Risk held ~50: confirmed divergence (up) balanced by absent legacy redirect recovery and no demonstrated exposure.
