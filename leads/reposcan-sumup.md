@@ -82,3 +82,61 @@ TARGET_ORG not configured for sumup; skipping public-org deep scan.
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
 ## REPOSCAN 2026-09-05 19:45:21 UTC
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-05 21:51:09 UTC
+[HYP] Cloudflare Account ID Hardcoded in wrangler.jsonc
+class: SECRET
+asset: sumup-mcp/wrangler.jsonc (lines 24, 49, 74)
+confidence: 85
+reasoning: Cloudflare account ID 2037fc18a2fb8175c20d20776cac65c5 hardcoded in all three env blocks (dev/stage/live). Enables targeted enumeration of Cloudflare resources.
+impact: Low-Medium
+verify_steps: 1) Navigate to https://dash.cloudflare.com/2037fc18a2fb8175c20d20776cac65c5 2) GET /client/v4/accounts/2037fc18a2fb8175c20d20776cac65c5 (passive)
+[HYP] Internal Infrastructure Naming Scheme Exposed
+class: MISCONFIG
+asset: sumup-mcp/wrangler.jsonc, sumup-mcp/src/auth.test.ts
+confidence: 90
+reasoning: Full internal naming convention exposed: sam-app.ro domain with subdomains mcp-theta.sam-app.ro (dev), mcp.sam-app.ro (stage), api-theta.sam-app.ro, api.sam-app.ro, auth-theta.sam-app.ro, auth.sam-app.ro, mcp-beta.sam-app.ro.
+impact: Medium
+verify_steps: 1) DNS lookup on sam-app.ro, api.sam-app.ro, auth.sam-app.ro, mcp-theta.sam-app.ro 2) HTTP HEAD to identify running services
+[HYP] Wildcard CORS on Production MCP Server
+class: MISCONFIG
+asset: sumup-mcp/src/config.ts:8, sumup-developer/public/_headers:2
+confidence: 80
+reasoning: Access-Control-Allow-Origin: * on mcp.sumup.com (OAuth-authenticated MCP server with merchant payment data). Any website can make credentialed cross-origin requests; could enable CSRF token exfiltration.
+impact: Medium
+verify_steps: 1) curl -I -X OPTIONS https://mcp.sumup.com/mcp -H "Origin: https://evil.com" -H "Access-Control-Request-Method: POST" 2) Verify credentials sent cross-origin
+[HYP] Committed Secrets File (.dev.vars)
+class: MISCONFIG
+asset: sumup-mcp/.dev.vars
+confidence: 70
+reasoning: Cloudflare Workers local secrets file committed to public repo, not in .gitignore. Currently empty (OPENAI_APPS_CHALLENGE=) but dangerous pattern — any developer adding real secrets auto-commits them.
+impact: Low
+verify_steps: 1) Verify file at https://github.com/sumup/sumup-mcp/blob/main/.dev.vars 2) Check git history for actual secrets
+[HYP] Hardcoded Default Secrets in Docker Example
+class: SECRET
+asset: sumup-plugin-medusa/examples/docker/medusa/medusa-config.ts:12-13
+confidence: 75
+reasoning: JWT_SECRET, COOKIE_SECRET, MEDUSA_ADMIN_PASSWORD, SUPERADMIN_PASSWORD all default to "supersecret" when env vars unset. entrypoint.sh seeds admin with this password. Deploying docker-compose unchanged gives trivially guessable JWT signing key.
+impact: Medium
+verify_steps: 1) Check if any SumUp demo/staging uses these defaults 2) Search internal configs for MEDUSA_ADMIN_PASSWORD
+[HYP] Hardcoded Postgres Credentials in Docker Example
+class: SECRET
+asset: sumup-plugin-vendure/examples/docker/example.env:8-9
+confidence: 70
+reasoning: POSTGRES_USER=vendure, POSTGRES_PASSWORD=vendure hardcoded defaults. Combined with above, docker-compose up exposes Postgres with trivial credentials.
+impact: Low
+verify_steps: 1) Confirm no SumUp instances use these defaults 2) Check if Postgres port is externally exposed
+[HYP] Internal Maven Server URL Leaked
+class: MISCONFIG
+asset: sumup-android-tap-to-pay/build.gradle.kts:18
+confidence: 90
+reasoning: URL https://tap-to-pay-sdk.fleet.live.sumup.net/ reveals internal Maven artifact server hostname and Fleet CD platform naming convention.
+impact: Low
+verify_steps: 1) Confirm this is the only public reference 2) Check Fleet server for additional exposed endpoints
+[HYP] Internal Mock Service DNS Name in Tests
+class: MISCONFIG
+asset: sumup-rs/sdk/tests/client.rs:59-60
+confidence: 85
+reasoning: String https://mock.sumup.internal in test code reveals internal DNS naming convention for mock services.
+impact: Very Low
+verify_steps: 1) Verify domain doesn't resolve externally 2) Check other repos for internal hostnames
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
