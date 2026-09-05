@@ -39,3 +39,5 @@
 - 2026-09-05 REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (307 redirect, no CORS headers)
 - 2026-09-05 ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
 - 2026-09-05 REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfirmed in-scope
+- 2026-09-05 ACCEPTED AUTH @ me.sumup.com: Vercel-served asset confirmed; all anonymous /api/* routes return 307/403 to OAuth flow — no debug endpoints or permissive CORS found passively
+- 2026-09-05 REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (403, no CORS headers)

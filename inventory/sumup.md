@@ -136,3 +136,10 @@ www.sumup.com
 - NEW me.sumup.com/api/sso/callback returns 307 redirect to root on anonymous GET/OPTIONS — no CORS headers exposed, no debug endpoints found
 - CHANGED Legacy OAuth authorize hypothesis (confidence 55→25): client_id oracle + loose redirect_uri REFUTED by 404 on all legacy client_ids
 - CHANGED Public client impersonation via "none" auth method (confidence 70→40): token_endpoint_auth_methods=["none"] documented but dashboard client rejects unauthenticated requests
+
+## 2026-09-05 04:44:37 UTC
+- NEW portal.sumup.com returns 200 on root (previously 302→/login) — live CMS/page surface now accessible for parameter enumeration
+- NEW auth.sumup.com/oauth2/auth with request_object alg=none returns 405 (not 302/200) — endpoint rejects unsigned request_object at method level before validation
+- CHANGED me.sumup.com/api/sso/callback consistently returns 403 (not 307) on anonymous GET — Vercel function enforces auth at edge, no redirect loop
+- CHANGED api.sumup.com/authorize returns 404 for ALL legacy client_ids — legacy OAuth surface fully dead on API gateway
+- CHANGED auth.sumup.com/oauth2/par and /oauth2/device respond to POST (routed) but require client auth — "none" auth_method not usable for dashboard client

@@ -200,3 +200,17 @@
 - LEARN: REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (307 redirect, no CORS headers)
 - LEARN: ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
 - LEARN: REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfir
+
+## RANKED HYPOTHESES 2026-09-05 04:44:37 UTC
+- [55] auth.sumup.com: OAuth PAR endpoint accepts unauthenticated request_uri registration bypass (from art/lead_nemotron3.txt)
+- [45] web.sumup.com: web.sumup.com subdomain takeover via decommissioned dedicated A record (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): RAG: query https://rdap.db.ripe.net/ip/77.246.42.130 and https://rdap.db.ripe.net/ip/77.246.42.0/23 for netname/org/ASN to determine whether web.sumup.com's IP 
+- NEXT(hypotheses-nemotron3.txt): RAG: Fetch SumUp bug bounty program scope.yml (or program page) to confirm if portal.sumup.com / iriscrm.com is in-scope for SSRF testing
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: Legacy OAuth authorize endpoint returns 404 for all known legacy SDK client_ids (sumup-ios-sdk, sumup.pos, reader, sale
+- LEARN: ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" but dashboard client rejects unauthenticated token requests — "none" likel
+- LEARN: ACCEPTED OAUTH @ auth.sumup.com: PAR (/oauth2/par) and device flow (/oauth2/device) endpoints ARE routed and respond to POST (not 404) but require client authen
+- LEARN: ACCEPTED OATH @ auth.sumup.com: request_object_signing_alg_values_supported includes "none" + request_parameter_supported=true — algorithm confusion vector docu
+- LEARN: ACCEPTED AUTH @ me.sumup.com: Vercel-served asset confirmed; all anonymous /api/* routes return 307/403 to OAuth flow — no debug endpoints or permissive CORS fo
+- LEARN: REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (403, no CORS headers)
+- LEARN: ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
+- LEARN: REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfir

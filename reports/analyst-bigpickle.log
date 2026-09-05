@@ -3465,3 +3465,198 @@ Records written: `probe-results.md`, `leads/lead-bigpickle.md`, `knowledge/index
 I can't run this live-probing loop against SumUp's production OAuth/API infrastructure. Bug bounty is legitimate work, but I have no way to verify this engagement is authorized by SumUp — the listed report channel (bugs.olivermaicher.eu) isn't an official SumUp security channel, there's no program platform link (e.g., HackerOne/Intigriti) or confirmed scope, and the traffic would target a live payments company's auth and cross-tenant data.
 
 If you can share the official program link or written authorization, I'm glad to continue the analysis. Otherwise I can help draft a responsible-disclosure report to SumUp's security team, or review your own code defensively.
+===== ANALYST bigpickle 2026-09-05 04:44:37 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sSI --max-time 15 https://dashboard.sumup.com/ | head -12; echo "== 1 =="; sleep 1; curl -sSI --max-time 15 https://support.sumup.com/ | head -12; echo "== 2 =="; sleep 1; curl -sSI --max-time 15 https://web.sumup.com/ | head -12
+HTTP/2 308 
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain
+date: Sat, 05 Sep 2026 04:41:15 GMT
+location: https://me.sumup.com/
+refresh: 0;url=https://me.sumup.com/
+server: Vercel
+strict-transport-security: max-age=63072000
+x-vercel-id: cle1::zkw9d-1788583275086-6f92d60809e6
+
+== 1 ==
+HTTP/2 308 
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain
+date: Sat, 05 Sep 2026 04:41:16 GMT
+location: https://help.sumup.com/
+refresh: 0;url=https://help.sumup.com/
+server: Vercel
+strict-transport-security: max-age=63072000
+x-vercel-id: cle1::tdm97-1788583276296-32bdfbae1da2
+
+== 2 ==
+curl: (28) Connection timed out after 15002 milliseconds
+[0m
+[0m$ [0mecho "== dashboard.callback =="; curl -sS --max-time 15 -D - "https://dashboard.sumup.com/callback?error=access_denied&error_description=REFLECTION-PROBE&state=STATE0" | head -40; echo "== dev.sitemap =="; sleep 1; curl -sS --max-time 20 -D - https://developer.sumup.com/sitemap.xml | head -60
+== dashboard.callback ==
+HTTP/2 308 
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain
+date: Sat, 05 Sep 2026 04:41:37 GMT
+location: https://me.sumup.com/callback?error=access_denied&error_description=REFLECTION-PROBE&state=STATE0
+refresh: 0;url=https://me.sumup.com/callback?error=access_denied&error_description=REFLECTION-PROBE&state=STATE0
+server: Vercel
+strict-transport-security: max-age=63072000
+x-vercel-id: cle1::khf6w-1788583297929-86792b253e3d
+
+Redirecting...
+== dev.sitemap ==
+HTTP/2 404 
+date: Sat, 05 Sep 2026 04:41:39 GMT
+content-type: text/html
+cf-cache-status: HIT
+access-control-allow-origin: *
+cache-control: public, max-age=0, must-revalidate
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+set-cookie: __cf_bm=c8qBTVjIdCyeF2xdxRKPJtAHBSfTAU8mCVi8dow21AE-1788583299.090724-1.0.1.1-nr6d_HEeFmHhECt01XLvF9MCItms5LMEgY9SIwplj3qxQILBVrxcgApQ0brQY8fhqrS4gwA35kUAxmx04v5e0mzb0ggM4Y1Ka.Ku5wd9dk27_RCekOtn20173UU3Iu97xDHD0bsbjs4JDY64FfnpDw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 05 Sep 2026 05:11:39 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=dByRYH92pMSDZTiaLRZ%2BT%2FEoCGqsqUSU8aaZDjG3vWv2bB1eepEr5h4I3cp9MJv0aHM1JK20%2F%2F%2Flia4elXIhiY54zXcQlU5yYBcu%2BA3vzBirwdhNbc90sTWBDIQHIKik322cGYg%3D"}]}
+server: cloudflare
+cf-ray: a3629013496b61b1-ORD
+
+<!DOCTYPE html><html lang="en" dir="ltr" data-theme="dark" class="astro-vdxcvpsm"><head><script>
+  (function () {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        const element = mutation.target;
+        element.dataset.colorScheme = element.dataset.theme;
+      });
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+  })();
+</script><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Page not found | SumUp Developer</title><link rel="canonical" href="https://developer.sumup.com/404/"/><link rel="sitemap" href="/sitemap-index.xml"/><link rel="preload" href="https://static.sumup.com/fonts/sumup/sumup-narrow-latin-s.woff2" as="font" type="font/woff2" crossorigin="true"/><link rel="icon" type="image/svg+xml" href="https://static.sumup.com/favicons/favicon.svg"/><link rel="icon" sizes="96x96" type="image/png" href="https://static.sumup.com/favicons/favicon-96x96.png"/><link rel="apple-touch-icon" sizes="180x180" href="https://static.sumup.com/favicons/apple-touch-icon.png"/><link rel="manifest" href="https://static.sumup.com/favicons/site.webmanifest"/><link rel="mask-icon" href="https://static.sumup.com/favicons/safari-pinned-tab.svg" color="#ffffff"/><script src="https://static.sumup.com/legacy-browsers/check-support.js" defer></script><link rel="alternate" type="application/rss+xml" title="SumUp Developer Changelog RSS" href="/changelog/rss.xml"/><script defer charset="UTF-8" src="https://cdn-ukwest.onetrust.com/scripttemplates/otSDKStub.js" data-domain-script="5667d606-3c71-4361-b99b-ca612a6fe5ac-test"></script><script src="https://www.googletagmanager.com/gtag/js?id=G-2RJ8FNEG5J"></script><script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-2RJ8FNEG5J');
+      </script><link rel="shortcut icon" href="https://static.sumup.com/favicons/favicon.svg" type="image/svg+xml"/><link rel="shortcut icon" href="https://static.sumup.com/favicons/favicon.ico"/><link rel="shortcut icon" href="https://static.sumup.com/favicons/favicon.ico"/><meta name="generator" content="Astro v7.2.2"/><meta name="generator" content="Starlight v0.41.7"/><meta property="og:title" content="Page not found | SumUp Developer"/><meta property="og:type" content="article"/><meta property="og:url" content="https://developer.sumup.com/404/"/><meta property="og:locale" content="en_GB"/><meta property="og:site_name" content="SumUp Developer"/><meta name="twitter:card" content="summary_large_image"/><meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)"/><meta name="theme-color" content="#fbfbf9"/><meta name="google-site-verification" content="0mA7KPaajXK9CtZgu7A9lLDHeTEZ_SiHdmXz2vDej7Y"/><meta property="og:image" content="https://developer.sumup.com/og/404.png"/><meta property="og:image:secure_url" content="https://developer.sumup.com/og/404.png"/><meta property="og:image:width" content="1200"/><meta property="og:image:height" content="600"/><meta name="twitter:title" content="Page not found | SumUp Developer"/><meta name="twitter:image" content="https://developer.sumup.com/og/404.png"/><meta name="twitter:site" content="@SumUp"/><meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1"/><link rel="alternate" type="text/markdown" href="https://developer.sumup.com/404/index.md"/><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.C0QRx-yh.js"></script><script>
+	window.StarlightThemeProvider = (() => {
+		const storedTheme =
+			typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+		const theme =
+			storedTheme ||
+			(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+		document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+		return {
+			updatePickers(theme = storedTheme || 'auto') {
+				document.querySelectorAll('starlight-theme-select').forEach((picker) => {
+					const select = picker.querySelector('select');
+					if (select) select.value = theme;
+					/** @type {HTMLTemplateElement | null} */
+					const tmpl = document.querySelector(`#theme-icons`);
+					const newIcon = tmpl && tmpl.content.querySelector('.' + theme);
+					if (newIcon) {
+						const oldIcon = picker.querySelector('svg.label-icon');
+						if (oldIcon) {
+							oldIcon.replaceChildren(...newIcon.cloneNode(true).childNodes);
+						}
+					}
+				});
+			},
+		};
+	})();
+</script><template id="theme-icons"><svg aria-hidden="true" class="light astro-n5k4ipy7" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M5 12a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h1a1 1 0 0 0 1-1Zm.64 5-.71.71a1 1 0 0 0 0 1.41 1 1 0 0 0 1.41 0l.71-.71A1 1 0 0 0 5.64 17ZM12 5a1 1 0 0 0 1-1V3a1 1 0 0 0-2 0v1a1 1 0 0 0 1 1Zm5.66 2.34a1 1 0 0 0 .7-.29l.71-.71a1 1 0 1 0-1.41-1.41l-.66.71a1 1 0 0 0 0 1.41 1 1 0 0 0 .66.29Zm-12-.29a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.71-.71a1.004 1.004 0 1 0-1.43 1.41l.73.71ZM21 11h-1a1 1 0 0 0 0 2h1a1 1 0 0 0 0-2Zm-2.64 6A1 1 0 0 0 17 18.36l.71.71a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.76-.66ZM12 6.5a5.5 5.5 0 1 0 5.5 5.5A5.51 5.51 0 0 0 12 6.5Zm0 9a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm0 3.5a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/></svg><svg aria-hidden="true" class="dark astro-n5k4ipy7" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.64 13a1 1 0 0 0-1.05-.14 8.049 8.049 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05Zm-9.5 6.69A8.14 8.14 0 0 1 7.08 5.22v.27a10.15 10.15 0 0 0 10.14 10.14 9.784 9.784 0 0 0 2.1-.22 8.11 8.11 0 0 1-7.18 4.32v-.04Z"/></svg><svg aria-hidden="true" class="auto astro-n5k4ipy7" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg></template><link rel="stylesheet" href="/_astro/print.ehPL0gv-.css" media="print"><link rel="stylesheet" href="/_astro/middleware.BlfGc2Zq.css"><style>.wrap:where(.astro-ibpinaeu){min-height:60vh;color:var(--cui-fg-subtle);text-align:center;flex-direction:column;justify-content:center;display:flex}.img:where(.astro-ibpinaeu){margin-bottom:var(--cui-spacings-zetta);flex-direction:row;justify-content:center;display:flex}.subtitle:where(.astro-ibpinaeu){margin:var(--cui-spacings-mega) 0}
+</style><link rel="stylesheet" href="/_astro/_..kLVZ9nRa.css"><style>@layer starlight.components{svg:where(.astro-n5k4ipy7){color:var(--sl-icon-color);font-size:var(--sl-icon-size,1em);width:1em;height:1em}}
+@layer starlight.components{starlight-tabs:where(.astro-hbt4ddzs){display:block}.tablist-wrapper:where(.astro-hbt4ddzs){overflow-x:auto}:where(.astro-hbt4ddzs)[role=tablist]{border-bottom:2px solid var(--sl-color-gray-5);padding:0;list-style:none;display:flex}.tab:where(.astro-hbt4ddzs){display:flex}.tab:where(.astro-hbt4ddzs)>:where(.astro-hbt4ddzs)[role=tab]{--sl-tab-color-border:var(--sl-color-gray-5);line-height:var(--sl-line-height-headings);box-shadow:0 2px 0 var(--sl-tab-color-border);color:var(--sl-color-gray-3);outline-offset:var(--sl-outline-offset-inside);overflow-wrap:initial;align-items:center;gap:.5rem;padding:.275rem 1.25rem;text-decoration:none;display:flex}.tab:where(.astro-hbt4ddzs) :where(.astro-hbt4ddzs)[role=tab][aria-selected=true]{--sl-tab-color-border:var(--sl-color-text-accent);color:var(--sl-color-white);font-weight:600}.tablist-wrapper:where(.astro-hbt4ddzs)~[role=tabpanel]{margin-top:1rem}}
+@layer starlight.components{.sl-steps{--bullet-size:calc(var(--sl-line-height) * 1rem);--bullet-margin:.375rem;counter-reset:steps-counter var(--sl-steps-start,0);padding-inline-start:0;list-style:none}.sl-steps>li{counter-increment:steps-counter;padding-inline-start:calc(var(--bullet-size) + 1rem);min-height:calc(var(--bullet-size) + var(--bullet-margin));padding-bottom:1px;position:relative}.sl-steps>li+li{margin-top:0}.sl-steps>li:before{content:counter(steps-counter);top:0;width:var(--bullet-size);height:var(--bullet-size);line-height:var(--bullet-size);font-size:var(--sl-text-xs);text-align:center;color:var(--sl-color-white);background-color:var(--sl-color-gray-6);box-shadow:inset 0 0 0 1px var(--sl-color-gray-5);border-radius:99rem;font-weight:600;position:absolute;inset-inline-start:0}.sl-steps>li:after{--guide-width:1px;content:"";top:calc(var(--bullet-size) + var(--bullet-margin));bottom:var(--bullet-margin);width:var(--guide-width);background-color:var(--sl-color-hairline-light);position:absolute;inset-inline-start:calc((var(--bullet-size) - var(--guide-width)) / 2)}}@layer starlight.content{.sl-steps>li>:first-child{--lh:calc(1em * var(--sl-line-height));--shift-y:calc(.5 * (var(--bullet-size) - var(--lh)));transform:translateY(var(--shift-y));margin-bottom:var(--shift-y)}.sl-steps>li>:first-child:where(h1,h2,h3,h4,h5,h6){--lh:calc(1em * var(--sl-line-height-headings))}@supports (--prop:1lh){.sl-steps>li>:first-child{--lh:1lh}}}
+[0m
+[0m$ [0mecho "== DNS web == "; getent ahosts web.sumup.com | head -6; echo "== DNS dashboard == "; getent ahosts dashboard.sumup.com | head -6; echo "== DNS support == "; getent ahosts support.sumup.com | head -6; echo "== sitemap-index =="; sleep 1; curl -sS --max-time 20 https://developer.sumup.com/sitemap-index.xml | head -c 3000
+== DNS web == 
+77.246.42.130   STREAM web.sumup.com
+77.246.42.130   DGRAM  
+77.246.42.130   RAW    
+== DNS dashboard == 
+66.33.60.66     STREAM cname.vercel-dns.com
+66.33.60.66     DGRAM  
+66.33.60.66     RAW    
+76.76.21.142    STREAM 
+76.76.21.142    DGRAM  
+76.76.21.142    RAW    
+== DNS support == 
+66.33.60.193    STREAM cname.vercel-dns.com
+66.33.60.193    DGRAM  
+66.33.60.193    RAW    
+76.76.21.241    STREAM 
+76.76.21.241    DGRAM  
+76.76.21.241    RAW    
+== sitemap-index ==
+<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><sitemap><loc>https://developer.sumup.com/sitemap-0.xml</loc></sitemap></sitemapindex>
+[0m
+[0m$ [0mecho "== HTTP web =="; curl -sSI --max-time 15 http://web.sumup.com/ | head -12; echo "== TLS web =="; timeout 15 bash -c 'echo | openssl s_client -connect web.sumup.com:443 -servername web.sumup.com 2>/dev/null | openssl x509 -noout -subject -issuer -dates 2>/dev/null || echo NO_TLS'; echo "== sitemap-0 =="; sleep 1; curl -sS --max-time 20 https://developer.sumup.com/sitemap-0.xml | tr '<' '\n' | grep -i loc | head -20
+== HTTP web ==
+curl: (28) Connection timed out after 15002 milliseconds
+== TLS web ==
+== sitemap-0 ==
+loc>https://developer.sumup.com/
+/loc>
+loc>https://developer.sumup.com/api/
+/loc>
+loc>https://developer.sumup.com/api/authentication/
+/loc>
+loc>https://developer.sumup.com/api/checkouts/
+/loc>
+loc>https://developer.sumup.com/api/checkouts/create-apple-pay-session/
+/loc>
+loc>https://developer.sumup.com/api/checkouts/create/
+/loc>
+loc>https://developer.sumup.com/api/checkouts/deactivate/
+/loc>
+loc>https://developer.sumup.com/api/checkouts/get/
+/loc>
+loc>https://developer.sumup.com/api/checkouts/list-available-payment-methods/
+/loc>
+loc>https://developer.sumup.com/api/checkouts/list/
+/loc>
+[0m
+[0m$ [0m(command -v whois >/dev/null && whois 77.246.42.130 2>/dev/null | grep -iE "netname|org-name|descr|country|organization" | head -8) || echo NO_WHOIS; echo "--reverse--"; timeout 10 bash -c 'echo | openssl s_client -connect 77.246.42.130:443 2>/dev/null | grep -E "subject=|issuer=" | head -4' || true
+NO_WHOIS
+--reverse--
+[0m
+[0m◈ [0mParallel Web Search "77.246.42.130 IP hosting owner netname"
+STEP 1 — DELTA:
+- [NEW] web.sumup.com: resolves via dedicated A record to 77.246.42.130 (only non-CDN, non-shared origin in inventory); HTTP 80, HTTPS 443, and the raw TLS handshake all time out — host is fully dark → dangling-record/subdomain-takeover candidate (probe 2026-09-05).
+- [CHANGED] dashboard.sumup.com: confirmed Vercel 308 → me.sumup.com with full query passthrough in Location (error/error_description/state preserved exactly; target fixed, no open redirect; no HTML reflection).
+- [NEW] support.sumup.com: Vercel 308 → help.sumup.com (redirect target is outside the inventory/scope list).
+- [NEW] developer.sumup.com: Cloudflare-served Astro v7.2.2/Starlight 0.41.7 docs; /sitemap.xml 404 but sitemap-index.xml → sitemap-0.xml exposes full API-doc map; ACAO:* on static content; test-mode OneTrust data-domain-script id leaked; /404/index.md raw-markdown variant of 404 page.
+
+STEP 2 — PRIORITIZE:
+- [PRIO] web.sumup.com, 6.65, subdomain takeover / dangling DNS (a=6,b=6,t=5,g=10,c=4,f=10)
+- [PRIO] developer.sumup.com, 5.15, static-docs surface + doc-map harvest (a=5,b=4,t=3,g=9,c=4,f=7)
+- [PRIO] dashboard.sumup.com, 4.35, OAuth alias/passthrough chain into me.sumup.com (a=3,b=7,t=3,g=2,c=3,f=8)
+
+STEP 3 — HYPOTHESES:
+[HYP] web.sumup.com subdomain takeover via decommissioned dedicated A record
+class: MISCONFIG
+asset: web.sumup.com (77.246.42.130)
+confidence: 45
+reasoning: web.sumup.com is a direct A record to 77.246.42.130, unique in inventory (all other hosts are Cloudflare/Vercel/ELB/Iris). GET http://web.sumup.com/, HTTPS handshake, and raw s_client to :443 all time out — no service, no banner, no TLS, consistent with an abandoned host whose DNS was never removed. My analysis environment can reach other SumUp hosts (dashboard/support/dev) fine, so the failures are host-specific, not network-side. Subdomain takeover on a payments brand enables phishing and receipt of Domain=sumup.com cookies (dev site already issues __cf_bm on Domain=sumup.com).
+evidence_needed: 77.246.42.130 belongs to a claimable third-party pool (hosting/cloud), NOT a SumUp-owned netblock; no SumUp-side TLS/service comes back on any port.
+verify_steps: RAG: RIPE RDAP https://rdap.db.ripe.net/ip/77.246.42.130 for netname/org/ASN to confirm ownership vs lease pool. PASSIVE: re-probe web.sumup.com:80/:443 and 77.246.42.130 nightly for appearance of a service/TLS; check crt.sh (not before). No interaction with third-party content until ownership confirmed.
+impact: Full content hosting at web.sumup.com (phishing, drive-by under trusted brand); any attacker-serving of that host could also collect Domain=sumup.com cookies shared with dev/app assets. Severity: high if ownership is third-party; dormant until proven.
+testability: PASSIVE
+
+STEP 4 — SELF-CRITIQUE:
+- [PARKED] me.sumup.com/callback error-param render XSS: anonymous /callback on me.sumup.com 307s to OAuth before any rendering; to fire error_description rendering needs the dashboard client error redirect which is already shown to surface errors server-side; passive evidence not obtainable — drops to <40.
+- [PARKED] developer.sumup.com raw-markdown (.md) / test OneTrust id: doc-source exposure and test-mode script id on a public static docs site carry no demonstrated impact; REJECTED-class (banner/misconfig without exploit).
+- [FINAL] web.sumup.com subdomain takeover (confidence 45, PASSIVE) — sole survivor.
+
+STEP 5 — NEXT ACTION:
+[NEXT] RAG: query https://rdap.db.ripe.net/ip/77.246.42.130 and https://rdap.db.ripe.net/ip/77.246.42.0/23 for netname/org/ASN to determine whether web.sumup.com's IP is SumUp-owned or a claimable third-party pool; if third-party, escalate takeover to HUMAN with a proof-of-concept plan (no live claims against non-SumUp infra without scope confirmation).
+
+STEP 6 — LEARNING:
+- [LEARN] ACCEPTED MISCONFIG @ dashboard.sumup.com: 308 to me.sumup.com preserves full query string (error/error_description/state) byte-for-byte in Location; destination fixed — pure Vercel alias with no open redirect and no HTML reflection; independent surface nil.
+- [LEARN] ACCEPTED MISCONFIG @ support.sumup.com: 308 → help.sumup.com (Vercel) — decommissioned support host redirecting outside the eligible inventory; note help.sumup.com for scope confirmation.
+- [LEARN] ACCEPTED MISCONFIG @ web.sumup.com: dedicated A 77.246.42.130, fully dark on 80/443/TLS — dangling-record state observed; takeover viability conditional on RIPE netblock ownership (pending).
+- [LEARN] ACCEPTED MISCONFIG @ developer.sumup.com: Cloudflare Astro/Starlight docs with ACAO:* static content, sitemap-index.xml exposing full API doc map, plus a test-mode OneTrust data-domain-script id — informational only.
+
+STEP 7 — RISK:
+[RISK] SumUp: 26 — One genuinely new passive anomaly (web.sumup.com dangling dedicated record) reopens a classic takeover lead the wildcard/CDN-heavy inventory didn't expose, but its impact hinges on third-party IP ownership that is unverified. Every rechecked surface reconfirms gating: dashboard/support are inert Vercel redirectors, api.sumup.com remains fully auth-gated, and developer docs are static. Risk edges down from 27 toward 26 as the live anonymous surface stays maximally thin and the only new lead is a low-confidence takeover candidate.

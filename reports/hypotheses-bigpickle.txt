@@ -1,1 +1,12 @@
-## 2026-09-05 00:15:56 UTC [target] (model bigpickle)
+## 2026-09-05 04:44:26 UTC [target] (model bigpickle)
+[HYP] web.sumup.com subdomain takeover via decommissioned dedicated A record
+class: MISCONFIG
+asset: web.sumup.com (77.246.42.130)
+confidence: 45
+reasoning: web.sumup.com is a direct A record to 77.246.42.130, unique in inventory (all other hosts are Cloudflare/Vercel/ELB/Iris). GET http://web.sumup.com/, HTTPS handshake, and raw s_client to :443 all time out — no service, no banner, no TLS, consistent with an abandoned host whose DNS was never removed. My analysis environment can reach other SumUp hosts (dashboard/support/dev) fine, so the failures are host-specific, not network-side. Subdomain takeover on a payments brand enables phishing and receipt of Domain=sumup.com cookies (dev site already issues __cf_bm on Domain=sumup.com).
+evidence_needed: 77.246.42.130 belongs to a claimable third-party pool (hosting/cloud), NOT a SumUp-owned netblock; no SumUp-side TLS/service comes back on any port.
+verify_steps: RAG: RIPE RDAP https://rdap.db.ripe.net/ip/77.246.42.130 for netname/org/ASN to confirm ownership vs lease pool. PASSIVE: re-probe web.sumup.com:80/:443 and 77.246.42.130 nightly for appearance of a service/TLS; check crt.sh (not before). No interaction with third-party content until ownership confirmed.
+impact: Full content hosting at web.sumup.com (phishing, drive-by under trusted brand); any attacker-serving of that host could also collect Domain=sumup.com cookies shared with dev/app assets. Severity: high if ownership is third-party; dormant until proven.
+testability: PASSIVE
+[NEXT] RAG: query https://rdap.db.ripe.net/ip/77.246.42.130 and https://rdap.db.ripe.net/ip/77.246.42.0/23 for netname/org/ASN to determine whether web.sumup.com's IP is SumUp-owned or a claimable third-party pool; if third-party, escalate takeover to HUMAN with a proof-of-concept plan (no live claims against non-SumUp infra without scope confirmation).
+[RISK] SumUp: 26 — One genuinely new passive anomaly (web.sumup.com dangling dedicated record) reopens a classic takeover lead the wildcard/CDN-heavy inventory didn't expose, but its impact hinges on third-party IP ownership that is unverified. Every rechecked surface reconfirms gating: dashboard/support are inert Vercel redirectors, api.sumup.com remains fully auth-gated, and developer docs are static. Risk edges down from 27 toward 26 as the live anonymous surface stays maximally thin and the only new lead is a low-confidence takeover candidate.
