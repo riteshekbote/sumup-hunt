@@ -271,3 +271,5 @@ www.sumup.com
 - CHANGED auth.sumup.com redirect_uri validation CONFIRMED strict allowlist for `client_id=dashboard`: attacker host, subdomain-confusion, and path-traversal redirect_uri all rejected (`invalid_request` → error
 - NEW Legacy registry divergence: `dashboard` client's modern registered callback `https://me.sumup.com/api/sso/callback` is rejected on the legacy gateway (invalid_request redirect-mismatch) but yields 303
 - NEW Legacy registry divergence: `client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback` is REJECTED on the legacy gateway (`invalid_request` redirect-mismatch, even with valid state) but 
+
+## 2026-09-06 16:26:36 UTC

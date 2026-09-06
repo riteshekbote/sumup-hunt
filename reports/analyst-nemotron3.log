@@ -4138,3 +4138,184 @@ testability: AUTH_HELPED
 ### STEP 7 — RISK
 
 [RISK] sumup: 73 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector.
+===== ANALYST nemotron3 2026-09-06 16:26:36 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mdate -u +"%Y-%m-%d %H:%M:%S UTC"
+2026-09-06 16:08:15 UTC
+[0m
+[0m$ [0mcurl -sI https://api.sumup.com/authorize 2>&1 | head -30
+HTTP/2 404 
+date: Sun, 06 Sep 2026 16:09:45 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 99e05795-d350-9004-b193-77aebc75b4d1
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=P767psLHv4Kyu564i4Tcg9gNu6xKYH5BsOt7xjCm8eA-1788710984.9952-1.0.1.1-l_B2OB3YDIMdBnvUY63ECfBsTBw_HWnT06nG7H8mvuO1xwzB8SmWUXcazn8yTcS5ottbajmh_UWPhOkluByXiius2LJ1GLXIDogXl17O6sU6OWEqbVN5kdMfnPospZOQt_rJW.Nh6egWhqlaNH4JWQ; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sun, 06 Sep 2026 16:39:45 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=Oj%2BB%2B7lg94drcCMca3naCKclfE90E8R6RzcXp1wBn9E6AY0njVCaNlcVnJsyAenwnLWkHLwWO1MJJNHQVX7Elx4ymea85cDM9Rq%2BaIwyuaVl2JuA2kHK7xR4lKO5EEQ%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a36ebd68394223b8-DFW
+[0m
+[0m$ [0mcurl -sI "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678" 2>&1 | head -30
+HTTP/2 404 
+date: Sun, 06 Sep 2026 16:11:06 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 0d4f526c-423f-90ea-ad29-9fed1aa20d80
+x-envoy-upstream-service-time: 1
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=hmjOF8xpu19CyYV3jESvxCG6dhMZ2TSdNJnINYs7Qiw-1788711066.0814679-1.0.1.1-A82lxEWhC6LI12iQpLkYhEFPy9IAdTjghw78k4c8_p_chG4SHU0bkR5kbINiwODGOTuyTY_FAXomCUEWnGfWl2RTiapGpjjI1SE3ROgZyH8VqoP9TjfGiMq6xv1tkXGi4OBNsg0Ymv6oer7BQWFDog; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sun, 06 Sep 2026 16:41:06 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=bnvxl2kewjapXdZxjMA%2BxT4rZIycsFx5eAxlPiloJZhJIwaTZRW5SslD4dVt0qT1aRB%2BcoE%2FohirSsNKp6HiULCtrXKY2x7vk6WOZB%2FuiZAIWcVchA2d6txMX1tmdtQ%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a36ebf6308eff78b-DFW
+[0m
+[0m$ [0mcurl -sI "https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678" 2>&1 | head -30
+HTTP/2 405 
+date: Sun, 06 Sep 2026 16:12:30 GMT
+content-type: text/plain; charset=utf-8
+content-length: 19
+allow: GET, OPTIONS, POST
+x-content-type-options: nosniff
+x-envoy-upstream-service-time: 2
+server: cloudflare
+x-request-id: 2f43184b-a8de-9732-9486-e26238f782be
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=.YUyEOvKKSZGM_CAxsYxUAfcFuOJwr6aHftIuI9zqdo-1788711149.8286834-1.0.1.1-Ba3QAAjFTVViHkDCeuwSj3l6oWs7afIQQUkk5Pq7MOP_OstSjuGw0v3c3DE8PX8pvW50WeVmpUh27TuJveiHcMfMuCOiQSRH0V_g0NicwEesE3NFeCBvH7TxWzd1rjXrzoAabXnCwGv3sBHzH.9ayA; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sun, 06 Sep 2026 16:42:30 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=OeL5A7OCSib%2BrgFeSyuihMyonZxldTmp9DHVPkQNcYcAoK9GeXdfCTa6lEqJE9z6NrfYxVmERDiE0J5j6y5BrzxLRNgl2tiOxKuxflmsmVNHsYyEJyZFMb6jU9Je3Dmi"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a36ec16e6a2ef78b-DFW
+[0m
+[0m$ [0mcurl -sI "https://auth.sam-app.ro/oauth2/auth?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678" 2>&1 | head -30
+HTTP/2 405 
+date: Sun, 06 Sep 2026 16:13:48 GMT
+content-type: text/plain; charset=utf-8
+content-length: 19
+allow: GET, OPTIONS, POST
+x-content-type-options: nosniff
+x-envoy-upstream-service-time: 5
+server: cloudflare
+x-request-id: 33afe4f7-bc23-99d4-8df3-9b38a364d53c
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=Z0OoRadVuF5GGs6GW1hD7r26Gw5MCccCu4T6mkhoB8U-1788711228.0537047-1.0.1.1-rzuX3oIYCe.AqFACzPb_biUlfSpQd4nPZovg1e0giwQzTDAN_0A5ovrlshfIXIAsxyG8hWMIgPE.21q99dMfF1t8MIbjK2xw4B6QpAqUBaqG2oPxRDCRLllBYb8qk36K; HttpOnly; SameSite=None; Secure; Path=/; Domain=sam-app.ro; Expires=Sun, 06 Sep 2026 16:43:48 GMT
+cf-ray: a36ec3575b88f063-DFW
+[0m
+[0m$ [0mcurl -sI "https://auth.sam-app.ro/oauth2/register" 2>&1 | head -20
+HTTP/2 404 
+date: Sun, 06 Sep 2026 16:15:06 GMT
+x-envoy-upstream-service-time: 7
+server: cloudflare
+x-request-id: 5063f064-6a57-9846-a537-62f54ad25640
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=KwYtWBsxf.Ae8H8OuV3RfUcVhURaJ121OaSdq_BYSiE-1788711305.2300913-1.0.1.1-.ZmXJPp0S.3.t24xaiTA66u8k0lbCxKYG3d_sPSwwXhuoI.mth5F7DV2Fb8TzSl76K1dqokeDBwd6EyxN5HTihw9sUcJMt64SrrDKMRXEUA5FM.GyzYmaA3_rq_JgGbG; HttpOnly; SameSite=None; Secure; Path=/; Domain=sam-app.ro; Expires=Sun, 06 Sep 2026 16:45:06 GMT
+cf-ray: a36ec539af8de088-DFW
+[0m
+[0m$ [0mcurl -s "https://auth.sam-app.ro/.well-known/openid-configuration" 2>&1 | head -50
+{
+  "issuer": "https://auth.sam-app.ro",
+  "authorization_endpoint": "https://auth.sam-app.ro/oauth2/auth",
+  "token_endpoint": "https://auth.sam-app.ro/oauth2/token",
+  "jwks_uri": "https://auth.sam-app.ro/.well-known/jwks.json",
+  "registration_endpoint": "https://auth.sam-app.ro/oauth2/register",
+  "scopes_supported": [
+    "offline_access",
+    "members.read",
+    "members.write",
+    "merchants.read",
+    "merchants.write",
+    "roles.read",
+    "roles.write",
+    "checkouts.read",
+    "checkouts.write",
+    "customers.read",
+    "customers.write",
+    "api_keys.read",
+    "api_keys.write",
+    "receipts.read",
+    "refunds.write",
+    "transactions.read",
+    "payouts.read",
+    "readers.read",
+    "readers.write",
+    "sales.read"
+  ],
+  "response_types_supported": [
+    "code",
+    "code id_token",
+    "id_token",
+    "token id_token",
+    "token",
+    "token id_token code"
+  ],
+  "response_modes_supported": [
+    "query"
+  ],
+  "grant_types_supported": [
+    "authorization_code",
+    "client_credentials",
+    "refresh_token",
+    "urn:ietf:params:oauth:grant-type:device_code"
+  ],
+  "token_endpoint_auth_methods_supported": [
+    "client_secret_post",
+    "private_key_jwt",
+    "none"
+  ],
+[0m
+[0m$ [0mcurl -s "https://auth.sumup.com/.well-known/openid-configuration" 2>&1 | head -50
+{"issuer":"https://auth.sumup.com/","authorization_endpoint":"https://auth.sumup.com/oauth2/auth","token_endpoint":"https://auth.sumup.com/oauth2/token","jwks_uri":"https://auth.sumup.com/.well-known/jwks.json","subject_types_supported":["public"],"response_types_supported":["code","code id_token","id_token","token id_token","token","token id_token code"],"claims_supported":["sub","iss","exp","iat"],"grant_types_supported":["authorization_code","implicit","client_credentials","refresh_token"],"response_modes_supported":["query","fragment"],"userinfo_endpoint":"https://auth.sumup.com/userinfo","scopes_supported":["offline_access","offline","openid","email","classic"],"token_endpoint_auth_methods_supported":["client_secret_post","client_secret_basic","private_key_jwt","none"],"userinfo_signing_alg_values_supported":["none","RS256"],"id_token_signing_alg_values_supported":["RS256"],"request_parameter_supported":true,"request_uri_parameter_supported":true,"require_request_uri_registration":true,"claims_parameter_supported":false,"revocation_endpoint":"https://auth.sumup.com/oauth2/revoke","backchannel_logout_supported":true,"backchannel_logout_session_supported":true,"frontchannel_logout_supported":true,"frontchannel_logout_session_supported":true,"end_session_endpoint":"https://auth.sumup.com/oauth2/sessions/logout","request_object_signing_alg_values_supported":["RS256","none"],"code_challenge_methods_supported":["plain","S256"],"nonce_endpoint":"https://auth.sumup.com/oauth2/nonce"}
+[0m
+[0m$ [0mcurl -sI "https://checkout.sumup.com" 2>&1 | head -20
+HTTP/2 403 
+cache-control: private, no-store, max-age=0
+content-type: text/plain; charset=utf-8
+server: Vercel
+x-vercel-id: sfo1::l8l24-1788711569360-9f435542ed17
+x-vercel-mitigated: deny
+content-length: 59
+date: Sun, 06 Sep 2026 16:19:29 GMT
+[0m
+[0m$ [0mcurl -sI "https://read-api.sumup.com" 2>&1 | head -20
+HTTP/2 404 
+date: Sun, 06 Sep 2026 16:20:48 GMT
+content-type: text/plain; charset=utf-8
+content-length: 0
+server: cloudflare
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=GCqcr0sEzTIc5CRFEd1PWwGg0tNG7Pim22jyETuLEv8-1788711648.4318953-1.0.1.1-amwQI4x93p6DlJLv14CybkkO_M1dMgIcxDtisdR0jHYVbrMyiFfVJM2jBV9MrTrXu0s_g6n_fdJHqAIXeXSyZ_Nzz0mAf7cC3rM6KpwEMHAz2e8aI0UZABYgrYD_DoppwGgEmsS3IfnZCEjAQxn4Rg; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sun, 06 Sep 2026 16:50:48 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=M3jjUr9DELcfmnF8ChV%2BpxkSITHhNEZgMTj2QYmoWu4NP2jtYx2blQ4HeKRKop6E8YNcqUBSaeg2gK9gHdy1FJ2GIEIr%2BLTbx6tmMaDp13szIJz7TQAhYseLeQ8MCXl5t%2BAp8g%3D%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a36ecd9aaa95464d-DFW
+[0m
+[0m$ [0mcurl -sI "https://sf-gateway-api.sumup.com" 2>&1 | head -20
+HTTP/2 404 
+date: Sun, 06 Sep 2026 16:22:08 GMT
+content-type: text/plain; charset=utf-8
+content-length: 0
+server: cloudflare
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=9fLHEV90_lF0fjKgAgtTlNtWNYlInHqHoRbtIygvS3g-1788711728.5007918-1.0.1.1-U8xJyNwh.SVCa85oIzHsF0rHzfqRpTvxJy1UtxFygT9WxF3rbsEu1SB5PgP2Sz25pCVEJRSy98SwoRp_cI0Ih44qsJf0IW7yt1Pdo0cLX.g16ma5IkEI_W4P2Xf8BEV0L2su2e0ZfYPksRqSbCkdmg; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sun, 06 Sep 2026 16:52:08 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=Ca1rAljLeVCSSeIX5y7Lq9i9cbyMGuTEf8yS97ZHk%2BPKTKZMRU%2Bc%2Fejce4XrG0ThBfleb%2FPOqdNxcFFN8UFJIog76hAquGiECcqt7o4qE67wJ%2BZTezOW36G%2B3gdgPQxJPKlvYA%2F%2BWo70PQ%3D%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a36ecf8f1b92d164-DFW
+[0m
+[0m$ [0mcurl -sI "https://app-auth.sumup.com" 2>&1 | head -20
+(no output)
+[0m
+[0m$ [0mcurl -sI --max-time 10 "https://app-auth.sumup.com" 2>&1 | head -20
+(no output)
+[0m

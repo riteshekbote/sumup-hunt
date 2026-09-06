@@ -460,3 +460,5 @@
 - LEARN: ACCEPTED OATH @ auth.sam-app.ro: RFC 7591 dynamic client registration LIVE unauthenticated (POST /oauth2/register → 201 client_id+secret+chosen redirect_uris) d
 - LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge
 - LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed
+
+## RANKED HYPOTHESES 2026-09-06 16:26:36 UTC

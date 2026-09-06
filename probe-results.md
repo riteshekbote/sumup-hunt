@@ -252,3 +252,6 @@ https://mcp.sumup.com/.well-known/jwks.json -> HTTP 404
 https://mcp.sumup.com/ -> HTTP 404
 https://mcp.sumup.com/mcp -> HTTP 401
 https://me.sumup.com/api/sso/callback` -> HTTP 404
+
+## 2026-09-06 16:26:36 UTC
+
