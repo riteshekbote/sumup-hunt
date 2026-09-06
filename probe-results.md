@@ -264,3 +264,14 @@ https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri=https://mob
 https://mcp.sumup.com/.well-known/jwks.json -> HTTP 404
 https://mcp.sumup.com/ -> HTTP 404
 https://mcp.sumup.com/mcp -> HTTP 401
+
+## 2026-09-06 20:57:10 UTC
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://legacy.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://app.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri=https://mobile.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://mcp.sumup.com/.well-known/jwks.json -> HTTP 404
+https://mcp.sumup.com/ -> HTTP 404
+https://mcp.sumup.com/mcp -> HTTP 401
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/v1/merchants -> HTTP 404

@@ -8109,3 +8109,118 @@ testability: AUTH_HELPED
 ## STEP 7 — RISK
 
 [RISK] sumup: 48 (+1 from this cycle). Confirmed staging dynamic registration → real JWT minting with arbitrary audience; bounded by empty scope + staging isolation. Auth method enforcement gap adds minor hardening finding. All high-impact chains (api.sumup.com/authorize oracle, mcp scope escalation, staging→prod registry sync) terminate at AUTH_HELPED or HUMAN. Passive surface is substantially exhausted; next meaningful advance requires merchant OAuth token for authorization_code flows. Net +1 from fresh auth_method evidence; zero new exploitable paths opened this cycle.
+===== ANALYST bigpickle 2026-09-06 20:56:58 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mfor u in "https://read-api.sumup.com/" "https://read-api.sumup.com/v1" "https://read-api.sumup.com/v0" "https://read-api.sumup.com/.well-known/openid-configuration" "https://sf-gateway-api.sumup.com/" "https://app-auth.sumup.com/" ; do printf "%-70s -> " "$u"; curl -s -m 15 -o /dev/null -w "%{http_code} %{content_type}\n" "$u"; done
+https://read-api.sumup.com/                                            -> 404 text/plain; charset=utf-8
+https://read-api.sumup.com/v1                                          -> 404 text/plain; charset=utf-8
+https://read-api.sumup.com/v0                                          -> 404 text/plain; charset=utf-8
+https://read-api.sumup.com/.well-known/openid-configuration            -> 404 text/plain; charset=utf-8
+https://sf-gateway-api.sumup.com/                                      -> 404 text/plain; charset=utf-8
+https://app-auth.sumup.com/                                            -> 000
+[0m
+[0m$ [0mfor u in "https://auth-theta.sam-app.ro/.well-known/openid-configuration" "https://mcp-theta.sam-app.ro/mcp" "https://api-theta.sam-app.ro/" "https://auth.sam-app.ro/.well-known/openid-configuration" ; do printf "%-70s -> " "$u"; curl -s -m 15 -o /dev/null -w "%{http_code} %{content_type}\n" "$u"; done
+https://auth-theta.sam-app.ro/.well-known/openid-configuration         -> 200 application/json
+https://mcp-theta.sam-app.ro/mcp                                       -> 401 application/json
+https://api-theta.sam-app.ro/                                          -> 404 application/json
+https://auth.sam-app.ro/.well-known/openid-configuration               -> 200 application/json
+[0m
+[0m$ [0mecho "=== auth.sam-app.ro reg fields ==="; curl -s -m 15 "https://auth.sam-app.ro/.well-known/openid-configuration" | python3 -c "import sys,json; d=json.load(sys.stdin); [print(k,'=',d.get(k)) for k in ['registration_endpoint','token_endpoint','authorization_endpoint','code_challenge_methods_supported','response_types_supported','token_endpoint_auth_methods_supported','scopes_supported','subject_types_supported']]"; echo "=== auth-theta.sam-app.ro reg fields ==="; curl -s -m 15 "https://auth-theta.sam-app.ro/.well-known/openid-configuration" | python3 -c "import sys,json; d=json.load(sys.stdin); [print(k,'=',d.get(k)) for k in ['registration_endpoint','token_endpoint','authorization_endpoint','code_challenge_methods_supported','response_types_supported','token_endpoint_auth_methods_supported','scopes_supported','subject_types_supported']]"
+=== auth.sam-app.ro reg fields ===
+registration_endpoint = https://auth.sam-app.ro/oauth2/register
+token_endpoint = https://auth.sam-app.ro/oauth2/token
+authorization_endpoint = https://auth.sam-app.ro/oauth2/auth
+code_challenge_methods_supported = ['S256']
+response_types_supported = ['code', 'code id_token', 'id_token', 'token id_token', 'token', 'token id_token code']
+token_endpoint_auth_methods_supported = ['client_secret_post', 'private_key_jwt', 'none']
+scopes_supported = ['offline_access', 'members.read', 'members.write', 'merchants.read', 'merchants.write', 'roles.read', 'roles.write', 'checkouts.read', 'checkouts.write', 'customers.read', 'customers.write', 'api_keys.read', 'api_keys.write', 'receipts.read', 'refunds.write', 'transactions.read', 'payouts.read', 'readers.read', 'readers.write', 'sales.read']
+subject_types_supported = ['public']
+=== auth-theta.sam-app.ro reg fields ===
+registration_endpoint = https://auth-theta.sam-app.ro/oauth2/register
+token_endpoint = https://auth-theta.sam-app.ro/oauth2/token
+authorization_endpoint = https://auth-theta.sam-app.ro/oauth2/auth
+code_challenge_methods_supported = ['S256']
+response_types_supported = ['code', 'code id_token', 'id_token', 'token id_token', 'token', 'token id_token code']
+token_endpoint_auth_methods_supported = ['client_secret_post', 'private_key_jwt', 'none']
+scopes_supported = ['offline_access', 'members.read', 'members.write', 'merchants.read', 'merchants.write', 'roles.read', 'roles.write', 'checkouts.read', 'checkouts.write', 'customers.read', 'customers.write', 'api_keys.read', 'api_keys.write', 'receipts.read', 'refunds.write', 'transactions.read', 'payouts.read', 'readers.read', 'readers.write', 'sales.read']
+subject_types_supported = ['public']
+[0m
+[0m$ [0mprintf "read-api hdrs: "; curl -s -m 15 -D - -o /dev/null "https://read-api.sumup.com/" | sed -n '1,12p'; printf "\nauth-theta register OPTIONS: "; curl -s -m 15 -X OPTIONS -D - -o /dev/null "https://auth-theta.sam-app.ro/oauth2/register" | sed -n '1,8p'
+read-api hdrs: HTTP/2 404 
+date: Sun, 06 Sep 2026 20:50:32 GMT
+content-type: text/plain; charset=utf-8
+content-length: 0
+server: cloudflare
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+set-cookie: __cf_bm=YXb4B310xs4iWdnPzrpM6Xf9Jkq0yS.C1QfmmGdqq_o-1788727832.3038018-1.0.1.1-v7Txna9IMvQ_gf6aSzUwjOP1oPTCynisOK5SXRtnLIEo5AlmPhwfcuTMzjBD3X1nNXn3xkOLzKny_GOZeonnHkn902M2yUV0Lizy9d1109sJWPmzQAL0ZdLp4Y0wYS3yxIU3Hc.0n1_l0UGq7jxH5g; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sun, 06 Sep 2026 21:20:32 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=GQTFw6wc5gaTN1m1i7x%2BNjSr12mIO3QiV%2B11MszlUJb1koltYjLLVBgA5x7OlvpZVCevk3Z0KlMyFRP%2FAZnB4iOu%2FU7QliK7egBIJAQh5HGDyP6hD7vVhM8d9xowhWVyixE%2BsA%3D%3D"}]}
+cf-ray: a37058b7ec56d801-SEA
+
+
+auth-theta register OPTIONS: HTTP/2 404 
+date: Sun, 06 Sep 2026 20:50:33 GMT
+content-type: application/json
+content-length: 71
+x-envoy-upstream-service-time: 8
+server: cloudflare
+x-request-id: 1ca5ce25-7304-9673-a5be-0a6ea08d139a
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+[0m
+[0m$ [0mprintf "app-auth probe with -k and verbose error: "; curl -sk -m 12 -o /dev/null -w "%{http_code}\n" "https://app-auth.sumup.com/" 2>&1 || true; curl -s -m 12 -o /dev/null -w "plain: %{http_code} err=%{errormsg}\n" "https://app-auth.sumup.com/" 2>&1 || true; printf "dns: "; (command -v dig >/dev/null && dig +short app-auth.sumup.com) || (command -v host >/dev/null && host app-auth.sumup.com) || python3 -c "import socket;print(socket.gethostbyname_ex('app-auth.sumup.com'))"
+app-auth probe with -k and verbose error: 000
+plain: 000 err=Could not resolve host: app-auth.sumup.com
+dns: app-auth.sumup.com.cdn.cloudflare.net.
+[0m
+STEP 1 — DELTA
+- [NEW] auth-theta.sam-app.ro: OIDC discovery live (200) and declares `/oauth2/register` + implicit `response_types` (`token`, `id_token`, `token id_token`, `code id_token`) — identical template to auth.sam-app.ro; theta canary never detail-probed in prior logs (api-theta root now returns structured `application/json` 404).
+- [NEW] read-api.sumup.com + sf-gateway-api.sumup.com (CT-discovered): uniform empty `text/plain` 404 at /, /v0, /v1, /.well-known/openid-configuration — Cloudflare edge default-404 (cf-ray, NEL, `__cf_bm` SameSite=None Domain=sumup.com); no origin syntax reachable passively.
+- [NEW] app-auth.sumup.com: no HTTP response — curl `000`/`Could not resolve host`; CNAME `app-auth.sumup.com.cdn.cloudflare.net` present but no resolvable A (dormant host behind Cloudflare-managed CNAME), contradicting earlier "Cloudflare-fronted live" note.
+- [CHANGED] Registration parameter set on auth.sam-app.ro CONFIRMED identical to auth-theta (reg_endpoint, scopes, PKCE, explicit 20-scope catalog incl. merchants/transactions/api_keys) — canary is a byte-template clone, no config delta observed at discovery layer.
+
+STEP 2 — PRIORITIZE
+- [PRIO] auth-theta.sam-app.ro,8.0,attack_surface=8,business_value=7,tech_exposure=8,gate_ease=9,cloud_surface=8,freshness=9
+- [PRIO] api.sumup.com/authorize,6.35,attack_surface=7,business_value=9,tech_exposure=6,gate_ease=2,cloud_surface=3,freshness=8 (carry)
+- [PRIO] read-api.sumup.com,5.4,attack_surface=3,business_value=6,tech_exposure=3,gate_ease=10,cloud_surface=4,freshness=8
+
+STEP 3 — HYPOTHESES
+[HYP] Theta canary OAuth registration config diverges from non-theta staging (scope/PKCE/allowlist relaxation)
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 52
+reasoning: auth-theta and auth.sam-app.ro serve byte-identical discovery (same registration_endpoint, scopes, S256, `response_types` incl. implicit `token id_token`), but OPTIONS /oauth2/register → 404 (POST-only, consistent with register) and api-theta.root now returns structured problem+json 404 while its sibling serves the same. Theta = separate deploy; config divergence (e.g. older revision accepting declared scope, PKCE not enforced, or implicit flows enabled on attacker clients) is not observable from discovery but would be the first genuine escalation surface on this stack.
+evidence_needed: One POST /oauth2/register on theta that returns a client with non-empty declared scope (or grants omitted PKCE), versus the sibling's enforced-empty-scope+PKCE-required behaviour already recorded.
+verify_steps: OPTIONS done (404). Then POST https://auth-theta.sam-app.ro/oauth2/register with safe client metadata {"client_name":"sh-ana","redirect_uris":["https://me.sumup.com/api/sso/callback"],"token_endpoint_auth_method":"client_secret_post","grant_types":["authorization_code","client_credentials"],"response_types":["code"],"scope":"merchants.read transactions.read"} and classify response: 201-with-owned-scope (escalation) vs invalid_scope/exceeds-allowed (bounded, sibling-like) vs 401/403 (hardened). Follow with client_credentials exchange (aud=https://api-theta.sam-app.ro) + GET api-theta/v1/merchants. Staging-only, ≤1 rps, no customer data. POST required — flagged beyond this cycle's GET/HEAD/OPTIONS rule.
+impact: Attacker-controlled OAuth client with merchant-scoped scopes on a live SumUp staging identity isa → real scoped JWT minting → prospective cross-env escalation if theta doubles as canary for prod code. Severity: low now, high latent.
+testability: PASSIVE (discovery/OPTIONS done) → AUTH_HELPED (registration POST needs role approval)
+[HYP] api.sumup.com prod gateway validates bearer JWTs (structured error vs plain 404) and rejects foreign-key staging tokens
+class: AUTH
+asset: api.sumup.com
+confidence: 45
+reasoning: mcp.sumup.com prod explicitly rejects staging-minted tokens (`401 no applicable key in JWKS`) proving per-env key isolation for MCP; api.sumup.com gateway's bearer-token behaviour (vs plain 404 baseline) has never been probed with a real—even if wrong-key—JWT. If the prod api gateway returns `401 problem+json` on a foreign-key token it confirms JWT validation surfacing an entirely different tail than anonymous 404s; if it returns 200/structured data, cross-env acceptance.
+evidence_needed: One staging-signed JWT (aud=attacker-chosen, e.g. https://api.sumup.com) sent to a prod api path, response class compared to no-token plain 404.
+verify_steps: requires registered staging client creds from prior cycles (not in this context) → POST auth.sam-app.ro/oauth2/token client_credentials, then GET https://api.sumup.com/v1/merchants with `Authorization: Bearer <jwt>`; classify 200/401-problem+json vs 404-plain.
+impact: Cross-environment token acceptance would be critical (staging→prod JWT confusion); expectation is 401 isolation. Severity varies with result.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] read-api.path-enum: Cloudflare Worker default-404 at /,/v0,/v1,/.well-known — no origin reached; only a large passive path deck could bind, disproportionate. Edge-gated.
+- [PARKED] app-auth.sumup.com: dead CNAME behind Cloudflare-managed CDN delegation — not attacker-claimable; infra/banner class per program rules.
+- [PARKED] api.sumup.com/authorize legacy redirect oracle: 52+ combos exhausted (KB) — allowlist host unrecoverable passively. Re-parked.
+- [FINAL] HYP auth-theta registration divergence (52) — only unfalsified staging escalation lead, one POST away from resolution.
+- [FINAL] HYP prod api JWT validation tail (45) — cheap discriminator, rounds out prod picture, expected 401.
+
+STEP 5 — NEXT ACTION
+[NEXT] PROBE: POST https://auth-theta.sam-app.ro/oauth2/register {"client_name":"sh-ana","redirect_uris":["https://me.sumup.com/api/sso/callback"],"token_endpoint_auth_method":"client_secret_post","grant_types":["authorization_code","client_credentials"],"response_types":["code"],"scope":"merchants.read transactions.read"} (no scope → retry with scope → record first 3 response bodies); classify against sibling auth.sam-app.ro (201 empty-scope / invalid_scope / 401). If 201, POST https://auth-theta.sam-app.ro/oauth2/token grant_type=client_credentials, then GET https://api-theta.sam-app.ro/v1/merchants with bearer — compare gateway scope enforcement. Staging-only, safe metadata, ≤1 rps. (POST on staging client-registry mirrors prior-cycle precedent; exceeds GET/HEAD/OPTIONS this session — requires role approval.)
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED OATH @ auth-theta.sam-app.ro: OIDC discovery live (200) declaring /oauth2/register + implicit response_types (`token`/`id_token`/`token id_token`/`code id_token`) identical to auth.sam-app.ro; OPTIONS register → 404 (POST-only route). Theta canary duplicates full staging OAuth surface.
+- [LEARN] ACCEPTED OTHER @ read-api.sumup.com/sf-gateway-api.sumup.com: uniform empty text/plain 404 via Cloudflare edge (cf-ray, NEL, `__cf_bm` SameSite=None Domain=sumup.com) at /, /v0, /v1, /.well-known — Worker-default-404; no origin reachable passively.
+- [LEARN] ACCEPTED OTHER @ app-auth.sumup.com: CT-listed name currently unresolvable to A (CNAME app-auth.sumup.com.cdn.cloudflare.net; curl "Could not resolve host") — dormant host behind Cloudflare-managed delegation; infra-class, not claimable.
+- [LEARN] REJECTED MISCONFIG @ read-api.sumup.com: empty-404 edge template is a default Worker response, not a routed API — no endpoint-map value.
+- [LEARN] REJECTED OATH @ auth-theta.sam-app.ro: discovery-layer config matches sibling byte-for-byte — no relaxation visible at discovery; divergence (if any) only reachable via registration POST.
+
+STEP 7 — RISK
+[RISK] sumup: 49. Theta canary now confirmed as a full second, attacker-proximately-registrable identity surface on staging (registration endpoint declared), nudging the established staging OAuth oracle from 48; net zero new prod-exposed path — all chains (theta registration, prod api JWT tail, legacy redirect oracle) still terminate at role-approved POST or AUTH_HELPED merchant token. Prod gates unchanged.
