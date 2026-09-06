@@ -185,3 +185,5 @@ verify_steps: 1. Check if Durable Object bindings are properly scoped 2. Review 
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
 ## REPOSCAN 2026-09-06 14:13:19 UTC
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 17:06:21 UTC
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
