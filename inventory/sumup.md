@@ -254,3 +254,14 @@ www.sumup.com
 - CHANGED portal.sumup.com returns 200 with React CRM login (iriscrm.com) — live parameter enumeration surface accessible
 - CHANGED Legacy redirect oracle re-tested +18 new combos (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, sumup://, sumup-pos://, com.sumup.pos://, api.sumup.com×3, www.sumup.com) — all in
 - CHANGED api.sumup.com/authorize confirmed LIVE via raw curl (302→auth.sumup.com/flows/oauth2/error) — probe harness 404s were redirect-following artifacts; endpoint exposes client_id oracle (invalid_client vs
+
+## 2026-09-06 08:47:51 UTC
+- NEW mcp.sumup.com discovered: Official SumUp MCP (Cloudflare Worker, bearer JWKS from auth.sumup.com, Durable Object agent) LIVE, absent from inventory — surfaced via sumup-mcp public repo config
+- NEW sam-app.ro staging stack (mcp/mcp-theta/api/api-theta/auth/auth-theta) publicly reachable; replicates prod gates byte-for-byte (/mcp 401, /authorize invalid_request on evil redirect, OIDC discovery pu
+- NEW checkout.sumup.com (Vercel 76.76.21.61), read-api.sumup.com, sf-gateway-api.sumup.com, app-auth.sumup.com discovered via CT sweep (4422 certs → 257 unique names)
+- CHANGED api.sumup.com/authorize confirmed LIVE via raw curl (302→auth.sumup.com/flows/oauth2/error) — probe harness 404s were redirect-following artifacts; endpoint exposes client_id oracle + wildcard CORS
+- CHANGED auth.sumup.com/oauth2/par and /oauth2/device return 400 on POST (routed, require client_auth) — not 404
+- CHANGED me.sumup.com/api/sso/callback returns 307 on anonymous GET (redirect to OAuth flow) — not 403
+- CHANGED portal.sumup.com returns 200 with React CRM login (iriscrm.com) — live parameter enumeration surface accessible
+- CHANGED Legacy redirect oracle re-tested +18 new combos (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, custom schemes, api.sumup.com×3, www) — all invalid_request; legacy allowlist host
+- CHANGED sumup-ios-sdk and unknown client_ids → invalid_client ("does not exist") on legacy gateway — legacy SDK clients NOT registered; only dashboard confirmed registered on legacy path

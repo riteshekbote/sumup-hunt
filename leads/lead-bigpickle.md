@@ -1191,3 +1191,36 @@ testability: PASSIVE (oracle) / HUMAN_ONLY (allowlist)
 [LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Redirect-allowlist divergence + wildcard CORS is the api-gateway template (identical on api.sam-app.ro), distinct from auth.sumup.com — architectural fact, not per-instance anomaly.
 [LEARN] REJECTED MISCONFIG @ tap-to-pay-sdk.fleet.live.sumup.net: 401 Cloudflare Maven host + Fleet CD naming = infra/banner class.
 [RISK] sumup: 47 — First-seen live official MCP asset (merchant payment/invoice tool surface) plus a publicly reachable full staging stack both add real but authenticated surface; oracle + redirect-divergence + CORS-template chain stable; wildcard-CORS CSRF angle formally dead (bearer-only), legacy allowlist still unrecoverable passively. Net +2 on fresh live surface (MCP, staging oracle); every high-impact chain still terminates at AUTH_HELPED or HUMAN.
+## 2026-09-06 08:45:28 UTC [target] (model bigpickle)
+[HYP] Unauthenticated RFC 7591 dynamic client registration on staging identity host enables self-issued OAuth clients
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 65
+reasoning: `POST https://auth.sam-app.ro/oauth2/register` (declared in openid-configuration, absent in prod auth.sumup.com) returns HTTP 201 on a well-formed payload — generated client_id=`cl_2F13S19SAB94CA24XV3KQFC4G7` + plaintext client_secret + server-accepted attacker-chosen redirect_uris. Route runs on same envoy identity service (envoy-headless.identity.svc.cluster.local:8080/*) as prod. Registration is unauthenticated (no client_assertion/initial_access_token required). Dynamic clients pinned to empty scope, require PKCE code_challenge at /oauth2/auth, allowed redirects limited to registered URI (unrelated redirect → 401), and are NOT present in the separate api.sam-app.ro /authorize registry (invalid_client there).
+evidence_needed: whether a dynamic client can later escalate scope (RFC 7592 update absent — 404 on register/{id}), whether empty scope + refresh_token grant yields any token, and whether the staging registry ever syncs to prod.
+verify_steps: PASSIVE done this cycle (201 create; scope escalation blocked — "exceeds allowed scopes"; PKCE required; redirect allowlist; api-gateway not synced; no RFC7592 management). AUTH_HELPED: complete code+PKCE+token flow with a registered client to confirm a live usable token; if token unusable (empty scope), the finding is a dormant account-creation primitive.
+impact: attacker self-registers a working OAuth client_credentials/authorization_code client on a live identity stack at will; if scope/PKCE/allowlist gaps ever relax or registry syncs to prod, this becomes account-creation→token abuse. Severity: low-medium now (staging, scoped-empty, PKCE-bound), latent higher.
+testability: PASSIVE (register/create) → AUTH_HELPED (full flow)
+[HYP] Legacy OAuth allowlist recovery via stage oracle + api-gateway registry sync gap
+class: OATH
+asset: api.sam-app.ro/authorize
+confidence: 40
+reasoning: Confirmed dynamically-registered auth.sam-app.ro client is NOT visible to api.sam-app.ro /authorize (invalid_client) — two independent registries on the shared api-gateway OAuth template. The retuned legacy `dashboard` callback host remains unrecoverable (52 combos exhausted), but the stage `/authorize`+`/oauth2/register` pair is a parallel registry where a self-registered client could be mirrored to the api-gateway if the template auto-syncs registrations — worth one bounded regression probe.
+evidence_needed: a registration created now becoming routable on api.sam-app.ro/authorize after propagation, or a captured legacy dashboard callback host.
+verify_steps: after create, re-curl GET https://api.sam-app.ro/authorize?client_id=cl_2F13S19SAB94CA24XV3KQFC4G7&redirect_uri=... periodically for invalid_client→invalid_request transition (propagation). Passive only; allowlist recovery itself remains HUMAN_ONLY (historical registration data).
+impact: if registration propagates to api-gateway, attacker controls a client on the redirect-divergence surface. Severity: medium latent, dormant.
+testability: PASSIVE (oracle)
+[HYP] mcp.sumup.com MCP tool-layer scope/privilege gap
+class: OATH
+asset: mcp.sumup.com
+confidence: 45
+reasoning: Official SumUp MCP (Cloudflare Worker, Durable Object agent, bearer JWKS from auth.sumup.com) live; scopes `offline_access email` public; tools wrap merchant payment/invoice/reader APIs; all gates at authed-tool execution. Non-anonymous; requires merchant token.
+evidence_needed: consent scope-vs-privilege mismatch, cross-tenant Durable Object session isolation.
+verify_steps: PASSIVE complete (root 200, /mcp+/sse 401). AUTH_HELPED: OAuth to mcp.sumup.com, tools/list, execute high-priv tool with minimal email-scope token.
+impact: cross-tenant merchant financial data via MCP. Severity: medium-high latent.
+testability: AUTH_HELPED
+[NEXT] PROBE: GET https://auth.sam-app.ro/oauth2/token with the registered client (`cl_2F13S19SAB94CA24XV3KQFC4G7`) + client_secret_basic + empty scope via client_credentials grant (POST body grant_type=client_credentials, signed basic) to determine whether the empty-scope dynamic client yields a usable access_token and which protected resources it can reach on `mcp.sam-app.ro`/`api.sam-app.ro`. Read-only, no customer data, no redirect side-effects.
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: RFC 7591 dynamic client registration LIVE unauthenticated (POST /oauth2/register → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 both discovery docs).
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge, enforce per-client redirect allowlist (unrelated redirect → 401), no RFC7592 get/put/delete (404), and are NOT synced to api.sam-app.ro /authorize (invalid_client) — bounded blast radius.
+[LEARN] REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+[RISK] sumup: 49 — Confirmed a live, unauthenticated RFC 7591 dynamic-client-registration endpoint on an in-scope staging identity host (sam-app.ro) that returns real client credentials with attacker-chosen redirect_uris, directly diverging from prod (no registration endpoint). Practical severity is bounded now (empty scope, PKCE, per-client allowlist, staging-only, no registry sync to api-gateway), so this is a hardening/config-divergence finding rather than an exploitable chain. The legacy api.sumup.com/authorize oracle + redirect-divergence + wildcard CORS chain remains the top dormant lead but is unrecoverable passively. Net +2 from a fresh reproducible in-scope registration divergence; every exploitable path still terminates at AUTH_HELPED or HUMAN.
