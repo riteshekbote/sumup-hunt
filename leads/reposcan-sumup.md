@@ -146,3 +146,40 @@ TARGET_ORG not configured for sumup; skipping public-org deep scan.
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
 ## REPOSCAN 2026-09-06 06:02:15 UTC
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 11:06:47 UTC
+[HYP] Cloudflare Account ID Exposed in Public Repository
+class: MISCONFIG
+asset: sumup/sumup-mcp/wrangler.jsonc
+confidence: 85
+reasoning: Cloudflare account ID "2037fc18a2fb8175c20d20776cac65c5" is hardcoded in wrangler.jsonc for all environments (dev, stage, live). This is a Cloudflare-specific identifier that should not be public.
+impact: Medium - Allows attackers to enumerate Cloudflare resources, potentially discover other workers, or craft targeted attacks against the account.
+verify_steps: 1. Visit https://github.com/sumup/sumup-mcp/blob/main/wrangler.jsonc 2. Verify account_id matches 2037fc18a2fb8175c20d20776cac65c5 3. Check Cloudflare dashboard if accessible with this ID
+[HYP] Internal Staging/Development Domains Exposed
+class: MISCONFIG
+asset: sumup/sumup-mcp/wrangler.jsonc
+confidence: 90
+reasoning: Internal staging domains revealed: mcp-theta.sam-app.ro (dev), mcp.sam-app.ro (stage), api-theta.sam-app.ro, auth-theta.sam-app.ro, api.sam-app.ro, auth.sam-app.ro. These are non-public SumUp infrastructure.
+impact: High - Exposes internal attack surface for reconnaissance. Attackers can probe these domains for vulnerabilities, misconfigurations, or weaker security controls.
+verify_steps: 1. DNS lookup on sam-app.ro domains 2. Check if these are reachable from public internet 3. Probe for exposed services or admin panels
+[HYP] CORS Wildcard on Auth-Protected MCP Endpoint
+class: MISCONFIG
+asset: sumup/sumup-mcp/src/config.ts
+confidence: 75
+reasoning: MCP server uses Access-Control-Allow-Origin: * which allows any origin to make requests to the endpoint, even though it requires Bearer token authentication.
+impact: Low-Medium - While the endpoint requires JWT authentication, the wildcard CORS could facilitate CSRF-like attacks or allow malicious websites to interact with the MCP server if user's browser has valid tokens.
+verify_steps: 1. Visit https://mcp.sumup.com 2. Send a cross-origin request from a different domain 3. Verify CORS headers allow all origins
+[HYP] OpenAI Apps Challenge Endpoint Exposed
+class: OTHER
+asset: sumup/sumup-mcp/wrangler.jsonc + src/worker.ts
+confidence: 60
+reasoning: Dedicated route /.well-known/openai-apps-challenge with environment variable OPENAI_APPS_CHALLENGE. This appears to be a feature flag for OpenAI integration that could be enabled.
+impact: Low - Potential additional attack surface if the OpenAI challenge feature is enabled or contains sensitive configuration.
+verify_steps: 1. Visit https://mcp.sumup.com/.well-known/openai-apps-challenge 2. Check if endpoint returns content or 404
+[HYP] Cloudflare Durable Object Session State Storage
+class: MISCONFIG
+asset: sumup/sumup-mcp/wrangler.jsonc
+confidence: 70
+reasoning: MCP server uses Cloudflare Durable Objects (SumUpMcpAgent) to persist session state across requests within the same Worker deployment.
+impact: Low-Medium - If Durable Object storage is not properly secured or if there are race conditions, session data could be accessed or manipulated.
+verify_steps: 1. Check if Durable Object bindings are properly scoped 2. Review sumup-agent.ts for session handling logic
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
