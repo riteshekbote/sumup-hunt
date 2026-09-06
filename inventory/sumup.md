@@ -322,3 +322,5 @@ www.sumup.com
 - CHANGED auth.sumup.com: No dynamic registration endpoint (404 GET/POST/OPTIONS on /register) — staging/prod divergence confirmed.
 - CHANGED portal.sumup.com: Returns 200 with React CRM login (iriscrm.com) — live parameter enumeration surface; third-party CNAME confirmed but webhook/callback params not discovered passively.
 - CHANGED api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway.
+
+## 2026-09-06 22:52:02 UTC
