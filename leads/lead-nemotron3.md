@@ -1221,3 +1221,79 @@ testability: AUTH_HELPED
 [LEARN] REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed
 [RISK] sumup: 73 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector.
 ## 2026-09-06 16:26:24 UTC [target] (model nemotron3)
+## 2026-09-06 18:44:45 UTC [target] (model nemotron3)
+[NEW] mcp.sumup.com: Official SumUp MCP server (Cloudflare Worker, bearer JWKS from auth.sumup.com, Durable Object agent) LIVE — discovered via sumup-mcp public repo config; absent from prior inventory
+[NEW] sam-app.ro staging stack: mcp.theta/api.theta/auth.theta publicly reachable; replicates prod gates byte-for-byte; auth.sam-app.ro exposes unauthenticated RFC 7591 dynamic client registration (POST /oauth2/register → 201)
+[NEW] checkout.sumup.com: Vercel asset (76.76.21.61) discovered via CT sweep; uniform 403 text/plain on all paths — edge-gated like me.sumup.com
+[NEW] read-api.sumup.com + sf-gateway-api.sumup.com: Cloudflare-fronted, root 404, discovered via CT sweep (4422 certs → 257 unique names)
+[NEW] app-auth.sumup.com: Cloudflare-fronted, discovered via CT sweep
+[CHANGED] api.sumup.com/authorize: CONFIRMED LIVE via raw curl (302→auth.sumup.com/flows/oauth2/error) — earlier 404s were redirect-following harness artifacts; exposes client_id oracle (invalid_client vs invalid_request) + endpoint-specific wildcard CORS (access-control-allow-origin:*, allow-methods:GET,HEAD,PUT,PATCH,POST,DELETE, max-age=300) + SameSite=None; Domain=sumup.com cookies
+[CHANGED] auth.sam-app.ro/oauth2/register: Unauthenticated dynamic client registration CONFIRMED LIVE (201 with client_id+secret+chosen redirect_uris); dynamic clients forced to EMPTY scope (openid → invalid_scope "exceeds allowed scopes"), require PKCE, enforce per-client redirect allowlist, no RFC7592 management, NOT synced to api.sam-app.ro/authorize (invalid_client)
+[CHANGED] auth.sumup.com: No dynamic registration endpoint (404 GET/POST/OPTIONS on /register) — staging/prod divergence confirmed
+[CHANGED] Legacy redirect oracle: crt.sh-derived candidates (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, api.sumup.com self-hosts, www) + custom schemes (sumup://, sumup-pos://, com.sumup.pos://) all invalid_request — ~52 combos exhausted; legacy allowlist host NOT recoverable from reachable surface
+[CHANGED] sumup-ios-sdk and unknown client_ids → invalid_client ("does not exist") on legacy gateway — legacy SDK clients NOT registered; only dashboard confirmed registered
+[CHANGED] portal.sumup.com: Returns 200 with React CRM login (iriscrm.com) — live parameter enumeration surface; third-party CNAME confirmed but webhook/callback params not discovered passively
+[CHANGED] me.sumup.com/api/sso/callback: Returns 307 on anonymous GET (redirect to OAuth flow) — Vercel edge enforcement confirmed
+[CHANGED] auth.sumup.com/oauth2/par and /oauth2/device: Return 400 on POST (routed, require client_auth) — not 404; "none" auth_method not usable for dashboard client
+[CHANGED] api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
+[PRIO] api.sumup.com/authorize,8.5,a=9,b=10,t=9,g=9,c=8,f=7
+[PRIO] auth.sam-app.ro/oauth2/register,8.0,a=9,b=9,t=8,g=9,c=7,f=6
+[PRIO] mcp.sumup.com,7.5,a=8,b=9,t=8,g=5,c=7[0m
+[PRIO] checkout.sumup.com,5.5,a=6,b=5,t=5,g=5,c=5,f=5
+[PRIO] read-api.sumup.com,5.0,a=5,b=5,t=5,g=4,c=5,f=5
+[PRIO] sf-gateway-api.sumup.com,5.0,a=5,b=5,t=5,g=4,c=5,f=5
+[PRIO] app-auth.sumup.com,5.0,a=5,b=5,t=5,g=4,c=5,f=5
+[PRIO] admin.sumup.com,4.5,a=5,b=7,t=3,g=2,c=6,f=5
+[PRIO] me.sumup.com,4.5,a=5,b=5,t=4,g=3,c=5,f=5
+[HYP] Legacy OAuth authorize endpoint client_id oracle + redirect_uri divergence + wildcard CORS enables callback host enumeration and OAuth code theft
+class: OATH
+asset: api.sumup.com/authorize
+confidence: 80
+reasoning: Endpoint LIVE (302→auth.sumup.com/flows/oauth2/error). Client_id oracle: invalid_client for unknown vs invalid_request (redirect_uri mismatch) for registered dashboard. Legacy/modern redirect-set divergence: dashboard client's modern callback https://me.sumup.com/api/sso/callback accepted on auth.sumup.com/oauth2/auth (302→login flow) but REJECTED on api.sumup.com/authorize (invalid_request). Endpoint-specific wildcard CORS (access-control-allow-origin:*, allow-methods:GET,HEAD,PUT,PATCH,POST,DELETE, max-age=300) + SameSite=None; Domain=sumup.com cookies — absent on auth.sumup.com/oauth2/auth. Legacy allowlist host not recovered from 52+ candidates (crt.sh subdomains, custom schemes, common patterns).
+evidence_needed: Enumerated legacy callback host accepted for dashboard client on api.sumup.com/authorize yielding authorization code; successful code exchange at auth.sumup.com/oauth2/token
+verify_steps: GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://legacy.sumup.com/callback&response_type=code&scope=classic&state=test12345678 → observe invalid_request; GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://app.sumup.com/callback&response_type=code&scope=classic&state=test12345678 → test legacy callback pattern; GET https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri=https://mobile.sumup.com/callback&response_type=code&scope=classic&state=test12345678 → enumerate SDK client_ids
+impact: OAuth authorization code theft via legacy callback host → merchant account takeover, full scope access (accounting/invoices/api_keys/lending/readers/receivables/unified_customer_directory) — CRITICAL
+testability: PASSIVE
+[HYP] Unauthenticated RFC 7591 dynamic client registration on staging identity host enables self-issued OAuth clients with controlled redirect_uris
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 75
+reasoning: POST /oauth2/register → 201 returns client_id+secret+chosen redirect_uris, declared in openid-configuration. Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge, enforce per-client redirect allowlist (unrelated redirect → 401), no RFC7592 get/put/delete (404), and are NOT synced to api.sam-app.ro/authorize (invalid_client). Prod auth.sumup.com has no register endpoint (404). Staging replicates prod gates byte-for-byte.
+evidence_needed: Registered dynamic client on auth.sam-app.ro that can complete authorization code flow on auth.sam-app.ro/oauth2/auth and exchange code at auth.sam-app.ro/oauth2/token; proof of cross-environment client sync (prod auth.sumup.com or api.sumup.com/authorize)
+verify_steps: POST https://auth.sam-app.ro/oauth2/register with redirect_uris=["https://evil.com/callback"] → observe 201 client_id+secret; GET https://auth.sam-app.ro/oauth2/auth?client_id=<new_client>&redirect_uri=https://evil.com/callback&response_type=code&scope=openid&code_challenge=<pkce>&code_challenge_method=S256&state=test12345678 → test auth flow; POST https://auth.sam-app.ro/oauth2/token with code → test token exchange; GET https://api.sam-app.ro/authorize?client_id=<new_client>... → test cross-sync
+impact: Self-issued OAuth client on staging → potential bypass of prod registration controls if clients sync; credentialed access to staging APIs with chosen redirect_uri — HIGH
+testability: PASSIVE
+[HYP] MCP server bearer token validation bypass via JWKS confusion or Durable Object state manipulation
+class: AUTH
+asset: mcp.sumup.com
+confidence: 55
+reasoning: mcp.sumup.com is a Cloudflare Worker MCP server using bearer JWKS from auth.sumup.com with Durable Object agent. Worker runtime + DO state + external JWKS introduces potential token validation gaps: JWKS caching staleness, kid confusion, DO state isolation bypass, or alg=none in token header if JWKS validation incomplete. Public repo config confirms architecture. No permissive CORS for token theft (bearer_methods_supported=["header"], no cookies/ambient creds).
+evidence_needed: Valid access token accepted without proper signature verification; cross-DO state leak; forged token with alg=none accepted
+verify_steps: GET https://mcp.sumup.com/.well-known/jwks.json → confirm JWKS endpoint; GET https://mcp.sumup.com/ → observe 401 challenge; POST https://mcp.sumup.com/mcp with Authorization: Bearer <forged_JWT_alg_none> → test alg=none; POST https://mcp.sumup.com/mcp with Authorization: Bearer <valid_token_from_merchant_flow> → test token acceptance and scope enforcement
+impact: MCP agent hijack → merchant data access, payment initiation, reader control — HIGH
+testability: AUTH_HELPED
+[PARKED] MCP server bearer token validation bypass via JWKS confusion or Durable Object state manipulation: Confidence 55 but verify_steps require AUTH_HELPED (valid merchant token, forged JWTs) — cannot test passively; requires live merchant OAuth flow
+[FINAL] 1. Legacy OAuth authorize endpoint client_id oracle + redirect_uri divergence + wildcard CORS enables callback host enumeration and OAuth code theft (confidence 80) — SURVIVES
+[FINAL] 2. Unauthenticated RFC 7591 dynamic client registration on staging identity host enables self-issued OAuth clients with controlled redirect_uris (confidence 75) — SURVIVES
+[NEXT] RAG: fetch crt.sh for q=%.sumup.com (current + historical certificates), extract all unique subdomains, filter for OAuth-callback-shaped names (oauth, auth, sso, callback, login, connect, authorize, dashboard, app, mobile, api, legacy, old, v1, v2, beta, test, dev, stage, sandbox, demo, trial, partner, merchant, seller, account, user, profile, settings, admin, portal, gateway, api-gateway, auth-gateway, identity, idp, saml, oidc, sso-gateway) to generate candidate legacy redirect_uri hosts for api.sumup.com/authorize enumeration
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Endpoint LIVE with client_id oracle (invalid_client vs invalid_request) and legacy redirect-set divergence — modern dashboard callback rejected on legacy gateway
+[LEARN] ACCEPTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS (access-control-allow-origin:*) + broad allow-methods + max-age + SameSite=None cookies on Domain=sumup.com — endpoint-specific divergence from auth.sumup.com
+[LEARN] ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live on modern auth server — https://me.sumup.com/api/sso/callback returns 302→login flow (state≥8 enforced)
+[LEARN] ACCEPTED AUTH @ auth.sumup.com: PAR (/oauth2/par) and device flow (/oauth2/device) routed (400 on POST) but require client authentication — "none" auth_method not usable for dashboard client
+[LEARN] ACCEPTED AUTH @ me.sumup.com: Vercel-served asset; anonymous /api/* routes return 307 to OAuth flow — no debug endpoints or permissive CORS
+[LEARN] REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (307 redirect, no CORS headers)
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
+[LEARN] REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfirmed in-scope
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Raw-curl ground truth re-confirms 302 error-flow (invalid_client vs invalid_request); earlier "404" logs are harness redirect-following artifacts — endpoint is live
+[LEARN] REJECTED OATH @ api.sumup.com/authorize: crt.sh-derived callback candidates (app-auth×5 shapes, checkout, pay, collect, ze-dashboard, gateway, read-api, api.sumup.com self-hosts, www) + custom schemes (sumup://, sumup-pos://, com.sumup.pos://) all invalid_request — single-class oracle, ~52 combos exhausted; legacy allowlist host not recoverable from any reachable surface
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: sumup-ios-sdk and unknown IDs → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered; only dashboard confirmed registered
+[LEARN] ACCEPTED AUTH @ checkout.sumup.com: New Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as me.sumup.com; no anonymous surface
+[LEARN] ACCEPTED OTHER @ mcp.sumup.com: Official SumUp MCP (Cloudflare Worker, bearer JWKS from auth.sumup.com, Durable Object agent) LIVE and absent from inventory — surfaced via sumup-mcp public repo config; new in-scope authenticated surface
+[LEARN] ACCEPTED OATH @ sam-app.ro: Staging stack (mcp/mcp-theta/api/api-theta/auth/auth-theta) publicly reachable; replicates prod gates byte-for-byte (/mcp 401, /authorize invalid_request on evil redirect, OIDC discovery public) — faithful parallel oracle, no permissive config observed
+[LEARN] REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is NOT token-stealing (bearer_methods_supported=["header"], no cookies/ambient creds); hardening-only
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Redirect-allowlist divergence + wildcard CORS is the api-gateway template (identical on api.sam-app.ro), distinct from auth.sumup.com — architectural fact, not per-instance anomaly
+[LEARN] REJECTED MISCONFIG @ tap-to-pay-sdk.fleet.live.sumup.net: 401 Cloudflare Maven host + Fleet CD naming = infra/banner class
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: RFC 7591 dynamic client registration LIVE unauthenticated (POST /oauth2/register → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 both discovery docs)
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge, enforce per-client redirect allowlist (unrelated redirect → 401), no RFC7592 get/put/delete (404), and are NOT synced to api.sam-app.ro/authorize (invalid_client) — bounded blast radius
+[LEARN] REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed
+[RISK] sumup: 73 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector.

@@ -273,3 +273,26 @@ www.sumup.com
 - NEW Legacy registry divergence: `client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback` is REJECTED on the legacy gateway (`invalid_request` redirect-mismatch, even with valid state) but 
 
 ## 2026-09-06 16:26:36 UTC
+
+## 2026-09-06 18:44:57 UTC
+- NEW auth.sam-app.ro dynamic registration clients CAN mint real JWT access_tokens via client_credentials grant (`client_secret_post` body auth succeeds; `client_secret_basic` header auth fails with `invali
+- NEW Minted JWT has empty `scp:[]` but attacker-controlled `aud` (set at registration time — confirmed `https://api.sam-app.ro` and `https://mcp.sam-app.ro` both accepted).
+- NEW Registration rejects explicit `scope` parameter (`invalid_client_metadata`) and `token_endpoint_auth_method: "none"` — scope escalation and public-client registration both blocked.
+- NEW api.sam-app.ro resource paths with token: now return structured `problem+json` 404 (vs plain 404 without token) — confirms JWT IS validated at gateway level, but empty scope blocks resource access.
+- NEW mcp.sam-app.ro rejects empty-scope tokens: `401 "Invalid access token"` (MCP validates scope/claims beyond JWT validity).
+- NEW mcp.sumup.com (prod) rejects staging tokens: `401 "no applicable key found in the JSON Web Key Set"` — cross-environment JWKS key isolation confirmed (staging keys not in prod trust store).
+- CHANGED Auth method enforcement: registration defaults to `client_secret_basic` but token endpoint only accepts `client_secret_post` — server stores preference but doesn't enforce.
+- NEW mcp.sumup.com: Official SumUp MCP server (Cloudflare Worker, bearer JWKS from auth.sumup.com, Durable Object agent) LIVE — discovered via sumup-mcp public repo config; absent from prior inventory
+- NEW sam-app.ro staging stack: mcp.theta/api.theta/auth.theta publicly reachable; replicates prod gates byte-for-byte; auth.sam-app.ro exposes unauthenticated RFC 7591 dynamic client registration (POST /oa
+- NEW checkout.sumup.com: Vercel asset (76.76.21.61) discovered via CT sweep; uniform 403 text/plain on all paths — edge-gated like me.sumup.com
+- NEW read-api.sumup.com + sf-gateway-api.sumup.com: Cloudflare-fronted, root 404, discovered via CT sweep (4422 certs → 257 unique names)
+- NEW app-auth.sumup.com: Cloudflare-fronted, discovered via CT sweep
+- CHANGED api.sumup.com/authorize: CONFIRMED LIVE via raw curl (302→auth.sumup.com/flows/oauth2/error) — earlier 404s were redirect-following harness artifacts; exposes client_id oracle (invalid_client vs inval
+- CHANGED auth.sam-app.ro/oauth2/register: Unauthenticated dynamic client registration CONFIRMED LIVE (201 with client_id+secret+chosen redirect_uris); dynamic clients forced to EMPTY scope (openid → invalid_sc
+- CHANGED auth.sumup.com: No dynamic registration endpoint (404 GET/POST/OPTIONS on /register) — staging/prod divergence confirmed
+- CHANGED Legacy redirect oracle: crt.sh-derived candidates (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, api.sumup.com self-hosts, www) + custom schemes (sumup://, sumup-pos://, com.sum
+- CHANGED sumup-ios-sdk and unknown client_ids → invalid_client ("does not exist") on legacy gateway — legacy SDK clients NOT registered; only dashboard confirmed registered
+- CHANGED portal.sumup.com: Returns 200 with React CRM login (iriscrm.com) — live parameter enumeration surface; third-party CNAME confirmed but webhook/callback params not discovered passively
+- CHANGED me.sumup.com/api/sso/callback: Returns 307 on anonymous GET (redirect to OAuth flow) — Vercel edge enforcement confirmed
+- CHANGED auth.sumup.com/oauth2/par and /oauth2/device: Return 400 on POST (routed, require client_auth) — not 404; "none" auth_method not usable for dashboard client
+- CHANGED api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway

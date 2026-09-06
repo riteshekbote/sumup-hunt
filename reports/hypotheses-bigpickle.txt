@@ -1,1 +1,48 @@
-## 2026-09-06 16:07:34 UTC [target] (model bigpickle)
+## 2026-09-06 18:29:20 UTC [target] (model bigpickle)
+[NEW] auth.sam-app.ro dynamic registration clients CAN mint real JWT access_tokens via client_credentials grant (`client_secret_post` body auth succeeds; `client_secret_basic` header auth fails with `invalid_client` — auth_method enforcement gap).
+[NEW] Minted JWT has empty `scp:[]` but attacker-controlled `aud` (set at registration time — confirmed `https://api.sam-app.ro` and `https://mcp.sam-app.ro` both accepted).
+[NEW] Registration rejects explicit `scope` parameter (`invalid_client_metadata`) and `token_endpoint_auth_method: "none"` — scope escalation and public-client registration both blocked.
+[NEW] api.sam-app.ro resource paths with token: now return structured `problem+json` 404 (vs plain 404 without token) — confirms JWT IS validated at gateway level, but empty scope blocks resource access.
+[NEW] mcp.sam-app.ro rejects empty-scope tokens: `401 "Invalid access token"` (MCP validates scope/claims beyond JWT validity).
+[NEW] mcp.sumup.com (prod) rejects staging tokens: `401 "no applicable key found in the JSON Web Key Set"` — cross-environment JWKS key isolation confirmed (staging keys not in prod trust store).
+[CHANGED] Auth method enforcement: registration defaults to `client_secret_basic` but token endpoint only accepts `client_secret_post` — server stores preference but doesn't enforce.
+[PRIO] auth.sam-app.ro,7.35,attack_surface=9,business_value=8,tech_exposure=8,gate_ease=3,cloud_surface=8,freshness=10
+[PRIO] api.sumup.com/authorize,6.35,attack_surface=7,business_value=9,tech_exposure=6,gate_ease=2,cloud_surface=3,freshness=8
+[PRIO] mcp.sam-app.ro,6.20,attack_surface=6,business_value=7,tech_exposure=7,gate_ease=2,cloud_surface=8,freshness=10
+[HYP] Staging auth server issues attacker-controlled audience JWTs via unauthenticated dynamic registration
+class: OATH
+asset: auth.sam-app.ro
+confidence: 82
+reasoning: POST /oauth2/register returns real client_id+secret with attacker-chosen audience + redirect_uris + grant_types. POST /oauth2/token with client_secret_post yields real signed JWT (ES256) with `scp:[]` and `aud` matching attacker-chosen value. Scope escalation blocked (registration rejects non-empty scope; token endpoint rejects scope param). Auth_method declared "client_secret_basic" but only client_secret_post works — enforcement gap. Absent in prod (auth.sumup.com /register returns 404). Staging tokens rejected by prod JWKS. Real tokens ARE accepted by staging api.sam-app.ro gateway (structured problem+json 404 vs plain 404) and mcp.sam-app.ro (401 with scope-aware error).
+evidence_needed: Whether scope empty tokens can be used for any staging resource (tried: api.sam-app.ro/v1/merchants 404, mcp.sam-app.ro/mcp 401). Whether any staging service trusts JWT audience without scope check. Whether staging registry syncs to prod periodically.
+verify_steps: PASSIVE complete (registration, token issuance, resource probing all done). AUTH_HELPED: Complete authorization_code+PKCE flow with a registered client against auth.sam-app.ro to obtain a scoped token via merchant login, then test against staging api/mcp surfaces for scope-dependent resource access.
+impact: Attacker self-registers working OAuth clients on live staging identity stack with real JWT issuance; arbitrary audience targeting + attacker-controlled redirect_uris; if staging scope/PKCE/allowlist ever relax or registry syncs to prod, attacker has pre-seeded credentials with full token issuance path. Severity: low now (empty scope, staging-only, PKCE-bound), medium latent.
+testability: PASSIVE complete → AUTH_HELPED (full auth code flow)
+[HYP] Client auth method not enforced at staging token endpoint
+class: AUTH
+asset: auth.sam-app.ro/oauth2/token
+confidence: 75
+reasoning: Registration defaults `token_endpoint_auth_method: "client_secret_basic"` but Basic auth header fails (`invalid_client`) while POST body (`client_secret_post`) succeeds. The server stores but does not enforce the declared method. A client declaring "client_secret_basic" could authenticate via the weaker client_secret_post method, which is more susceptible to MITM exposure. This is a configuration inconsistency, not directly exploitable without network position.
+evidence_needed: Whether client_secret_jwt or private_key_jwt methods are also accepted for clients declaring client_secret_basic.
+verify_steps: PASSIVE complete. No further passive tests available.
+impact: Auth method confusion — server accepts weaker auth method than declared; requires MITM position to exploit. Severity: low.
+testability: PASSIVE (complete)
+[HYP] api.sam-app.ro gateway validates JWTs but empty scope gates all resources
+class: AUTH
+asset: api.sam-app.ro
+confidence: 70
+reasoning: With staging access token: /v1/merchants returns structured problem+json 404 (vs plain 404 without token) — gateway IS performing JWT validation. Empty `scp:[]` prevents resource access. If a non-empty-scope token could be obtained (via auth code flow + merchant consent), the gateway would serve real merchant data. The staging gateway mirrors prod api.sumup.com architecture exactly.
+evidence_needed: AUTH_HELPED: authorization_code+PKCE flow with registered client to obtain merchant-scoped token, then probe versioned API paths for data access.
+impact: Cross-merchant API data exposure if scope validation is weak. Severity: high if scoped; current scope enforcement blocks this.
+testability: AUTH_HELPED
+[HYP] Staging auth server issues attacker-controlled audience JWTs — **SURVIVES** (82). Hard evidence of unauthenticated registration → real token issuance with arbitrary audience. Bounded by empty scope but architecturally significant.
+[HYP] Client auth method not enforced — **SURVIVES** (75). Real misconfiguration but low exploitability. Valid for hardening report but not standalone bounty-worthy.
+[HYP] api.sam-app.ro gateway JWT validation — **SURVIVES** (70). Confirming the gateway validates tokens is useful but current scope enforcement is solid. Needs AUTH_HELPED to advance.
+[PARKED] api.sumup.com/authorize redirect-divergence oracle: 52+ redirect candidates exhausted, all `invalid_client`. Legacy allowlist host unrecoverable from any reachable surface. Re-parked.
+[PARKED] mcp.sumup.com scope gap: requires AUTH_HELPED OAuth token. Passive complete.
+[NEXT] PROBE: Register a client on auth.sam-app.ro with `grant_types:["authorization_code"]` + `response_types:["code"]` and complete a full authorization_code+PKCE flow against `https://auth.sam-app.ro/oauth2/auth?response_type=code&client_id={registered}&redirect_uri={registered}&scope=openid&code_challenge={SHA256}&code_challenge_method=S256` — observe whether the consent screen reveals available scopes and whether the resulting authorization code can be exchanged for a scoped token. This determines if dynamic clients can inherit merchant-consented scopes (potentially escalating beyond the empty-scope restriction). Read-only interaction with consent UI; no data modification.
+[LEARN] ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp but attacker-controlled aud; scope escalation blocked at registration + token endpoint; auth_method declared but not enforced.
+[LEARN] ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404 with/without token) but empty scope blocks all resource access.
+[LEARN] ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed.
+[LEARN] REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint.
+[RISK] sumup: 48 (+1 from this cycle). Confirmed staging dynamic registration → real JWT minting with arbitrary audience; bounded by empty scope + staging isolation. Auth method enforcement gap adds minor hardening finding. All high-impact chains (api.sumup.com/authorize oracle, mcp scope escalation, staging→prod registry sync) terminate at AUTH_HELPED or HUMAN. Passive surface is substantially exhausted; next meaningful advance requires merchant OAuth token for authorization_code flows. Net +1 from fresh auth_method evidence; zero new exploitable paths opened this cycle.
