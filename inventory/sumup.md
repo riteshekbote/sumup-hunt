@@ -265,3 +265,9 @@ www.sumup.com
 - CHANGED portal.sumup.com returns 200 with React CRM login (iriscrm.com) — live parameter enumeration surface accessible
 - CHANGED Legacy redirect oracle re-tested +18 new combos (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, custom schemes, api.sumup.com×3, www) — all invalid_request; legacy allowlist host
 - CHANGED sumup-ios-sdk and unknown client_ids → invalid_client ("does not exist") on legacy gateway — legacy SDK clients NOT registered; only dashboard confirmed registered on legacy path
+
+## 2026-09-06 12:51:50 UTC
+- NEW me.sumup.com identified as a distinct merchant self-service asset served by Vercel (not Cloudflare/nginx/ELB). Root and /settings/oauth2-applications both 307 → auth.sumup.com OAuth with public `clien
+- CHANGED auth.sumup.com redirect_uri validation CONFIRMED strict allowlist for `client_id=dashboard`: attacker host, subdomain-confusion, and path-traversal redirect_uri all rejected (`invalid_request` → error
+- NEW Legacy registry divergence: `dashboard` client's modern registered callback `https://me.sumup.com/api/sso/callback` is rejected on the legacy gateway (invalid_request redirect-mismatch) but yields 303
+- NEW Legacy registry divergence: `client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback` is REJECTED on the legacy gateway (`invalid_request` redirect-mismatch, even with valid state) but 

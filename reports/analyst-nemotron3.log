@@ -3551,3 +3551,590 @@ testability: PASSIVE (enum) → HUMAN_ONLY (exploit requires in-scope confirmati
 ### STEP 7 — RISK
 
 [RISK] sumup: 73 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector.
+===== ANALYST nemotron3 2026-09-06 12:51:50 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mcurl -s "https://crt.sh/?q=%.sumup.com&output=json" | jq -r '.[].name_value' | sort -u | head -100
+*.crm.sumup.com
+*.ext-dns.sumup.com
+*.grpc.k8s-eu-west-1-live.external.sumup.com
+*.ie.sumup.com
+*.internal.sumup.com
+*.k8s-eu-developers.internal.sumup.com
+*.k8s-eu-west-1-live.internal.sumup.com
+*.k8s-eu-west-1-live.sg.sumup.com
+*.k8s-eu-west-1-live.sumup.com
+*.k8s-eu-west-1-stage.internal.sumup.com
+*.kds.sumup.com
+*.live-k8s-eu-pci-supporting.ext-dns.sumup.com
+*.live-k8s-eu-pci-supporting.sumup.com
+*.live-k8s-eu-pci.ext-dns.sumup.com
+*.live-k8s-eu-pci.sumup.com
+*.lt.sumup.com
+*.magicpay.sumup.com
+*.orderandpay.sumup.com
+*.ordering.sumup.com
+*.pos.sumup.com
+*.raw-tickets.sumup.com
+*.s3.live.solo.sumup.com
+*.s3.stage.solo.sumup.com
+*.serial-terminal.dev.solo.sumup.com
+*.sumup.com
+*.sumup.com.ar
+*.sumup.com.au
+*.sumup.com.br
+*.sumup.com.cy
+*.sumup.com.mt
+*.uk.sumup.com
+3dsecure.sumup.com
+6f74656c-grpc.sumup.com
+6f74656c-http.sumup.com
+6f74656c.sumup.com
+academy.sumup.com
+accounting.sumup.com
+adm.apicore.ie.sumup.com
+adm.apicore.lt.sumup.com
+adm.apicore.uk.sumup.com
+admin.sumup.com
+aide.sumup.com
+amex.sumup.com
+api.sumup.com
+apicore.ie.sumup.com
+apicore.lt.sumup.com
+apicore.uk.sumup.com
+app-auth.sumup.com
+app.kds.sumup.com
+app.ordering.sumup.com
+auth.sumup.com
+autoreceipts.sumup.com
+bank-backoffice.sumup.com
+billing-widget.sumup.com
+boleto.sumup.com
+brand.sumup.com
+bredge-external.sumup.com
+buy-de.sumup.com
+buy-fr.sumup.com
+buy-it.sumup.com
+buy-uk.sumup.com
+buy.sumup.com
+camunda.dev.solo.sumup.com
+card-mobile-edge-theta.sumup.com
+card.sumup.com
+cash-operation-ingestor.sumup.com
+cbs.sumup.com
+ch-de.sumup.com
+ch-fr.sumup.com
+ch-it.sumup.com
+ch.sumup.com
+chat.sumup.com
+checkout.sumup.com
+circuit.sumup.com
+click.crm.sumup.com
+cloak.sumup.com
+cloud.crm.sumup.com
+collect.sumup.com
+concentrix.sumup.com
+consultant-store.sumup.com
+consultants.sumup.com
+content.sumup.com
+core.ie.sumup.com
+core.lt.sumup.com
+core.uk.sumup.com
+credibanco.sumup.com
+dashboard.sumup.com
+developer.sumup.com
+developers.sumup.com
+devices.sumup.com
+dg.sumup.com
+docs.sumup.com
+dwh-replica.internal.sumup.com
+dwh.internal.sumup.com
+edge.sumup.com
+erp.sumup.com
+es.sumup.com
+ext-dns.sumup.com
+fiori.sumup.com
+fivestars.sumup.com
+[0m
+[0m$ [0mcurl -s "https://crt.sh/?q=%.sumup.com&output=json" | jq -r '.[].name_value' | sort -u
+*.crm.sumup.com
+*.ext-dns.sumup.com
+*.grpc.k8s-eu-west-1-live.external.sumup.com
+*.ie.sumup.com
+*.internal.sumup.com
+*.k8s-eu-developers.internal.sumup.com
+*.k8s-eu-west-1-live.internal.sumup.com
+*.k8s-eu-west-1-live.sg.sumup.com
+*.k8s-eu-west-1-live.sumup.com
+*.k8s-eu-west-1-stage.internal.sumup.com
+*.kds.sumup.com
+*.live-k8s-eu-pci-supporting.ext-dns.sumup.com
+*.live-k8s-eu-pci-supporting.sumup.com
+*.live-k8s-eu-pci.ext-dns.sumup.com
+*.live-k8s-eu-pci.sumup.com
+*.lt.sumup.com
+*.magicpay.sumup.com
+*.orderandpay.sumup.com
+*.ordering.sumup.com
+*.pos.sumup.com
+*.raw-tickets.sumup.com
+*.s3.live.solo.sumup.com
+*.s3.stage.solo.sumup.com
+*.serial-terminal.dev.solo.sumup.com
+*.sumup.com
+*.sumup.com.ar
+*.sumup.com.au
+*.sumup.com.br
+*.sumup.com.cy
+*.sumup.com.mt
+*.uk.sumup.com
+3dsecure.sumup.com
+6f74656c-grpc.sumup.com
+6f74656c-http.sumup.com
+6f74656c.sumup.com
+academy.sumup.com
+accounting.sumup.com
+adm.apicore.ie.sumup.com
+adm.apicore.lt.sumup.com
+adm.apicore.uk.sumup.com
+admin.sumup.com
+aide.sumup.com
+amex.sumup.com
+api.sumup.com
+apicore.ie.sumup.com
+apicore.lt.sumup.com
+apicore.uk.sumup.com
+app-auth.sumup.com
+app.kds.sumup.com
+app.ordering.sumup.com
+auth.sumup.com
+autoreceipts.sumup.com
+bank-backoffice.sumup.com
+billing-widget.sumup.com
+boleto.sumup.com
+brand.sumup.com
+bredge-external.sumup.com
+buy-de.sumup.com
+buy-fr.sumup.com
+buy-it.sumup.com
+buy-uk.sumup.com
+buy.sumup.com
+camunda.dev.solo.sumup.com
+card-mobile-edge-theta.sumup.com
+card.sumup.com
+cash-operation-ingestor.sumup.com
+cbs.sumup.com
+ch-de.sumup.com
+ch-fr.sumup.com
+ch-it.sumup.com
+ch.sumup.com
+chat.sumup.com
+checkout.sumup.com
+circuit.sumup.com
+click.crm.sumup.com
+cloak.sumup.com
+cloud.crm.sumup.com
+collect.sumup.com
+concentrix.sumup.com
+consultant-store.sumup.com
+consultants.sumup.com
+content.sumup.com
+core.ie.sumup.com
+core.lt.sumup.com
+core.uk.sumup.com
+credibanco.sumup.com
+dashboard.sumup.com
+developer.sumup.com
+developers.sumup.com
+devices.sumup.com
+dg.sumup.com
+docs.sumup.com
+dwh-replica.internal.sumup.com
+dwh.internal.sumup.com
+edge.sumup.com
+erp.sumup.com
+es.sumup.com
+ext-dns.sumup.com
+fiori.sumup.com
+fivestars.sumup.com
+fps.sumup.com
+frw.sumup.com
+gateway.sumup.com
+get.sumup.com
+getting-started.sumup.com
+go.sumup.com
+grpc.k8s-eu-west-1-live.external.sumup.com
+hana.sumup.com
+hardware-mobile-edge.sumup.com
+hardware-shared.s3.dev.solo.sumup.com
+hardware.sumup.com
+hawkbit.dev.solo.sumup.com
+help.sumup.com
+helpdesk.sumup.com
+hi.sumup.com
+hilfe.sumup.com
+hmrc.sumup.com
+ie.sumup.com
+image.crm.sumup.com
+images.sumup.com
+integrator.sumup.com
+investments.sumup.com
+invoice.sumup.com
+invoices-signup.sumup.com
+invoices.sumup.com
+ios-circuitui.sumup.com
+iso20022-edge.sumup.com
+iso20022.sumup.com
+it-usa.sumup.com
+join.sumup.com
+js.sumup.com
+k8s-eu-developers.internal.sumup.com
+k8s-eu-west-1-live.internal.sumup.com
+k8s-eu-west-1-live.sg.sumup.com
+k8s-eu-west-1-live.sumup.com
+k8s-eu-west-1-stage.internal.sumup.com
+kds.sumup.com
+klocwork.dev.solo.sumup.com
+knowledge.sumup.com
+l.sumup.com
+live-k8s-eu-pci-supporting.ext-dns.sumup.com
+live-k8s-eu-pci-supporting.sumup.com
+live-k8s-eu-pci.ext-dns.sumup.com
+live-k8s-eu-pci.sumup.com
+logistics.sumup.com
+lt.sumup.com
+ltxup.sumup.com
+magicpay.sumup.com
+me.sumup.com
+messaging.sumup.com
+mss.sumup.com
+my-images.sumup.com
+netsuitetest1.sumup.com
+netsuitetest2.sumup.com
+network-tools.sumup.com
+onboardingknowledge.sumup.com
+open-banking-service-grpc-theta.sumup.com
+open-banking-service-grpc.sumup.com
+open-banking-service.sumup.com
+opensource.sumup.com
+orderandpay.sumup.com
+ordering.sumup.com
+partners.sumup.com
+pay.sumup.com
+paylevenbrazil.sumup.com
+payout-reports-edge.sumup.com
+payout-settings-edge.sumup.com
+people.sumup.com
+pepadmin.sumup.com
+pepsanctions.sumup.com
+pepsearch.sumup.com
+pops-usa.sumup.com
+portal.sumup.com
+pos-payment.sumup.com
+pos.sumup.com
+posdemo.sumup.com
+posfin.sumup.com
+poshelp.sumup.com
+promo-service.sumup.com
+raw-tickets.sumup.com
+read-api.sumup.com
+receipts-ng.sumup.com
+receipts.sumup.com
+recommendation.sumup.com
+redeban.sumup.com
+reviews-platform.sumup.com
+reviews.sumup.com
+s.sumup.com
+s3.dev.solo.sumup.com
+sales-receipt.sumup.com
+sepa.lt.sumup.com
+serial-terminal.dev.solo.sumup.com
+settlements-sandbox.sumup.com
+settlements.sumup.com
+sf-gateway-api.sumup.com
+sfmc-activities.sumup.com
+shop.sumup.com
+sidekick.sumup.com
+soap.sumup.com
+social-media-presence-api.sumup.com
+social-media-presence.sumup.com
+solo-edge-private.live.solo.sumup.com
+solo-edge-private.stage.solo.sumup.com
+solo-edge.sumup.com
+sse.sumup.com
+staging.pos-payment.sumup.com
+static.sumup.com
+status.sumup.com
+store.orderandpay.sumup.com
+store.sumup.com
+sumup-angelwatch-tms-live.s3.live.solo.sumup.com
+sumup-embedded-build.s3.dev.solo.sumup.com
+sumup-ze-dashboard.sumup.com
+sumup.com
+sumup.com.ar
+sumup.com.au
+sumup.com.br
+sumup.com.cy
+sumup.com.mt
+support-centre.sumup.com
+support.sumup.com
+supportch.sumup.com
+supportde.sumup.com
+supportfr.sumup.com
+supportnl.sumup.com
+supporto.sumup.com
+supportpl.sumup.com
+supportpt.sumup.com
+supportuk.sumup.com
+tech.sumup.com
+telecom.sumup.com
+test-otel-public-live.sumup.com
+testhelp.sumup.com
+tobepaid-brasil.sumup.com
+tobepaid-brazil.sumup.com
+top-sam.sumup.com
+tracking.sumup.com
+triangle-ng.sumup.com
+triangle.sumup.com
+txg-ng.sumup.com
+txg.sumup.com
+uk.sumup.com
+userresources.sumup.com
+video.sumup.com
+view.crm.sumup.com
+wealth-api.sumup.com
+wealth.sumup.com
+wf.sumup.com
+wss.sumup.com
+www.aide.sumup.com
+www.hilfe.sumup.com
+www.pos.sumup.com
+www.store.orderandpay.sumup.com
+www.sumup.com
+www.support.sumup.com
+www.supporto.sumup.com
+yapily.sumup.com
+[0m
+[0m$ [0mcurl -s "https://crt.sh/?q=%.sumup.com&output=json" | jq -r '.[].name_value' | sort -u | grep -iE '(oauth|auth|sso|callback|login|connect|authorize|dashboard|app|mobile|api|legacy|old|v1|v2|beta|test|dev|stage|sandbox|demo|trial|partner|merchant|seller|account|user|profile|settings|admin|portal|gateway|api-gateway|auth-gateway|identity|idp|saml|oidc|sso-gateway|pay|collect|checkout|ze-dashboard|read-api|gateway|mobile|pos|sumup-pos|my|secure|me|www)'
+*.k8s-eu-developers.internal.sumup.com
+*.k8s-eu-west-1-stage.internal.sumup.com
+*.magicpay.sumup.com
+*.orderandpay.sumup.com
+*.pos.sumup.com
+*.s3.stage.solo.sumup.com
+*.serial-terminal.dev.solo.sumup.com
+3dsecure.sumup.com
+academy.sumup.com
+accounting.sumup.com
+adm.apicore.ie.sumup.com
+adm.apicore.lt.sumup.com
+adm.apicore.uk.sumup.com
+admin.sumup.com
+amex.sumup.com
+api.sumup.com
+apicore.ie.sumup.com
+apicore.lt.sumup.com
+apicore.uk.sumup.com
+app-auth.sumup.com
+app.kds.sumup.com
+app.ordering.sumup.com
+auth.sumup.com
+camunda.dev.solo.sumup.com
+card-mobile-edge-theta.sumup.com
+checkout.sumup.com
+collect.sumup.com
+dashboard.sumup.com
+developer.sumup.com
+developers.sumup.com
+devices.sumup.com
+gateway.sumup.com
+hardware-mobile-edge.sumup.com
+hardware-shared.s3.dev.solo.sumup.com
+hawkbit.dev.solo.sumup.com
+investments.sumup.com
+k8s-eu-developers.internal.sumup.com
+k8s-eu-west-1-stage.internal.sumup.com
+klocwork.dev.solo.sumup.com
+magicpay.sumup.com
+me.sumup.com
+messaging.sumup.com
+my-images.sumup.com
+netsuitetest1.sumup.com
+netsuitetest2.sumup.com
+orderandpay.sumup.com
+partners.sumup.com
+pay.sumup.com
+paylevenbrazil.sumup.com
+payout-reports-edge.sumup.com
+payout-settings-edge.sumup.com
+pepadmin.sumup.com
+portal.sumup.com
+pos-payment.sumup.com
+pos.sumup.com
+posdemo.sumup.com
+posfin.sumup.com
+poshelp.sumup.com
+read-api.sumup.com
+recommendation.sumup.com
+s3.dev.solo.sumup.com
+serial-terminal.dev.solo.sumup.com
+settlements-sandbox.sumup.com
+settlements.sumup.com
+sf-gateway-api.sumup.com
+social-media-presence-api.sumup.com
+social-media-presence.sumup.com
+solo-edge-private.stage.solo.sumup.com
+staging.pos-payment.sumup.com
+store.orderandpay.sumup.com
+sumup-embedded-build.s3.dev.solo.sumup.com
+sumup-ze-dashboard.sumup.com
+test-otel-public-live.sumup.com
+testhelp.sumup.com
+userresources.sumup.com
+wealth-api.sumup.com
+www.aide.sumup.com
+www.hilfe.sumup.com
+www.pos.sumup.com
+www.store.orderandpay.sumup.com
+www.sumup.com
+www.support.sumup.com
+www.supporto.sumup.com
+yapily.sumup.com
+[0m
+Now I have the crt.sh data filtered for OAuth-callback-shaped names. Let me work through all 8 steps systematically.
+
+---
+
+### STEP 1 — DELTA
+
+**NEW:**
+- `mcp.sumup.com` — Official SumUp MCP (Cloudflare Worker, bearer JWKS from auth.sumup.com, Durable Object agent) LIVE, absent from inventory, surfaced via sumup-mcp public repo config
+- `sam-app.ro` staging stack (mcp/mcp-theta/api/api-theta/auth/auth-theta) publicly reachable; replicates prod gates byte-for-byte
+- `checkout.sumup.com` (Vercel 76.76.21.61), `read-api.sumup.com`, `sf-gateway-api.sumup.com`, `app-auth.sumup.com` discovered via CT sweep (4422 certs → 257 unique names)
+- `auth.sam-app.ro`: RFC 7591 dynamic client registration LIVE unauthenticated (POST /oauth2/register → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com
+- `auth.sam-app.ro`: Dynamic clients forced to EMPTY scope, require PKCE, enforce per-client redirect allowlist, no RFC7592 management, NOT synced to api.sam-app.ro/authorize
+
+**CHANGED:**
+- `api.sumup.com/authorize` confirmed LIVE via raw curl (302→auth.sumup.com/flows/oauth2/error) — probe harness 404s were redirect-following artifacts; endpoint exposes client_id oracle + wildcard CORS
+- `auth.sumup.com/oauth2/par` and `/oauth2/device` return 400 on POST (routed, require client_auth) — not 404 as previously logged
+- `me.sumup.com/api/sso/callback` returns 307 on anonymous GET (redirect to OAuth flow) — not 403
+- `portal.sumup.com` returns 200 with React CRM login (iriscrm.com) — live parameter enumeration surface accessible
+- Legacy redirect oracle re-tested +18 new combos (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, custom schemes, api.sumup.com×3, www) — all invalid_request; legacy allowlist host not recoverable
+- `sumup-ios-sdk` and unknown client_ids → invalid_client ("does not exist") on legacy gateway — legacy SDK clients NOT registered; only dashboard confirmed registered on legacy path
+- `auth.sumup.com`: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed
+
+---
+
+### STEP 2 — PRIORITIZE
+
+| Asset | Score | a | b | t | g | c | f |
+|-------|-------|---|---|---|---|---|---|
+| `api.sumup.com/authorize` | **8.2** | 9 | 9 | 9 | 10 | 8 | 5 |
+| `auth.sam-app.ro/oauth2/register` | **7.1** | 8 | 7 | 8 | 10 | 6 | 5 |
+| `mcp.sumup.com` | **7.0** | 8 | 8 | 7 | 5 | 7 | 6 |
+| `auth.sumup.com` | **6.8** | 7 | 9 | 7 | 5 | 8 | 6 |
+| `me.sumup.com` | **6.3** | 7 | 8 | 6 | 5 | 7 | 6 |
+| `portal.sumup.com` | **5.8** | 7 | 7 | 5 | 5 | 5 | 7 |
+| `checkout.sumup.com` | **4.5** | 5 | 5 | 4 | 3 | 5 | 5 |
+| `read-api.sumup.com` | **4.0** | 5 | 4 | 4 | 3 | 4 | 4 |
+| `sf-gateway-api.sumup.com` | **4.0** | 5 | 4 | 4 | 3 | 4 | 4 |
+| `app-auth.sumup.com` | **4.0** | 5 | 4 | 4 | 3 | 4 | 4 |
+| `admin.sumup.com` | **4.5** | 5 | 7 | 3 | 2 | 6 | 5 |
+| `web.sumup.com` | **5.5** | 6 | 5 | 4 | 9 | 4 | 5 |
+
+**Formula:** priority = 0.25a + 0.25b + 0.15t + 0.15g + 0.10c + 0.10f
+
+[PRIO] api.sumup.com/authorize,8.2,a=9,b=9,t=9,g=10,c=8,f=5
+[PRIO] auth.sam-app.ro/oauth2/register,7.1,a=8,b=7,t=8,g=10,c=6,f=5
+[PRIO] mcp.sumup.com,7.0,a=8,b=8,t=7,g=5,c=7,f=6
+[PRIO] auth.sumup.com,6.8,a=7,b=9,t=7,g=5,c=8,f=6
+[PRIO] me.sumup.com,6.3,a=7,b=8,t=6,g=5,c=7,f=6
+[PRIO] portal.sumup.com,5.8,a=7,b=7,t=5,g=5,c=5,f=7
+[PRIO] web.sumup.com,5.5,a=6,b=5,t=4,g=9,c=4,f=5
+[PRIO] admin.sumup.com,4.5,a=5,b=7,t=3,g=2,c=6,f=5
+[PRIO] checkout.sumup.com,4.5,a=5,b=5,t=4,g=3,c=5,f=5
+[PRIO] read-api.sumup.com,4.0,a=5,b=4,t=4,g=3,c=4,f=4
+[PRIO] sf-gateway-api.sumup.com,4.0,a=5,b=4,t=4,g=3,c=4,f=4
+[PRIO] app-auth.sumup.com,4.0,a=5,b=4,t=4,g=3,c=4,f=4
+
+---
+
+### STEP 3 — HYPOTHESES
+
+[HYP] Legacy OAuth authorize endpoint client_id oracle + redirect_uri divergence + wildcard CORS enables callback host enumeration and OAuth code theft
+class: OATH
+asset: api.sumup.com/authorize
+confidence: 80
+reasoning: Endpoint LIVE (302→auth.sumup.com/flows/oauth2/error). Client_id oracle: invalid_client for unknown vs invalid_request (redirect_uri mismatch) for registered dashboard. Legacy/modern redirect-set divergence: dashboard client's modern callback https://me.sumup.com/api/sso/callback accepted on auth.sumup.com/oauth2/auth (302→login flow) but REJECTED on api.sumup.com/authorize (invalid_request). Endpoint-specific wildcard CORS (access-control-allow-origin:*, allow-methods:GET,HEAD,PUT,PATCH,POST,DELETE, max-age=300) + SameSite=None; Domain=sumup.com cookies — absent on auth.sumup.com/oauth2/auth. Legacy allowlist host not recovered from 52+ candidates (crt.sh subdomains, custom schemes, common patterns).
+evidence_needed: Enumerated legacy callback host accepted for dashboard client on api.sumup.com/authorize yielding authorization code; successful code exchange at auth.sumup.com/oauth2/token
+verify_steps: GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://legacy.sumup.com/callback&response_type=code&scope=classic&state=test12345678 → observe invalid_request; GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://app.sumup.com/callback&response_type=code&scope=classic&state=test12345678 → test legacy callback pattern; GET https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri=https://mobile.sumup.com/callback&response_type=code&scope=classic&state=test12345678 → enumerate SDK client_ids
+impact: OAuth authorization code theft via legacy callback host → merchant account takeover, full scope access (accounting/invoices/api_keys/lending/readers/receivables/unified_customer_directory) — CRITICAL
+testability: PASSIVE
+
+[HYP] Unauthenticated RFC 7591 dynamic client registration on staging identity host enables self-issued OAuth clients with controlled redirect_uris
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 75
+reasoning: POST /oauth2/register → 201 returns client_id+secret+chosen redirect_uris, declared in openid-configuration. Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge, enforce per-client redirect allowlist (unrelated redirect → 401), no RFC7592 get/put/delete (404), and are NOT synced to api.sam-app.ro/authorize (invalid_client). Prod auth.sumup.com has no register endpoint (404). Staging replicates prod gates byte-for-byte.
+evidence_needed: Registered dynamic client on auth.sam-app.ro that can complete authorization code flow on auth.sam-app.ro/oauth2/auth and exchange code at auth.sam-app.ro/oauth2/token; proof of cross-environment client sync (prod auth.sumup.com or api.sumup.com/authorize)
+verify_steps: POST https://auth.sam-app.ro/oauth2/register with redirect_uris=["https://evil.com/callback"] → observe 201 client_id+secret; GET https://auth.sam-app.ro/oauth2/auth?client_id=<new_client>&redirect_uri=https://evil.com/callback&response_type=code&scope=openid&code_challenge=<pkce>&code_challenge_method=S256&state=test12345678 → test auth flow; POST https://auth.sam-app.ro/oauth2/token with code → test token exchange; GET https://api.sam-app.ro/authorize?client_id=<new_client>... → test cross-sync
+impact: Self-issued OAuth client on staging → potential bypass of prod registration controls if clients sync; credentialed access to staging APIs with chosen redirect_uri — HIGH
+testability: PASSIVE
+
+[HYP] MCP server bearer token validation bypass via JWKS confusion or Durable Object state manipulation
+class: AUTH
+asset: mcp.sumup.com
+confidence: 55
+reasoning: mcp.sumup.com is a Cloudflare Worker MCP server using bearer JWKS from auth.sumup.com with Durable Object agent. Worker runtime + DO state + external JWKS introduces potential token validation gaps: JWKS caching staleness, kid confusion, DO state isolation bypass, or alg=none in token header if JWKS validation incomplete. Public repo config confirms architecture. No permissive CORS for token theft (bearer_methods_supported=["header"], no cookies).
+evidence_needed: Valid access token accepted without proper signature verification; cross-DO state leak; forged token with alg=none accepted
+verify_steps: GET https://mcp.sumup.com/.well-known/jwks.json → confirm JWKS endpoint; GET https://mcp.sumup.com/ → observe 401 challenge; POST https://mcp.sumup.com/mcp with Authorization: Bearer <forged_JWT_alg_none> → test alg=none; POST https://mcp.sumup.com/mcp with Authorization: Bearer <valid_token_from_merchant_flow> → test token acceptance and scope enforcement
+impact: MCP agent hijack → merchant data access, payment initiation, reader control — HIGH
+testability: AUTH_HELPED
+
+---
+
+### STEP 4 — SELF-CRITIQUE
+
+[PARKED] MCP server bearer token validation bypass via JWKS confusion or Durable Object state manipulation: Confidence 55 but verify_steps require AUTH_HELPED (valid merchant token, forged JWTs) — cannot test passively; requires live merchant OAuth flow
+
+[FINAL] Legacy OAuth authorize endpoint client_id oracle + redirect_uri divergence + wildcard CORS enables callback host enumeration and OAuth code theft (confidence 80) — SURVIVES
+
+[FINAL] Unauthenticated RFC 7591 dynamic client registration on staging identity host enables self-issued OAuth clients with controlled redirect_uris (confidence 75) — SURVIVES
+
+---
+
+### STEP 5 — NEXT ACTION
+
+[NEXT] RAG: fetch crt.sh for q=%.sumup.com (current + historical certificates), extract all unique subdomains, filter for OAuth-callback-shaped names (oauth, auth, sso, callback, login, connect, authorize, dashboard, app, mobile, api, legacy, old, v1, v2, beta, test, dev, stage, sandbox, demo, trial, partner, merchant, seller, account, user, profile, settings, admin, portal, gateway, api-gateway, auth-gateway, identity, idp, saml, oidc, sso-gateway) to generate candidate legacy redirect_uri hosts for api.sumup.com/authorize enumeration
+
+---
+
+### STEP 6 — LEARNING
+
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Endpoint LIVE with client_id oracle (invalid_client vs invalid_request) and legacy redirect-set divergence — modern dashboard callback rejected on legacy gateway
+[LEARN] ACCEPTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS (access-control-allow-origin:*) + broad allow-methods + max-age + SameSite=None cookies on Domain=sumup.com — endpoint-specific divergence from auth.sumup.com
+[LEARN] ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live on modern auth server — https://me.sumup.com/api/sso/callback returns 302→login flow (state≥8 enforced)
+[LEARN] ACCEPTED AUTH @ auth.sumup.com: PAR (/oauth2/par) and device flow (/oauth2/device) routed (400 on POST) but require client authentication — "none" auth_method not usable for dashboard client
+[LEARN] ACCEPTED AUTH @ me.sumup.com: Vercel-served asset; anonymous /api/* routes return 307 to OAuth flow — no debug endpoints or permissive CORS
+[LEARN] REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (307 redirect, no CORS headers)
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
+[LEARN] REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfirmed in-scope
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Raw-curl ground truth re-confirms 302 error-flow (invalid_client vs invalid_request); earlier "404" logs are harness redirect-following artifacts — endpoint is live
+[LEARN] REJECTED OATH @ api.sumup.com/authorize: crt.sh-derived callback candidates (app-auth×5 shapes, checkout, pay, collect, ze-dashboard, gateway, read-api, api.sumup.com self-hosts, www) + custom schemes (sumup://, sumup-pos://, com.sumup.pos://) all invalid_request — single-class oracle, ~52 combos exhausted; legacy allowlist host not recoverable from any reachable surface
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: sumup-ios-sdk and unknown IDs → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered; only dashboard confirmed registered
+[LEARN] ACCEPTED AUTH @ checkout.sumup.com: New Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as me.sumup.com; no anonymous surface
+[LEARN] ACCEPTED OTHER @ mcp.sumup.com: Official SumUp MCP (Cloudflare Worker, bearer JWKS from auth.sumup.com, Durable Object agent) LIVE and absent from inventory — surfaced via sumup-mcp public repo config; new in-scope authenticated surface
+[LEARN] ACCEPTED OATH @ sam-app.ro: Staging stack (mcp/mcp-theta/api/api-theta/auth/auth-theta) publicly reachable; replicates prod gates byte-for-byte (/mcp 401, /authorize invalid_request on evil redirect, OIDC discovery public) — faithful parallel oracle, no permissive config observed
+[LEARN] REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is NOT token-stealing (bearer_methods_supported=["header"], no cookies/ambient creds); hardening-only
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Redirect-allowlist divergence + wildcard CORS is the api-gateway template (identical on api.sam-app.ro), distinct from auth.sumup.com — architectural fact, not per-instance anomaly
+[LEARN] REJECTED MISCONFIG @ tap-to-pay-sdk.fleet.live.sumup.net: 401 Cloudflare Maven host + Fleet CD naming = infra/banner class
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: RFC 7591 dynamic client registration LIVE unauthenticated (POST /oauth2/register → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 both discovery docs)
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge, enforce per-client redirect allowlist (unrelated redirect → 401), no RFC7592 get/put/delete (404), and are NOT synced to api.sam-app.ro/authorize (invalid_client) — bounded blast radius
+[LEARN] REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed
+
+---
+
+### STEP 7 — RISK
+
+[RISK] sumup: 73 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector.
