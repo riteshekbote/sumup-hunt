@@ -183,3 +183,5 @@ reasoning: MCP server uses Cloudflare Durable Objects (SumUpMcpAgent) to persist
 impact: Low-Medium - If Durable Object storage is not properly secured or if there are race conditions, session data could be accessed or manipulated.
 verify_steps: 1. Check if Durable Object bindings are properly scoped 2. Review sumup-agent.ts for session handling logic
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-06 14:13:19 UTC
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
