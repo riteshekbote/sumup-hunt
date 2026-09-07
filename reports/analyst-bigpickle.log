@@ -8295,3 +8295,213 @@ STEP 6 — LEARNING:
 
 STEP 7 — RISK:
 - [RISK] sumup: 49. Passive surface on the api target is near-exhausted; fresh leads are discovery-only oracle checks (RFC 9728 metadata, mcp.json) that are non-exploitable without auth; all escalation chains (theta register POST, prod api JWT tail, mcp scope gap) terminate at role approval or AUTH_HELPED merchant token. Net 0 vs prior cycle — no new exploitable path opened.
+===== ANALYST bigpickle 2026-09-07 05:57:20 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" "https://mcp.sumup.com/.well-known/mcp.json" 2>/dev/null; echo; curl -s "https://mcp.sumup.com/.well-known/mcp.json" 2>/dev/null | head -c 500
+404
+{"jsonrpc":"2.0","error":{"code":-32010,"message":"Not Found"},"id":null}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" -H "Accept: application/json" "https://api.sumup.com/.well-known/oauth-protected-resource" 2>/dev/null; echo; curl -s -H "Accept: application/json" "https://api.sumup.com/.well-known/oauth-protected-resource" 2>/dev/null | head -c 500
+200
+{
+	"resource_name": "SumUp API",
+	"resource": "https://api.sumup.com",
+	"authorization_servers": ["https://auth.sumup.com"],
+	"bearer_methods_supported": ["header"],
+	"jwks_uri": "https://auth.sumup.com/.well-known/jwks.json",
+	"resource_documentation": "https://developer.sumup.com"
+}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" "https://mcp.sumup.com/mcp.json" 2>/dev/null; echo; curl -s "https://mcp.sumup.com/mcp.json" 2>/dev/null | head -c 500
+404
+{"jsonrpc":"2.0","error":{"code":-32010,"message":"Not Found"},"id":null}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" -H "Accept: application/json" "https://api.sumup.com/.well-known/oauth-authorization-server" 2>/dev/null; echo; curl -s -H "Accept: application/json" "https://api.sumup.com/.well-known/oauth-authorization-server" 2>/dev/null | head -c 500
+404
+{
+	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",
+	"title": "Not Found",
+	"status": 404,
+	"detail": "Resource not found"
+}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" -H "Accept: application/json" "https://api.sumup.com/.well-known/openid-configuration" 2>/dev/null; echo; curl -s -H "Accept: application/json" "https://api.sumup.com/.well-known/openid-configuration" 2>/dev/null | head -c 500
+404
+{
+	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",
+	"title": "Not Found",
+	"status": 404,
+	"detail": "Resource not found"
+}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" "https://api.sam-app.ro/.well-known/oauth-protected-resource" 2>/dev/null; echo; curl -s "https://api.sam-app.ro/.well-known/oauth-protected-resource" 2>/dev/null | head -c 500
+200
+{
+	"resource_name": "SumUp API (stage)",
+	"resource": "https://api.sam-app.ro",
+	"authorization_servers": ["https://auth.sam-app.ro"],
+	"bearer_methods_supported": ["header"],
+	"jwks_uri": "https://auth.sam-app.ro/.well-known/jwks.json",
+	"resource_documentation": "https://developer-stage.sumup-vercel.app"
+}
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" "https://developer.sumup.com" 2>/dev/null; echo; curl -s -o /dev/null -w "%{http_code}" "https://developer-stage.sumup-vercel.app" 2>/dev/null; echo
+200
+404
+[0m
+[0m$ [0mcurl -s -H "Accept: application/json" "https://auth.sumup.com/.well-known/jwks.json" 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(f'keys: {len(d.get(\"keys\",[]))}'); [print(f'  kid={k.get(\"kid\",\"?\")} kty={k.get(\"kty\",\"?\")} alg={k.get(\"alg\",\"?\")} use={k.get(\"use\",\"?\")}') for k in d.get('keys',[])]" 2>/dev/null
+keys: 8
+  kid=public:38618372-f016-4e5d-97b2-d043a975d243 kty=RSA alg=RS256 use=sig
+  kid=public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9 kty=RSA alg=RS256 use=sig
+  kid=public:8c332d17-2b35-4cba-a61e-6843b4375a71 kty=RSA alg=RS256 use=sig
+  kid=public:a4627362-0900-4bfa-8b68-3a740165dbcf kty=RSA alg=RS256 use=sig
+  kid=public:32ad4b15-8641-4aaa-9a2e-427bb1848321 kty=RSA alg=RS256 use=sig
+  kid=public:8e43ec38-e8f1-47e4-aa6c-9990c3ae20b3 kty=RSA alg=RS256 use=sig
+  kid=1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM kty=RSA alg=RS256 use=?
+  kid=-tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4 kty=OKP alg=EdDSA use=?
+[0m
+Significant new discovery — RFC 9728 resource-server metadata is live on both prod and staging. Let me follow up.
+[0m$ [0mcurl -s -H "Accept: application/json" "https://auth.sam-app.ro/.well-known/jwks.json" 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(f'keys: {len(d.get(\"keys\",[]))}'); [print(f'  kid={k.get(\"kid\",\"?\")} kty={k.get(\"kty\",\"?\")} alg={k.get(\"alg\",\"?\")} use={k.get(\"use\",\"?\")}') for k in d.get('keys',[])]" 2>/dev/null
+keys: 11
+  kid=2ca76842-2487-428f-a87f-603d1f6f6ef0 kty=RSA alg=RS256 use=sig
+  kid=ugK7GDfOf35HE5n2Pwsy9K3HSnYWNPGbRnWRscc83Lg kty=OKP alg=EdDSA use=sig
+  kid=public:73c59380-fbab-4a2f-8d0e-1884cf8ec724 kty=RSA alg=RS256 use=sig
+  kid=public:b2aafe4c-7d7f-4f32-90a7-66a0fc9cd097 kty=RSA alg=RS256 use=sig
+  kid=public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a kty=RSA alg=RS256 use=sig
+  kid=public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9 kty=RSA alg=RS256 use=sig
+  kid=public:3862035e-6139-422f-b17d-cf67b950a74f kty=RSA alg=RS256 use=sig
+  kid=public:e1d0f7e4-aab6-424e-8e2b-7549ac77f514 kty=RSA alg=RS256 use=sig
+  kid=public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a kty=RSA alg=RS256 use=sig
+  kid=public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9 kty=RSA alg=RS256 use=sig
+  kid=loadtesting kty=RSA alg=RS256 use=sig
+[0m
+Key findings. Let me now check the key overlap and document everything.
+[0m$ [0mcurl -s "https://auth.sumup.com/.well-known/jwks.json" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+kids = sorted([k['kid'] for k in d.get('keys',[])])
+for k in kids: print(k)
+" 2>/dev/null
+-tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4
+1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM
+public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9
+public:32ad4b15-8641-4aaa-9a2e-427bb1848321
+public:38618372-f016-4e5d-97b2-d043a975d243
+public:8c332d17-2b35-4cba-a61e-6843b4375a71
+public:8e43ec38-e8f1-47e4-aa6c-9990c3ae20b3
+public:a4627362-0900-4bfa-8b68-3a740165dbcf
+[0m
+[0m$ [0mcurl -s "https://auth.sam-app.ro/.well-known/jwks.json" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+kids = sorted([k['kid'] for k in d.get('keys',[])])
+for k in kids: print(k)
+" 2>/dev/null
+2ca76842-2487-428f-a87f-603d1f6f6ef0
+loadtesting
+public:3862035e-6139-422f-b17d-cf67b950a74f
+public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a
+public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a
+public:73c59380-fbab-4a2f-8d0e-1884cf8ec724
+public:b2aafe4c-7d7f-4f32-90a7-66a0fc9cd097
+public:e1d0f7e4-aab6-424e-8e2b-7549ac77f514
+public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9
+public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9
+ugK7GDfOf35HE5n2Pwsy9K3HSnYWNPGbRnWRscc83Lg
+[0m
+Now I have all the data for a complete structured output. Let me also check the developer.sumup.com docs for any scope/resource documentation.
+[0m$ [0mcurl -s "https://developer.sumup.com" 2>/dev/null | head -c 2000
+<!DOCTYPE html><html lang="en" dir="ltr" data-theme="dark" data-has-sidebar data-has-hero class="astro-vdxcvpsm"><head><script>
+  (function () {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        const element = mutation.target;
+        element.dataset.colorScheme = element.dataset.theme;
+      });
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+  })();
+</script><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>SumUp Developer Portal</title><link rel="canonical" href="https://developer.sumup.com/"/><link rel="sitemap" href="/sitemap-index.xml"/><link rel="preload" href="https://static.sumup.com/fonts/sumup/sumup-narrow-latin-s.woff2" as="font" type="font/woff2" crossorigin="true"/><link rel="icon" type="image/svg+xml" href="https://static.sumup.com/favicons/favicon.svg"/><link rel="icon" sizes="96x96" type="image/png" href="https://static.sumup.com/favicons/favicon-96x96.png"/><link rel="apple-touch-icon" sizes="180x180" href="https://static.sumup.com/favicons/apple-touch-icon.png"/><link rel="manifest" href="https://static.sumup.com/favicons/site.webmanifest"/><link rel="mask-icon" href="https://static.sumup.com/favicons/safari-pinned-tab.svg" color="#ffffff"/><script src="https://static.sumup.com/legacy-browsers/check-support.js" defer></script><link rel="alternate" type="application/rss+xml" title="SumUp Developer Changelog RSS" href="/changelog/rss.xml"/><script defer charset="UTF-8" src="https://cdn-ukwest.onetrust.com/scripttemplates/otSDKStub.js" data-domain-script="5667d606-3c71-4361-b99b-ca612a6fe5ac-test"></script><script src="https://www.googletagmanager.com/gtag/js?id=G-2RJ8FNEG5J"></script><script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-2RJ8FNEG5J');
+[0m
+Here is the structured output for this cycle:
+
+---
+
+## STEP 1 — DELTA
+
+[NEW] api.sumup.com/.well-known/oauth-protected-resource → 200 JSON: RFC 9728 resource-server metadata declaring auth.sumup.com as sole authorization server + JWKS URI + developer.sumup.com docs link.
+[NEW] api.sam-app.ro/.well-known/oauth-protected-resource → 200 JSON: staging variant declaring auth.sam-app.ro, identical structure.
+[NEW] mcp.sumup.com/.well-known/mcp.json → 404 JSON-RPC (not static file; live JSON-RPC endpoint).
+[NEW] api.sumup.com/.well-known/oauth-authorization-server → 404 structured problem+json (gateway-handled, not auth-server path).
+[NEW] api.sumup.com/.well-known/openid-configuration → 404 structured problem+json (same).
+[CHANGED] JWKS prod vs staging kid overlap: ZERO. Prod 8 keys (6 public:* RSA + 2 unnamed: 1 RSA + 1 EdDSA); staging 11 keys (7 public:* RSA + 2 unnamed RSA + 1 EdDSA + 1 `loadtesting` RSA). Cross-env key isolation reconfirmed at kid level (mcp.sumup.com rejection already known; now explained by disjoint key sets).
+
+## STEP 2 — PRIORITIZE
+
+[PRIO] api.sumup.com,7.5,attack_surface=8,business_value=9,tech_exposure=8,gate_ease=4,cloud_surface=6,freshness=9
+[PRIO] mcp.sumup.com,5.5,attack_surface=4,business_value=7,tech_exposure=7,gate_ease=2,cloud_surface=7,freshness=6
+[PRIO] api.sam-app.ro,7.0,attack_surface=8,business_value=7,tech_exposure=8,gate_ease=6,cloud_surface=6,freshness=7
+
+## STEP 3 — HYPOTHESES
+
+[HYP] Staging JWKS `loadtesting` kid indicates a separate signing key for load-testing tokens — if accessible, those tokens may have broader scope or bypass auth_method enforcement
+class: AUTH
+asset: auth.sam-app.ro/.well-known/jwks.json
+confidence: 38
+reasoning: Staging JWKS contains kid `loadtesting` (RSA, use=sig) not present in prod; this key exists for load-testing token issuance. If load-testing tokens mint real JWTs with non-empty scope or if the loadtesting key is trusted by api.sam-app.ro gateway, this could bypass the empty-scope restriction on dynamically-registered clients. However, the key is declared in the public JWKS (not a private leak), its use is opaque from passive data, and api.sam-app.ro gateway already validates JWT structure/keys. No evidence that loadtesting tokens have different scope semantics.
+evidence_needed: A JWT signed by kid `loadtesting` returned from auth.sam-app.ro token endpoint with non-empty scope; or api.sam-app.ro accepting loadtesting-signed tokens with elevated privileges.
+verify_steps: PASSIVE only — would require client_credentials flow (POST auth.sam-app.ro/oauth2/token) to obtain a token and inspect its header.kid, then attempt use against api.sam-app.ro. Cannot determine kid→scope mapping without a live token exchange.
+impact: Potential scope bypass on staging gateway if loadtesting tokens carry elevated permissions; severity depends on whether loadtesting signing key grants broader scope than dynamic-registration key path. Low-moderate on staging, zero on prod (kid absent from prod JWKS).
+testability: AUTH_HELPED
+
+[HYP] api.sumup.com RFC 9728 metadata is the only well-known endpoint; no scope/audience enumeration beyond the declared authorization_servers array — reconnaissance surface exhausted
+class: BUSLOGIC
+asset: api.sumup.com/.well-known/oauth-protected-resource
+confidence: 90
+reasoning: RFC 9728 metadata at api.sumup.com returns 200 with resource_name, authorization_servers (sole: auth.sumup.com), bearer_methods (header-only), jwks_uri, and resource_documentation. No scope/audience/resource_scopes fields present (RFC 9728 allows optional resource_scopes). All other well-known paths on api.sumup.com (openid-configuration, oauth-authorization-server) return 404. The metadata confirms the expected auth server and JWKS URI (already fully enumerated). No new attack surface from this endpoint.
+evidence_needed: None — endpoint fully characterized; absence of resource_scopes field is the final state.
+verify_steps: None — passive characterization complete.
+impact: Reconnaissance value only; confirms authorization server binding; no standalone vulnerability.
+testability: PASSIVE
+
+[HYP] api.sumup.com gateway returns structured problem+json 404 on all .well-known paths except oauth-protected-resource, proving a single gateway-level route table governs all well-known discovery
+class: BUSLOGIC
+asset: api.sumup.com/.well-known/*
+confidence: 85
+reasoning: api.sumup.com/.well-known/oauth-protected-resource → 200 (RFC 9728); openid-configuration → 404 (structured problem+json with developer.sumup.com docs link); oauth-authorization-server → 404 (same). The structured 404 is gateway-handled (same problem+json envelope as all other api.sumup.com paths). This confirms only the RFC 9728 resource-server metadata is routed to a handler; other well-known paths are not configured. No misconfiguration — the gateway deliberately exposes only the resource-server discovery.
+evidence_needed: None — fully characterized.
+verify_steps: None — passive characterization complete.
+impact: Informational; confirms gateway routing model.
+testability: PASSIVE
+
+## STEP 4 — SELF-CRITIQUE
+
+[PARKED] Staging JWKS `loadtesting` kid hypothesis: Cannot determine scope semantics of loadtesting-signed tokens from passive data alone; no evidence that the key grants elevated scope. Confidence 38 < 40 threshold. Requires AUTH_HELPED (client_credentials flow + kid inspection). Parked until merchant token available.
+[FINAL] api.sumup.com RFC 9728 metadata exhaustion: CONFIRMED — endpoint fully characterized, reconnaissance surface complete. No further passive enumeration possible on this path.
+[FINAL] api.sumup.com .well-known route table mapping: CONFIRMED — single gateway governs all well-known paths; only RFC 9728 is routed. Informational finding only.
+
+## STEP 5 — NEXT ACTION
+
+[NEXT] HUMAN: All passive well-known/discovery surfaces on api.sumup.com (RFC 9728, openid-configuration, oauth-authorization-server) are now fully characterized. Staging JWKS kid comparison with prod confirms zero overlap. Remaining high-confidence hypotheses (theta canary registration config divergence, authorization_code+PKCE flow against auth.sam-app.ro, mcp scope escalation) all require AUTH_HELPED merchant OAuth tokens. No further passive enumeration will yield new findings on the current attack surface. Recommend resuming when a merchant token is available, or pivoting to a new target.
+
+## STEP 6 — LEARNING
+
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200 JSON) declaring auth.sumup.com as sole authorization_server, header-only bearer, JWKS URI, developer docs link; no resource_scopes field — reconnaissance surface exhausted.
+[LEARN] ACCEPTED BUSLOGIC @ api.sam-app.ro/.well-known/oauth-protected-resource: Staging variant LIVE (200 JSON) declaring auth.sam-app.ro; identical structure to prod; confirms per-env authorization server binding.
+[LEARN] ACCEPTED OTHER @ mcp.sumup.com/.well-known/mcp.json: 404 JSON-RPC response (not static file); MCP app-directory spec metadata not published by this worker.
+[LEARN] ACCEPTED MISCONFIG @ api.sumup.com/.well-known/openid-configuration: 404 structured problem+json; gateway-handled, no auth-server discovery on API gateway (correct — auth-server is auth.sumup.com).
+[LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-authorization-server: 404 structured problem+json; same gateway handling.
+[LEARN] ACCEPTED OTHER @ JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Cross-env key isolation confirmed at JWKS kid level (explains mcp.sumup.com prod rejection of staging tokens). Staging includes `loadtesting` kid not in prod.
+
+## STEP 7 — RISK
+
+[RISK] sumup: 50. RFC 9728 discovery surface fully enumerated — auth.sumup.com confirmed sole authorization server for api.sumup.com; JWKS key isolation prod↔staging confirmed by disjoint kid sets (zero overlap, 8 prod vs 11 staging keys). Staging dynamic registration → real JWT minting remains the highest-confidence finding (85) but is bounded by empty scope + staging isolation. All remaining high-impact chains (theta canary registration divergence, authorization_code flow, mcp scope escalation, prod api gateway JWT test) require AUTH_HELPED merchant token. Passive surface is exhausted; no new enumeration vectors discovered this cycle. Net +1 from fresh RFC 9728 evidence + JWKS kid comparison.

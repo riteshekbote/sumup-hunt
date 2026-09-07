@@ -326,3 +326,15 @@ www.sumup.com
 ## 2026-09-06 22:52:02 UTC
 
 ## 2026-09-07 00:55:00 UTC
+
+## 2026-09-07 05:57:20 UTC
+- NEW api.sumup.com/.well-known/oauth-protected-resource → 200 JSON: RFC 9728 resource-server metadata declaring auth.sumup.com as sole authorization server + JWKS URI + developer.sumup.com docs link.
+- NEW api.sam-app.ro/.well-known/oauth-protected-resource → 200 JSON: staging variant declaring auth.sam-app.ro, identical structure.
+- NEW mcp.sumup.com/.well-known/mcp.json → 404 JSON-RPC (not static file; live JSON-RPC endpoint).
+- NEW api.sumup.com/.well-known/oauth-authorization-server → 404 structured problem+json (gateway-handled, not auth-server path).
+- NEW api.sumup.com/.well-known/openid-configuration → 404 structured problem+json (same).
+- CHANGED JWKS prod vs staging kid overlap: ZERO. Prod 8 keys (6 public:* RSA + 2 unnamed: 1 RSA + 1 EdDSA); staging 11 keys (7 public:* RSA + 2 unnamed RSA + 1 EdDSA + 1 `loadtesting` RSA). Cross-env key isola
+- NEW api.sumup.com/.well-known/oauth-protected-resource → 200 (RFC 9728 resource server metadata: authorization_servers=["https://auth.sumup.com"], bearer_methods_supported=["header"], jwks_uri=https://aut
+- NEW api.sumup.com/.well-known/oauth-authorization-server → 404 (expected, auth server at auth.sumup.com)
+- CHANGED mcp.sumup.com/.well-known/mcp.json → 404 (no MCP server metadata published)
+- CHANGED mcp.sumup.com/mcp.json → 404 (no MCP manifest)
