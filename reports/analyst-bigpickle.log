@@ -9861,3 +9861,22 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 - [RISK] sumup: 60. Net +8: first confirmed reportable finding this program (exposed Contentful preview token → 1,082 draft entries), plus mapped live unauthenticated help-search data path. help.sumup.com promoted to confirmed-priority asset. Remaining high-impact chains (BOLA on api.sumup.com, theta canary registration, mcp scope) remain token/POST-gated; staging dynamic-registration→JWT (85) unchanged and contained by empty scope + cross-env JWKS isolation.
+===== ANALYST bigpickle 2026-09-07 23:51:38 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mfor i in 1 2; do
+  curl -sS -o /tmp/r1_$i -D /tmp/h1_$i -w "GET /sse/scss [Accept:text/plain] => %{http_code}\n" "https://sse.sumup.com/sse/scss" ;
+  sleep 1;
+done
+curl -sS -o /tmp/r_es -D /tmp/h_es -w "GET /sse/scss [Accept:text/event-stream] => %{http_code}\n" -H 'Accept: text/event-stream' "https://sse.sumup.com/sse/scss"
+sleep 1
+curl -sS -D /tmp/h_wk -o /tmp/r_wk -w "GET /.well-known/oauth-protected-resource => %{http_code}\n" "https://sse.sumup.com/.well-known/oauth-protected-resource"
+GET /sse/scss [Accept:text/plain] => 404
+GET /sse/scss [Accept:text/plain] => 404
+GET /sse/scss [Accept:text/event-stream] => 404
+GET /.well-known/oauth-protected-resource => 404
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/h_es /tmp/h_wk /tmp/r1_1 /tmp/r_es failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.

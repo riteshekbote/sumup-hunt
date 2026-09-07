@@ -1679,3 +1679,4 @@ evidence_needed: One POST /oauth2/register on theta with non-empty scope or waiv
 verify_steps: BLOCKED passive — POST required; needs role approval.
 impact: Scoped staging JWTs → cross-env risk if theta doubles as prod canary. Low-now, high-latent.
 testability: AUTH_HELPED
+## 2026-09-07 23:46:57 UTC [target] (model bigpickle)

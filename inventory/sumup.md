@@ -356,3 +356,5 @@ www.sumup.com
 - NEW api.sumup.com/.well-known/oauth-authorization-server → 404 structured problem+json (gateway-handled, not auth-server path).
 - NEW api.sumup.com/.well-known/openid-configuration → 404 structured problem+json (same).
 - CHANGED JWKS prod vs staging kid overlap: ZERO. Prod 8 keys (6 public:* RSA + 2 unnamed: 1 RSA + 1 EdDSA); staging 11 keys (7 public:* RSA + 2 unnamed RSA + 1 EdDSA + 1 `loadtesting` RSA). Cross-env key isola
+
+## 2026-09-07 23:51:38 UTC
