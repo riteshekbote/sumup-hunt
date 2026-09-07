@@ -208,3 +208,41 @@ TARGET_ORG not configured for sumup; skipping public-org deep scan.
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
 ## REPOSCAN 2026-09-07 17:57:53 UTC
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-07 21:02:16 UTC
+class: MISCONFIG
+asset: sumup-mcp/wrangler.jsonc (lines 24, 49, 74)
+confidence: 95
+reasoning: The wrangler.jsonc file contains the Cloudflare account_id "2037fc18a2fb8175c20d20776cac65c5" in clear text for all three environments (dev, stage, live). While CF account IDs are not full secrets on their own, they are non-public identifiers that reveal the owning account and can be used as a prerequisite for targeted Cloudflare API abuse (e.g., account-level enumeration, Workers KV/Durable Object interaction) if combined with any leaked API token.
+impact: LOW-MEDIUM — Aids reconnaissance; insufficient alone for compromise.
+verify_steps: 1. Confirm the account_id matches the live SumUp Cloudflare account via passive DNS or certificate transparency logs for mcp.sumup.com. 2. Check whether any other SumUp repos or config files reference this account_id.
+class: MISCONFIG
+asset: sumup-mcp/wrangler.jsonc, sumup-mcp/src/auth.test.ts
+confidence: 95
+reasoning: The wrangler.jsonc and test files reveal internal staging hostnames: mcp-theta.sam-app.ro, api-theta.sam-app.ro, auth-theta.sam-app.ro (dev), and mcp.sam-app.ro, api.sam-app.ro, auth.sam-app.ro (stage). These expose the naming convention of SumUp's internal infrastructure and reveal that development/staging environments sit behind the sam-app.ro domain. If these hosts are not access-controlled, they could be targeted for weaker security posture than production.
+impact: LOW-MEDIUM — Information disclosure of internal infrastructure; potential attack surface expansion.
+verify_steps: 1. Passively check DNS resolution for the exposed hostnames (e.g., via dig/nslookup). 2. Confirm they resolve to internal/private IPs or that public DNS does not exist.
+class: MISCONFIG
+asset: sumup-mcp/wrangler.jsonc (line: upload_source_maps: true), sumup-developer/wrangler.jsonc (line: upload_source_maps: true)
+confidence: 90
+reasoning: Both the MCP server and developer portal Cloudflare Worker configs have upload_source_maps set to true. When deployed, this uploads source maps to Cloudflare, making the original TypeScript source decompilable by anyone who can access the Workers runtime or debug endpoints. This exposes internal logic, comments, and potentially internal-only code paths.
+impact: LOW — Source code exposure via source maps; requires additional access to Cloudflare debugging surface.
+verify_steps: 1. Confirm source maps are actually served in production by inspecting the Worker response for source map references. 2. Check if Cloudflare's source map access controls are properly configured.
+class: MISCONFIG
+asset: sumup-plugin-vendure/examples/docker/vendure/vendure-config.ts (lines 25-38), sumup-plugin-vendure/examples/docker/example.env
+confidence: 85
+reasoning: The example Docker configuration hardcodes default credentials: SUPERADMIN_PASSWORD="supersecret", COOKIE_SECRET="supersecret", SESSION_SECRET="supersecret", POSTGRES_PASSWORD="vendure", POSTGRES_USER="vendure". While these are explicitly in an examples/ directory, developers frequently deploy without changing defaults. The example.env file ships identical values. The cookie secret "supersecret" is especially weak for session signing.
+impact: LOW — Example-only defaults; risk only if deployed without modification by integrators.
+verify_steps: 1. Confirm these are only in the examples/ directory and not in the plugin source itself. 2. Check if the README warns against using defaults in production.
+class: MISCONFIG
+asset: sumup-plugin-vendure/src/sumup.controller.ts (lines 9-17)
+confidence: 80
+reasoning: The SumUpController.webhook() method at POST /payments/sumup/webhook accepts a checkout_id from the raw request body and calls syncPaymentFromCheckout() without verifying a webhook signature or HMAC. In contrast, the ACP repo (sumup-audit/acp/signature/signature.go) implements proper HMAC-SHA256 verification. The lack of webhook verification means any party who can reach this endpoint can trigger payment state transitions by supplying arbitrary checkout IDs.
+impact: MEDIUM — Potential for payment status manipulation if the Vendure webhook endpoint is network-accessible without additional middleware.
+verify_steps: 1. Check if the Vendure plugin documentation requires users to add webhook signature verification middleware. 2. Confirm whether SumUp sends a signature header on webhooks that the plugin expects users to validate externally.
+class: OTHER
+asset: sumup-developer/astro.config.ts (line 151)
+confidence: 100
+reasoning: The Google Search Console verification token "0mA7KPaajXK9CtZgu7A9lLDHeTEZ_SiHdmXz2vDej7Y" is hardcoded in the Astro config. While Google site verification tokens are inherently semi-public (they are used for DNS/HTML verification), embedding them in a public source repo confirms the ownership claim and could be used for targeted phishing against the developer.sumup.com property.
+impact: LOW — Semi-public by design; minor information disclosure.
+verify_steps: 1. Confirm this matches the live verification on developer.sumup.com via a meta tag or DNS TXT record.
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
