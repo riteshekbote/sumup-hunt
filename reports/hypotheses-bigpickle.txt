@@ -1,1 +1,28 @@
-## 2026-09-06 22:50:35 UTC [target] (model bigpickle)
+## 2026-09-07 00:50:30 UTC [target] (model bigpickle)
+[HYP] Prod API gateway may publish RFC 9728 resource-server discovery diverging scope/audience model
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource
+confidence: 45
+reasoning: api.sumup.com is a distinct legacy OAuth gateway (authorize oracle live; wildcard CORS + SameSite=None cookie profile divergent from auth.sumup.com); versioned resource paths fully gated; sibling OIDC/OAuth discovery (auth.sumup.com, sam-app.ro stack) is published and enumerates live endpoints + scope/resource model. RFC 9728 resource-server metadata is the only well-known discovery surface not enumerated on the api target.
+evidence_needed: HTTP 200 JSON on /.well-known/oauth-protected-resource or /.well-known/oauth-authorization-server on api.sumup.com (vs 404) exposing authorization server URIs, audiences, or resource/scope pairs; differential against api.sam-app.ro.
+verify_steps: GET https://api.sumup.com/.well-known/oauth-protected-resource (Accept: application/json); GET https://api.sumup.com/.well-known/oauth-authorization-server; GET https://api.sam-app.ro/.well-known/oauth-protected-resource; classify 200-metadata vs 404/403; 3 requests, <=1 rps, GET-only.
+impact: Extended resource-model/audience/scope catalog on prod merchant API gateway; sharpens aud targeting for any staged token; reconnaissance value only, no standalone damage. Severity: low.
+testability: PASSIVE
+[HYP] MCP worker may publish .well-known/mcp.json app-directory metadata
+class: MISCONFIG
+asset: mcp.sumup.com/.well-known/mcp.json
+confidence: 50
+reasoning: Official MCP server runs on Cloudflare Workers (bearer JWKS from auth.sumup.com, Durable Object agent); MCP app-directory spec defines /.well-known/mcp.json as public static discovery; never probed on prod worker or staging siblings. If present it enumerates endpoint pairing/version unauthenticated; divergence mcp.sumup.com vs mcp.sam-app.ro / mcp-theta.sam-app.ro would expose env-specific tool/endpoint routing.
+evidence_needed: HTTP 200 JSON on /.well-known/mcp.json (or /mcp.json) on mcp.sumup.com, mcp.sam-app.ro, or mcp-theta.sam-app.ro; 404 confirms absent.
+verify_steps: GET https://mcp.sumup.com/.well-known/mcp.json; GET https://mcp.sumup.com/mcp.json; GET https://mcp.sam-app.ro/.well-known/mcp.json; 3 requests, <=1 rps, GET-only.
+impact: Passive metadata enumeration of prod Cloudflare asset; endpoint catalog + env-divergence signal; informational/low, but fresh un-enumerated surface on a live prod target. Severity: low.
+testability: PASSIVE
+[HYP] Theta canary OAuth registration config diverges from non-theta staging
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 52
+reasoning: auth-theta serves byte-identical discovery to auth.sam-app.ro but is a separate deploy (mcp-theta/api-theta/auth-theta) with api-theta.root already returning structured problem+json 404; sibling registration returns 201 empty-scope clients + real JWTs with attacker-chosen aud; theta config divergence (relaxed scope/PKCE/allowlist on older/canary revision) is not observable from public metadata and would be the first real escalation on this stack.
+evidence_needed: One POST /oauth2/register on theta returning a client with non-empty declared scope or waived PKCE vs sibling enforced empty-scope + PKCE-required.
+verify_steps: BLOCKED passive — POST required (exceeds GET/HEAD/OPTIONS rule); needs role approval. When approved: POST https://auth-theta.sam-app.ro/oauth2/register {"client_name":"sh-ana","redirect_uris":["https://me.sumup.com/api/sso/callback"],"token_endpoint_auth_method":"client_secret_post","grant_types":["authorization_code","client_credentials"],"response_types":["code"],"scope":"merchants.read transactions.read"} classify 201-owned-scope (escalation) vs invalid_scope (bounded) vs 401; then client_credentials exchange + GET https://api-theta.sam-app.ro/v1/merchants with bearer.
+impact: Attacker-scoped OAuth client on live staging identity isa → real scoped JWTs → cross-env escalation if theta doubles as prod canary. Severity: low now, high latent.
+testability: AUTH_HELPED

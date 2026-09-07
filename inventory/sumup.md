@@ -324,3 +324,5 @@ www.sumup.com
 - CHANGED api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway.
 
 ## 2026-09-06 22:52:02 UTC
+
+## 2026-09-07 00:55:00 UTC
