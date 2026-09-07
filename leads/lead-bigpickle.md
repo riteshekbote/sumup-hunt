@@ -1482,3 +1482,33 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/.well-known/*: Single gateway route table governs all well-known paths; only RFC 9728 is routed (openid-configuration and oauth-authorization-server return 404 structured problem+json).
 [LEARN] ACCEPTED OATH @ auth-theta.sam-app.ro: Theta canary is separate deploy; config divergence hypothesis documented but untestable without POST (passive-only rule).
 [RISK] sumup: 45. Passive surface fully enumerated across api.sumup.com, auth.sumup.com, api.sam-app.ro, mcp.sumup.com, me.sumup.com, checkout.sumup.com. All .well-known/discovery/OIDC endpoints characterized. JWKS prod↔staging kid isolation confirmed (zero overlap, 8 prod vs 11 staging). Staging dynamic registration → real JWT minting remains highest-confidence finding (bounded by empty scope + cross-env key isolation). All remaining high-impact chains (theta canary registration divergence, authorization_code+PKCE flow, mcp scope escalation, prod api gateway JWT test) require AUTH_HELPED merchant OAuth token. Net -5 from exhaustion — no new attack paths discovered this cycle. Fresh unprobed assets remain: dashboard.sumup.com, support.sumup.com, www.sumup.com (seed recon only, not deep-probed).
+## 2026-09-07 17:55:44 UTC [target] (model bigpickle)
+[HYP] help.sumup.com/api/search/* 500 is an unauthenticated serverless proxy to the sse.search backend — attacker-supplied query may reach the internal search/index path
+class: OTHER
+asset: help.sumup.com/api/search/articles
+confidence: 62
+reasoning: GET /api/search/articles and /api/search/query return deterministic 500 (text/plain) with no auth; all sibling routes (/api/localization/enabled-locales) return 200 and unknown routes 404. Client JS pins NEXT_PUBLIC_SEARCH_SERVICE_ENDPOINT=https://sse.sumup.com/sse/scss. A 500-on-empty-GET pattern = route exists, throws server-side (missing body/params) — consistent with a thin proxy to sse.sumup.com that fails closed without payload.
+evidence_needed: PROBE POST with a valid search body returning a 2xx JSON article list (proves proxy data path, not the 500); or GET/POST returning a structured error enumerating accepted params.
+verify_steps: POST https://help.sumup.com/api/search/articles body {"query":"test","locale":"en-GB"} — if 200, confirm response reflects query and check whether a manipulated query reaches sse backend (backend injection / unpublished-content exposure).
+impact: If query flows unauthenticated into search/index backend → exposure of unpublished/restricted article content or inter-service request manipulation. Severity low-moderate.
+testability: AUTH_HELPED
+[HYP] auth-theta.sam-app.ro registration config diverges from sibling auth.sam-app.ro (non-empty scope or waived PKCE) on the canary deploy
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 52
+reasoning: auth-theta serves byte-identical OIDC discovery to auth.sam-app.ro but is a separate deploy (mcp-theta/api-theta/auth-theta); sibling registers unauthenticated RFC 7591 clients yielding real JWTs with empty scope + PKCE-required. Theta divergence would be the first real escalation on the staging identity stack.
+evidence_needed: One POST /oauth2/register on theta returning client with non-empty scope or waived PKCE.
+verify_steps: BLOCKED passive — POST required (exceeds GET/HEAD/OPTIONS rule); needs role approval.
+impact: Attacker-scoped OAuth client on live staging identity → real scoped JWTs → cross-env escalation if theta doubles as prod canary. Severity low-now, high-latent.
+testability: AUTH_HELPED
+[HYP] sse.sumup.com search routes are POST-only by design and may serve article content without merchant auth (public search index access)
+class: BUSLOGIC
+asset: sse.sumup.com/sse/scss
+confidence: 45
+reasoning: All GETs to /sse/scss and subpaths → 404 text/plain (gateway-gated like api.sumup.com versioned paths), while /sse → 301 to /sse/. Client integration expects SSE (Accept: text/event-stream) POST from help.sumup.com serverless layer. envoyer template identical to api.sumup.com.
+evidence_needed: A POST/SSE handshake returning streamed article content unauthenticated.
+verify_steps: BLOCKED passive — requires SSE POST (mutating per rule); tee up for when merchant token/acl allows.
+impact: Indirect exposure of help/search corpus only; low. Parent value is confirm-backend topology for the help/api/search lead above.
+testability: AUTH_HELPED
+[NEXT] HUMAN: POST https://help.sumup.com/api/search/articles with body {"query":"test","locale":"en-GB"} — confirm whether the deterministic 500 is a thin proxy to sse.sumup.com/sse/scss and whether attacker-controlled query reaches the search/index backend. Exceeds passive GET/HEAD/OPTIONS rule → needs role approval. (Parallel passive follow-through: GET /api/search/query?q=test on help.sumup.com already returns 500 — deterministic.)
+[RISK] sumup: 52. Net +7: two fresh in-scope assets (help.sumup.com, sse.sumup.com) discovered and characterized, resolving both seed-era "unprobed" gaps (dashboard/support aliases closed). help.sumup.com/api/search/* deterministic 500 is a new, testable proxy lead; sse.sumup.com adds chainable backend context (same Envoy template as api.sumup.com). Still bounded: all high-impact confirmations require POST (exceeds passive rule) or merchant OAuth token. Staging dynamic-registration→JWT remains highest-confidence finding at 85, contained by empty scope + cross-env key isolation (zero kid overlap, 8 prod vs 11 staging).

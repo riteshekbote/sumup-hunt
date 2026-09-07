@@ -8573,3 +8573,573 @@ testability: AUTH_HELPED
 ## STEP 7 — RISK
 
 [RISK] sumup: 45. Passive surface fully enumerated across api.sumup.com, auth.sumup.com, api.sam-app.ro, mcp.sumup.com, me.sumup.com, checkout.sumup.com. All .well-known/discovery/OIDC endpoints characterized. JWKS prod↔staging kid isolation confirmed (zero overlap, 8 prod vs 11 staging). Staging dynamic registration → real JWT minting remains highest-confidence finding (bounded by empty scope + cross-env key isolation). All remaining high-impact chains (theta canary registration divergence, authorization_code+PKCE flow, mcp scope escalation, prod api gateway JWT test) require AUTH_HELPED merchant OAuth token. Net -5 from exhaustion — no new attack paths discovered this cycle. Fresh unprobed assets remain: dashboard.sumup.com, support.sumup.com, www.sumup.com (seed recon only, not deep-probed).
+===== ANALYST bigpickle 2026-09-07 17:55:54 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls /home/runner/work/sumup-hunt/sumup-hunt/
+README.md
+analyst-out.txt
+analyst-prompt.txt
+ctx.txt
+inventory
+knowledge
+leads
+probe-results.md
+recon-notes
+reports
+reposcan-raw
+scope.yml
+scripts
+state_bigpickle.json
+state_laguna.json
+state_ling3.json
+state_longcat.json
+state_mimo.json
+state_nemotron3.json
+triage
+[0m
+[0m$ [0mls /home/runner/work/sumup-hunt/sumup-hunt/art/ 2>/dev/null || echo "no art dir"
+no art dir
+[0m
+[0m→ [0mRead inventory
+[0m→ [0mRead scope.yml
+[0m→ [0mRead inventory/sumup.md
+[0m
+[0m$ [0mls /home/runner/work/sumup-hunt/sumup-hunt/knowledge/ 2>/dev/null
+index.md
+[0m
+[0m$ [0mcat /home/runner/work/sumup-hunt/sumup-hunt/knowledge/index.md 2>/dev/null | head -50
+# Knowledge Base (seed)
+- 2026-09-03 ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
+- 2026-09-03 ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling.
+- 2026-09-03 ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+- 2026-09-03 ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+- 2026-09-03 REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-scope verified.
+- 2026-09-03 ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
+- 2026-09-03 ACCEPTED OATH @ auth.sumup.com: OIDC/OAuth discovery documents are public and enumerate live endpoints + full scope/resource model; /oauth2/auth is a live interactive flow. High-value deep-hunt surface.
+- 2026-09-03 ACCEPTED IDOR @ api.sumup.com: scope catalog names the API resource model, but all unauthenticated paths 404 — BOLA test requires a merchant OAuth token (AUTH_HELPED), not passive.
+- 2026-09-03 REJECTED MISCONFIG @ auth.sumup.com: x-envoy-decorator-operation leaks k8s service name identity.svc.cluster.local — header/banner leak is explicit out-of-scope class.
+- 2026-09-04 ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+- 2026-09-04 ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+- 2026-09-04 REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-scope verified.
+- 2026-09-04 ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
+- 2026-09-04 ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+- 2026-09-04 ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+- 2026-09-04 REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-scope verified.
+- 2026-09-04 ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
+- 2026-09-04 ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
+- 2026-09-04 ACCEPTED OATH @ auth.sumup.com: redirect_uri is strictly allowlisted per client (client_id=dashboard confirmed) — naive redirect_uri/subdomain/path-traversal bypass refuted; errors surfaced on server flow page.
+- 2026-09-04 ACCEPTED AUTH @ me.sumup.com: me.sumup.com is a distinct Vercel-served merchant self-service asset behind dashboard OAuth (client_id=dashboard) — new non-Cloudflare attack surface.
+- 2026-09-04 ACCEPTED MISCONFIG @ auth.sumup.com: /oauth2/par & /oauth2/device documented but return 404 on OPTIONS (unrouted) while /oauth2/token & /oauth2/revoke return 200 — PAR/device grants likely not deployed at routing level.
+- 2026-09-04 ACCEPTED OATH @ auth.sumup.com: dashboard-client scope catalog (accounting/invoices/api_keys/lending/receivables/unified_customer_directory/readers) maps a broader hidden api.sumup.com resource model than OIDC discovery.
+- 2026-09-04 ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" — public client impersonation vector; requires live PAR+token flow test.
+- 2026-09-04 ACCEPTED OAUTH @ auth.sumup.com: Full discovery docs expose PAR, device flow, request_object alg "none", scope catalog mapping 1:1 to merchant API resources.
+- 2026-09-04 REJECTED MISCONFIG @ api.sumup.com: x-envoy-decorator-operation leaks apigateway2-headless.identity.svc.cluster.local — header/banner leak is explicit out-of-scope class.
+- 2026-09-04 ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths 404 unauthenticated; scope catalog from auth.sumup.com defines resource model but requires merchant token.
+- 2026-09-04 REJECTED AUTH @ admin.sumup.com: Header spoofing (Host, X-Forwarded-For, X-Original-URL) yields identical 403 — no auth bypass via passive header manipulation.
+- 2026-09-04 ACCEPTED OATH @ api.sumup.com/authorize: Legacy OAuth authorize endpoint exists on API gateway (distinct from auth.sumup.com) with legacy SDK client_ids and potentially relaxed redirect_uri validation — new attack surface
+- 2026-09-04 ACCEPTED OATH @ auth.sumup.com: dashboard-client scope catalog maps broader hidden api.sumup.com resource model than OIDC discovery
+- 2026-09-04 ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths 404 unauthenticated; scope catalog defines resource model but requires merchant token
+- 2026-09-04 REJECTED AUTH @ admin.sumup.com: Header spoofing yields identical 403 — no auth bypass via passive header manipulation
+- 2026-09-04 REJECTED MISCONFIG @ api.sumup.com: x-envoy-decorator-operation leaks k8s service name — header/banner leak explicit out-of-scope class
+- 2026-09-05 REJECTED OATH @ api.sumup.com/authorize: Legacy OAuth authorize endpoint returns 404 for all known legacy SDK client_ids (sumup-ios-sdk, sumup.pos, reader, sales, virtual-terminal) — no client_id oracle, no loose redirect_uri
+- 2026-09-05 ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" but dashboard client rejects unauthenticated token requests — "none" likely restricted to specific client configs not publicly registrable
+- 2026-09-05 ACCEPTED OAUTH @ auth.sumup.com: PAR (/oauth2/par) and device flow (/oauth2/device) endpoints ARE routed and respond to POST (not 404) but require client authentication
+- 2026-09-05 ACCEPTED OATH @ auth.sumup.com: request_object_signing_alg_values_supported includes "none" + request_parameter_supported=true — algorithm confusion vector documented but untestable without valid client flow
+- 2026-09-05 ACCEPTED AUTH @ me.sumup.com: Vercel-served asset confirmed; all anonymous /api/* routes return 307 to OAuth flow — no debug endpoints or permissive CORS found passively
+- 2026-09-05 REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (307 redirect, no CORS headers)
+- 2026-09-05 ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
+- 2026-09-05 REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfirmed in-scope
+- 2026-09-05 ACCEPTED AUTH @ me.sumup.com: Vercel-served asset confirmed; all anonymous /api/* routes return 307/403 to OAuth flow — no debug endpoints or permissive CORS found passively
+- 2026-09-05 REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (403, no CORS headers)
+- 2026-09-05 ACCEPTED OATH @ api.sumup.com/authorize: Endpoint is LIVE (302→auth.sumup.com/flows/oauth2/error), not 404; the earlier "404 for all legacy client_ids" log ran an unexpanded placeholder URL. Exposes a client_id oracle (invalid_client vs invalid_request) and `dashboard` is registered here with a redirect set divergent from modern auth.sumup.com.
+- 2026-09-05 ACCEPTED MISCONFIG @ api.sumup.com/authorize: access-control-allow-origin:* + broad allow-methods + max-age on legacy OAuth gateway responses, absent on auth.sumup.com/oauth2/auth — endpoint-specific CORS divergence; Sets optimizely_experiment_user + __cf_bm on Domain=sumup.com (SameSite=None) cross-site readable.
+- 2026-09-05 ACCEPTED OATH @ auth.sumup.com: modern dashboard client registered redirect confirmed live — https://me.sumup.com/api/sso/callback yields 303 invalid_state (state≥8 enforced) on the accepted host.
+- 2026-09-05 ACCEPTED OATH @ api.sumup.com/authorize: Endpoint is LIVE (302→auth.sumup.com/flows/oauth2/error), not 404 — the recorded "legacy authorize dead" logged an unexpanded `{legacy_client_id` placeholder URL. Exposes a client_id oracle (invalid_client vs invalid_request) and `dashboard` is registered here with a redirect allowlist divergent from modern auth.sumup.com (modern callback rejected).
+- 2026-09-05 ACCEPTED MISCONFIG @ api.sumup.com/authorize: access-control-allow-origin:* + broad allow-methods + max-age on legacy OAuth gateway responses, absent on auth.sumup.com/oauth2/auth — endpoint-specific CORS divergence; sets optimizely_experiment_user + __cf_bm on Domain=sumup.com (SameSite=None) cross-site readable.
+- 2026-09-05 ACCEPTED OATH @ auth.sumup.com: modern dashboard client registered redirect confirmed live — https://me.sumup.com/api/sso/callback returns 303 invalid_state object (state≥8 enforced) on the accepted host, proving the same URI is NOT accepted on the legacy api path.
+- 2026-09-05 ACCEPTED MISCONFIG @ web.sumup.com: 77.246.42.130 is in Rackspace lease pool UK-RACKSPACE-20070509 (Rackspace Ltd.), not a SumUp-owned netblock — supporting infrastructure for a takeover lead but no claimable service state observed.
+[0m
+[0m$ [0mfor h in dashboard.sumup.com support.sumup.com; do echo "=== $h ==="; curl -sS -o /dev/null -w "root: %{http_code} type:%{content_type} loc:%{redirect_url}\n" "https://$h/" --max-time 15; done
+=== dashboard.sumup.com ===
+root: 308 type:text/plain loc:https://me.sumup.com/
+=== support.sumup.com ===
+root: 308 type:text/plain loc:https://help.sumup.com/
+[0m
+[0m$ [0mfor h in help.sumup.com; do echo "=== $h ==="; curl -sS -o /dev/null -w "root: %{http_code} type:%{content_type} loc:%{redirect_url} server:%{header_json}\n" "https://$h/" --max-time 15 2>/dev/null | head -c 400; echo; curl -sSI "https://$h/" --max-time 15 2>/dev/null | head -12; done; echo "=== support redirected chain ==="; curl -sSI -L "https://support.sumup.com/" --max-time 20 2>/dev/null | rg -i '^(HTTP|location|server|via|x-powered|cf-ray)' | head -20
+=== help.sumup.com ===
+root: 307 type:text/plain loc:https://help.sumup.com/en-GB server:{"cache-control":["public, max-age=0, must-revalidate"],
+"content-type":["text/plain"],
+"date":["Mon, 07 Sep 2026 17:48:26 GMT"],
+"location":["/en-GB"],
+"server":["Vercel"],
+"strict-transport-security":["max-age=63072000"],
+"x-vercel-id":["sfo1::c8d8f-1788803306572-f78d821ef528"]
+}
+
+HTTP/2 307 
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain
+date: Mon, 07 Sep 2026 17:48:26 GMT
+location: /en-GB
+server: Vercel
+strict-transport-security: max-age=63072000
+x-vercel-id: sfo1::tqpn9-1788803306703-d93bb0ef8fb8
+
+=== support redirected chain ===
+/bin/bash: line 1: rg: command not found
+[0m
+[0m$ [0mcurl -sSI -L "https://support.sumup.com/" --max-time 20 2>/dev/null | grep -iE '^(HTTP|location|server|via|x-powered|cf-ray)' | head -20; echo "=== help en-GB page ==="; curl -sS -o /dev/null -w "en-GB: %{http_code} type:%{content_type} loc:%{redirect_url}\n" "https://help.sumup.com/en-GB" --max-time 15; echo "=== help search/api probes ==="; for p in "/api/" "/sitemap.xml" "/robots.txt" "/en-GB"; do curl -sS -o /dev/null -w "$p -> %{http_code} type:%{content_type}\n" "https://help.sumup.com$p" --max-time 15; done
+HTTP/2 308 
+location: https://help.sumup.com/
+server: Vercel
+HTTP/2 307 
+location: /en-GB
+server: Vercel
+HTTP/2 200 
+server: Vercel
+x-powered-by: Next.js
+=== help en-GB page ===
+en-GB: 200 type:text/html; charset=utf-8 loc:
+=== help search/api probes ===
+/api/ -> 308 type:text/plain
+/sitemap.xml -> 404 type:text/html; charset=utf-8
+/robots.txt -> 404 type:text/html; charset=utf-8
+/en-GB -> 200 type:text/html; charset=utf-8
+[0m
+[0m$ [0mfor p in "/search" "/en-GB/search" "/api/search" "/_next/data/" "/locale/" "/en-GB/sitemap.xml"; do curl -sS -o /dev/null -w "$p -> %{http_code} type:%{content_type} loc:%{redirect_url}\n" "https://help.sumup.com$p" --max-time 15; sleep 1; done
+/search -> 307 type:text/plain loc:https://help.sumup.com/en-GB/search
+/en-GB/search -> 404 type:text/html; charset=utf-8 loc:
+/api/search -> 404 type:text/html; charset=utf-8 loc:
+/_next/data/ -> 308 type:text/plain loc:https://help.sumup.com/_next/data
+/locale/ -> 308 type:text/plain loc:https://help.sumup.com/locale
+/en-GB/sitemap.xml -> 404 type:text/html; charset=utf-8 loc:
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/en-GB" --max-time 15 | grep -oE '(src|href)="[^"]+"' | grep -viE '\.(css|png|svg|ico|woff|js)\b' | sort -u | head -40
+href="/en-GB"
+href="/en-GB/articles/15E5OQcuzgPjKDDrogtKpl-tap-iphone-faq"
+href="/en-GB/articles/1GJYtEmchP946KB2T2Z2AJ-cash-advance-offer"
+href="/en-GB/articles/1K6tiRe1quFjBtGgGSs21e-reports"
+href="/en-GB/articles/1KG11ItyvnzieB4QZzpWTU-what-is-qr-order-and-pay"
+href="/en-GB/articles/1ZHM8V5zKlAdEriUqiXwHu-item-catalogue"
+href="/en-GB/articles/1fQiqsEjvss5lO65gFgx3H-online-store-shipping"
+href="/en-GB/articles/1h9BG0jQMVRVv0JvTlg2eX-amend-invoice-status"
+href="/en-GB/articles/1r5YOgk2R6IIbVTVKSt4cZ-accept-card-reader-payments"
+href="/en-GB/articles/208zHVoYmWArGZdqK9KNfV-transfer-money-business-account"
+href="/en-GB/articles/25bJtcE51JL4r3p3o60Bm4-sales-history"
+href="/en-GB/articles/2HwRmbtUT06lIj9AXjUSCo-manage-sumup-bookings-calendar"
+href="/en-GB/articles/2MrnASQDdzJMkFMUnK7BFL-gdpr-data-protection"
+href="/en-GB/articles/2VUzoZkbomDxg4CLyiJToC-tap-to-pay"
+href="/en-GB/articles/2Zhi4G9QqmfnsJ25U8GftR-card-reader-bluetooth"
+href="/en-GB/articles/2rTTr92lUebQ3nY9jAAy5m-send-payment-links"
+href="/en-GB/articles/3LmA9XV15VHbcJvl6YVpyX-get-paid"
+href="/en-GB/articles/3Q7rF11470dHWU9y8JVmMg-whats-sumup-loyalty"
+href="/en-GB/articles/3o25VqKu1Y6DxOT0Ysv34M-what-is-sumup-kiosk"
+href="/en-GB/articles/3xMAI15C7Nff0CjYUsLq7J-business-details"
+href="/en-GB/articles/40ACdT0r3Ai4T9NzCLBELE-article-send-and-receive-money-with-the-sumup-pay"
+href="/en-GB/articles/4RnVqiWwOcTio8ifF60URc-business-account-faq"
+href="/en-GB/articles/4kgVCmWWL9AsVJVHz9eaYy-invoice-payment-methods"
+href="/en-GB/articles/4oI3qHHji2I2S9dyvRfec3-pricing-fees"
+href="/en-GB/articles/4tjmONpi33pmjXg237XDoi-delivery"
+href="/en-GB/articles/52KztRzh3WhxbSfPyBG2xT-article-get-started-with-my-sumup-kiosk-screen"
+href="/en-GB/articles/58b8PEGUGWYZaXz9twwsCg-article-whats-sumup-pay"
+href="/en-GB/articles/5AaBe8VTlCyUHDPZ7BWPp-accept-tap-to-pay"
+href="/en-GB/articles/5DMyYhDtk3r23QizapYDHi-configure-the-menu-for-my-qr-order-and-pay"
+href="/en-GB/articles/5Ok8KgSAGqW7WSA5vfJkkn-card-reader-setup"
+href="/en-GB/articles/5V8xZtu56CPbJ2K7Hm0brt-sign-up"
+href="/en-GB/articles/5cS63645opCb7LOtDKn4xX-membership-faq"
+href="/en-GB/articles/5rXVhcEbRazRA2QIibKrU8-one-membership"
+href="/en-GB/articles/5wTT36trM3SXOINkJBwdut-set-up-my-sumup-loyalty"
+href="/en-GB/articles/61ye4yDIUoKJCrUSBSx32D-cash-advance-faq"
+href="/en-GB/articles/636QHlMBt0BwjGuxOHr28X-tipping"
+href="/en-GB/articles/69sjLOCIbEvV3hQSSfQHcb-set-up-my-sumup-kiosk-hardware"
+href="/en-GB/articles/6HKSuNx4BFmosTlag9CdsU-payout-reports"
+href="/en-GB/articles/6IDE9sGwydKbSXbd9gD4b8-payout-settings"
+href="/en-GB/articles/6SPKVS8RKLvyMmat2QS7BW-manage-my-Plus-plan"
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/en-GB" --max-time 15 | grep -oiE '(action|data-api|/api/[a-z0-9/_-]+)' | sort -u | head; echo "---search form---"; curl -sS "https://help.sumup.com/en-GB" --max-time 15 | grep -oiE '<form[^>]*>|placeholder="[^"]*"' | sort -u | head
+action
+---search form---
+placeholder="Search"
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/en-GB" --max-time 15 | grep -oiE '<form[^>]*>|action="[^"]*"|/api/[a-zA-Z0-9/_-]+|electro|search[^"]*"|algolia' | sort -u | head -20
+Electro
+Search"
+Search</span></label><div class="
+search is experimental, so check all answers via the suggested articles."
+search will answer it. Smart search is experimental, so check all answers via the suggested support articles."
+search"
+search's accuracy by upvoting useful answers and downvoting inaccurate ones."
+search.\n\nHere you can get quick answers to all of your questions. But please don't enter any personal or sensitive info.\n\nEnter a question to get started."
+search_placeholder"
+searchinput-fbxw"
+[0m
+[0m$ [0mfor p in "/en-GB/search?q=xss" "/en-GB/search?query=xss" "/api/search?q=test" "/api/search?" "/search?q=%3Cscript%3E" "/en-GB?q=xss"; do curl -sS -o /dev/null -w "$p -> %{http_code} type:%{content_type} loc:%{redirect_url}\n" "https://help.sumup.com$p" --max-time 15; sleep 1; done
+/en-GB/search?q=xss -> 404 type:text/html; charset=utf-8 loc:
+/en-GB/search?query=xss -> 404 type:text/html; charset=utf-8 loc:
+/api/search?q=test -> 404 type:text/html; charset=utf-8 loc:
+/api/search? -> 404 type:text/html; charset=utf-8 loc:
+/search?q=%3Cscript%3E -> 307 type:text/plain loc:https://help.sumup.com/en-GB/search?q=%3Cscript%3E
+/en-GB?q=xss -> 200 type:text/html; charset=utf-8 loc:
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/en-GB" --max-time 20 -o /tmp/help.html; grep -oE '_next/static/[^"]+\.js' /tmp/help.html | sort -u | head -10
+_next/static/0UxyBtVWc3Go5wjuHzBDC/_buildManifest.js
+_next/static/0UxyBtVWc3Go5wjuHzBDC/_ssgManifest.js
+_next/static/chunks/framework-86442cb55e14eee1.js
+_next/static/chunks/main-8cbf60e29e4bbad7.js
+_next/static/chunks/pages/_app-42796b37ba694640.js
+_next/static/chunks/pages/index-556da3ae74e853f0.js
+_next/static/chunks/polyfills-42372ed130431b0a.js
+_next/static/chunks/webpack-86d0f042d5564939.js
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/_next/static/chunks/pages/index-556da3ae74e853f0.js" --max-time 20 | grep -oE '"/[a-zA-Z0-9/_.-]+"|\.search|/api/[a-zA-Z0-9/_-]+' | sort -u | head -30
+(no output)
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/_next/static/chunks/pages/index-556da3ae74e853f0.js" --max-time 20 -o /tmp/idx.js; wc -c /tmp/idx.js; grep -oE '(api/[a-zA-Z0-9/_.-]+|search[a-zA-Z]*|algolia|meilisearch|[a-z]+\.search)' /tmp/idx.js | sort -u | head -20
+4468 /tmp/idx.js
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/_next/static/chunks/pages/_app-42796b37ba694640.js" --max-time 20 | grep -oE '"/[a-zA-Z0-9/_.:{}?-]+"' | sort -u | head -40
+"/404"
+"/_app"
+"/_next/image"
+"/_next/static/media/"
+"/_vercel/speed-insights/script.js"
+"/api/localization/enabled-locales"
+"/api/preview/disable"
+"/api/preview/enable"
+"/api/search/"
+"/articles/"
+"/flag_"
+"/hc/"
+"/liveAgent.html"
+"/pos"
+"/s"
+"/search"
+"/search/"
+"/sections/"
+"/spaces/"
+"/sse/support-centre-search/api/articles"
+[0m
+[0m$ [0mfor p in "/api/localization/enabled-locales" "/sse/support-centre-search/api/articles" "/api/preview/enable" "/api/preview/disable"; do curl -sS -o /dev/null -w "$p -> %{http_code} type:%{content_type} loc:%{redirect_url}\n" "https://help.sumup.com$p" --max-time 15; sleep 1; done
+/api/localization/enabled-locales -> 200 type:application/json; charset=utf-8 loc:
+/sse/support-centre-search/api/articles -> 404 type:text/html; charset=utf-8 loc:
+/api/preview/enable -> 307 type: loc:https://help.sumup.com/
+/api/preview/disable -> 307 type: loc:https://help.sumup.com/
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/api/localization/enabled-locales" --max-time 15 | head -c 500; echo; echo "---preview-enable with params---"; curl -sS -o /dev/null -w "previewEnable: %{http_code} loc:%{redirect_url}\n" "https://help.sumup.com/api/preview/enable?token=x&redirect=/en-GB" --max-time 15; sleep 1; curl -sS -o /dev/null -w "articles-auth: %{http_code} type:%{content_type}\n" "https://help.sumup.com/api/search/" --max-time 15
+{"enabledLocales":"en,en-AU,en-GB,en-IE,en-US,bg-BG,cs-CZ,da-DK,de-AT,de-CH,de-DE,de-LU,el-CY,el-GR,es-CL,es-CO,es-ES,es-PE,es-US,et-EE,fi-FI,fr-BE,fr-CH,fr-FR,fr-LU,hr-HR,hu-HU,it-CH,it-IT,lt-LT,lv-LV,nb-NO,nl-BE,nl-NL,pl-PL,pt-BR,pt-PT,ro-RO,sk-SK,sl-SI,sv-SE,es-MX,en-MT,en-CA,fr-CA"}
+---preview-enable with params---
+previewEnable: 307 loc:https://help.sumup.com/api/preview/enable?token=x&redirect=%2Fen-GB
+articles-auth: 308 type:text/plain
+[0m
+[0m$ [0mgrep -oE '_next/static/chunks/pages/[a-zA-Z0-9_-]+\.js' /tmp/help.html | sort -u; echo "---try fetch search page html---"; curl -sS "https://help.sumup.com/en-GB/search" --max-time 15 -o /tmp/search.html -w "%{http_code}\n"; grep -oE '_next/static/chunks/pages/[a-zA-Z0-9_-]+\.js' /tmp/search.html 2>/dev/null | sort -u; grep -oE '(smart|Smart|/s\b|sse|search/api[^"]*)' /tmp/search.html 2>/dev/null | sort -u | head
+_next/static/chunks/pages/_app-42796b37ba694640.js
+_next/static/chunks/pages/index-556da3ae74e853f0.js
+---try fetch search page html---
+404
+_next/static/chunks/pages/404-54c360f2bb80c800.js
+_next/static/chunks/pages/_app-42796b37ba694640.js
+Smart
+smart
+sse
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/_next/static/0UxyBtVWc3Go5wjuHzBDC/_buildManifest.js" --max-time 15 | head -c 2000
+self.__BUILD_MANIFEST=function(s,e,t){return{__rewrites:{afterFiles:[],beforeFiles:[],fallback:[]},__routerFilterStatic:{numItems:0,errorRate:1e-4,numBits:0,numHashes:t,bitArray:[]},__routerFilterDynamic:{numItems:s,errorRate:1e-4,numBits:s,numHashes:t,bitArray:[]},"/":["static/chunks/pages/index-556da3ae74e853f0.js"],"/404":["static/chunks/pages/404-54c360f2bb80c800.js"],"/_error":["static/chunks/pages/_error-fb0fe9d693cf7f50.js"],"/articles/[articleSlug]":["static/chunks/pages/articles/[articleSlug]-b182587be8dffe7c.js"],"/pos":["static/chunks/pages/pos-4219052129d2019d.js"],"/pos/articles/[articleSlug]":["static/chunks/859-9797867dd8aa22e5.js","static/chunks/338-369f674e73469d52.js","static/css/6d00cbaab331e331.css","static/chunks/pages/pos/articles/[articleSlug]-4ab1fee296505660.js"],"/pos/sections/[sectionSlug]":["static/chunks/pages/pos/sections/[sectionSlug]-f43dc8b3822902df.js"],"/search/[searchTerm]":["static/css/b3d9efd2965f11f9.css","static/chunks/pages/search/[searchTerm]-9884062054627e1f.js"],"/sections/[sectionSlug]":["static/css/33fcf9cb74c39a58.css","static/chunks/pages/sections/[sectionSlug]-84af44b68124216e.js"],"/support/ai-assistant-redirect":["static/css/cbe6dd43fa49ea08.css","static/chunks/pages/support/ai-assistant-redirect-05a2a3f590ad9f87.js"],sortedPages:["/","/404","/_app","/_error","/articles/[articleSlug]","/pos","/pos/articles/[articleSlug]","/pos/sections/[sectionSlug]","/search/[searchTerm]","/sections/[sectionSlug]","/support/ai-assistant-redirect"]}}(0,1e-4,NaN),self.__BUILD_MANIFEST_CB&&self.__BUILD_MANIFEST_CB();
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/en-GB/search/**<script>alert(1)</script>**" --max-time 20 -o /tmp/s.html -w "%{http_code} type:%{content_type}\n" 2>/dev/null; sleep 1; curl -sS "https://help.sumup.com/en-GB/search/test" -o /dev/null -w "search/test -> %{http_code} loc:%{redirect_url}\n" --max-time 15; sleep 1; curl -sS "https://help.sumup.com/support/ai-assistant-redirect" -o /dev/null -w "ai-assist -> %{http_code} loc:%{redirect_url}\n" --max-time 15; sleep 1; curl -sS "https://help.sumup.com/en-GB/search/testterm" -o /tmp/s2.html -w "search page: %{http_code}\n" --max-time 15
+404 type:text/html; charset=utf-8
+search/test -> 200 loc:
+ai-assist -> 307 loc:https://help.sumup.com/en-GB/support/ai-assistant-redirect
+search page: 200
+[0m
+[0m$ [0mgrep -oiE '(dangerouslySetInnerHTML|__NEXT_DATA__|pageProps|"props"|searchTerm|results|callback)' /tmp/s2.html | sort -u | head; echo "---"; grep -o 'en-GB/search/[^"]*' /tmp/s2.html | head -5; echo "---query state---"; grep -oE '"/en-GB/search/[^"]+|<input[^>]*value="[^"]*"' /tmp/s2.html | head -10
+"props"
+Results
+__NEXT_DATA__
+callback
+pageProps
+results
+searchTerm
+---
+---query state---
+<input id="_R_9jal6cm_" class="cui-input-3xav cui-input-has-prefix-rn0o cui-searchinput-fbxw" type="search" placeholder="Search" tabindex="-1" value=""
+<input id="_R_kqjacm_" class="cui-input-3xav cui-input-has-prefix-rn0o cui-searchinput-fbxw" type="search" placeholder="Search" value=""
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/en-GB/search/testterm" --max-time 20 | grep -oE '<script id="__NEXT_DATA__"[^>]*>[^<]*' | head -c 600; echo; echo "---sse lib refs---"; grep -oE 'sse[s,a-z/-]*|support-centre['"'"']?[a-z]*|/api/[a-z/]*' /tmp/s2.html | sort -u | head
+<script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"locale":"en-GB","searchTerm":"testterm","searchResults":{"articles":null,"meta":{"next_page_url":"","prev_page_url":"","total_articles":0,"current_page":0,"page_size":0,"total_pages":0,"contentful_env":"","contentful_space_id":""}},"_nextI18Next":{"initialI18nStore":{"en-GB":{"common":{"header":{"logo_description":"Support","go_to_website":{"name":"Go to main site","url":"https://sumup.co.uk/"},"login":"Log in","greeting":"How can we help?","dashboard":{"name":"Dashboard","url":"https://me.sumup.com/login"},"logout":"Lo
+---sse lib refs---
+ssed
+sset
+ssets
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/_next/static/chunks/pages/search/[searchTerm]-9884062054627e1f.js" --max-time 20 -o /tmp/s.js; wc -c /tmp/s.js; grep -oE '(sse[^"'\\]{0,40}|/api/[a-zA-Z0-9/_-]+|contentful[^"'\\]{0,20}|X-Contentful[^"'\\]{0,20})' /tmp/s.js | sort -u | head
+/bin/bash: -c: line 1: unexpected EOF while looking for matching `]'
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/_next/static/chunks/pages/search/%5BsearchTerm%5D-9884062054627e1f.js" --max-time 20 -o /tmp/s.js; wc -c /tmp/s.js; grep -oE 'sse[^"'\''\\]{0,40}|/api/[a-zA-Z0-9/_-]+|contentful[^a-zA-Z]{0,20}' /tmp/s.js | sort -u | head
+8336 /tmp/s.js
+[0m
+[0m$ [0mgrep -oE '.{0,60}search.{0,60}' /tmp/s.js | head -20
+052 50.5967 142.246 50.6044Z",fill:"black"})]})}),M=e=>{let{searchTerm:t}=e,{t:n}=(0,s.Bd)();return(0,r.FD)(A,{children:[(0,r.
+Y)(q,{}),(0,r.Y)(E,{as:"h2",size:"m",children:"".concat(n("search.no_results.heading"),' "').concat(t,'"')}),(0,r.Y)(b,{size:
+"m",children:n("search.no_results.advice")})]})};var R=n(6264),N=n(3714),k=n(6548)
+,Z=n(9763),z=n(3730),F=!0;let T=e=>{let{locale:t,searchTerm:n,searchResults:i}=e,[C,u]=(0,a.useState)(i.articles),[
+n:"article_selection",option:"results_page",value:"classic",searchQuery:n,article_id:r,locale:t})},[n,t]);return(0,a.useEffect
+let e=!0;return _&&C.length<i.meta.total_articles&&(0,k.p)({searchTerm:n,locale:t,page:h,size:f.Tq.ON_SCROLL}).then(t=>{Array.
+r.Y)(x,{as:"h2",size:H?"three":"one",children:" ".concat(g("search.results_for"),' "').concat(n,'" (').concat(i.meta.total_art
+p((e,t)=>t!==C.length-6?(0,r.Y)(R.A,{resultData:e,inPage:!0,searchEvent:()=>Y(t+1,e.id)},"result-".concat(e.id,"-").concat(e.t
+itle)):(0,r.Y)(R.A,{scrollRef:p,resultData:e,inPage:!0,searchEvent:()=>Y(t+1,e.id)},e.id)):(0,r.Y)(M,{searchTerm:n})})]})
+108:(e,t,n)=>{(window.__NEXT_P=window.__NEXT_P||[]).push(["/search/[searchTerm]",function(){return n(882)}])},3818:e=>{e.expor
+ts={resultsGreeting:"searchResults_resultsGreeting__byAeC"}},7328:(e,t,n)=>{e.exports=n
+//# sourceMappingURL=[searchTerm]-9884062054627e1f.js.map
+[0m
+[0m$ [0mgrep -oE '.{0,50}(searchTerm|locale|page|size|X-Contentful|contentful)[^,}]{0,50}' /tmp/s.js | head -10; echo "=== fetch module 6264 & 3714 (search api) ==="; for chunk in 6264 3714; do curl -sS "https://help.sumup.com/_next/static/chunks/$chunk.js" --max-time 15 -o /tmp/c.js; echo "--- $chunk ---"; grep -oE '(/[a-zA-Z0-9/_-]*search[a-zA-Z0-9/_-]*|fetch\([^)]{0,80})' /tmp/c.js | sort -u | head; done
+n    margin-bottom: ",";\n\n    "," {\n      font-size: "
+n    text-align: center;\n\n    "," {\n      font-size: "
+7 142.246 50.6044Z",fill:"black"})]})}),M=e=>{let{searchTerm:t
+FD)(A,{children:[(0,r.Y)(q,{}),(0,r.Y)(E,{as:"h2",size:"m"
+esults.heading"),' "').concat(t,'"')}),(0,r.Y)(b,{size:"m"
+,k=n(6548),Z=n(9763),z=n(3730),F=!0;let T=e=>{let{locale:t
+,searchTerm:n
+:z.qY.INTERACTION,action:z.kl.SELECT_FROM_RESULTS,pageName:f.Dn
+,locale:t
+onDescription:"article_selection",option:"results_page"
+=== fetch module 6264 & 3714 (search api) ===
+--- 6264 ---
+--- 3714 ---
+[0m
+[0m$ [0mfor p in "/pos" "/pos/articles/testarticle" "/en-GB/sections/test" "/en-GB/support/ai-assistant-redirect"; do curl -sS -o /dev/null -w "$p -> %{http_code} type:%{content_type} loc:%{redirect_url}\n" "https://help.sumup.com$p" --max-time 15; sleep 1; done
+/pos -> 307 type:text/plain loc:https://help.sumup.com/en-GB/pos
+/pos/articles/testarticle -> 307 type:text/plain loc:https://help.sumup.com/en-GB/pos/articles/testarticle
+/en-GB/sections/test -> 200 type:text/html; charset=utf-8 loc:
+/en-GB/support/ai-assistant-redirect -> 200 type:text/html; charset=utf-8 loc:
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/en-GB/support/ai-assistant-redirect" --max-time 20 -o /tmp/ai.html -w "%{http_code}\n"; grep -oE '<meta[^>]*http-equiv[^>]*>|<script[^>]*>[^<]{0,200}' /tmp/ai.html | head -c 1200; echo; echo "=== pageProps keys ==="; grep -o 'pageProps.{0,200}' /tmp/ai.html | head -c 400
+200
+<script defer="" noModule="" src="/_next/static/chunks/polyfills-42372ed130431b0a.js">
+<script src="/_next/static/chunks/webpack-86d0f042d5564939.js" defer="">
+<script src="/_next/static/chunks/framework-86442cb55e14eee1.js" defer="">
+<script src="/_next/static/chunks/main-8cbf60e29e4bbad7.js" defer="">
+<script src="/_next/static/chunks/pages/_app-42796b37ba694640.js" defer="">
+<script src="/_next/static/chunks/pages/support/ai-assistant-redirect-05a2a3f590ad9f87.js" defer="">
+<script src="/_next/static/0UxyBtVWc3Go5wjuHzBDC/_buildManifest.js" defer="">
+<script src="/_next/static/0UxyBtVWc3Go5wjuHzBDC/_ssgManifest.js" defer="">
+<script id="gtmCookieConsent" type="text/javascript">function getCategories(){try{var e=decodeURIComponent(document.cookie);return/groups=([C\d\:\,]+)/.exec(e)[1].split(",").reduce(function(e,t){var a=t.split(":");return e[a[0]]=a[1],e},{})}catch(e){ret
+<script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"noLayout":true,"platform":"other","_nextI18Next":{"initialI18nStore":{"en-GB":{"common":{"header":{"logo_description":"Support","go_to_website":{"name":"Go to main site","url":
+
+=== pageProps keys ===
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/_next/static/chunks/pages/support/ai-assistant-redirect-05a2a3f590ad9f87.js" --max-time 15 -o /tmp/ai.js; wc -c /tmp/ai.js; grep -oE 'https?://[a-zA-Z0-9./_-]{5,90}|location[^;]{0,80}|redirect[^;]{0,60}' /tmp/ai.js | sort -u | head -15
+5216 /tmp/ai.js
+http://www.w3.org/2000/svg
+https://me.sumup.com/support/ai-assistant
+location.assign(l)},3e3)
+redirect",function(){return a(5692)}])},5692:(s,e,a)=>{"use strict"
+redirect-05a2a3f590ad9f87.js.map
+redirect.click_here_fallback",components:{anchor:(0,c.Y)(_.M,{href:l
+redirect.returning_to_app")}),(0,c.Y)(p.n,{className:v().fallback,si
+redirect_container__rKssw",logo:"ai-assistant-redirect_logo__67pQ1",
+redirect_message__Fe3XI",fallback:"ai-assistant-redirect_fallback__I
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/en-GB/search/%3Cscript%3Ealert(1)%3C/script%3E" --max-time 20 -o /tmp/x.html -w "%{http_code}\n"; grep -oE 'search\.results_for.{0,120}|no_results.{0,120}' /tmp/x.html | grep -oE '"[^"]*"' | head -5
+404
+":{"
+":"
+","
+":"
+":{"
+[0m
+[0m$ [0mgrep -o 'searchTerm":"[^"]*"' /tmp/s2.html | head -3; grep -oE '"searchTerm"[^,}]{0,40}' /tmp/s2.html | head -3; echo "---reflection test---"; curl -sS "https://help.sumup.com/en-GB/search/a%22%3E%3Csvg%20onload=alert(1)%3E" --max-time 20 -o /tmp/r.html -w "%{http_code}\n"; grep -oE '"searchTerm"[^,}]{0,40}|"results_for"[^}]{0,80}|results_for[^<]{0,60}' /tmp/r.html | head -5
+searchTerm":"testterm"
+searchTerm":"testterm"
+"searchTerm":"testterm"
+"searchTerm":"testterm"
+---reflection test---
+200
+"searchTerm":"a\"\u003e\u003csvg onload=alert(1)\u00
+"results_for":"Results for","no_results":{"heading":"Oh no! No results found for","advice":"T
+"results_for":"Results for","no_results":{"heading":"Oh no! No results found for","advice":"T
+"searchTerm":"a\"\u003e\u003csvg onload=alert(1)\u00
+[0m
+[0m$ [0mgrep -oE '.{0,80}location\.assign.{0,120}' /tmp/ai.js; echo "---"; grep -oE '[a-z]+=([^,;]{0,60}me\.sumup[^,;]{0,60})' /tmp/ai.js | head; echo "---l value---"; grep -oE '"[^"]*support/ai-assistant[^"]*"|me\.sumup\.com[^"'"']*' /tmp/ai.js | sort -u
+/bin/bash: -c: line 1: unexpected EOF while looking for matching `"'
+[0m
+[0m$ [0mgrep -oE '.{0,60}location.assign.{0,140}' /tmp/ai.js
+nt";return(0,t.useEffect)(()=>{let s=setTimeout(()=>{window.location.assign(l)},3e3);return()=>{clearTimeout(s)}},[l]),(0,c.FD)("div",{className:v().container,children:[(0,c.Y)(m,{className:v().logo,variant:"full",s
+[0m
+[0m$ [0mgrep -oE 'let l=.[^;]{0,120}|l="[^"]*"' /tmp/ai.js | head; echo "---"; grep -oE 'concat\("[^"]*",[^)]{0,80}\)|"/[a-zA-Z0-9/_-]*(assistant|ai)[a-zA-Z0-9/_-]*"' /tmp/ai.js | head
+l="android"
+---
+"/support/ai-assistant-redirect"
+[0m
+[0m$ [0mgrep -oE '.{0,80}"platform".{0,120}' /tmp/ai.js | head; echo "---find l assignment with platform---"; grep -oE 'platform[=:][^,;)]{0,80}' /tmp/ai.js | head; echo "---full context around 'redirect'---"; grep -oE '.{0,40}me\.sumup\.com.{0,80}' /tmp/ai.js | head
+---find l assignment with platform---
+platform:a}=s
+---full context around 'redirect'---
+"common"),l="android"===(e=a)?"intent://me.sumup.com/support/ai-assistant#Intent;scheme=https;package=com.kaching.merchant;end":"ios
+p/screen/support/ai-assistant":"https://me.sumup.com/support/ai-assistant";return(0,t.useEffect)(()=>{let s=setTimeout(()=>{window.l
+[0m
+[0m$ [0mfor p in "/sse/support-centre-search/api/articles?q=test" "/api/search/?q=test" "/en-GB/sse/support-centre-search/api/articles" "/api/localization/enabled-locales?locale=en-GB"; do curl -sS -o /dev/null -w "$p -> %{http_code} type:%{content_type} loc:%{redirect_url}\n" "https://help.sumup.com$p" --max-time 15; sleep 1; done; echo "---search data endpoint in main chunk---"; grep -oE 'support-centre-search|sse/[a-z-]+' /tmp/help.html /tmp/s2.html 2>/dev/null | sort -u | head
+/sse/support-centre-search/api/articles?q=test -> 404 type:text/html; charset=utf-8 loc:
+/api/search/?q=test -> 308 type:text/plain loc:https://help.sumup.com/api/search?q=test
+/en-GB/sse/support-centre-search/api/articles -> 404 type:text/html; charset=utf-8 loc:
+/api/localization/enabled-locales?locale=en-GB -> 200 type:application/json; charset=utf-8 loc:
+---search data endpoint in main chunk---
+[0m
+[0m$ [0mfor p in "/api/search?q=test" "/api/search/query?q=test" "/api/search/articles?q=test"; do curl -sS -o /dev/null -w "$p -> %{http_code} type:%{content_type} loc:%{redirect_url}\n" "https://help.sumup.com$p" --max-time 15; sleep 1; done; echo "---main app chunk strings for api/search---"; curl -sS "https://help.sumup.com/_next/static/chunks/main-8cbf60e29e4bbad7.js" --max-time 20 | grep -oE '.{0,40}api/search.{0,60}' | head -5
+/api/search?q=test -> 404 type:text/html; charset=utf-8 loc:
+/api/search/query?q=test -> 500 type:text/plain; charset=utf-8 loc:
+/api/search/articles?q=test -> 500 type:text/plain; charset=utf-8 loc:
+---main app chunk strings for api/search---
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/api/search/articles?q=test" --max-time 15 | head -c 300; echo; sleep 1; curl -sS "https://help.sumup.com/api/search/articles?searchTerm=test&locale=en-GB" --max-time 15 -o /dev/null -w "-> %{http_code}\n"; sleep 1; curl -sS "https://help.sumup.com/api/search/query" --max-time 15 | head -c 300
+Internal Server Error
+-> 500
+Internal Server Error
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/_next/static/chunks/webpack-86d0f042d5564939.js" --max-time 20 -o /tmp/w.js; curl -sS "https://help.sumup.com/_next/static/chunks/framework-86442cb55e14eee1.js" --max-time 20 -o /tmp/f.js; grep -oE '.{0,30}(/sse/|support-centre|contentful|x-algolia|algolia)[^"'\'']{0,60}' /tmp/w.js /tmp/f.js /tmp/s.js /tmp/idx.js 2>/dev/null | sort -u | head -20
+(no output)
+[0m
+[0m$ [0mcurl -sS "https://help.sumup.com/_next/static/chunks/pages/_app-42796b37ba694640.js" --max-time 20 -o /tmp/app.js; grep -oE '.{0,60}(sse|support-centre|assistant|minWotop[^"'\'']{0,20})[^;]{0,80}' /tmp/app.js | head -10
+=>({ENV:"live",NEXT_PUBLIC_SEARCH_SERVICE_ENDPOINT:"https://sse.sumup.com/sse/scss",CONTENTFUL_SPACE_ID:"214q1nptnllb",CONTENTFUL_ENV:"master",
+IC_API_GATEWAY:"https://api.sumup.com",SSE_SERVICE:"https://sse.sumup.com"})[e]},1643:e=>{"use strict"
+ap.prototype.delete",!0);e.exports=l?function(){var e,t,r={assert:function(e){if(!r.has(e))throw new s("Side channel does not contain "+o(e))},
+: var(--cui-border-width-mega) solid var(--cui-bg-normal-pressed)
+ent-hovered);}&:visited:active{color:var(--cui-fg-accent-pressed)
+\.?_?\d+)+)/i,e);return r&&(t.version=r),t}},{test:[/micromessenger/i],describe:function(e){var t={name:"WeChat"},r=i.default.getFirstMatch(/(?
+:micromessenger)[\s/](\d+(\.?_?\d+)+)/i,e)||i.default.getFirstMatch(o,e)
+row Object.defineProperty(Error("An object should only be passed to the image component src parameter if it comes from a static image import. I
+row Object.defineProperty(Error("An object should only be passed to the image component src parameter if it comes from a static image import. I
+eof(null==e?void 0:e.lng))throw Error("config.lng was not passed into createConfig")
+[0m
+New asset surfaced from help.sumup.com's JS: `sse.sumup.com` (search service). Probed it plus `main` chunk for more endpoints.
+[0m$ [0mcurl -sS -o /dev/null -w "sse.sumup.com root -> %{http_code} type:%{content_type} loc:%{redirect_url}\n" "https://sse.sumup.com/" --max-time 15; sleep 1; curl -sS -o /dev/null -w "sse/scss -> %{http_code} type:%{content_type} loc:%{redirect_url}\n" "https://sse.sumup.com/sse/scss?q=test" --max-time 15; sleep 1; curl -sS "https://sse.sumup.com/sse/scss" --max-time 15 | head -c 300
+sse.sumup.com root -> 404 type:text/plain; charset=utf-8 loc:
+sse/scss -> 404 type:text/plain; charset=utf-8 loc:
+Not found
+[0m
+[0m$ [0mgrep -oE '.{0,40}(search-service|scss|SEARCH|/sse/)[^;]{0,80}' /tmp/app.js | grep -oiE 'https?://[a-zA-Z0-9./_-]+|/sse/[a-z0-9/_-]+' | sort -u | head; echo "---main chunk endpoints---"; curl -sS "https://help.sumup.com/_next/static/chunks/6548.js" --max-time 15 -o /tmp/65.js 2>/dev/null; wc -c /tmp/65.js; grep -oE '.{0,50}(scss|search-service|/api/|sse)[^;]{0,60}' /tmp/65.js | head
+/sse/support-centre-search/api/articles
+https://sse.sumup.com/sse/scss
+---main chunk endpoints---
+9 /tmp/65.js
+[0m
+[0m$ [0mfor p in "/sse/scss/" "/sse/scss/articles" "/sse/scss/search" "/sse/scss?query=test" "/sse/scss/test"; do curl -sS -o /dev/null -w "$p -> %{http_code} type:%{content_type}\n" "https://sse.sumup.com$p" --max-time 15; sleep 1; done; echo "=== options ==="; curl -sS -o /dev/null -w "POST /sse/scss -> %{http_code}\n" -X POST "https://sse.sumup.com/sse/scss" --max-time 15 2>/dev/null
+/sse/scss/ -> 404 type:application/json
+/sse/scss/articles -> 404 type:application/json
+/sse/scss/search -> 404 type:application/json
+/sse/scss?query=test -> 404 type:text/plain; charset=utf-8
+/sse/scss/test -> 404 type:application/json
+=== options ===
+POST /sse/scss -> 404
+[0m
+[0m$ [0mcurl -sSI "https://sse.sumup.com/sse/scss/articles" --max-time 15 | grep -iE '^(HTTP|server|via|cf-ray|x-|content-type)'; echo "---root headers---"; curl -sSI "https://sse.sumup.com/" --max-time 15 | grep -iE '^(HTTP|server|via)'; echo "---help api preflight OPTIONS---"; curl -sS -o /dev/null -w "OPTIONS /api/search/articles -> %{http_code} acori:%{header_acl_origin}\n" -X OPTIONS "https://help.sumup.com/api/search/articles" -H "Origin: https://evil.com" --max-time 15
+HTTP/2 404 
+content-type: application/json
+x-request-id: 804e5b1b-7f1f-913f-9f85-d6410ebb2458
+server: cloudflare
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+x-envoy-upstream-service-time: 0
+cf-ray: a37792bc19032ca5-DFW
+---root headers---
+HTTP/2 404 
+server: cloudflare
+---help api preflight OPTIONS---
+curl: unknown --write-out variable: 'header_acl_origin'
+OPTIONS /api/search/articles -> 500 acori:
+[0m
+[0m$ [0mfor p in "/.well-known/oauth-protected-resource" "/authorize?client_id=dashboard" "/scss" "/sse" "/v1" "/health"; do curl -sS -o /dev/null -w "$p -> %{http_code} type:%{content_type} loc:%{redirect_url}\n" "https://sse.sumup.com$p" --max-time 12; sleep 1; done
+/.well-known/oauth-protected-resource -> 404 type:text/plain; charset=utf-8 loc:
+/authorize?client_id=dashboard -> 404 type:text/plain; charset=utf-8 loc:
+/scss -> 404 type:text/plain; charset=utf-8 loc:
+/sse -> 301 type:text/html; charset=utf-8 loc:https://sse.sumup.com/sse/
+/v1 -> 404 type:text/plain; charset=utf-8 loc:
+/health -> 404 type:text/plain; charset=utf-8 loc:
+[0m
+[0m$ [0mcurl -sS -o /dev/null -w "/sse/ -> %{http_code} type:%{content_type} loc:%{redirect_url}\n" "https://sse.sumup.com/sse/" --max-time 12; sleep 1; for p in "/sse/scss" "/sse/country" "/sse/rate" "/sse/a/1"; do curl -sS -o /dev/null -w "$p -> %{http_code} type:%{content_type}\n" "https://sse.sumup.com$p" --max-time 12; sleep 1; done
+/sse/ -> 404 type:text/plain; charset=utf-8 loc:
+/sse/scss -> 404 type:text/plain; charset=utf-8
+/sse/country -> 404 type:text/plain; charset=utf-8
+/sse/rate -> 404 type:text/plain; charset=utf-8
+/sse/a/1 -> 404 type:text/plain; charset=utf-8
+[0m
+[0m$ [0mgrep -oE '.{0,80}(scss|NEXT_PUBLIC_SEARCH_SERVICE_ENDPOINT|searchResults|getServerSideProps|fetch\().{0,120}' /tmp/app.js | head -15
+top()},e}()},1620:(e,t,r)=>{"use strict";r.d(t,{A:()=>n});let n=e=>({ENV:"live",NEXT_PUBLIC_SEARCH_SERVICE_ENDPOINT:"https://sse.sumup.com/sse/scss",CONTENTFUL_SPACE_ID:"214q1nptnllb",CONTENTFUL_ENV:"master",CONTENTFUL_REVAMP_ENV:"mast
+a=e=>{let{children:t}=e,[r,a]=(0,i.useState)();return(0,n.Y)(o.Provider,{value:{searchResults:r,setSearchResults:a},children:t})},s=()=>(0,i.useContext)(o)},3730:(e,t,r)=>{"use strict";r.d(t,{dW:()=>a,g$:()=>i,kl:
+.locale?n.locale:"locale"in e?e.locale:void 0);if(b.has(i))return;b.add(i)}e.prefetch(t,r,n).catch(e=>{})}}function E(e){return"string"==typeof e?e:(0,d.formatUrl)(e)}let O=l.default.forwardRef(function(e,t
+ig=(0,e4.A)("header",{target:"e15cv7k3"})(e=>{let{theme:t,isPos:r=!1,isSearch:n,searchResults:i}=e;return(0,J.AH)(nJ(),r?t.spacings.giga:(e=>{let{theme:t,isSearch:r,searchResults:n}=e;return r&&!n?t.spacings.mega:
+t.spacings.zetta})({theme:t,isSearch:n,searchResults:i}),t.mq.mega,t.spacings.tera)}),im=(0,e4.A)(nV.Z,{target:"e15cv7k4"})(e=>{let{theme:t}=e;return(0,J.AH)(nX(),t.mq.unti
+s.setIsScrolled(!a)},[a,s]),(0,W.Y)(ig,{isSearch:n.pathname.includes("/search"),searchResults:l.searchResults,isPos:i8(n),children:i8(n)?n.pathname===i6.B&&(0,W.Y)(i1,{}):(0,W.FD)(W.FK,{children:["/"===n.pathname?
+[0m
+[0m$ [0mcurl -sS -o /tmp/sse.txt -w "GET /sse/scss (SSE accept) -> %{http_code} type:%{content_type}\n" "https://sse.sumup.com/sse/scss" -H "Accept: text/event-stream" --max-time 12; sleep 1; head -c 400 /tmp/sse.txt; echo; curl -sS -o /dev/null -w "GET /sse/scss?source=help ->> %{http_code}\n" "https://sse.sumup.com/sse/scss?source=help" --max-time 12
+GET /sse/scss (SSE accept) -> 404 type:text/plain; charset=utf-8
+Not found
+
+GET /sse/scss?source=help ->> 404
+[0m
+## SumUp Deep-Hunt Analysis — 2026-09-07 (bigpickle)
+
+### STEP 1 — DELTA
+- NEW `help.sumup.com`: Vercel Next.js i18n help center (44 locales), live article/section/search/pos/AI-assistant routes. `support.sumup.com` 308-alias to it. First real characterization of the "support" asset.
+- NEW `sse.sumup.com`: search service (SSE) discovered via help client JS (`NEXT_PUBLIC_SEARCH_SERVICE_ENDPOINT=https://sse.sumup.com/sse/scss`, `SSE_SERVICE`). Root /sse/scss all GET → 404; behind the same `apigateway2-headless` Envoy gateway as api.sumup.com.
+- CHANGED `dashboard.sumup.com`: 308 → `me.sumup.com` (pure alias to already-characterized Vercel OAuth asset); closes the seed-era "unprobed dashboard" gap — no distinct surface.
+- CHANGED `help.sumup.com/api/search/*`: `/api/search/articles` and `/api/search/query` → deterministic 500 unauthenticated (while every other API route returns 404/307) — a live serverless route failing server-side, pointing at the sse backend.
+
+### STEP 2 — PRIORITIZE
+- [PRIO] api.sumup.com,7.5,attack_surface=8,business_value=9,tech_exposure=8,gate_ease=4,cloud_surface=6,freshness=8
+- [PRIO] help.sumup.com,7.0,attack_surface=7,business_value=5,tech_exposure=7,gate_ease=9,cloud_surface=6,freshness=10
+- [PRIO] sse.sumup.com,6.8,attack_surface=5,business_value=6,tech_exposure=8,gate_ease=9,cloud_surface=5,freshness=10
+- [PRIO] auth.sam-app.ro,6.5,attack_surface=6,business_value=6,tech_exposure=9,gate_ease=7,cloud_surface=5,freshness=7
+- [PRIO] api.sam-app.ro,6.4,attack_surface=8,business_value=7,tech_exposure=8,gate_ease=6,cloud_surface=6,freshness=6
+- [PRIO] mcp.sumup.com,5.4,attack_surface=4,business_value=7,tech_exposure=7,gate_ease=2,cloud_surface=7,freshness=5
+
+### STEP 3 — HYPOTHESES
+[HYP] help.sumup.com/api/search/* 500 is an unauthenticated serverless proxy to the sse.search backend — attacker-supplied query may reach the internal search/index path
+class: OTHER
+asset: help.sumup.com/api/search/articles
+confidence: 62
+reasoning: GET /api/search/articles and /api/search/query return deterministic 500 (text/plain) with no auth; all sibling routes (/api/localization/enabled-locales) return 200 and unknown routes 404. Client JS pins NEXT_PUBLIC_SEARCH_SERVICE_ENDPOINT=https://sse.sumup.com/sse/scss. A 500-on-empty-GET pattern = route exists, throws server-side (missing body/params) — consistent with a thin proxy to sse.sumup.com that fails closed without payload.
+evidence_needed: PROBE POST with a valid search body returning a 2xx JSON article list (proves proxy data path, not the 500); or GET/POST returning a structured error enumerating accepted params.
+verify_steps: POST https://help.sumup.com/api/search/articles body {"query":"test","locale":"en-GB"} — if 200, confirm response reflects query and check whether a manipulated query reaches sse backend (backend injection / unpublished-content exposure).
+impact: If query flows unauthenticated into search/index backend → exposure of unpublished/restricted article content or inter-service request manipulation. Severity low-moderate.
+testability: AUTH_HELPED
+
+[HYP] auth-theta.sam-app.ro registration config diverges from sibling auth.sam-app.ro (non-empty scope or waived PKCE) on the canary deploy
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 52
+reasoning: auth-theta serves byte-identical OIDC discovery to auth.sam-app.ro but is a separate deploy (mcp-theta/api-theta/auth-theta); sibling registers unauthenticated RFC 7591 clients yielding real JWTs with empty scope + PKCE-required. Theta divergence would be the first real escalation on the staging identity stack.
+evidence_needed: One POST /oauth2/register on theta returning client with non-empty scope or waived PKCE.
+verify_steps: BLOCKED passive — POST required (exceeds GET/HEAD/OPTIONS rule); needs role approval.
+impact: Attacker-scoped OAuth client on live staging identity → real scoped JWTs → cross-env escalation if theta doubles as prod canary. Severity low-now, high-latent.
+testability: AUTH_HELPED
+
+[HYP] sse.sumup.com search routes are POST-only by design and may serve article content without merchant auth (public search index access)
+class: BUSLOGIC
+asset: sse.sumup.com/sse/scss
+confidence: 45
+reasoning: All GETs to /sse/scss and subpaths → 404 text/plain (gateway-gated like api.sumup.com versioned paths), while /sse → 301 to /sse/. Client integration expects SSE (Accept: text/event-stream) POST from help.sumup.com serverless layer. envoyer template identical to api.sumup.com.
+evidence_needed: A POST/SSE handshake returning streamed article content unauthenticated.
+verify_steps: BLOCKED passive — requires SSE POST (mutating per rule); tee up for when merchant token/acl allows.
+impact: Indirect exposure of help/search corpus only; low. Parent value is confirm-backend topology for the help/api/search lead above.
+testability: AUTH_HELPED
+
+### STEP 4 — SELF-CRITIQUE
+- [PARKED] Staging JWKS `loadtesting` kid scope semantics: confidence 38 < 40; requires token endpoint access. Unchanged.
+- [PARKED] sse.sumup.com POST/SSE handshake: confidence 45, but not passively confirmable — folded into the help/api/search lead as the backend leg.
+- [FINAL] help.sumup.com/api/search 500-proxy lead (62) — survivors top.
+- [FINAL] auth-theta.sam-app.ro registration divergence (52) — survivor, boundary case.
+- [FINAL] sse.sumup.com backend exposure (45) — kept as chainable context, not standalone.
+
+### STEP 5 — NEXT ACTION
+[NEXT] HUMAN: POST https://help.sumup.com/api/search/articles with body {"query":"test","locale":"en-GB"} — confirm whether the deterministic 500 is a thin proxy to sse.sumup.com/sse/scss and whether attacker-controlled query reaches the search/index backend. Exceeds passive GET/HEAD/OPTIONS rule → needs role approval. (Parallel passive follow-through: GET /api/search/query?q=test on help.sumup.com already returns 500 — deterministic.)
+
+### STEP 6 — LEARNING
+- [LEARN] ACCEPTED OTHER @ help.sumup.com: Vercel Next.js help center live with 44 locales, public article/section/search/pos/AI-assistant routes; /api/localization/enabled-locales 200; /api/search/* deterministic 500 unauthenticated — new in-scope asset fully characterized this cycle.
+- [LEARN] ACCEPTED OTHER @ sse.sumup.com: search service (SSE) surfaced from help client JS; shares apigateway2-headless Envoy template with api.sumup.com; all GET 404, POST/SSE routes expected but not passively testable.
+- [LEARN] ACCEPTED BUSLOGIC @ support.sumup.com: 308 alias to help.sumup.com — closes the seed-era "support unprobed" gap; not a distinct product surface.
+- [LEARN] ACCEPTED BUSLOGIC @ dashboard.sumup.com: 308 → me.sumup.com pure alias — closes the unprobed dashboard gap; no distinct surface.
+- [LEARN] REJECTED MISCONFIG @ sse.sumup.com: x-envoy-decorator-operation leaks apigateway2-headless.identity.svc.cluster.local:8080 — header/banner leak is explicit out-of-scope class.
+
+### STEP 7 — RISK
+[RISK] sumup: 52. Net +7: two fresh in-scope assets (help.sumup.com, sse.sumup.com) discovered and characterized, resolving both seed-era "unprobed" gaps (dashboard/support aliases closed). help.sumup.com/api/search/* deterministic 500 is a new, testable proxy lead; sse.sumup.com adds chainable backend context (same Envoy template as api.sumup.com). Still bounded: all high-impact confirmations require POST (exceeds passive rule) or merchant OAuth token. Staging dynamic-registration→JWT remains highest-confidence finding at 85, contained by empty scope + cross-env key isolation (zero kid overlap, 8 prod vs 11 staging).

@@ -346,3 +346,5 @@ www.sumup.com
 - NEW api.sumup.com/.well-known/oauth-authorization-server: 404 structured problem+json (gateway-handled)
 - NEW api.sumup.com/.well-known/openid-configuration: 404 structured problem+json (gateway-handled)
 - NEW JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Staging includes `loadtesting` kid not in prod. Cross-env key isolation confirmed at JWKS kid level.
+
+## 2026-09-07 17:55:54 UTC
