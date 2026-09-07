@@ -1443,3 +1443,42 @@ testability: PASSIVE
 [LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-authorization-server: 404 structured problem+json; same gateway handling.
 [LEARN] ACCEPTED OTHER @ JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Cross-env key isolation confirmed at JWKS kid level (explains mcp.sumup.com prod rejection of staging tokens). Staging includes `loadtesting` kid not in prod.
 [RISK] sumup: 50. RFC 9728 discovery surface fully enumerated — auth.sumup.com confirmed sole authorization server for api.sumup.com; JWKS key isolation prod↔staging confirmed by disjoint kid sets (zero overlap, 8 prod vs 11 staging keys). Staging dynamic registration → real JWT minting remains the highest-confidence finding (85) but is bounded by empty scope + staging isolation. All remaining high-impact chains (theta canary registration divergence, authorization_code flow, mcp scope escalation, prod api gateway JWT test) require AUTH_HELPED merchant token. Passive surface is exhausted; no new enumeration vectors discovered this cycle. Net +1 from fresh RFC 9728 evidence + JWKS kid comparison.
+## 2026-09-07 12:08:19 UTC [target] (model bigpickle)
+[PRIO] api.sumup.com,7.5,attack_surface=8,business_value=9,tech_exposure=8,gate_ease=4,cloud_surface=6,freshness=8
+[PRIO] api.sam-app.ro,7.1,attack_surface=8,business_value=7,tech_exposure=8,gate_ease=6,cloud_surface=6,freshness=7
+[PRIO] auth.sam-app.ro,6.5,attack_surface=6,business_value=6,tech_exposure=9,gate_ease=7,cloud_surface=5,freshness=7
+[PRIO] mcp.sumup.com,5.4,attack_surface=4,business_value=7,tech_exposure=7,gate_ease=2,cloud_surface=7,freshness=5
+[HYP] api.sumup.com RFC 9728 resource-server metadata fully characterized; no resource_scopes field, no further discovery surface on .well-known
+class: BUSLOGIC
+asset: api.sumup.com/.well-known/oauth-protected-resource
+confidence: 90
+reasoning: Endpoint returns 200 JSON with authorization_servers=["https://auth.sumup.com"], bearer_methods_supported=["header"], jwks_uri, resource_documentation. No resource_scopes present (RFC 9728 optional). All other .well-known paths on api.sumup.com (openid-configuration, oauth-authorization-server) return 404 structured problem+json. Single gateway route table governs all well-known paths — only RFC 9728 is routed.
+evidence_needed: None — fully characterized.
+verify_steps: None — passive characterization complete.
+impact: Informational only; confirms auth.sumup.com is sole authorization server; no standalone vulnerability.
+testability: PASSIVE
+[HYP] theta canary OAuth registration config may diverge from non-theta staging — relaxed scope/PKCE/allowlist on older/canary revision would be first real escalation
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 52
+reasoning: auth-theta serves byte-identical OIDC discovery to auth.sam-app.ro but is a separate deploy (mcp-theta/api-theta/auth-theta stack). Sibling auth.sam-app.ro registration yields empty-scope clients + real JWTs. Theta config divergence (non-empty scope or waived PKCE) is not observable from public metadata and would be the first real escalation on this staging stack.
+evidence_needed: One POST /oauth2/register on theta returning a client with non-empty declared scope or waived PKCE vs sibling enforced empty-scope + PKCE-required.
+verify_steps: BLOCKED passive — POST required (exceeds GET/HEAD/OPTIONS rule); needs role approval.
+impact: Attacker-scoped OAuth client on live staging identity isa → real scoped JWTs → cross-env escalation if theta doubles as prod canary. Severity: low now, high latent.
+testability: AUTH_HELPED
+[HYP] Staging JWKS `loadtesting` kid indicates separate signing key for load-testing tokens — if accessible, those tokens may have broader scope or bypass auth_method enforcement
+class: AUTH
+asset: auth.sam-app.ro/.well-known/jwks.json
+confidence: 38
+reasoning: Staging JWKS contains kid `loadtesting` (RSA, use=sig) not present in prod. Key exists for load-testing token issuance. If loadtesting tokens mint real JWTs with non-empty scope or if the key is trusted by api.sam-app.ro gateway with elevated privileges, this could bypass empty-scope restriction on dynamically-registered clients. Key is declared in public JWKS (not a private leak), its use is opaque from passive data, and api.sam-app.ro gateway already validates JWT structure/keys.
+evidence_needed: A JWT signed by kid `loadtesting` returned from auth.sam-app.ro token endpoint with non-empty scope; or api.sam-app.ro accepting loadtesting-signed tokens with elevated privileges.
+verify_steps: PASSIVE only — would require client_credentials flow (POST auth.sam-app.ro/oauth2/token) to obtain a token and inspect its header.kid, then attempt use against api.sam-app.ro.
+impact: Potential scope bypass on staging gateway if loadtesting tokens carry elevated permissions; low-moderate on staging, zero on prod (kid absent from prod JWKS).
+testability: AUTH_HELPED
+[PARKED] Staging JWKS `loadtesting` kid: confidence 38 < 40 threshold. Cannot determine scope semantics from passive data alone; requires AUTH_HELPED (client_credentials flow + kid inspection). Parked until merchant token available.
+[FINAL] Survivors ranked:
+[NEXT] HUMAN: All passive well-known/discovery surfaces on api.sumup.com (RFC 9728, openid-configuration, oauth-authorization-server) are now fully characterized. Staging JWKS kid comparison with prod confirms zero overlap. All remaining high-confidence hypotheses (theta canary registration config divergence, authorization_code+PKCE flow against auth.sam-app.ro, mcp scope escalation, prod api gateway JWT test) require AUTH_HELPED merchant OAuth tokens. No further passive enumeration will yield new findings on the current attack surface. Recommend resuming when a merchant token is available, or pivoting to a new in-scope target (e.g. dashboard.sumup.com, support.sumup.com, www.sumup.com — none probed since seed recon).
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200 JSON) declaring auth.sumup.com as sole authorization_server, header-only bearer, JWKS URI, developer docs link; no resource_scopes field — reconnaissance surface exhausted.
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/.well-known/*: Single gateway route table governs all well-known paths; only RFC 9728 is routed (openid-configuration and oauth-authorization-server return 404 structured problem+json).
+[LEARN] ACCEPTED OATH @ auth-theta.sam-app.ro: Theta canary is separate deploy; config divergence hypothesis documented but untestable without POST (passive-only rule).
+[RISK] sumup: 45. Passive surface fully enumerated across api.sumup.com, auth.sumup.com, api.sam-app.ro, mcp.sumup.com, me.sumup.com, checkout.sumup.com. All .well-known/discovery/OIDC endpoints characterized. JWKS prod↔staging kid isolation confirmed (zero overlap, 8 prod vs 11 staging). Staging dynamic registration → real JWT minting remains highest-confidence finding (bounded by empty scope + cross-env key isolation). All remaining high-impact chains (theta canary registration divergence, authorization_code+PKCE flow, mcp scope escalation, prod api gateway JWT test) require AUTH_HELPED merchant OAuth token. Net -5 from exhaustion — no new attack paths discovered this cycle. Fresh unprobed assets remain: dashboard.sumup.com, support.sumup.com, www.sumup.com (seed recon only, not deep-probed).

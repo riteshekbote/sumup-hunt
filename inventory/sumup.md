@@ -338,3 +338,11 @@ www.sumup.com
 - NEW api.sumup.com/.well-known/oauth-authorization-server → 404 (expected, auth server at auth.sumup.com)
 - CHANGED mcp.sumup.com/.well-known/mcp.json → 404 (no MCP server metadata published)
 - CHANGED mcp.sumup.com/mcp.json → 404 (no MCP manifest)
+
+## 2026-09-07 12:11:41 UTC
+- NEW api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200) declaring authorization_servers=["https://auth.sumup.com"], bearer_methods_supported=["header"], jwks_u
+- NEW api.sam-app.ro/.well-known/oauth-protected-resource: Staging variant LIVE (200) declaring auth.sam-app.ro; identical structure to prod
+- NEW mcp.sumup.com/.well-known/mcp.json: 404 JSON-RPC response (live endpoint, not static file)
+- NEW api.sumup.com/.well-known/oauth-authorization-server: 404 structured problem+json (gateway-handled)
+- NEW api.sumup.com/.well-known/openid-configuration: 404 structured problem+json (gateway-handled)
+- NEW JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Staging includes `loadtesting` kid not in prod. Cross-env key isolation confirmed at JWKS kid level.
