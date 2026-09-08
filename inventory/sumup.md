@@ -392,3 +392,12 @@ www.sumup.com
 - NEW read-api.sumup.com / sf-gateway-api.sumup.com probed fresh: uniform 404 on all read paths (swagger/openapi/health/well-known); `/authorize` returns **404** (NOT the 302 oracle of api.sumup.com) — CT-d
 
 ## 2026-09-08 17:50:37 UTC
+
+## 2026-09-08 20:29:13 UTC
+- NEW ccTLD legacy-callback oracle exhaustively negative: 96 combos (15 ccTLDs × {app,dashboard,my,secure,me,www} /callback) + 15 bare-path subset — all `invalid_request`, 0 HITs; legacy allowlist host not 
+- NEW read-api.sumup.com & sf-gateway-api.sumup.com: `/authorize` returns 404 (not the 302 oracle of api.sumup.com); uniform 404 on swagger/openapi/health/well-known — no divergent OAuth oracle
+- NEW RFC 9728 metadata on api.sumup.com/.well-known/oauth-protected-resource is static: `resource=https://api.sumup.com`, sole auth server auth.sumup.com, header-only bearer, dev-docs link; no resource_sco
+- CHANGED Contentful Preview token leak on help.sumup.com CONFIRMED reportable (P4): 1,082 draft/unpublished entries in space 214q1nptnllb via leaked token
+- CHANGED Staging dynamic registration (auth.sam-app.ro) yields real JWTs with empty scope + attacker-controlled aud; cross-env JWKS isolation confirmed (prod 8 keys, staging 11 keys, ZERO kid overlap)
+- CHANGED mcp.sumup.com MCP server: wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds) — REJECTED MISCONFIG class
+- CHANGED api.sumup.com/authorize: client_id oracle + wildcard CORS + redirect divergence remain LIVE but callback host enumeration fully exhausted (crt.sh 52 combos + ccTLD 96 combos + custom schemes = 0 HITs)

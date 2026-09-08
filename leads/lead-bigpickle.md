@@ -2402,3 +2402,33 @@ testability: AUTH_HELPED
 [LEARN] REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not the 302 oracle of api.sumup.com); uniform 404 on all read paths (swagger/openapi/health/well-known) — no divergent OAuth oracle, fully gated.
 [LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata is static — `resource=https://api.sumup.com`, sole auth server auth.sumup.com, header-only bearer, dev-docs link; no resource_scopes/audience-oracle field; recon surface exhausted.
 [RISK] sumup: 78 — Legacy OAuth gateway live (client_id oracle, wildcard CORS, redirect-set divergence) but allowlist host not recoverable from ccTLD or common-surface space (exhaustively refuted this session). Staging auth.sam-app.ro unauthenticated RFC 7591 registration mints valid JWTs (empty scope, controlled aud); prod/staging JWKS key isolation confirmed. RFC 9728 metadata static on prod. Confirmed reportable P4: Contentful preview-token leak (1,082 draft help entries). All high-impact chains still require merchant token or POST (AUTH_HELPED); ccTLD sweep and read-api/sf-gateway subdomains closed with no fresh oracle. Vercel me/checkout and CT-discovered API subdomains fully gated. Financial surface concentrated but access-controlled, with the confirmed low-severity info-disclosure as the current reportable item.
+## 2026-09-08 20:18:40 UTC [target] (model bigpickle)
+[HYP] Contentful Preview API token leak grants unauthenticated read of draft/unpublished help content (CONFIRMED — reportable P4)
+class: MISCONFIG
+asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb
+confidence: 92
+reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW. GET preview.contentful.com → total 9419 vs cdn 8337; `sys.publishedAt[exists]=false` → 1082 drafts (102 articles, 143 callouts) incl. never-published updated 2026-09-04; invalid token → 401. Not management-scoped.
+evidence_needed: none — verified (cdn vs preview totals; draft filter; 401 control; search-API draft escalation refuted).
+verify_steps: (done) GET cdn vs preview totals; draft filter; 401 control.
+impact: Unauthenticated read of 1,082 draft/unpublished help entries (unreleased product/legal content). No customer/financial/auth data. Severity low-moderate.
+testability: PASSIVE
+[HYP] RFC 9728 / audience-validation divergence at prod gateway
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource
+confidence: 60
+reasoning: Metadata statically declares resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, JWKS from auth.sumup.com; prod JWKS rejects staging tokens (key isolation) but the gateway's aud validation is untested at request level.
+evidence_needed: A staging-minted JWT (aud=api.sam-app.ro) accepted vs cleanly rejected at prod api.sumup.com/v1/*.
+verify_steps: BLOCKED passive — requires replaying a staging JWT at a prod resource path.
+impact: Cross-env token relay → merchant/payment access if accepted. High-latent.
+testability: AUTH_HELPED
+[HYP] auth-theta.sam-app.ro registration config diverges from sibling (canary escalation)
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 42
+reasoning: Sibling supports unauthenticated RFC 7591 registration → real JWTs (empty scope, PKCE-required); theta route semantics byte-identical; only POST-behavior divergence remains.
+evidence_needed: One POST /oauth2/register on theta returning non-empty scope or waived PKCE.
+verify_steps: BLOCKED passive — POST required; needs role approval.
+impact: Attacker-scoped staging OAuth client → scoped JWTs → cross-env risk if theta is live prod canary.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Report confirmed Contentful preview-token exposure to bugs.olivermaicher.eu — class MISCONFIG/exposed-secret, P4. asset help.sumup.com → space 214q1nptnllb, token (Contentful PREVIEW API token, sha256=preview-contentful). PoC: 1) GET cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<DELIVERY>&limit=1 → total 8337; 2) GET preview.contentful.com/spaces/214q1nptnllb/entries?access_token=<PREVIEW>&sys.publishedAt[exists]=false&content_type=article → total 102 drafts; 3) invalid-token control → 401. Draft help articles only — no customer/financial/auth data touched. This step is still pending (valid-bugs.md count 0).
+[RISK] sumup: 78 — Legacy OAuth gateway live (client_id oracle, wildcard CORS, redirect-set divergence) but allowlist host unrecoverable from ccTLD/common-surface (exhaustively refuted). Staging auth.sam-app.ro unauthenticated RFC 7591 registration mints valid JWTs (empty scope, controlled aud); prod/staging JWKS key isolation confirmed as the blocker. RFC 9728 metadata static on prod. Confirmed reportable P4: Contentful preview-token leak (1,082 draft help entries), still unreported. All high-impact chains remain AUTH_HELPED/POST-blocked; Vercel me/checkout and CT-discovered API subdomains fully gated. Financial surface concentrated but access-controlled, with the confirmed low-severity info-disclosure as the current actionable reportable item.

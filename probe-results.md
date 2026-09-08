@@ -397,3 +397,14 @@ https://api.sumup.com/v1/merchants -> HTTP 404
 
 ## 2026-09-08 17:50:38 UTC
 https://api.sumup.com` -> ERR <urlopen error [Errno -2] Name or service not know
+
+## 2026-09-08 20:29:26 UTC
+https://api.sumup.com` -> ERR <urlopen error [Errno -2] Name or service not know
+https://auth.sumup.com/oauth2/par -> HTTP 404
+https://me.sumup.com/api/sso/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256 -> HTTP 404
+https://auth.sumup.com/oauth2/token -> HTTP 405
+https://auth.sumup.com/oauth2/auth -> HTTP 405
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/v1/merchants/self -> HTTP 404
