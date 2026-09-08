@@ -390,3 +390,5 @@ www.sumup.com
 - CHANGED read-api.sumup.com / sf-gateway-api.sumup.com: uniform 404 on all enumerated read paths (swagger/openapi/health/well-known/authorize); /authorize returns 404 (NOT the 302 oracle of api.sumup.com) — CT
 - NEW ccTLD legacy-callback oracle exhaustively swept: 96 combos (15 ccTLDs × {app,dashboard,my,secure,me,www}, `/callback`) + 15 bare-path subset → **all** `invalid_request` error-flow, **0 HITs**. Extends
 - NEW read-api.sumup.com / sf-gateway-api.sumup.com probed fresh: uniform 404 on all read paths (swagger/openapi/health/well-known); `/authorize` returns **404** (NOT the 302 oracle of api.sumup.com) — CT-d
+
+## 2026-09-08 17:50:37 UTC

@@ -962,3 +962,10 @@
 - LEARN: ACCEPTED OTHER @ JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Cross-env key isolation confirmed at JWKS kid level (expla
 - LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 
 - LEARN: REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read ove
+
+## RANKED HYPOTHESES 2026-09-08 17:50:37 UTC
+- [92] help.sumup.com: Contentful Preview API token grants unauthenticated read of draft/unpublished help content (CONFIRMED — reportable P4) (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Report confirmed Contentful preview-token exposure (help.sumup.com, space 214q1nptnllb, token sha256=preview-contentful) to bugs.olivermaicher.eu — class
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts, /callback) + 15 bare-path subset a
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not the 302 oracle of api.sumup.com); uniform 404 on all read paths (swag
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata is static — `resource=https://api.sumup.com`, sole auth server auth.sumup

@@ -11945,3 +11945,63 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] sumup: 78 — Legacy OAuth gateway live (client_id oracle, wildcard CORS, redirect-set divergence) but allowlist host not recoverable from ccTLD or common-surface space (exhaustively refuted this session). Staging auth.sam-app.ro unauthenticated RFC 7591 registration mints valid JWTs (empty scope, controlled aud); prod/staging JWKS key isolation confirmed. RFC 9728 metadata static on prod. Confirmed reportable P4: Contentful preview-token leak (1,082 draft help entries). All high-impact chains still require merchant token or POST (AUTH_HELPED); ccTLD sweep and read-api/sf-gateway subdomains closed with no fresh oracle. Vercel me/checkout and CT-discovered API subdomains fully gated. Financial surface concentrated but access-controlled, with the confirmed low-severity info-disclosure as the current reportable item.
+===== ANALYST bigpickle 2026-09-08 17:50:37 UTC =====
+[0m
+> build · big-pickle
+[0m
+STEP 1 — DELTA
+NO_DELTA. All recent entries confirm existing findings without new assets or state changes.
+
+STEP 2 — PRIORITIZE
+[PRIO] api.sumup.com/authorize,8.5,oauth_legacy_gateway
+[PRIO] help.sumup.com,7.8,token_leak
+[PRIO] auth.sumup.com,7.2,oauth_server
+[PRIO] auth.sam-app.ro,6.5,staging_registration
+[PRIO] api.sumup.com/.well-known/oauth-protected-resource,5.8,rfc9728_metadata
+
+STEP 3 — HYPOTHESES
+[HYP] Contentful Preview API token grants unauthenticated read of draft/unpublished help content (CONFIRMED — reportable P4)
+class: MISCONFIG
+asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb
+confidence: 92
+reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW (sha256 52136da5…8997). GET preview.contentful.com → total 9419 vs cdn 8337; `sys.publishedAt[exists]=false` → 1082 drafts (102 articles, 143 callouts) incl. never-published updated 2026-09-04; invalid token → 401. Not management-scoped.
+evidence_needed: none — verified (cdn vs preview totals; draft filter; 401 control; search-API draft escalation refuted).
+verify_steps: (done) GET cdn vs preview totals; draft filter; 401 control.
+impact: Unauthenticated read of 1,082 draft/unpublished help entries (unreleased product/legal content). No customer/financial/auth data. Severity low-moderate.
+testability: PASSIVE
+
+[HYP] RFC 9728 resource-server metadata / audience-validation divergence at prod gateway
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource
+confidence: 60
+reasoning: Metadata statically declares `resource=https://api.sumup.com`, sole auth server auth.sumup.com, header-only bearer, JWKS from auth.sumup.com. Prod JWKS rejects staging tokens (key isolation confirmed) but the gateway's audience check (aud=api.sumup.com vs staging aud=api.sam-app.ro) is untested at request level — divergent/staging token replay could be accepted if aud validation is absent.
+evidence_needed: A staging-minted JWT (aud=api.sam-app.ro) accepted vs cleanly rejected at prod api.sumup.com/v1/*.
+verify_steps: BLOCKED passive — requires replaying a staging JWT at a prod resource path.
+impact: Cross-env token relay → merchant/payment access if accepted. High-latent.
+testability: AUTH_HELPED
+
+[HYP] auth-theta.sam-app.ro registration config diverges from sibling (canary escalation)
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 42
+reasoning: Sibling supports unauthenticated RFC 7591 registration → real JWTs (empty scope, PKCE-required); theta discovery/route semantics byte-identical; only POST-behavior divergence remains.
+evidence_needed: One POST /oauth2/register on theta returning non-empty scope or waived PKCE.
+verify_steps: BLOCKED passive — POST required; needs role approval.
+impact: Attacker-scoped staging OAuth client → scoped JWTs → cross-env risk if theta is live prod canary. Low-now, high-latent.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+[PARKED] auth-theta.sam-app.ro divergence: confidence 42 < 50, AUTH_HELPED blocked (needs POST).
+[FINAL] 1. Contentful Preview API token leak (confidence 92) — SURVIVES, PASSIVE, verified, reportable
+[FINAL] 2. RFC 9728 audience-validation divergence (confidence 60) — SURVIVES, AUTH_HELPED
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Report confirmed Contentful preview-token exposure (help.sumup.com, space 214q1nptnllb, token sha256=preview-contentful) to bugs.olivermaicher.eu — class MISCONFIG/exposed-secret P4. PoC: 1) GET cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<DELIVERY>&limit=1 → total 8337; 2) GET preview.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4...&sys.publishedAt[exists]=false&content_type=article → total 102 drafts; 3) invalid-token control → 401. Draft help articles only, no customer/financial/auth data touched.
+
+STEP 6 — LEARNING
+[LEARN] REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts, /callback) + 15 bare-path subset all invalid_request error-flow, 0 HITs; legacy dashboard allowlist host not recoverable from ccTLD space either.
+[LEARN] REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not the 302 oracle of api.sumup.com); uniform 404 on all read paths (swagger/openapi/health/well-known) — no divergent OAuth oracle, fully gated.
+[LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata is static — `resource=https://api.sumup.com`, sole auth server auth.sumup.com, header-only bearer, dev-docs link; no resource_scopes/audience-oracle field; recon surface exhausted.
+
+STEP 7 — RISK
+[RISK] sumup: 78 — Legacy OAuth gateway live (client_id oracle, wildcard CORS, redirect-set divergence) but allowlist host not recoverable from ccTLD or common-surface space (exhaustively refuted this session). Staging auth.sam-app.ro unauthenticated RFC 7591 registration mints valid JWTs (empty scope, controlled aud); prod/staging JWKS key isolation confirmed. RFC 9728 metadata static on prod. Confirmed reportable P4: Contentful preview-token leak (1,082 draft help entries). All high-impact chains still require merchant token or POST (AUTH_HELPED); ccTLD sweep and read-api/sf-gateway subdomains closed with no fresh oracle. Vercel me/checkout and CT-discovered API subdomains fully gated. Financial surface concentrated but access-controlled, with the confirmed low-severity info-disclosure as the current reportable item.

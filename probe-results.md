@@ -394,3 +394,6 @@ https://api.sumup.com -> HTTP 404
 https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
 https://auth.sumup.com/oauth2/token -> HTTP 405
 https://api.sumup.com/v1/merchants -> HTTP 404
+
+## 2026-09-08 17:50:38 UTC
+https://api.sumup.com` -> ERR <urlopen error [Errno -2] Name or service not know
