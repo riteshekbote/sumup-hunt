@@ -248,3 +248,5 @@ verify_steps: 1. Confirm this matches the live verification on developer.sumup.c
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
 ## REPOSCAN 2026-09-07 23:16:36 UTC
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-08 01:29:18 UTC
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
