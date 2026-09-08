@@ -380,3 +380,17 @@ https://help.sumup.com/api/search/{draft-title -> HTTP 500
 https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://{cctld-host -> HTTP 404
 https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://dashboard.sumup.de/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
 https://me.sumup.com/api/sso/callback -> HTTP 403
+
+## 2026-09-08 13:38:15 UTC
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://dashboard.sumup.co.uk/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://dashboard.sumup.fr/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://app.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://help.sumup.com -> 200 len=167350
+https://help.sumup.com/api/search/{draft-title -> HTTP 500
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://auth.sumup.com/oauth2/token -> HTTP 405
+https://api.sumup.com/v1/merchants -> HTTP 404

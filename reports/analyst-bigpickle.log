@@ -10977,3 +10977,971 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] sumup: 78 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. Contentful Preview API token leak on help.sumup.com grants draft access (low-moderate). All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, and resource server metadata exposure.
+===== ANALYST bigpickle 2026-09-08 13:37:57 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && ls -la && cat scope.yml 2>/dev/null | head -50
+total 356
+drwxr-xr-x 12 runner runner   4096 Sep  8 13:28 .
+drwxr-xr-x  3 runner runner   4096 Sep  8 13:28 ..
+drwxr-xr-x  7 runner runner   4096 Sep  8 13:28 .git
+drwxr-xr-x  3 runner runner   4096 Sep  8 13:28 .github
+-rw-r--r--  1 runner runner   1885 Sep  8 13:28 README.md
+-rw-r--r--  1 runner runner     32 Sep  8 13:28 analyst-out.txt
+-rw-r--r--  1 runner runner 126361 Sep  8 13:28 analyst-prompt.txt
+-rw-r--r--  1 runner runner 122475 Sep  8 13:28 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 inventory
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 leads
+-rw-r--r--  1 runner runner  25077 Sep  8 13:28 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 reports
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Sep  8 13:28 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 scripts
+-rw-r--r--  1 runner runner     33 Sep  8 13:28 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep  8 13:28 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep  8 13:28 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep  8 13:28 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep  8 13:28 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep  8 13:28 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 triage
+programs:
+  sumup:
+    name: SumUp Payments Limited / SumUp Group Bug Bounty
+    disclosure_policy: via bugs.olivermaicher.eu (Oliver Maicher private program) - report + PoC + contact + payment
+    assets:
+      - name: "All company-owned infrastructure, payment platforms, merchant portals, APIs, mobile and web applications, point-of-sale systems, cloud services, websites, and domains operated by SumUp Group and its subsidiaries"
+        priority: In
+    out_of_scope:
+- "Network level Denial of Service attacks"
+      - "Application Denial of Service by locking user accounts"
+      - "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)"
+      - "Disclosure of known public files or directories (e.g. robots.txt)"
+      - "Outdated software / library versions"
+      - "OPTIONS / TRACE HTTP method enabled"
+      - "CSRF on logout"
+      - "CSRF on forms that are available to anonymous users"
+      - "Cookies that lack HTTP Only or Secure settings for non-sensitive data"
+      - "Self-XSS and issues exploitable only through Self-XSS"
+      - "Reports resulting from automated scanning utilities without additional details or a POC demonstrating a specific exploit"
+      - "Attacks requiring physical access to a user's device"
+      - "Attacks dependent upon social engineering of employees or vendors"
+      - "Username enumeration based on login or forgot password pages"
+      - "Enforcement policies for brute force, rate limiting, or account lockout"
+      - "SSL/TLS best practices"
+      - "SSL attacks such as BEAST, BREACH, Renegotiation attack"
+      - "Clickjacking, without additional details demonstrating a specific exploit"
+      - "Mail configuration issues including SPF, DKIM, DMARC settings"
+      - "Use of a known-vulnerable library without a description of an exploit specific to our implementation"
+      - "Password and account recovery policies"
+      - "Presence of autocomplete functionality in form fields"
+      - "Publicly accessible login panels"
+      - "Lack of email address verification during account registration or account invitation"
+      - "Lack of email address verification password restore"
+      - "Session control during email/password changes"
+      - "Social engineering, physical attacks, and DoS/DDoS testing (per program notes)"
+      - "Exposure of customer/employee/financial/authentication data during testing (per program notes)"
+    github_orgs:
+      - none-configured
+
+rules:
+  passive_first: false          # deep-hunt agent: active probes allowed when scoped
+  max_requests_per_second: 1    # never hammer live infra
+  no_doom: true                 # no DoS/DDoS, no account-lockout attacks
+  account_creation: restricted  # only on test/sandbox assets, never live customer data
+  no_data_modification: true    # no writes/deletes on live customer data
+  no_pre_disclosure: true       # never disclose before program response
+  poc_required: true            # scanner output alone is REJECTED
+  redact_secrets_in_commits: true
+
+models:
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && cat analyst-out.txt && echo "---LEADS---" && ls leads/ && echo "---STATE---" && cat state_bigpickle.json
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && ls -la && cat scope.yml 2>/dev/null | head -50
+total 356
+drwxr-xr-x 12 runner runner   4096 Sep  8 13:28 .
+drwxr-xr-x  3 runner runner   4096 Sep  8 13:28 ..
+drwxr-xr-x  7 runner runner   4096 Sep  8 13:28 .git
+drwxr-xr-x  3 runner runner   4096 Sep  8 13:28 .github
+-rw-r--r--  1 runner runner   1885 Sep  8 13:28 README.md
+-rw-r--r--  1 runner runner     32 Sep  8 13:28 analyst-out.txt
+-rw-r--r--  1 runner runner 126361 Sep  8 13:28 analyst-prompt.txt
+-rw-r--r--  1 runner runner 122475 Sep  8 13:28 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 inventory
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 leads
+-rw-r--r--  1 runner runner  25077 Sep  8 13:28 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 reports
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Sep  8 13:28 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 scripts
+-rw-r--r--  1 runner runner     33 Sep  8 13:28 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep  8 13:28 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep  8 13:28 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep  8 13:28 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep  8 13:28 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep  8 13:28 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep  8 13:28 triage
+programs:
+  sumup:
+    name: SumUp Payments Limited / SumUp Group Bug Bounty
+    disclosure_policy: via bugs.olivermaicher.eu (Oliver Maicher private program) - report + PoC + contact + payment
+    assets:
+      - name: "All company-owned infrastructure, payment platforms, merchant portals, APIs, mobile and web applications, point-of-sale systems, cloud services, websites, and domains operated by SumUp Group and its subsidiaries"
+        priority: In
+    out_of_scope:
+- "Network level Denial of Service attacks"
+      - "Application Denial of Service by locking user accounts"
+      - "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)"
+      - "Disclosure of known public files or directories (e.g. robots.txt)"
+      - "Outdated software / library versions"
+      - "OPTIONS / TRACE HTTP method enabled"
+      - "CSRF on logout"
+      - "CSRF on forms that are available to anonymous users"
+      - "Cookies that lack HTTP Only or Secure settings for non-sensitive data"
+      - "Self-XSS and issues exploitable only through Self-XSS"
+      - "Reports resulting from automated scanning utilities without additional details or a POC demonstrating a specific exploit"
+      - "Attacks requiring physical access to a user's device"
+      - "Attacks dependent upon social engineering of employees or vendors"
+      - "Username enumeration based on login or forgot password pages"
+      - "Enforcement policies for brute force, rate limiting, or account lockout"
+      - "SSL/TLS best practices"
+      - "SSL attacks such as BEAST, BREACH, Renegotiation attack"
+      - "Clickjacking, without additional details demonstrating a specific exploit"
+      - "Mail configuration issues including SPF, DKIM, DMARC settings"
+      - "Use of a known-vulnerable library without a description of an exploit specific to our implementation"
+      - "Password and account recovery policies"
+      - "Presence of autocomplete functionality in form fields"
+      - "Publicly accessible login panels"
+      - "Lack of email address verification during account registration or account invitation"
+      - "Lack of email address verification password restore"
+      - "Session control during email/password changes"
+      - "Social engineering, physical attacks, and DoS/DDoS testing (per program notes)"
+      - "Exposure of customer/employee/financial/authentication data during testing (per program notes)"
+    github_orgs:
+      - none-configured
+
+rules:
+  passive_first: false          # deep-hunt agent: active probes allowed when scoped
+  max_requests_per_second: 1    # never hammer live infra
+  no_doom: true                 # no DoS/DDoS, no account-lockout attacks
+  account_creation: restricted  # only on test/sandbox assets, never live customer data
+  no_data_modification: true    # no writes/deletes on live customer data
+  no_pre_disclosure: true       # never disclose before program response
+  poc_required: true            # scanner output alone is REJECTED
+  redact_secrets_in_commits: true
+
+models:
+[0m
+---LEADS---
+lead-bigpickle.md
+lead-laguna.md
+lead-ling3.md
+lead-longcat.md
+lead-mimo.md
+lead-nemotron3.md
+reposcan-sumup.md
+---STATE---
+{"phase": "POC", "target": "api"}
+[0m
+Let me run the pending probe from the NEXT action (ccTLD legacy callback enumeration) and check the analyst output state.
+The prior session ran the ccTLD probe but I don't see its result recorded. Let me check the lead file and probe results to see if the ccTLD enumeration was already attempted.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && cat leads/lead-bigpickle.md && echo "===PROBE RESULTS TAIL===" && tail -60 probe-results.md
+...output truncated...
+
+Full output saved to: /home/runner/.local/share/opencode/tool-output/tool_08134da4c001PaAiNCfnNJQicy
+
+class: BUSLOGIC
+asset: sse.sumup.com/sse/scss
+confidence: 42
+reasoning: 102 draft articles exist in space 214q1nptnllb; the public search contract (page/size/locale) returned only published IDs for the tested queries. If sse backend indexes drafts per-locale (e.g. preview-locales/draft flag ignored on help.sumup.com but honored server-side), draft content could surface through search param manipulation.
+evidence_needed: A search response containing one of the leaked draft IDs (6gZWzhAO0Am1PlWc6HsmOp) via locale/draft param.
+verify_steps: GET https://help.sumup.com/api/search/{draft-title}?page=1&size=20&locale=*-* && locale=it-IT && locale=de-DE compare IDs; passive GET only.
+impact: Draft/unreleased help content exposure via search (same data already readable via preview token — additive, not new class). Severity low.
+testability: PASSIVE
+[HYP] auth-theta.sam-app.ro registration config diverges from sibling auth.sam-app.ro (non-empty scope or waived PKCE) on the canary deploy
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 52
+reasoning: auth-theta is separate deploy (mcp-theta/api-theta/auth-theta); sibling registers unauthenticated RFC 7591 clients with real JWTs, empty scope + PKCE-required. Theta divergence = first real escalation on staging identity stack.
+evidence_needed: One POST /oauth2/register on theta returning client with non-empty scope or waived PKCE.
+verify_steps: BLOCKED passive — POST required; needs role approval.
+impact: Attacker-scoped OAuth client on staging identity → scoped JWTs → cross-env escalation if theta is prod canary. Severity low-now, high-latent.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Report the confirmed Contentful preview-token exposure (help.sumup.com, space 214q1nptnllb, token XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM) to bugs.olivermaicher.eu — class MISCONFIG/exposed-secret, P4. PoC: 1) curl -s 'https://cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<DELIVERY>&limit=1' → total 8337; 2) curl -s 'https://preview.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4...&sys.publishedAt[exists]=false&content_type=article' → total 102 drafts; 3) invalid-token control → 401. No customer/financial/auth data touched (draft help articles only).
+[RISK] sumup: 60. Net +8: confirmed reportable info-disclosure (exposed Contentful preview token → 1,082 draft entries readable), plus live unauthenticated help-search data path mapped. help.sumup.com moves from edge asset to confirmed-priority. Remaining high-impact chains (theta canary registration divergence, BOLA on api, mcp scope) still need POST/token; staging dynamic-registration→JWT (85) unchanged, bounded by empty scope + cross-env key isolation.
+[HYP] Exposed Contentful PREVIEW API token reads unpublished/draft help-center content (CONFIRMED by probe)
+class: MISCONFIG
+asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb
+confidence: 92
+reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM". GET preview.contentful.com with it → 200, total 9419 vs cdn 8337; sys.publishedAt[exists]=false → 1082 drafts (102 content_type=article, 143 callout); sample never-published articles updated 2026-09-03/04; invalid token → 401.
+evidence_needed: none — verified.
+verify_steps: GET cdn vs preview totals; draft filter; invalid-token control (done).
+impact: Unauthenticated read of 1,082 draft/unpublished help articles (unreleased product/legal content). No customer/financial/auth data. Severity low-moderate (P4).
+testability: PASSIVE
+[HYP] help search / sse backend may index drafts via per-locale or draft-state param
+class: BUSLOGIC
+asset: sse.sumup.com/sse/scss
+confidence: 42
+reasoning: 102 draft articles exist; en-GB search over tested terms returned published IDs only. Draft indexing would surface unpublished content via search param abuse.
+evidence_needed: A search response containing leaked draft ID (6gZWzhAO0Am1PlWc6HsmOp).
+verify_steps: GET https://help.sumup.com/api/search/{draft-title}?page=1&size=20&locale=it-IT | de-DE | en-US — compare returned IDs (passive GET only).
+impact: Same draft data as preview token (additive, not a new class). Severity low.
+testability: PASSIVE
+[HYP] auth-theta.sam-app.ro registration config diverges (non-empty scope / waived PKCE) on canary deploy
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 52
+reasoning: Separate deploy; sibling gives real JWTs/empty scope + PKCE-required; divergence = first real staging-identity escalation.
+evidence_needed: One POST /oauth2/register on theta with non-empty scope or waived PKCE.
+verify_steps: BLOCKED passive — POST required; needs role approval.
+impact: Scoped staging JWTs → cross-env risk if theta doubles as prod canary. Low-now, high-latent.
+testability: AUTH_HELPED
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource
+confidence: 75
+reasoning: api.sumup.com publishes RFC 9728 metadata declaring authorization_servers=["https://auth.sumup.com"] and jwks_uri=https://auth.sumup.com/.well-known/jwks.json. The auth.sumup.com discovery doc supports token_endpoint_auth_methods_supported=["none"] and request_object_signing_alg_values_supported=["none"]. If a token minted for one resource server (e.g., staging api.sam-app.ro) is accepted by another (prod api.sumup.com) due to shared JWKS or audience validation gaps, cross-environment token relay is possible. Prod JWKS already rejects staging tokens (confirmed), but audience validation logic at api.sumup.com gateway is untested.
+evidence_needed: Valid access token from auth.sumup.com (or staging) with aud=https://api.sumup.com accepted by api.sumup.com gateway; token with aud=https://api.sam-app.ro rejected by prod gateway; token with manipulated aud claim accepted
+verify_steps: GET https://api.sumup.com/.well-known/oauth-protected-resource (confirmed 200); GET https://auth.sumup.com/.well-known/jwks.json → compare keys; POST https://auth.sumup.com/oauth2/token with client_credentials grant for dashboard client → extract JWT aud; replay token at api.sumup.com/v1/merchants with Authorization: Bearer <token> → observe 401 vs structured problem+json
+impact: Cross-resource-server token acceptance → merchant data access, payment initiation, reader control across environments — HIGH
+testability: AUTH_HELPED
+[PARKED] RFC 9728 resource server metadata divergence enables audience confusion / token relay across resource servers: Confidence 75 but verify_steps require AUTH_HELPED (valid merchant token, token replay) — cannot test passively; requires live merchant OAuth flow or client_credentials grant which dashboard client may not support on prod.
+[FINAL] 1. Staging dynamic client registration enables self-issued OAuth clients with attacker-controlled redirect_uris and audience, minting valid JWTs with empty scope but controlled aud (confidence 90) — SURVIVES  
+[FINAL] 2. Legacy OAuth authorize endpoint client_id oracle + redirect_uri allowlist divergence + wildcard CORS enables callback host enumeration and OAuth authorization code theft (confidence 85) — SURVIVES
+[NEXT] PROBE: POST https://auth.sam-app.ro/oauth2/register with {"client_name":"test","redirect_uris":["https://evil.com/callback"],"grant_types":["authorization_code","client_credentials"],"response_types":["code"],"token_endpoint_auth_method":"client_secret_post"} → observe 201 client_id+secret; then POST https://auth.sam-app.ro/oauth2/token with grant_type=client_credentials&client_id=<new>&client_secret=<new> → extract JWT; replay at https://api.sumup.com/v1/merchants with Authorization: Bearer <staging_jwt> → observe rejection (cross-env isolation) vs acceptance (confusion)
+[LEARN] ACCEPTED OATH @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200) declaring authorization_servers=["https://auth.sumup.com"], bearer_methods_supported=["header"], jwks_uri=https://auth.sumup.com/.well-known/jwks.json — new prod attack surface for token validation logic testing.  
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).  
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge, enforce per-client redirect allowlist (unrelated redirect → 401), no RFC7592 get/put/delete (404), NOT synced to api.sam-app.ro/authorize (invalid_client).  
+[LEARN] ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp but attacker-controlled aud; scope escalation blocked at registration + token endpoint; auth_method declared but not enforced.  
+[LEARN] ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404 with/without token) but empty scope blocks all resource access.  
+[LEARN] ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed.  
+[LEARN] REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is NOT token-stealing (bearer_methods_supported=["header"], no cookies/ambient creds); hardening-only.  
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Endpoint LIVE with client_id oracle (invalid_client vs invalid_request) and legacy redirect-set divergence — modern dashboard callback rejected on legacy gateway.  
+[LEARN] ACCEPTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS (access-control-allow-origin:*) + broad allow-methods + max-age + SameSite=None cookies on Domain=sumup.com — endpoint-specific divergence from auth.sumup.com.  
+[LEARN] ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live on modern auth server — https://me.sumup.com/api/sso/callback returns 302→login flow (state≥8 enforced).  
+[LEARN] REJECTED OATH @ api.sumup.com/authorize: crt.sh-derived callback candidates (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, api.sumup.com self-hosts, www) + custom schemes (sumup://, sumup-pos://, com.sumup.pos://) all invalid_request — single-class oracle, ~52 combos exhausted; legacy allowlist host not recoverable from reachable surface.  
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: sumup-ios-sdk and unknown IDs → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered; only dashboard confirmed registered.  
+[LEARN] ACCEPTED AUTH @ checkout.sumup.com: New Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as me.sumup.com; no anonymous surface.  
+[LEARN] REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.  
+[LEARN] REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint.  
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Redirect-allowlist divergence + wildcard CORS is the api-gateway template (identical on api.sam-app.ro), distinct from auth.sumup.com — architectural fact, not per-instance anomaly.  
+[LEARN] REJECTED MISCONFIG @ tap-to-pay-sdk.fleet.live.sumup.net: 401 Cloudflare Maven host + Fleet CD naming = infra/banner class.  
+[LEARN] ACCEPTED OATH @ sam-app.ro: Staging stack (mcp/mcp-theta/api/api-theta/auth/auth-theta) publicly reachable; replicates prod gates byte-for-byte (/mcp 401, /authorize invalid_request on evil redirect, OIDC discovery public) — faithful parallel oracle, no permissive config observed.  
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200 JSON) declaring auth.sumup.com as sole authorization_server, header-only bearer, JWKS URI, developer docs link; no resource_scopes field — reconnaissance surface exhausted.  
+[LEARN] ACCEPTED BUSLOGIC @ api.sam-app.ro/.well-known/oauth-protected-resource: Staging variant LIVE (200 JSON) declaring auth.sam-app.ro; identical structure to prod; confirms per-env authorization server binding.  
+[LEARN] ACCEPTED OTHER @ mcp.sumup.com/.well-known/mcp.json: 404 JSON-RPC response (not static file); MCP app-directory spec metadata not published by this worker.  
+[LEARN] ACCEPTED MISCONFIG @ api.sumup.com/.well-known/openid-configuration: 404 structured problem+json; gateway-handled, no auth-server discovery on API gateway (correct — auth-server is auth.sumup.com).  
+[LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-authorization-server: 404 structured problem+json; same gateway handling.  
+[LEARN] ACCEPTED OTHER @ JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Cross-env key isolation confirmed at JWKS kid level (explains mcp.sumup.com prod rejection of staging tokens). Staging includes `loadtesting` kid not in prod.  
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in SumUp help-center space 214q1nptnllb; published set is 8,337. Reproducible via GET preview.contentful.com with the leaked token.  
+[LEARN] REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read over public index only, no draft leak via search (draft IDs not returned).
+[RISK] sumup: 78 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, and resource server metadata exposure.
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in SumUp help-center space 214q1nptnllb; published set is 8,337. Reproducible via GET preview.contentful.com with the leaked token.
+[LEARN] REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read over public index only, no draft leak via search (draft IDs not returned).
+[HYP] help search/sse backend may serve draft content via non-en-GB locale or draft-state param on a hidden admin variant (draft IDs not surfaced in en-GB search)
+class: BUSLOGIC
+asset: sse.sumup.com/sse/scss
+confidence: 42
+reasoning: 102 draft articles exist in space 214q1nptnllb; the public search contract (page/size/locale) returned only published IDs for the tested queries. If sse backend indexes drafts per-locale (e.g. preview-locales/draft flag ignored on help.sumup.com but honored server-side), draft content could surface through search param manipulation.
+evidence_needed: A search response containing one of the leaked draft IDs (6gZWzhAO0Am1PlWc6HsmOp) via locale/draft param.
+verify_steps: GET https://help.sumup.com/api/search/{draft-title}?page=1&size=20&locale=*-* && locale=it-IT && locale=de-DE compare IDs; passive GET only.
+impact: Draft/unreleased help content exposure via search (same data already readable via preview token — additive, not new class). Severity low.
+testability: PASSIVE
+[HYP] auth-theta.sam-app.ro registration config diverges from sibling auth.sam-app.ro (non-empty scope or waived PKCE) on the canary deploy
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 52
+reasoning: auth-theta is separate deploy (mcp-theta/api-theta/auth-theta); sibling registers unauthenticated RFC 7591 clients with real JWTs, empty scope + PKCE-required. Theta divergence = first real escalation on staging identity stack.
+evidence_needed: One POST /oauth2/register on theta returning client with non-empty scope or waived PKCE.
+verify_steps: BLOCKED passive — POST required; needs role approval.
+impact: Attacker-scoped OAuth client on staging identity → scoped JWTs → cross-env escalation if theta is prod canary. Severity low-now, high-latent.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Report the confirmed Contentful preview-token exposure (help.sumup.com, space 214q1nptnllb, token XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM) to bugs.olivermaicher.eu — class MISCONFIG/exposed-secret, P4. PoC: 1) curl -s 'https://cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<DELIVERY>&limit=1' → total 8337; 2) curl -s 'https://preview.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4...&sys.publishedAt[exists]=false&content_type=article' → total 102 drafts; 3) invalid-token control → 401. No customer/financial/auth data touched (draft help articles only).
+[RISK] sumup: 60. Net +8: confirmed reportable info-disclosure (exposed Contentful preview token → 1,082 draft entries readable), plus live unauthenticated help-search data path mapped. help.sumup.com moves from edge asset to confirmed-priority. Remaining high-impact chains (theta canary registration divergence, BOLA on api, mcp scope) still need POST/token; staging dynamic-registration→JWT (85) unchanged, bounded by empty scope + cross-env key isolation.
+[HYP] Exposed Contentful PREVIEW API token reads unpublished/draft help-center content (CONFIRMED by probe)
+class: MISCONFIG
+asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb
+confidence: 92
+reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM". GET preview.contentful.com with it → 200, total 9419 vs cdn 8337; sys.publishedAt[exists]=false → 1082 drafts (102 content_type=article, 143 callout); sample never-published articles updated 2026-09-03/04; invalid token → 401.
+evidence_needed: none — verified.
+verify_steps: GET cdn vs preview totals; draft filter; invalid-token control (done).
+impact: Unauthenticated read of 1,082 draft/unpublished help articles (unreleased product/legal content). No customer/financial/auth data. Severity low-moderate (P4).
+testability: PASSIVE
+[HYP] help search / sse backend may index drafts via per-locale or draft-state param
+class: BUSLOGIC
+asset: sse.sumup.com/sse/scss
+confidence: 42
+reasoning: 102 draft articles exist; en-GB search over tested terms returned published IDs only. Draft indexing would surface unpublished content via search param abuse.
+evidence_needed: A search response containing leaked draft ID (6gZWzhAO0Am1PlWc6HsmOp).
+verify_steps: GET https://help.sumup.com/api/search/{draft-title}?page=1&size=20&locale=it-IT | de-DE | en-US — compare returned IDs (passive GET only).
+impact: Same draft data as preview token (additive, not a new class). Severity low.
+testability: PASSIVE
+[HYP] auth-theta.sam-app.ro registration config diverges (non-empty scope / waived PKCE) on canary deploy
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 52
+reasoning: Separate deploy; sibling gives real JWTs/empty scope + PKCE-required; divergence = first real staging-identity escalation.
+evidence_needed: One POST /oauth2/register on theta with non-empty scope or waived PKCE.
+verify_steps: BLOCKED passive — POST required; needs role approval.
+impact: Scoped staging JWTs → cross-env risk if theta doubles as prod canary. Low-now, high-latent.
+testability: AUTH_HELPED
+[PRIO] api.sumup.com/authorize,8.5,a=9,b=9,t=9,g=9,c=8,f=6  
+[PRIO] auth.sam-app.ro/oauth2/register,8.3,a=9,b=8,t=9,g=10,c=7,f=5  
+[PRIO] api.sumup.com/.well-known/oauth-protected-resource,7.8,a=8,b=8,t=8,g=8,c=7,f=6  
+[PRIO] auth.sumup.com,7.5,a=8,b=9,t=8,g=5,c=7,f=5  
+[PRIO] portal.sumup.com,6.8,a=7,b=7,t=7,g=6,c=7,f=6  
+[PRIO] mcp.sumup.com,6.2,a=7,b=7,t=8,g=4,c=6,f=5  
+[PRIO] help.sumup.com,5.5,a=6,b=5,t=6,g=8,c=5,f=4  
+[HYP] Legacy OAuth authorize endpoint client_id oracle + redirect_uri allowlist divergence + wildcard CORS enables callback host enumeration and OAuth authorization code theft
+class: OATH
+asset: api.sumup.com/authorize
+confidence: 85
+reasoning: Endpoint LIVE (302→auth.sumup.com/flows/oauth2/error via raw curl). Client_id oracle: invalid_client ("does not exist") for unknown IDs vs invalid_request (redirect_uri mismatch) for registered dashboard. Legacy/modern redirect-set divergence: dashboard client's modern callback https://me.sumup.com/api/sso/callback accepted on auth.sumup.com/oauth2/auth (302→login flow, state≥8 enforced) but REJECTED on api.sumup.com/authorize (invalid_request). Endpoint-specific wildcard CORS (access-control-allow-origin:*, allow-methods:GET,HEAD,PUT,PATCH,POST,DELETE, max-age=300) + SameSite=None; Domain=sumup.com cookies — absent on auth.sumup.com/oauth2/auth. Legacy allowlist host not recovered from 52+ candidates (crt.sh subdomains, custom schemes, common patterns).
+evidence_needed: Enumerated legacy callback host accepted for dashboard client on api.sumup.com/authorize yielding authorization code; successful code exchange at auth.sumup.com/oauth2/token
+verify_steps: GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://legacy.sumup.com/callback&response_type=code&scope=classic&state=test12345678 → observe invalid_request; GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://app.sumup.com/callback&response_type=code&scope=classic&state=test12345678 → test legacy callback pattern; GET https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri=https://mobile.sumup.com/callback&response_type=code&scope=classic&state=test12345678 → enumerate SDK client_ids
+impact: OAuth authorization code theft via legacy callback host → merchant account takeover, full scope access (accounting/invoices/api_keys/lending/readers/receivables/unified_customer_directory) — CRITICAL
+testability: PASSIVE
+[HYP] Staging dynamic client registration enables self-issued OAuth clients with attacker-controlled redirect_uris and audience, minting valid JWTs with empty scope but controlled aud
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 90
+reasoning: POST /oauth2/register → 201 returns client_id+secret+chosen redirect_uris (declared in openid-configuration). Dynamic clients complete client_credentials grant (client_secret_post) yielding real JWT access_tokens with empty scp:[] but attacker-controlled aud (https://api.sam-app.ro and https://mcp.sam-app.ro both accepted). Registration rejects explicit scope parameter (invalid_client_metadata) and token_endpoint_auth_method: "none". Prod auth.sumup.com has no /register endpoint (404). Staging replicates prod gates byte-for-byte per OIDC discovery.
+evidence_needed: Registered dynamic client on auth.sam-app.ro completing authorization_code+PKCE flow on auth.sam-app.ro/oauth2/auth and exchanging code at auth.sam-app.ro/oauth2/token; proof of cross-environment client sync to prod auth.sumup.com or api.sumup.com/authorize
+verify_steps: POST https://auth.sam-app.ro/oauth2/register with {"client_name":"test","redirect_uris":["https://evil.com/callback"],"grant_types":["authorization_code","client_credentials"],"response_types":["code"],"token_endpoint_auth_method":"client_secret_post"} → observe 201 client_id+secret; POST https://auth.sam-app.ro/oauth2/token with grant_type=client_credentials&client_id=<new_client>&client_secret=<new_secret> → observe JWT with empty scp, attacker-controlled aud; GET https://auth.sam-app.ro/oauth2/auth?client_id=<new_client>&redirect_uri=https://evil.com/callback&response_type=code&scope=openid&code_challenge=<pkce>&code_challenge_method=S256&state=test12345678 → test auth_code+PKCE flow
+impact: Self-issued OAuth client on staging with chosen redirect_uri and aud → credentialed access to staging APIs (api.sam-app.ro, mcp.sam-app.ro); potential bypass of prod registration controls if clients sync across environments — HIGH
+testability: PASSIVE
+[HYP] RFC 9728 resource server metadata divergence enables audience confusion / token relay across resource servers
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource
+confidence: 75
+reasoning: api.sumup.com publishes RFC 9728 metadata declaring authorization_servers=["https://auth.sumup.com"] and jwks_uri=https://auth.sumup.com/.well-known/jwks.json. The auth.sumup.com discovery doc supports token_endpoint_auth_methods_supported=["none"] and request_object_signing_alg_values_supported=["none"]. If a token minted for one resource server (e.g., staging api.sam-app.ro) is accepted by another (prod api.sumup.com) due to shared JWKS or audience validation gaps, cross-environment token relay is possible. Prod JWKS already rejects staging tokens (confirmed), but audience validation logic at api.sumup.com gateway is untested.
+evidence_needed: Valid access token from auth.sumup.com (or staging) with aud=https://api.sumup.com accepted by api.sumup.com gateway; token with aud=https://api.sam-app.ro rejected by prod gateway; token with manipulated aud claim accepted
+verify_steps: GET https://api.sumup.com/.well-known/oauth-protected-resource (confirmed 200); GET https://auth.sumup.com/.well-known/jwks.json → compare keys; POST https://auth.sumup.com/oauth2/token with client_credentials grant for dashboard client → extract JWT aud; replay token at api.sumup.com/v1/merchants with Authorization: Bearer <token> → observe 401 vs structured problem+json
+impact: Cross-resource-server token acceptance → merchant data access, payment initiation, reader control across environments — HIGH
+testability: AUTH_HELPED
+[PARKED] RFC 9728 resource server metadata divergence enables audience confusion / token relay across resource servers: Confidence 75 but verify_steps require AUTH_HELPED (valid merchant token, token replay) — cannot test passively; requires live merchant OAuth flow or client_credentials grant which dashboard client may not support on prod.
+[FINAL] 1. Staging dynamic client registration enables self-issued OAuth clients with attacker-controlled redirect_uris and audience, minting valid JWTs with empty scope but controlled aud (confidence 90) — SURVIVES  
+[FINAL] 2. Legacy OAuth authorize endpoint client_id oracle + redirect_uri allowlist divergence + wildcard CORS enables callback host enumeration and OAuth authorization code theft (confidence 85) — SURVIVES
+[NEXT] PROBE: POST https://auth.sam-app.ro/oauth2/register with {"client_name":"test","redirect_uris":["https://evil.com/callback"],"grant_types":["authorization_code","client_credentials"],"response_types":["code"],"token_endpoint_auth_method":"client_secret_post"} → observe 201 client_id+secret; then POST https://auth.sam-app.ro/oauth2/token with grant_type=client_credentials&client_id=<new>&client_secret=<new> → extract JWT; replay at https://api.sumup.com/v1/merchants with Authorization: Bearer <staging_jwt> → observe rejection (cross-env isolation) vs acceptance (confusion)
+[LEARN] ACCEPTED OATH @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200) declaring authorization_servers=["https://auth.sumup.com"], bearer_methods_supported=["header"], jwks_uri=https://auth.sumup.com/.well-known/jwks.json — new prod attack surface for token validation logic testing.  
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).  
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge, enforce per-client redirect allowlist (unrelated redirect → 401), no RFC7592 get/put/delete (404), NOT synced to api.sam-app.ro/authorize (invalid_client).  
+[LEARN] ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp but attacker-controlled aud; scope escalation blocked at registration + token endpoint; auth_method declared but not enforced.  
+[LEARN] ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404 with/without token) but empty scope blocks all resource access.  
+[LEARN] ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed.  
+[LEARN] REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is NOT token-stealing (bearer_methods_supported=["header"], no cookies/ambient creds); hardening-only.  
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Endpoint LIVE with client_id oracle (invalid_client vs invalid_request) and legacy redirect-set divergence — modern dashboard callback rejected on legacy gateway.  
+[LEARN] ACCEPTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS (access-control-allow-origin:*) + broad allow-methods + max-age + SameSite=None cookies on Domain=sumup.com — endpoint-specific divergence from auth.sumup.com.  
+[LEARN] ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live on modern auth server — https://me.sumup.com/api/sso/callback returns 302→login flow (state≥8 enforced).  
+[LEARN] REJECTED OATH @ api.sumup.com/authorize: crt.sh-derived callback candidates (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, api.sumup.com self-hosts, www) + custom schemes (sumup://, sumup-pos://, com.sumup.pos://) all invalid_request — single-class oracle, ~52 combos exhausted; legacy allowlist host not recoverable from reachable surface.  
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: sumup-ios-sdk and unknown IDs → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered; only dashboard confirmed registered.  
+[LEARN] ACCEPTED AUTH @ checkout.sumup.com: New Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as me.sumup.com; no anonymous surface.  
+[LEARN] REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.  
+[LEARN] REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint.  
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Redirect-allowlist divergence + wildcard CORS is the api-gateway template (identical on api.sam-app.ro), distinct from auth.sumup.com — architectural fact, not per-instance anomaly.  
+[LEARN] REJECTED MISCONFIG @ tap-to-pay-sdk.fleet.live.sumup.net: 401 Cloudflare Maven host + Fleet CD naming = infra/banner class.  
+[LEARN] ACCEPTED OATH @ sam-app.ro: Staging stack (mcp/mcp-theta/api/api-theta/auth/auth-theta) publicly reachable; replicates prod gates byte-for-byte (/mcp 401, /authorize invalid_request on evil redirect, OIDC discovery public) — faithful parallel oracle, no permissive config observed.  
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200 JSON) declaring auth.sumup.com as sole authorization_server, header-only bearer, JWKS URI, developer docs link; no resource_scopes field — reconnaissance surface exhausted.  
+[LEARN] ACCEPTED BUSLOGIC @ api.sam-app.ro/.well-known/oauth-protected-resource: Staging variant LIVE (200 JSON) declaring auth.sam-app.ro; identical structure to prod; confirms per-env authorization server binding.  
+[LEARN] ACCEPTED OTHER @ mcp.sumup.com/.well-known/mcp.json: 404 JSON-RPC response (not static file); MCP app-directory spec metadata not published by this worker.  
+[LEARN] ACCEPTED MISCONFIG @ api.sumup.com/.well-known/openid-configuration: 404 structured problem+json; gateway-handled, no auth-server discovery on API gateway (correct — auth-server is auth.sumup.com).  
+[LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-authorization-server: 404 structured problem+json; same gateway handling.  
+[LEARN] ACCEPTED OTHER @ JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Cross-env key isolation confirmed at JWKS kid level (explains mcp.sumup.com prod rejection of staging tokens). Staging includes `loadtesting` kid not in prod.  
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in SumUp help-center space 214q1nptnllb; published set is 8,337. Reproducible via GET preview.contentful.com with the leaked token.  
+[LEARN] REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read over public index only, no draft leak via search (draft IDs not returned).
+[RISK] sumup: 78 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, and resource server metadata exposure.
+[HYP] Legacy dashboard OAuth callback host recoverable on ccTLD space not covered by the exhausted .sumup.com/scheme sweep
+class: OATH
+asset: api.sumup.com/authorize
+confidence: 40
+reasoning: Registered `dashboard` legacy redirect-set is divergent from auth.sumup.com (me.sumup.com/api/sso/callback rejected invalid_request on legacy gateway). Prior ~52 combos covered .sumup.com crt.sh names + custom schemes only; SumUp operates 15+ ccTLD markets (sumup.co.uk/de/fr/it/es/pt/ie/pl/ro/at/ch/nl/se/dk/fi/be) whose old dashboard hosts were never enumerated against the single-class oracle.
+evidence_needed: A ccTLD callback candidate returning 302→auth flow instead of invalid_request for client_id=dashboard.
+verify_steps: GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://{cctld-host}/{callback|}&response_type=code&scope=classic&state=test12345678 for host ∈ {app,dashboard,my,secure,me,www}×{sumup.co.uk,sumup.de,sumup.fr,sumup.it,sumup.es,sumup.pt,sumup.ie,sumup.pl,sumup.ro,sumup.at,sumup.ch,sumup.nl,sumup.se,sumup.dk,sumup.fi,sumup.be} (raw curl, no -L); control = me.sumup.com/api/sso/callback (known invalid_request), ≤1 rps. negative = any 302 to auth-callback signals a HIT.
+impact: Accepted legacy callback → OAuth code theft via wildcard CORS + SameSite=None Domain=sumup.com cookies → merchant ATO with accounting/api_keys/lending/readers scope. Severity high.
+testability: PASSIVE
+[HYP] Exposed Contentful PREVIEW API token reads unpublished/draft help-center content (CONFIRMED by probe)
+class: MISCONFIG
+asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb
+confidence: 92
+reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM". GET preview.contentful.com → 200 total 9419 vs cdn 8337; sys.publishedAt[exists]=false → 1082 drafts (102 articles, 143 callouts) incl. never-published articles updated 2026-09-04; invalid token → 401 AccessTokenInvalid. Not management-scoped.
+evidence_needed: none — verified (cdn vs preview totals; draft filter; invalid-token control done).
+verify_steps: (done) GET cdn vs preview totals; draft filter; 401 control. Search-API draft escalation refuted today (per-locale published index only).
+impact: Unauthenticated read of 1,082 draft/unpublished help entries (unreleased product/legal content). No customer/financial/auth data. Severity low-moderate (P4).
+testability: PASSIVE
+[HYP] auth-theta.sam-app.ro registration behavior diverges (non-empty scope / waived PKCE) despite identical metadata
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 42
+reasoning: Sibling POST /oauth2/register → 201 with empty-scope + PKCE-required dynamic clients minting real JWTs. Theta discovery and route semantics now confirmed byte-identical (registration_endpoint declared; GET/OPTIONS 404 JSON identical to stage) — leaves only POST-behavior divergence as the canary-escalation vector.
+evidence_needed: One POST /oauth2/register on theta returning client with non-empty scope or waived PKCE.
+verify_steps: BLOCKED passive — POST required; needs role approval.
+impact: Attacker-scoped staging OAuth client → scoped JWTs → cross-env risk if theta is a live prod canary. Low-now, high-latent.
+testability: AUTH_HELPED
+## 2026-09-08 08:56:36 UTC [target] (model bigpickle)
+[NEW] MISCONFIG @ help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in help-center space 214q1nptnllb; published set is 8,337. Reproducible via GET preview.contentful.com with the leaked token.
+[NEW] BUSLOGIC @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200 JSON) declaring auth.sumup.com as sole authorization_server, header-only bearer, JWKS URI.
+[CHANGED] api.sumup.com/authorize: Endpoint confirmed LIVE (302→auth error flow) with client_id oracle + wildcard CORS + legacy redirect-set divergence from modern auth.sumup.com.
+[CHANGED] auth.sam-app.ro: Dynamic client registration yields real JWTs via client_credentials; empty scope blocks resource access; staging/prod divergence documented.
+[PRIO] api.sumup.com/authorize,8.5,oauth_legacy_gateway
+[PRIO] help.sumup.com,7.8,token_leak
+[PRIO] auth.sumup.com,7.2,oauth_server
+[PRIO] auth.sam-app.ro,6.5,staging_registration
+[PRIO] api.sumup.com/.well-known/oauth-protected-resource,5.8,rfc9728_metadata
+[HYP] ccTLD legacy dashboard callback host recovery on sumup.co.uk/de/fr/it/es/pt/ie/pl/ro/at/ch/nl/se/dk/fi/be
+class: OATH
+asset: api.sumup.com/authorize
+confidence: 40
+reasoning: Registered `dashboard` legacy redirect-set is divergent from auth.sumup.com. Prior ~52 combos covered .sumup.com crt.sh names + custom schemes only; SumUp operates 15+ ccTLD markets whose old dashboard hosts were never enumerated against the single-class oracle.
+evidence_needed: A ccTLD callback candidate returning 302→auth flow instead of invalid_request for client_id=dashboard.
+verify_steps: GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://{cctld-host}/{callback|}&response_type=code&scope=classic&state=test12345678 for host ∈ {app,dashboard,my,secure,me,www}×{sumup.co.uk,sumup.de,sumup.fr,sumup.it,sumup.es,sumup.pt,sumup.ie,sumup.pl,sumup.ro,sumup.at,sumup.ch,sumup.nl,sumup.se,sumup.dk,sumup.fi,sumup.be} (raw curl, no -L); control = me.sumup.com/api/sso/callback (known invalid_request), ≤1 rps. negative = any 302 to auth-callback signals a HIT.
+impact: Accepted legacy callback → OAuth code theft via wildcard CORS + SameSite=None Domain=sumup.com cookies → merchant ATO with accounting/api_keys/lending/readers scope. Severity high.
+testability: PASSIVE
+[HYP] Contentful Preview API token grants unauthenticated read of draft/unpublished help-center content
+class: MISCONFIG
+asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb
+confidence: 92
+reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM". GET preview.contentful.com → 200 total 9419 vs cdn 8337; sys.publishedAt[exists]=false → 1082 drafts (102 articles, 143 callouts) incl. never-published articles updated 2026-09-04; invalid token → 401 AccessTokenInvalid. Not management-scoped.
+evidence_needed: none — verified (cdn vs preview totals; draft filter; invalid-token control done).
+verify_steps: (done) GET cdn vs preview totals; draft filter; 401 control. Search-API draft escalation refuted today (per-locale published index only).
+impact: Unauthenticated read of 1,082 draft/unpublished help entries (unreleased product/legal content). No customer/financial/auth data. Severity low-moderate (P4).
+testability: PASSIVE
+[HYP] auth-theta.sam-app.ro registration behavior diverges despite identical metadata
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 42
+reasoning: Sibling POST /oauth2/register → 201 with empty-scope + PKCE-required dynamic clients minting real JWTs. Theta discovery and route semantics now confirmed byte-identical (registration_endpoint declared; GET/OPTIONS 404 JSON identical to stage) — leaves only POST-behavior divergence as the canary-escalation vector.
+evidence_needed: One POST /oauth2/register on theta returning client with non-empty scope or waived PKCE.
+verify_steps: BLOCKED passive — POST required; needs role approval.
+impact: Attacker-scoped staging OAuth client → scoped JWTs → cross-env risk if theta is a live prod canary. Low-now, high-latent.
+testability: AUTH_HELPED
+[PARKED] auth-theta.sam-app.ro registration behavior diverges: POST-behavior divergence requires active testing; confidence 42 < 50 threshold; AUTH_HELPED blocked.
+[FINAL] 1. Contentful Preview API token leak (confidence 92) — SURVIVES, PASSIVE, verified
+[FINAL] 2. ccTLD legacy dashboard callback host recovery (confidence 40) — BOUNDARY, PASSIVE, enumerable
+[FINAL] 3. auth-theta.sam-app.ro divergence (confidence 42) — PARKED, AUTH_HELPED
+[NEXT] PROBE: GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://dashboard.sumup.de/callback&response_type=code&scope=classic&state=test12345678 → raw curl, no -L; observe 302 to auth-callback (HIT) vs 302 to error (miss). Repeat for dashboard.sumup.co.uk, dashboard.sumup.fr, dashboard.sumup.it, dashboard.sumup.es, dashboard.sumup.pt, dashboard.sumup.ie, dashboard.sumup.pl, dashboard.sumup.ro, dashboard.sumup.at, dashboard.sumup.ch, dashboard.sumup.nl, dashboard.sumup.se, dashboard.sumup.dk, dashboard.sumup.fi, dashboard.sumup.be (≤1 rps).
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in SumUp help-center space 214q1nptnllb; published set is 8,337. Reproducible via GET preview.contentful.com with the leaked token.
+[LEARN] REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read over public index only, no draft leak via search (draft IDs not returned).
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Endpoint LIVE with client_id oracle (invalid_client vs invalid_request) and legacy redirect-set divergence — modern dashboard callback rejected on legacy gateway.
+[LEARN] ACCEPTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS (access-control-allow-origin:*) + broad allow-methods + max-age + SameSite=None cookies on Domain=sumup.com — endpoint-specific divergence from auth.sumup.com.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live on modern auth server — https://me.sumup.com/api/sso/callback returns 302→login flow (state≥8 enforced).
+[LEARN] REJECTED OATH @ api.sumup.com/authorize: crt.sh-derived callback candidates all invalid_request — single-class oracle, ~52 combos exhausted; legacy allowlist host not recoverable from reachable surface.
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: sumup-ios-sdk and unknown IDs → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered; only dashboard confirmed registered.
+[LEARN] ACCEPTED AUTH @ checkout.sumup.com: New Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as me.sumup.com; no anonymous surface.
+[RISK] sumup: 78 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. Contentful Preview API token leak on help.sumup.com grants draft access (low-moderate). All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, and resource server metadata exposure.
+===PROBE RESULTS TAIL===
+https://api.sumup.com/v1/merchants -> HTTP 404
+
+## 2026-09-07 17:56:12 UTC
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://legacy.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://app.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri=https://mobile.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://auth.sumup.com/oauth2/token -> HTTP 405
+https://api.sumup.com/v1/merchants -> HTTP 404
+https://sse.sumup.com/sse/scss -> HTTP 404
+https://help.sumup.com/api/search/articles -> HTTP 500
+
+## 2026-09-07 21:29:28 UTC
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://legacy.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://app.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri=https://mobile.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://auth.sumup.com/oauth2/token -> HTTP 405
+https://api.sumup.com/v1/merchants -> HTTP 404
+https://sse.sumup.com/sse/scss -> HTTP 404
+https://help.sumup.com/api/search/articles -> HTTP 500
+
+## 2026-09-07 23:51:51 UTC
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://legacy.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://app.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri=https://mobile.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://auth.sumup.com/oauth2/token -> HTTP 405
+https://api.sumup.com/v1/merchants -> HTTP 404
+
+## 2026-09-08 04:15:09 UTC
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://legacy.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://app.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://api.sumup.com/authorize?client_id=sumup-ios-sdk&redirect_uri=https://mobile.sumup.com/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://help.sumup.com -> 200 len=167350
+https://api.sumup.com/v1/merchants -> HTTP 404
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://auth.sumup.com/oauth2/token -> HTTP 405
+https://help.sumup.com/api/search/{draft-title -> HTTP 500
+
+## 2026-09-08 09:15:52 UTC
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://{cctld-host -> HTTP 404
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://dashboard.sumup.de/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://me.sumup.com/api/sso/callback -> HTTP 403
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && which curl && curl --version | head -1
+/usr/bin/curl
+curl 8.5.0 (x86_64-pc-linux-gnu) libcurl/8.5.0 OpenSSL/3.0.13 zlib/1.3 brotli/1.1.0 zstd/1.5.5 libidn2/2.3.7 libpsl/0.21.2 (+libidn2/2.3.7) libssh/0.10.6/openssl/zlib nghttp2/1.59.0 librtmp/2.3 OpenLDAP/2.6.10
+[0m
+The 09:15:52 probe results show that the ccTLD probe (dashboard.sumup.de/callback) returned HTTP 404 — but note that the raw-curl harness showed earlier "404" was a redirect-following artifact. The probe used `curl` with the harness. Let me look at what actually happened. The `{cctld-host` unexpanded placeholder caused 404. The dashboard.sumup.de probe returned 404 — but I need to determine if that's a real 404 or a redirect-following artifact.
+
+Let me run the ccTLD enumeration properly with raw curl (no -L) as the verify_steps specify. Let me first re-verify the control and the mechanics.
+Let me run the control probe first (known invalid_request → so I understand the raw-curl signal), then run the ccTLD enumeration. The key nuance: raw curl with `-o /dev/null -w '%{http_code} %{redirect_url}'` and no `-L`, to see whether the response is a 302 redirect to auth-callback (HIT) vs a 302/200 to error (miss).
+[0m$ [0mcd /tmp/opencode && curl -s -o /dev/null -D - -sS -o /dev/null -w 'CODE=%{http_code} REDIR=%{redirect_url} FINAL=%{url_effective}\n' --max-time 20 'https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678' 2>&1 | head -20
+HTTP/2 302 
+date: Tue, 08 Sep 2026 13:28:54 GMT
+content-length: 0
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+x-envoy-upstream-service-time: 5
+server: cloudflare
+x-request-id: f13b4fd6-8487-9e30-82fa-e165bbb4ab0f
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+cf-cache-status: DYNAMIC
+set-cookie: optimizely_experiment_user=74436ba3-7adf-4c95-9fc3-0a02cdd8dac5; Path=/; Domain=sumup.com; Expires=Tue, 15 Sep 2026 13:28:54 GMT; Secure; SameSite=None
+set-cookie: __cf_bm=jzy5Opd4FV5qp6zcwYO9Nwlh3HmfJywaRrwaCFNmLts-1788874134.08886-1.0.1.1-OjsTaaOb0ngcAYb8l1vZP7bkk9M2ORN9jj_klTCaoLsAs4nNg4ihG04oA81Z31AboGg4qAN1GpKV0d1wtHKZ8Putg3G3FS0ZX8UVXXc4k5IzSuli7FlnhZ6sGrGDZ0tdLn2b7DlLQwk4M16wntns6g; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Tue, 08 Sep 2026 13:58:54 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=h5O%2FOmew7lnr9hTLzQ4WJOde0mtAM%2FSQBjRRD7IJFeNPVsumL5mJe9zZ66UKwk9an9C06ot2jy8bmlJAZ9%2BqYjUlTw0Li7ghX8iWWimVu%2FMb%2BNMyPnVQBhBsyp0kzfU%3D"}]}
+cf-ray: a37e4c8a0e806077-ORD
+
+CODE=302 REDIR=https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls. FINAL=https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678
+[0m
+[0m$ [0mcd /tmp/opencode && cat > cctld_probe.sh <<'EOF'
+#!/bin/bash
+# ccTLD legacy dashboard callback enumeration - raw curl, no -L
+# HIT = redirect location NOT containing flows/oauth2/error
+cctlds="sumup.co.uk sumup.de sumup.fr sumup.it sumup.es sumup.pt sumup.ie sumup.pl sumup.ro sumup.at sumup.ch sumup.nl sumup.se sumup.dk sumup.fi sumup.be"
+hosts="app dashboard my secure me www"
+for c in $cctlds; do
+  for h in $hosts; do
+    url="https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://${h}.${c}/callback&response_type=code&scope=classic&state=test12345678"
+    loc=$(curl -s -o /dev/null --max-time 20 -w '%{redirect_url}' "$url")
+    if echo "$loc" | grep -q 'flows/oauth2/error'; then
+      echo "MISS ${h}.${c} -> ${loc}"
+    else
+      echo "HIT?? ${h}.${c} -> ${loc}"
+    fi
+    sleep 1
+  done
+done
+EOF
+chmod +x cctld_probe.sh && echo "script ready"
+script ready
+[0m
+Good — the control confirms the raw-curl signal: `302` with `location` = `https://auth.sumup.com/flows/oauth2/error?error=invalid_request...` = **MISS**. A HIT would be a redirect to the callback host (or login flow) rather than the error flow.
+
+Now let me run the ccTLD enumeration. I'll extract the `location` header for each candidate and detect a HIT (any redirect location that is NOT the error flow). Let me run this carefully at ≤1 rps.
+That's 96 requests at 1 rps ≈ 96 seconds + curl time. Let me run it with a generous timeout. Let me run in background and monitor.
+[0m$ [0mcd /tmp/opencode && timeout 200 ./cctld_probe.sh 2>&1 | tee cctld_results.txt; echo "EXIT=$?"
+MISS app.sumup.co.uk -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.co.uk -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.co.uk -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.co.uk -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.co.uk -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.co.uk -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.de -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.de -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.de -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.de -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.de -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.de -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.fr -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.fr -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.fr -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.fr -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.fr -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.fr -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.it -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.it -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.it -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.it -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.it -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.it -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.es -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.es -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.es -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.es -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.es -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.es -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.pt -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.pt -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.pt -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.pt -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.pt -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.pt -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.ie -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.ie -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.ie -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.ie -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.ie -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.ie -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.pl -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.pl -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.pl -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.pl -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.pl -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.pl -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.ro -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.ro -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.ro -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.ro -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.ro -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.ro -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.at -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.at -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.at -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.at -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.at -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.at -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.ch -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.ch -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.ch -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.ch -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.ch -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.ch -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.nl -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.nl -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.nl -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.nl -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.nl -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.nl -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.se -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.se -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.se -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.se -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.se -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.se -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.dk -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.dk -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.dk -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.dk -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.dk -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.dk -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.fi -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.fi -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.fi -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.fi -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.fi -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.fi -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS app.sumup.be -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS dashboard.sumup.be -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS my.sumup.be -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS secure.sumup.be -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS me.sumup.be -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+MISS www.sumup.be -> https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+EXIT=0
+[0m
+[0m$ [0mcd /tmp/opencode && grep -c '^MISS' cctld_results.txt && grep '^HIT' cctld_results.txt || echo "no HITs"
+96
+no HITs
+[0m
+All 96 ccTLD candidates returned **MISS** (invalid_request → error flow). This exhausts the ccTLD host enumeration for the `/callback` path. Let me verify with a couple additional callback path shapes on a subset to be thorough, since the original hypothesis allowed both `/callback` and bare. But given the prior exhaustive sweeps (52+ combos) plus 96 ccTLD combos all MISS, and the wait for a different callback path on the same ccTLD hosts is low-value, I should also try the bare-path variant on a small subset to confirm there's no divergent callback path shape.
+
+Actually, let me reconsider the value. The prior ~52 combos + 96 ccTLD all returned the single-class invalid_request oracle. The ccTLD hypothesis is now empirically refuted for the `/callback` shape. There's a marginal remaining possibility of a bare path, but that's within the same exhausted class. 
+
+Let me record the ccTLD sweep as REJECTED and move the analysis forward. The ccTLD hypothesis is now definitively exhausted (96 combos all MISS). This is a meaningful negative result.
+
+Let me update the lead file with this delta.
+96/96 MISS, 0 HIT. The ccTLD legacy-callback hypothesis is now empirically refuted for the `/callback` path across 15 ccTLDs × 6 hosts. The verify_steps in the hypothesis allowed `{callback|}` (bare path variant). Since the harness's earlier note about "404 was a redirect-following artifact" and the fact that a bare path is a distinct-but-similar shape, let me do a quick check on a small subset with the bare path to close out the class, then finalize.
+
+Given the identical single-class oracle across 100+ combos already, and that this is a low-yield tail, I'll do a focused bare-path check on the most-likely ccTLDs (de, co.uk, fr) across the most-likely host (dashboard, app) to confirm the negative, at 1 rps.
+[0m$ [0mcd /tmp/opencode && cat > bare_probe.sh <<'EOF'
+#!/bin/bash
+# bare-path variant check on subset of ccTLDs (dashboard/app hosts only)
+cctlds="sumup.de sumup.co.uk sumup.fr sumup.it sumup.es"
+hosts="dashboard app me"
+for c in $cctlds; do
+  for h in $hosts; do
+    url="https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://${h}.${c}&response_type=code&scope=classic&state=test12345678"
+    loc=$(curl -s -o /dev/null --max-time 20 -w '%{redirect_url}' "$url")
+    if echo "$loc" | grep -q 'flows/oauth2/error'; then
+      echo "MISS ${h}.${c} (bare) -> error-flow"
+    else
+      echo "HIT?? ${h}.${c} (bare) -> ${loc}"
+    fi
+    sleep 1
+  done
+done
+EOF
+chmod +x bare_probe.sh && timeout 90 ./bare_probe.sh 2>&1 | tee bare_results.txt; echo "EXIT=$?"
+MISS dashboard.sumup.de (bare) -> error-flow
+MISS app.sumup.de (bare) -> error-flow
+MISS me.sumup.de (bare) -> error-flow
+MISS dashboard.sumup.co.uk (bare) -> error-flow
+MISS app.sumup.co.uk (bare) -> error-flow
+MISS me.sumup.co.uk (bare) -> error-flow
+MISS dashboard.sumup.fr (bare) -> error-flow
+MISS app.sumup.fr (bare) -> error-flow
+MISS me.sumup.fr (bare) -> error-flow
+MISS dashboard.sumup.it (bare) -> error-flow
+MISS app.sumup.it (bare) -> error-flow
+MISS me.sumup.it (bare) -> error-flow
+MISS dashboard.sumup.es (bare) -> error-flow
+MISS app.sumup.es (bare) -> error-flow
+MISS me.sumup.es (bare) -> error-flow
+EXIT=0
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && cat >> leads/lead-bigpickle.md <<'EOF'
+
+## 2026-09-08 probe run: ccTLD legacy-callback oracle exhausted (REJECTED)
+Ran raw-curl (no -L) enumeration of client_id=dashboard&redirect_uri=... against api.sumup.com/authorize.
+- 96 combos (15 ccTLDs × {app,dashboard,my,secure,me,www}, path=/callback) → ALL MISS (redirect to auth.sumup.com/flows/oauth2/error?error=invalid_request, "does not match any of the pre-registered redirect urls").
+- 15 combos bare-path subset (dashboard/app/me × de/co.uk/fr/it/es) → ALL MISS (identical error flow).
+Control me.sumup.com/api/sso/callback confirmed MISS (error flow), not HIT (auth-callback).
+Result: 0 HITs across 111 ccTLD + prior ~52 .sumup.com/scheme combos — legacy dashboard allowlist host not recoverable from ccTLD or common-surface space either. Hypothesis REJECTED.
+EOF
+echo "recorded"
+recorded
+[0m
+All bare-path variants also MISS. The ccTLD legacy-callback oracle is now exhaustively negative across both `/callback` and bare path shapes. This confirms and strengthens the existing "legacy allowlist host not recoverable" conclusion, now extended to ccTLD space.
+
+Let me record this in the lead file to close out the hypothesis, then emit the structured analyst output.
+Now let me look for genuinely new attack surface to keep the hunt productive. The ccTLD sweep is closed. Let me consider: the strongest live leads now are the RFC 9728 resource-server metadata (token-val logic) and the RFC 7591 staging registration. But those need AUTH. 
+
+Let me think about what passive high-value surface remains unexplored. The `me.sumup.com` asset — I recall the OAuth2 application registry at `/settings/oauth2-applications`. Let me check if there's any additional passive surface on me.sumup.com or if there's a distinct asset worth a fresh probe. Let me first check the current analyzer state / what the phase is.
+
+State: `{"phase": "POC", "target": "api"}`. 
+
+Let me probe one fresh passive thing: `me.sumup.com` and `checkout.sumup.com` were edge-gated. The MCP asset `mcp.sumup.com` is accepted other — it's a Cloudflare Worker with bearer JWKS. Let me consider whether there's a passive READ-only surface on the MCP that doesn't require auth — the earlier `.well-known/mcp.json` returned 404 JSON-RPC. 
+
+Rather than re-probing exhausted assets, let me do one targeted fresh probe: verify the RFC 9728 metadata content and check for a `resource_scopes` bypass or any new well-known on the new Vercel assets. Actually, the most productive decision now: the ccTLD sweep is done (REJECTED). I should emit the analyst block with a clean NEXT action.
+
+Given the exhaustion, my NEXT should either (a) escalate to HUMAN to report the confirmed Contentful preview-token leak, or (b) probe a genuinely fresh read-only surface. The Contentful leak is a confirmed reportable finding (already noted as the top FINAL). Given it's verified and reportable, the highest-value next action is to persist that as the priority while I consider one more fresh probe.
+
+Let me do one fresh, genuinely-unexplored passive probe: check the `me.sumup.com` OAuth application registry surface more deeply isn't needed (edge-gated). Let me instead check whether the RFC 9728 metadata on api.sumup.com fields can be probed for an alternate resource-server (audience oracle) that reveals additional hidden API hosts — that could give a fresh lead. Let me probe the metadata body.
+[0m$ [0mcd /tmp/opencode && curl -s --max-time 20 'https://api.sumup.com/.well-known/oauth-protected-resource' | head -c 800; echo; echo "---AUDIENCE ORACLE: probe for alternate resource servers in metadata---"
+{
+	"resource_name": "SumUp API",
+	"resource": "https://api.sumup.com",
+	"authorization_servers": ["https://auth.sumup.com"],
+	"bearer_methods_supported": ["header"],
+	"jwks_uri": "https://auth.sumup.com/.well-known/jwks.json",
+	"resource_documentation": "https://developer.sumup.com"
+}
+
+---AUDIENCE ORACLE: probe for alternate resource servers in metadata---
+[0m
+The RFC 9728 metadata is a fixed static config (no audience oracle). The `resource` field is `https://api.sumup.com` — confirms the gateway validates tokens against `aud=https://api.sumup.com`. That's a known, exhausted recon surface (per KB). 
+
+Let me check whether the staging `api.sam-app.ro` metadata has a divergent/attacker-influenceable `resource` field — that's the more interesting angle for the already-confirmed staging-registration exposure. But that's already documented.
+
+The ccTLD sweep is the meaningful new delta this session. Given the confirmed Contentful leak is a reportable P4 and the ccTLD hypothesis is now refuted, I have a clean picture. Let me finalize the analyst output.
+
+Let me quickly sanity-check one genuinely fresh asset lead that hasn't been touched: the `read-api.sumup.com` and `sf-gateway-api.sumup.com` discovered via CT sweep were noted as "Cloudflare, root 404". These are API subdomains never deeply enumerated. Let me do a quick passive check for versioned paths / swagger on them — this is fresh, unexplored, passive surface.
+[0m$ [0mcd /tmp/opencode && for host in read-api.sumup.com sf-gateway-api.sumup.com; do
+  echo "=== $host ==="
+  for path in "/" "/v1" "/swagger" "/swagger.json" "/openapi.json" "/api" "/health" "/.well-known/oauth-protected-resource"; do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "https://${host}${path}")
+    echo "  ${path} -> ${code}"
+    sleep 1
+  done
+done
+=== read-api.sumup.com ===
+  / -> 404
+  /v1 -> 404
+  /swagger -> 404
+  /swagger.json -> 404
+  /openapi.json -> 404
+  /api -> 404
+  /health -> 404
+  /.well-known/oauth-protected-resource -> 404
+=== sf-gateway-api.sumup.com ===
+  / -> 404
+  /v1 -> 404
+  /swagger -> 404
+  /swagger.json -> 404
+  /openapi.json -> 404
+  /api -> 404
+  /health -> 404
+  /.well-known/oauth-protected-resource -> 404
+[0m
+Both fresh CT-discovered API hosts are uniform 404 on all enumerated read-only paths — fully gated, same as api.sumup.com. No new surface. Let me check if they resolve to the same gateway (Cloudflare) and whether the /authorize oracle exists there (a possible divergent legacy gateway copy), which would be more interesting.
+
+Actually — the key architectural finding in the KB is that the legacy `/authorize` oracle + wildcard CORS is the **api-gateway template** shared between api.sumup.com and api.sam-app.ro. If `read-api.sumup.com` / `sf-gateway-api.sumup.com` are separate gateway deployments, they might have their own `/authorize` with a *different* redirect allowlist — a fresh, unexplored single-class oracle. Let me test these two hosts for `/authorize` with the known dashboard callback and an evil redirect.
+
+This is a genuinely fresh angle: probing CT-discovered API subdomains for a divergent `/authorize` oracle, distinct from the exhausted api.sumup.com.
+[0m$ [0mcd /tmp/opencode && for host in read-api.sumup.com sf-gateway-api.sumup.com; do
+  echo "=== $host /authorize ==="
+  # control: known dashboard modern callback (MISS on api.sumup.com)
+  loc1=$(curl -s -k -o /dev/null --max-time 15 -w '%{http_code}|%{redirect_url}' "https://${host}/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678")
+  echo "  dashboard/me.sumup.com: $loc1"
+  sleep 1
+  # evil redirect (would be HIT if no allowlist)
+  loc2=$(curl -s -k -o /dev/null --max-time 15 -w '%{http_code}|%{redirect_url}' "https://${host}/authorize?client_id=dashboard&redirect_uri=https://evil.example/callback&response_type=code&scope=classic&state=test12345678")
+  echo "  dashboard/evil.example: $loc2"
+  sleep 1
+  # bare
+  loc3=$(curl -s -k -o /dev/null --max-time 15 -w '%{http_code}|%{redirect_url}' "https://${host}/authorize")
+  echo "  bare /authorize: $loc3"
+  sleep 1
+done
+=== read-api.sumup.com /authorize ===
+  dashboard/me.sumup.com: 404|
+  dashboard/evil.example: 404|
+  bare /authorize: 404|
+=== sf-gateway-api.sumup.com /authorize ===
+  dashboard/me.sumup.com: 404|
+  dashboard/evil.example: 404|
+  bare /authorize: 404|
+[0m
+Both CT-discovered API hosts return **404** on `/authorize` — unlike api.sumup.com (which returns 302), these don't expose the legacy authorize oracle. They're distinct subdomains that either don't route `/authorize` or are gated differently. No divergent oracle to exploit.
+
+This is a clean negative: the CT-discovered read-api / sf-gateway-api subdomains are uniform-404 on all paths including `/authorize`, so no new OAuth oracle surface there. Recon surface on these two hosts is exhausted (no swagger, no metadata, no authorize).
+
+I now have a complete picture for this session. The meaningful deltas:
+1. **ccTLD legacy-callback oracle exhausted** (96+15 combos, all MISS) — REJECTED, extends the existing "legacy host not recoverable" conclusion.
+2. **read-api.sumup.com / sf-gateway-api.sumup.com** fully gated, no `/authorize` oracle (404 on all read paths) — fresh negative, closes these CT-discovered subdomains as surface.
+3. Contentful preview-token leak remains the confirmed, reportable finding.
+
+Let me emit the analyst output for this session.
+
+---
+
+STEP 1 — DELTA:
+[NEW] ccTLD legacy-callback oracle exhaustive sweep: 96 combos (15 ccTLDs × {app,dashboard,my,secure,me,www}, /callback) + 15 bare-path subset → ALL invalid_request error-flow; 0 HITs. Extends prior ~52-combo exhaustion to ccTLD space.
+[CHANGED] read-api.sumup.com / sf-gateway-api.sumup.com: uniform 404 on all enumerated read paths (swagger/openapi/health/well-known/authorize); /authorize returns 404 (NOT the 302 oracle of api.sumup.com) — CT-discovered gateway subdomains fully gated, no divergent OAuth oracle.
+
+STEP 2 — PRIORITIZE:
+[PRIO] api.sumup.com/authorize,8.5,a=9,b=9,t=9,g=9,c=8,f=6
+[PRIO] help.sumup.com,7.8,token_leak
+[PRIO] auth.sumup.com,7.2,oauth_server
+[PRIO] auth.sam-app.ro,6.5,staging_registration
+[PRIO] api.sumup.com/.well-known/oauth-protected-resource,5.8,rfc9728_metadata
+
+STEP 3 — HYPOTHESES: The ccTLD hypothesis is now REJECTED (empirically negative). The strongest remaining survivors are the confirmed Contentful leak (already verified, not a hypothesis) and the AUTH_HELPED theta canary. Let me frame hypotheses on the top-3 actionable surfaces. Given ccTLD is dead and read-api is dead, I'll surface the best remaining live leads.
+
+[HYP] auth-theta.sam-app.ro registration behavior diverges despite identical metadata
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 42
+reasoning: Sibling POST /oauth2/register → 201 with empty-scope + PKCE-required dynamic clients minting real JWTs. Theta discovery/route semantics confirmed byte-identical (registration_endpoint declared; GET/OPTIONS 404 JSON identical) — only POST-behavior divergence remains as canary-escalation vector.
+evidence_needed: One POST /oauth2/register on theta returning client with non-empty scope or waived PKCE.
+verify_steps: BLOCKED passive — POST required; needs role approval.
+impact: Attacker-scoped staging OAuth client → scoped JWTs → cross-env risk if theta is live prod canary. Low-now, high-latent.
+testability: AUTH_HELPED
+
+[HYP] RFC 9728 resource-server metadata / audience validation divergence enables cross-resource token acceptance
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource
+confidence: 60
+reasoning: Metadata statically declares resource=https://api.sumup.com, sole auth server, header-only bearer, JKWs from auth.sumup.com. Staging api.sam-app.ro declares identical structure bound to auth.sam-app.ro. Prod JWKS already rejects staging tokens (key isolation), but prod gateway audience-validation logic (aud=https://api.sumup.com vs staging aud=https://api.sam-app.ro) is untested at request level.
+evidence_needed: A token minted for staging resource (aud=api.sam-app.ro) either accepted or cleanly rejected by prod api.sumup.com/v1/* → proves/refutes audience confusion.
+verify_steps: BLOCKED passive — requires replaying a staging JWT at prod resource path.
+impact: Cross-env token relay → merchant data/payment access if accepted. High-latent.
+testability: AUTH_HELPED
+
+[HYP] Contentful Preview API token grants unauthenticated read of draft/unpublished help-center content (CONFIRMED — reportable)
+class: MISCONFIG
+asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb
+confidence: 92
+reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW="XRP4..."; GET preview.contentful.com → total 9419 vs cdn 8337; publishedAt[exists]=false → 1082 drafts (102 articles, 143 callouts) incl. never-published updated 2026-09-04; invalid token → 401. Not management-scoped.
+evidence_needed: none — verified.
+verify_steps: (done) cdn vs preview totals; draft filter; 401 control. Search-API draft escalation refuted (per-locale published index only).
+impact: Unauthenticated read of 1,082 draft/unpublished help entries (unreleased product/legal content). No customer/financial/auth data. Severity low-moderate (P4).
+testability: PASSIVE
+
+STEP 4 — SELF-CRITIQUE:
+[REJECTED] ccTLD legacy dashboard callback host recovery: 96+15 combos all invalid_request (single-class oracle) — empirically refuted; legacy allowlist host not recoverable from ccTLD space. Drop.
+[REJECTED] read-api/sf-gateway-api divergent authorize oracle: /authorize returns 404 on both (not 302 oracle) — no divergent OAuth surface; drop.
+[PARKED] auth-theta divergence: confidence 42 < 50, AUTH_HELPED blocked (needs POST).
+[FINAL] 1. Contentful Preview API token leak (confidence 92) — SURVIVES, PASSIVE, verified, reportable
+[FINAL] 2. RFC 9728 audience-validation divergence (confidence 60) — SURVIVES, AUTH_HELPED
+
+STEP 5 — NEXT ACTION:
+[NEXT] HUMAN: Report confirmed Contentful preview-token exposure (help.sumup.com, space 214q1nptnllb, token sha256=preview-contentful) to bugs.olivermaicher.eu — class MISCONFIG/exposed-secret P4. PoC: 1) GET cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<DELIVERY>&limit=1 → total 8337; 2) GET preview.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4...&sys.publishedAt[exists]=false&content_type=article → total 102 drafts; 3) invalid-token control → 401. Draft help articles only, no customer/financial/auth data touched.
+
+Wait — the token is already redacted in my reasoning. Per rules, I must sha256 the secret. Let me compute that before encoding in the NEXT action.
+[0m$ [0mprintf '%s' 'XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM' | sha256sum
+52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997  -
+[0m
+STEP 6 — LEARNING:
+[LEARN] REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts, /callback) + 15 bare-path subset all invalid_request error-flow, 0 HITs; legacy dashboard allowlist host not recoverable from ccTLD space either.
+[LEARN] REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not the 302 oracle of api.sumup.com); uniform 404 on all read paths (swagger/openapi/health/well-known) — no divergent OAuth oracle, fully gated.
+[LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, dev docs link; no resource_scopes/audience-oracle field; recon surface exhausted.
+
+STEP 7 — RISK:
+[RISK] sumup: 78 — Legacy OAuth gateway (api.sumup.com/authorize) live with client_id oracle + wildcard CORS + redirect-set divergence but allowlist host not recoverable from ccTLD or common-surface space (now exhaustively refuted). Staging auth.sam-app.ro unauthenticated RFC 7591 registration minting valid JWTs (empty scope, controlled aud). prod JWKS key isolation confirmed. RFC 9728 metadata static on prod. Confirmed reportable P4: Contentful preview-token leak (1,082 draft help entries). All high-impact chains still need merchant token or POST (AUTH_HELPED); ccTLD/read-api subdomain sweep closed no new oracle. Vercel me/checkout + CT-discovered read-api/sf-gateway fully gated. Financial attack surface concentrated but access-controlled with legacy OAuth + staging divergence surface.
+
+That completes the analysis. The ccTLD hypothesis (the pending NEXT from last session) is now exhaustively executed and REJECTED — 111 combos all negative. Both CT-discovered API subdomains surfaced in earlier sessions are now closed as surface. The confirmed, reportable finding remains the Contentful preview-token leak, which is now the clear priority to escalate to HUMAN for reporting.
+
+---
+
+STEP 1 — DELTA
+[NEW] ccTLD legacy-callback oracle exhaustively swept: 96 combos (15 ccTLDs × {app,dashboard,my,secure,me,www}, `/callback`) + 15 bare-path subset → **all** `invalid_request` error-flow, **0 HITs**. Extends the prior ~52-combo exhaustion to ccTLD space.
+[NEW] read-api.sumup.com / sf-gateway-api.sumup.com probed fresh: uniform 404 on all read paths (swagger/openapi/health/well-known); `/authorize` returns **404** (NOT the 302 oracle of api.sumup.com) — CT-discovered gateway subdomains fully gated, no divergent OAuth oracle.
+
+STEP 2 — PRIORITIZE
+[PRIO] api.sumup.com/authorize,8.5,oauth_legacy_gateway
+[PRIO] help.sumup.com,7.8,token_leak
+[PRIO] auth.sumup.com,7.2,oauth_server
+[PRIO] auth.sam-app.ro,6.5,staging_registration
+[PRIO] api.sumup.com/.well-known/oauth-protected-resource,5.8,rfc9728_metadata
+
+STEP 3 — HYPOTHESES
+
+[HYP] Contentful Preview API token grants unauthenticated read of draft/unpublished help content (CONFIRMED — reportable P4)
+class: MISCONFIG
+asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb
+confidence: 92
+reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW (sha256 52136da5…8997). GET preview.contentful.com → total 9419 vs cdn 8337; `sys.publishedAt[exists]=false` → 1082 drafts (102 articles, 143 callouts) incl. never-published updated 2026-09-04; invalid token → 401. Not management-scoped.
+evidence_needed: none — verified (cdn vs preview totals; draft filter; 401 control; search-API draft escalation refuted).
+verify_steps: (done) GET cdn vs preview totals; draft filter; 401 control.
+impact: Unauthenticated read of 1,082 draft/unpublished help entries (unreleased product/legal content). No customer/financial/auth data. Severity low-moderate.
+testability: PASSIVE
+
+[HYP] RFC 9728 resource-server metadata / audience-validation divergence at prod gateway
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource
+confidence: 60
+reasoning: Metadata statically declares `resource=https://api.sumup.com`, sole auth server, header-only bearer, JWKS from auth.sumup.com. Prod JWKS rejects staging tokens (key isolation confirmed) but the gateway's audience check (aud=api.sumup.com vs staging aud=api.sam-app.ro) is untested at request level — divergent/staging token replay could be accepted if aud validation is absent.
+evidence_needed: A staging-minted JWT (aud=api.sam-app.ro) accepted vs cleanly rejected at prod api.sumup.com/v1/*.
+verify_steps: BLOCKED passive — requires replaying a staging JWT at a prod resource path.
+impact: Cross-env token relay → merchant/payment access if accepted. High-latent.
+testability: AUTH_HELPED
+
+[HYP] auth-theta.sam-app.ro registration config diverges from sibling (canary escalation)
+class: OATH
+asset: auth-theta.sam-app.ro/oauth2/register
+confidence: 42
+reasoning: Sibling supports unauthenticated RFC 7591 registration → real JWTs (empty scope, PKCE-required); theta discovery/route semantics byte-identical; only POST-behavior divergence remains.
+evidence_needed: One POST /oauth2/register on theta returning non-empty scope or waived PKCE.
+verify_steps: BLOCKED passive — POST required; needs role approval.
+impact: Attacker-scoped staging OAuth client → scoped JWTs → cross-env risk if theta is live prod canary. Low-now, high-latent.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+[REJECTED] ccTLD legacy dashboard callback host recovery: 96+15 combos all `invalid_request` (single-class oracle) — empirically refuted; legacy allowlist host not recoverable from ccTLD space. Drop.
+[REJECTED] read-api / sf-gateway-api divergent `/authorize` oracle: both return 404 (not 302 oracle) — no divergent OAuth surface. Drop.
+[PARKED] auth-theta.sam-app.ro divergence: confidence 42 < 50, AUTH_HELPED blocked (needs POST).
+[FINAL] 1. Contentful Preview API token leak (confidence 92) — SURVIVES, PASSIVE, verified, reportable
+[FINAL] 2. RFC 9728 audience-validation divergence (confidence 60) — SURVIVES, AUTH_HELPED
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Report confirmed Contentful preview-token exposure to bugs.olivermaicher.eu — class MISCONFIG/exposed-secret, P4. asset help.sumup.com → space 214q1nptnllb, token sha256 52136da5…8997. PoC: 1) GET cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<DELIVERY>&limit=1 → total 8337; 2) GET preview.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4…&sys.publishedAt[exists]=false&content_type=article → total 102 drafts; 3) invalid-token control → 401. Draft help articles only — no customer/financial/auth data touched.
+
+STEP 6 — LEARNING
+[LEARN] REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts `/callback`) + 15 bare-path subset all `invalid_request` error-flow, 0 HITs; legacy dashboard allowlist host not recoverable from ccTLD space.
+[LEARN] REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: `/authorize` returns 404 (not the 302 oracle of api.sumup.com); uniform 404 across swagger/openapi/health/well-known — no divergent OAuth oracle, fully gated.
+[LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata is static — `resource=https://api.sumup.com`, sole auth server auth.sumup.com, header-only bearer, dev-docs link; no resource_scopes/audience-oracle field; recon surface exhausted.
+
+STEP 7 — RISK
+[RISK] sumup: 78 — Legacy OAuth gateway live (client_id oracle, wildcard CORS, redirect-set divergence) but allowlist host not recoverable from ccTLD or common-surface space (exhaustively refuted this session). Staging auth.sam-app.ro unauthenticated RFC 7591 registration mints valid JWTs (empty scope, controlled aud); prod/staging JWKS key isolation confirmed. RFC 9728 metadata static on prod. Confirmed reportable P4: Contentful preview-token leak (1,082 draft help entries). All high-impact chains still require merchant token or POST (AUTH_HELPED); ccTLD sweep and read-api/sf-gateway subdomains closed with no fresh oracle. Vercel me/checkout and CT-discovered API subdomains fully gated. Financial surface concentrated but access-controlled, with the confirmed low-severity info-disclosure as the current reportable item.

@@ -380,3 +380,13 @@ www.sumup.com
 - NEW BUSLOGIC @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200 JSON) declaring auth.sumup.com as sole authorization_server, header-only bearer, JWKS URI.
 - CHANGED api.sumup.com/authorize: Endpoint confirmed LIVE (302→auth error flow) with client_id oracle + wildcard CORS + legacy redirect-set divergence from modern auth.sumup.com.
 - CHANGED auth.sam-app.ro: Dynamic client registration yields real JWTs via client_credentials; empty scope blocks resource access; staging/prod divergence documented.
+
+## 2026-09-08 13:37:57 UTC
+- NEW MISCONFIG @ help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in help-center space 214q1nptnllb; published set is 8,
+- NEW BUSLOGIC @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200 JSON) declaring auth.sumup.com as sole authorization_server, header-only bearer, JWKS URI.
+- CHANGED api.sumup.com/authorize: Endpoint confirmed LIVE (302→auth error flow) with client_id oracle + wildcard CORS + legacy redirect-set divergence from modern auth.sumup.com.
+- CHANGED auth.sam-app.ro: Dynamic client registration yields real JWTs via client_credentials; empty scope blocks resource access; staging/prod divergence documented.
+- NEW ccTLD legacy-callback oracle exhaustive sweep: 96 combos (15 ccTLDs × {app,dashboard,my,secure,me,www}, /callback) + 15 bare-path subset → ALL invalid_request error-flow; 0 HITs. Extends prior ~52-com
+- CHANGED read-api.sumup.com / sf-gateway-api.sumup.com: uniform 404 on all enumerated read paths (swagger/openapi/health/well-known/authorize); /authorize returns 404 (NOT the 302 oracle of api.sumup.com) — CT
+- NEW ccTLD legacy-callback oracle exhaustively swept: 96 combos (15 ccTLDs × {app,dashboard,my,secure,me,www}, `/callback`) + 15 bare-path subset → **all** `invalid_request` error-flow, **0 HITs**. Extends
+- NEW read-api.sumup.com / sf-gateway-api.sumup.com probed fresh: uniform 404 on all read paths (swagger/openapi/health/well-known); `/authorize` returns **404** (NOT the 302 oracle of api.sumup.com) — CT-d
