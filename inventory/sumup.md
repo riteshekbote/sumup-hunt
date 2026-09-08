@@ -401,3 +401,17 @@ www.sumup.com
 - CHANGED Staging dynamic registration (auth.sam-app.ro) yields real JWTs with empty scope + attacker-controlled aud; cross-env JWKS isolation confirmed (prod 8 keys, staging 11 keys, ZERO kid overlap)
 - CHANGED mcp.sumup.com MCP server: wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds) — REJECTED MISCONFIG class
 - CHANGED api.sumup.com/authorize: client_id oracle + wildcard CORS + redirect divergence remain LIVE but callback host enumeration fully exhausted (crt.sh 52 combos + ccTLD 96 combos + custom schemes = 0 HITs)
+
+## 2026-09-08 22:49:04 UTC
+- CHANGED help.sumup.com Contentful PREVIEW-token leak CONFIRMED and reportable (P4, conf 92) — but report still unfiled (valid-bugs.md=0); token may rotate at any time.
+- CHANGED api.sumup.com/.well-known/oauth-protected-resource verified STATIC — only untested gap left on that surface is request-level aud validation.
+- NEW ccTLD legacy-callback oracle exhaustively negative (0 HITs / 96+15 combos) — legacy allowlist-host recovery closed across ccTLD space as well.
+- NEW read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (no 302 oracle), uniform 404 on swagger/openapi/health/well-known — fully gated, no divergent OAuth oracle.
+- NEW auth-theta.sam-app.ro is the last sibling-divergence candidate; POST-only, untestable passively.
+- NEW Contentful Preview API token leak on help.sumup.com CONFIRMED reportable (P4): 1,082 draft/unpublished entries in space 214q1nptnllb via leaked token — immediately reproducible via GET preview.content
+- NEW ccTLD legacy-callback oracle on api.sumup.com/authorize exhaustively negative: 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset — all `invalid_request`, 0 HITs
+- NEW read-api.sumup.com & sf-gateway-api.sumup.com: `/authorize` returns 404 (not the 302 oracle of api.sumup.com); uniform 404 on all read paths — no divergent OAuth oracle
+- NEW RFC 9728 metadata on api.sumup.com/.well-known/oauth-protected-resource is static: `resource=https://api.sumup.com`, sole auth server auth.sumup.com, header-only bearer, dev-docs link; no resource_sco
+- CHANGED Staging dynamic registration (auth.sam-app.ro) yields real JWTs with empty scope + attacker-controlled aud; cross-env JWKS isolation confirmed (prod 8 keys, staging 11 keys, ZERO kid overlap)
+- CHANGED mcp.sumup.com MCP server: wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds) — REJECTED MISCONFIG class
+- CHANGED api.sumup.com/authorize: client_id oracle + wildcard CORS + redirect divergence remain LIVE but callback host enumeration fully exhausted (crt.sh 52 combos + ccTLD 96 combos + custom schemes = 0 HITs)
