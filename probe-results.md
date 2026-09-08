@@ -375,3 +375,8 @@ https://api.sumup.com -> HTTP 404
 https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
 https://auth.sumup.com/oauth2/token -> HTTP 405
 https://help.sumup.com/api/search/{draft-title -> HTTP 500
+
+## 2026-09-08 09:15:52 UTC
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://{cctld-host -> HTTP 404
+https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://dashboard.sumup.de/callback&response_type=code&scope=classic&state=test12345678 -> HTTP 404
+https://me.sumup.com/api/sso/callback -> HTTP 403

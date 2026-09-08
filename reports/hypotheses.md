@@ -852,3 +852,15 @@
 - LEARN: ACCEPTED OTHER @ JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Cross-env key isolation confirmed at JWKS kid level (expla
 - LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 
 - LEARN: REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read ove
+
+## RANKED HYPOTHESES 2026-09-08 09:15:48 UTC
+- [40] api.sumup.com/authorize: ccTLD legacy dashboard callback host recovery on sumup.co.uk/de/fr/it/es/pt/ie/pl/ro/at/ch/nl/se/dk/fi/be (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): PROBE: GET https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://dashboard.sumup.de/callback&response_type=code&scope=classic&state=test12345
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 
+- LEARN: REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read ove
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Endpoint LIVE with client_id oracle (invalid_client vs invalid_request) and legacy redirect-set divergence — modern das
+- LEARN: ACCEPTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS (access-control-allow-origin:*) + broad allow-methods + max-age + SameSite=None cookies on Domain=su
+- LEARN: ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live on modern auth server — https://me.sumup.com/api/sso/callback returns 302→login 
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: crt.sh-derived callback candidates all invalid_request — single-class oracle, ~52 combos exhausted; legacy allowlist ho
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: sumup-ios-sdk and unknown IDs → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered
+- LEARN: ACCEPTED AUTH @ checkout.sumup.com: New Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as me.sumup.com; no anonymous surface.

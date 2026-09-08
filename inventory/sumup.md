@@ -374,3 +374,9 @@ www.sumup.com
 - CHANGED api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
 - CHANGED Legacy redirect oracle on api.sumup.com/authorize: crt.sh-derived candidates (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, api.sumup.com self-hosts, www) + custom schemes (sumu
 - CHANGED sumup-ios-sdk and unknown client_ids → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered; only dashboard confirmed registered
+
+## 2026-09-08 09:15:48 UTC
+- NEW MISCONFIG @ help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in help-center space 214q1nptnllb; published set is 8,
+- NEW BUSLOGIC @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200 JSON) declaring auth.sumup.com as sole authorization_server, header-only bearer, JWKS URI.
+- CHANGED api.sumup.com/authorize: Endpoint confirmed LIVE (302→auth error flow) with client_id oracle + wildcard CORS + legacy redirect-set divergence from modern auth.sumup.com.
+- CHANGED auth.sam-app.ro: Dynamic client registration yields real JWTs via client_credentials; empty scope blocks resource access; staging/prod divergence documented.
