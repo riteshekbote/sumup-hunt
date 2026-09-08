@@ -358,3 +358,19 @@ www.sumup.com
 - CHANGED JWKS prod vs staging kid overlap: ZERO. Prod 8 keys (6 public:* RSA + 2 unnamed: 1 RSA + 1 EdDSA); staging 11 keys (7 public:* RSA + 2 unnamed RSA + 1 EdDSA + 1 `loadtesting` RSA). Cross-env key isola
 
 ## 2026-09-07 23:51:38 UTC
+
+## 2026-09-08 04:14:51 UTC
+- NEW auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumu
+- NEW auth.sam-app.ro dynamic clients mint real JWT access_tokens via client_credentials (client_secret_post); JWT contains empty scp:[] but attacker-controlled aud (api.sam-app.ro, mcp.sam-app.ro both acce
+- NEW mcp.sumup.com: Official SumUp MCP (Cloudflare Worker, bearer JWKS from auth.sumup.com, Durable Object agent) LIVE, absent from prior inventory — surfaced via sumup-mcp public repo config
+- NEW sam-app.ro staging stack (mcp/mcp-theta/api/api-theta/auth/auth-theta) publicly reachable; replicates prod gates byte-for-byte (/mcp 401, /authorize invalid_request on evil redirect, OIDC discovery pu
+- NEW api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200) declaring authorization_servers=["https://auth.sumup.com"], bearer_methods_supported=["header"], jwks_u
+- NEW JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap; staging includes `loadtesting` kid not in prod; cross-env key isolation confirmed at JWKS level
+- NEW help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in space 214q1nptnllb; published set is 8,337; repr
+- CHANGED api.sumup.com/authorize: Confirmed LIVE via raw curl (302→auth.sumup.com/flows/oauth2/error); client_id oracle (invalid_client vs invalid_request); legacy/modern redirect_uri divergence (dashboard cal
+- CHANGED auth.sumup.com: PAR (/oauth2/par) and device flow (/oauth2/device) routed (400 on POST) but require client authentication; "none" auth_method not usable for dashboard client
+- CHANGED me.sumup.com / checkout.sumup.com: Vercel-served assets; anonymous /api/* routes return 307/403 to OAuth flow; no debug endpoints or permissive CORS
+- CHANGED portal.sumup.com: Returns 200 with React CRM login (iriscrm.com); third-party CNAME confirmed; webhook/callback parameters not discovered passively
+- CHANGED api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
+- CHANGED Legacy redirect oracle on api.sumup.com/authorize: crt.sh-derived candidates (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, api.sumup.com self-hosts, www) + custom schemes (sumu
+- CHANGED sumup-ios-sdk and unknown client_ids → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered; only dashboard confirmed registered
