@@ -461,3 +461,13 @@ www.sumup.com
 - CHANGED auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register) — staging/prod divergence confirmed
 - CHANGED read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — fully gated, no divergent OAuth oracle
 - CHANGED mcp.sumup.com MCP server: wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds) — REJECTED MISCONFIG class
+
+## 2026-09-09 21:38:34 UTC
+- NEW help.sumup.com Contentful Preview token leak report file NOT ON DISK despite KB claim "CREATED this cycle" — submission still pending
+- NEW auth-theta.sam-app.ro identified as separate canary auth deploy; config divergence hypothesis POST-blocked (passive-only rule)
+- CHANGED api.sumup.com/.well-known/oauth-protected-resource verified STATIC — only untested gap is request-level aud validation (AUTH_HELPED)
+- CHANGED Staging dynamic registration (auth.sam-app.ro) yields real JWTs with empty scope + attacker-controlled aud; cross-env JWKS isolation confirmed (prod 8 keys, staging 11 keys, ZERO kid overlap)
+- CHANGED api.sumup.com/authorize: client_id oracle + wildcard CORS + redirect divergence LIVE but callback host enumeration fully exhausted (crt.sh 52 + ccTLD 96 + custom schemes = 0 HITs)
+- CHANGED auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register) — staging/prod divergence confirmed
+- CHANGED read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — fully gated
+- CHANGED mcp.sumup.com MCP server: wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds) — REJECTED MISCONFIG class

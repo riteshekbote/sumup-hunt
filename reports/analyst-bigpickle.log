@@ -12882,3 +12882,949 @@ testability: AUTH_HELPED
 
 **STEP 7 — RISK:**
 [RISK] sumup: 82 — Principal unrealized value: the single confirmed reportable P4 (Contentful PREVIEW token → 102 draft articles + 62 assets) is verified and NOW HAS A REPORT FILE but remains UNFILED on Jira. Time-sensitive to token rotation. All other high-impact chains (BOLA, OAuth redirect, staging client sync, cross-env token relay) remain AUTH_HELPED/POST-blocked. Legacy OAuth callback host fully exhausted across all enumeration surfaces (crt.sh + ccTLD + custom schemes = 0 HITs, all rejected).
+===== ANALYST bigpickle 2026-09-09 21:38:34 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /home/runner/work/sumup-hunt/sumup-hunt/ 2>/dev/null && echo "---" && ls -la /home/runner/work/sumup-hunt/sumup-hunt/reports/ 2>/dev/null
+total 400
+drwxr-xr-x 12 runner runner   4096 Sep  9 21:35 .
+drwxr-xr-x  3 runner runner   4096 Sep  9 21:34 ..
+drwxr-xr-x  7 runner runner   4096 Sep  9 21:35 .git
+drwxr-xr-x  3 runner runner   4096 Sep  9 21:34 .github
+-rw-r--r--  1 runner runner   1885 Sep  9 21:34 README.md
+-rw-r--r--  1 runner runner     32 Sep  9 21:35 analyst-out.txt
+-rw-r--r--  1 runner runner 145876 Sep  9 21:35 analyst-prompt.txt
+-rw-r--r--  1 runner runner 141990 Sep  9 21:35 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:34 inventory
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:34 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:34 leads
+-rw-r--r--  1 runner runner  29868 Sep  9 21:34 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:34 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:34 reports
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:34 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Sep  9 21:34 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:34 scripts
+-rw-r--r--  1 runner runner     33 Sep  9 21:34 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep  9 21:34 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep  9 21:34 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep  9 21:34 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep  9 21:34 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep  9 21:34 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:34 triage
+---
+total 2132
+drwxr-xr-x  2 runner runner    4096 Sep  9 21:34 .
+drwxr-xr-x 12 runner runner    4096 Sep  9 21:35 ..
+-rw-r--r--  1 runner runner 1166029 Sep  9 21:34 analyst-bigpickle.log
+-rw-r--r--  1 runner runner    9331 Sep  9 21:34 analyst-laguna.log
+-rw-r--r--  1 runner runner    9288 Sep  9 21:34 analyst-ling3.log
+-rw-r--r--  1 runner runner    9374 Sep  9 21:34 analyst-longcat.log
+-rw-r--r--  1 runner runner  741349 Sep  9 21:34 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    3996 Sep  9 21:34 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep  9 21:34 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep  9 21:34 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep  9 21:34 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   13752 Sep  9 21:34 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  176168 Sep  9 21:34 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep  9 21:34 reposcan-findings.md
+-rw-r--r--  1 runner runner    1263 Sep  9 21:34 valid-bugs.md
+[0m
+[0m$ [0mfind /home/runner/work/sumup-hunt/sumup-hunt/ -name "*.md" -o -name "*.yml" -o -name "*.yaml" 2>/dev/null | head -50
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-06-21-30.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-07-23-48.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-05-01-06.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-09-01-09.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-05-18-26.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-06-23-09.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-04-06-02.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-09-18-45.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-03-20-54.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-04-15-06.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-04-18-29.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-05-16-16.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-04-21-02.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-05-10-26.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-04-23-05.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-02-22-14.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-08-04-16.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-08-08-56.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-07-12-47.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-09-06-06.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-05-20-43.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-06-00-48.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-03-00-06.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-07-01-08.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-05-05-52.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-04-11-29.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-03-04-42.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-06-17-10.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-03-17-46.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-08-22-47.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-03-13-56.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-07-18-13.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-06-19-18.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-06-05-45.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-08-20-19.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-03-09-36.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-04-01-05.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-09-11-38.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-05-13-32.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-09-15-21.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-07-21-37.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-06-14-06.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-08-13-29.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-08-17-30.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-07-06-12.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-06-10-45.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-03-23-11.md
+/home/runner/work/sumup-hunt/sumup-hunt/triage/run-2026-09-05-22-45.md
+/home/runner/work/sumup-hunt/sumup-hunt/recon-notes/DEDICATED-DEEP.md
+/home/runner/work/sumup-hunt/sumup-hunt/inventory/sumup.md
+[0m
+[0m$ [0mcat /home/runner/work/sumup-hunt/sumup-hunt/reports/*.md 2>/dev/null; echo "===VALID-BUGS==="; cat /home/runner/work/sumup-hunt/sumup-hunt/reports/valid-bugs.md 2>/dev/null; echo "===STATE==="; cat /home/runner/work/sumup-hunt/sumup-hunt/state_bigpickle.json /home/runner/work/sumup-hunt/sumup-hunt/state_laguna.json /home/runner/work/sumup-hunt/sumup-hunt/state_ling3.json /home/runner/work/sumup-hunt/sumup-hunt/state_longcat.json /home/runner/work/sumup-hunt/sumup-hunt/state_mimo.json /home/runner/work/sumup-hunt/sumup-hunt/state_nemotron3.json 2>/dev/null
+...output truncated...
+
+Full output saved to: /home/runner/.local/share/opencode/tool-output/tool_08818c8ea001rxqD4K6E2dQGat
+
+- LEARN: ACCEPTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS (access-control-allow-origin:*) + broad allow-methods + max-age + SameSite=None cookies on Domain=su
+- LEARN: ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live on modern auth server — https://me.sumup.com/api/sso/callback returns 302→login 
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: crt.sh-derived callback candidates (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, api.sumup.com 
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: sumup-ios-sdk and unknown IDs → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered
+- LEARN: ACCEPTED AUTH @ checkout.sumup.com: New Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as me.sumup.com; no anonymous surface.
+- LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint.
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Redirect-allowlist divergence + wildcard CORS is the api-gateway template (identical on api.sam-app.ro), distinct from 
+- LEARN: REJECTED MISCONFIG @ tap-to-pay-sdk.fleet.live.sumup.net: 401 Cloudflare Maven host + Fleet CD naming = infra/banner class.
+- LEARN: ACCEPTED OATH @ sam-app.ro: Staging stack (mcp/mcp-theta/api/api-theta/auth/auth-theta) publicly reachable; replicates prod gates byte-for-byte (/mcp 401, /auth
+- LEARN: ACCEPTED BUSLOGIC @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200 JSON) declaring auth.sumup.com as sole autho
+- LEARN: ACCEPTED BUSLOGIC @ api.sam-app.ro/.well-known/oauth-protected-resource: Staging variant LIVE (200 JSON) declaring auth.sam-app.ro; identical structure to prod;
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com/.well-known/mcp.json: 404 JSON-RPC response (not static file); MCP app-directory spec metadata not published by this worker.
+- LEARN: ACCEPTED MISCONFIG @ api.sumup.com/.well-known/openid-configuration: 404 structured problem+json; gateway-handled, no auth-server discovery on API gateway (corr
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-authorization-server: 404 structured problem+json; same gateway handling.
+- LEARN: ACCEPTED OTHER @ JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Cross-env key isolation confirmed at JWKS kid level (expla
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 
+- LEARN: REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read ove
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 
+- LEARN: REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read ove
+- LEARN: ACCEPTED OATH @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200) declaring authorization_servers=["https://auth.
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) de
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge
+- LEARN: ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp b
+- LEARN: ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404 with/without token) but empty scope blocks all resource access.
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed.
+- LEARN: REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is NOT token-stealing (bearer_methods_supported=["header"], no cookies/ambient cr
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Endpoint LIVE with client_id oracle (invalid_client vs invalid_request) and legacy redirect-set divergence — modern das
+- LEARN: ACCEPTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS (access-control-allow-origin:*) + broad allow-methods + max-age + SameSite=None cookies on Domain=su
+- LEARN: ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live on modern auth server — https://me.sumup.com/api/sso/callback returns 302→login 
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: crt.sh-derived callback candidates (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, api.sumup.com 
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: sumup-ios-sdk and unknown IDs → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered
+- LEARN: ACCEPTED AUTH @ checkout.sumup.com: New Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as me.sumup.com; no anonymous surface.
+- LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint.
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Redirect-allowlist divergence + wildcard CORS is the api-gateway template (identical on api.sam-app.ro), distinct from 
+- LEARN: REJECTED MISCONFIG @ tap-to-pay-sdk.fleet.live.sumup.net: 401 Cloudflare Maven host + Fleet CD naming = infra/banner class.
+- LEARN: ACCEPTED OATH @ sam-app.ro: Staging stack (mcp/mcp-theta/api/api-theta/auth/auth-theta) publicly reachable; replicates prod gates byte-for-byte (/mcp 401, /auth
+- LEARN: ACCEPTED BUSLOGIC @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200 JSON) declaring auth.sumup.com as sole autho
+- LEARN: ACCEPTED BUSLOGIC @ api.sam-app.ro/.well-known/oauth-protected-resource: Staging variant LIVE (200 JSON) declaring auth.sam-app.ro; identical structure to prod;
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com/.well-known/mcp.json: 404 JSON-RPC response (not static file); MCP app-directory spec metadata not published by this worker.
+- LEARN: ACCEPTED MISCONFIG @ api.sumup.com/.well-known/openid-configuration: 404 structured problem+json; gateway-handled, no auth-server discovery on API gateway (corr
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-authorization-server: 404 structured problem+json; same gateway handling.
+- LEARN: ACCEPTED OTHER @ JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Cross-env key isolation confirmed at JWKS kid level (expla
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 
+- LEARN: REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read ove
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 
+- LEARN: REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read ove
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Endpoint LIVE with client_id oracle (invalid_client vs invalid_request) and legacy redirect-set divergence — modern das
+- LEARN: ACCEPTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS (access-control-allow-origin:*) + broad allow-methods + max-age + SameSite=None cookies on Domain=su
+- LEARN: ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live on modern auth server — https://me.sumup.com/api/sso/callback returns 302→login 
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: crt.sh-derived callback candidates all invalid_request — single-class oracle, ~52 combos exhausted; legacy allowlist ho
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: sumup-ios-sdk and unknown IDs → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered
+- LEARN: ACCEPTED AUTH @ checkout.sumup.com: New Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as me.sumup.com; no anonymous surface.
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts, /callback) + 15 bare-path subset a
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not the 302 oracle of api.sumup.com); uniform 404 on all read paths (swag
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts `/callback`) + 15 bare-path subset 
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: `/authorize` returns 404 (not the 302 oracle of api.sumup.com); uniform 404 across swagger/openap
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata is static — `resource=https://api.sumup.com`, sole auth server auth.sumup
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Endpoint LIVE with client_id oracle (invalid_client vs invalid_request) and legacy redirect-set divergence — modern das
+- LEARN: ACCEPTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS (access-control-allow-origin:*) + broad allow-methods + max-age + SameSite=None cookies on Domain=su
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) de
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge
+- LEARN: ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp b
+- LEARN: ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404 with/without token) but empty scope blocks all resource access.
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed.
+- LEARN: REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is NOT token-stealing (bearer_methods_supported=["header"], no cookies/ambient cr
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: crt.sh-derived callback candidates (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, api.sumup.com 
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: sumup-ios-sdk and unknown IDs → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered
+- LEARN: ACCEPTED AUTH @ checkout.sumup.com: New Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as me.sumup.com; no anonymous surface.
+- LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint.
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Redirect-allowlist divergence + wildcard CORS is the api-gateway template (identical on api.sam-app.ro), distinct from 
+- LEARN: REJECTED MISCONFIG @ tap-to-pay-sdk.fleet.live.sumup.net: 401 Cloudflare Maven host + Fleet CD naming = infra/banner class.
+- LEARN: ACCEPTED OATH @ sam-app.ro: Staging stack (mcp/mcp-theta/api/api-theta/auth/auth-theta) publicly reachable; replicates prod gates byte-for-byte (/mcp 401, /auth
+- LEARN: ACCEPTED BUSLOGIC @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200 JSON) declaring auth.sumup.com as sole autho
+- LEARN: ACCEPTED BUSLOGIC @ api.sam-app.ro/.well-known/oauth-protected-resource: Staging variant LIVE (200 JSON) declaring auth.sam-app.ro; identical structure to prod;
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com/.well-known/mcp.json: 404 JSON-RPC response (not static file); MCP app-directory spec metadata not published by this worker.
+- LEARN: ACCEPTED MISCONFIG @ api.sumup.com/.well-known/openid-configuration: 404 structured problem+json; gateway-handled, no auth-server discovery on API gateway (corr
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-authorization-server: 404 structured problem+json; same gateway handling.
+- LEARN: ACCEPTED OTHER @ JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Cross-env key isolation confirmed at JWKS kid level (expla
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 
+- LEARN: REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read ove
+
+## RANKED HYPOTHESES 2026-09-08 17:50:37 UTC
+- [92] help.sumup.com: Contentful Preview API token grants unauthenticated read of draft/unpublished help content (CONFIRMED — reportable P4) (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Report confirmed Contentful preview-token exposure (help.sumup.com, space 214q1nptnllb, token sha256=preview-contentful) to bugs.olivermaicher.eu — class
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts, /callback) + 15 bare-path subset a
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not the 302 oracle of api.sumup.com); uniform 404 on all read paths (swag
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata is static — `resource=https://api.sumup.com`, sole auth server auth.sumup
+
+## RANKED HYPOTHESES 2026-09-08 20:29:13 UTC
+- [95] auth.sam-app.ro/oauth2/register: Staging dynamic client registration enables self-issued OAuth clients with attacker-controlled redirect_uris and audience, minting valid JWTs with empty scope but controlled aud (from art/lead_nemotron3.txt)
+- [92] help.sumup.com: Contentful Preview API token leak grants unauthenticated read of draft/unpublished help content (CONFIRMED — reportable P4) (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Report confirmed Contentful preview-token exposure to bugs.olivermaicher.eu — class MISCONFIG/exposed-secret, P4. asset help.sumup.com → space 214q1nptnl
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Report confirmed Contentful Preview API token exposure (help.sumup.com, space 214q1nptnllb, 1,082 draft entries incl. 102 articles) to bugs.olivermaicher
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset al
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not the 302 oracle of api.sumup.com); uniform 404 on all read paths — no 
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) de
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge
+- LEARN: ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp b
+- LEARN: ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404 with/without token) but empty scope blocks all resource access.
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed.
+- LEARN: REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is NOT token-stealing (bearer_methods_supported=["header"], no cookies/ambient cr
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: crt.sh-derived callback candidates (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, api.sumup.com 
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: sumup-ios-sdk and unknown IDs → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered
+- LEARN: ACCEPTED AUTH @ checkout.sumup.com: New Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as me.sumup.com; no anonymous surface.
+- LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint.
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Redirect-allowlist divergence + wildcard CORS is the api-gateway template (identical on api.sam-app.ro), distinct from 
+- LEARN: REJECTED MISCONFIG @ tap-to-pay-sdk.fleet.live.sumup.net: 401 Cloudflare Maven host + Fleet CD naming = infra/banner class.
+- LEARN: ACCEPTED OATH @ sam-app.ro: Staging stack (mcp/mcp-theta/api/api-theta/auth/auth-theta) publicly reachable; replicates prod gates byte-for-byte (/mcp 401, /auth
+- LEARN: ACCEPTED BUSLOGIC @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200 JSON) declaring auth.sumup.com as sole autho
+- LEARN: ACCEPTED BUSLOGIC @ api.sam-app.ro/.well-known/oauth-protected-resource: Staging variant LIVE (200 JSON) declaring auth.sam-app.ro; identical structure to prod;
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com/.well-known/mcp.json: 404 JSON-RPC response (not static file); MCP app-directory spec metadata not published by this worker.
+- LEARN: ACCEPTED MISCONFIG @ api.sumup.com/.well-known/openid-configuration: 404 structured problem+json; gateway-handled, no auth-server discovery on API gateway (corr
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-authorization-server: 404 structured problem+json; same gateway handling.
+- LEARN: ACCEPTED OTHER @ JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Cross-env key isolation confirmed at JWKS kid level (expla
+
+## RANKED HYPOTHESES 2026-09-08 22:49:04 UTC
+- [95] auth.sam-app.ro/oauth2/register: Staging dynamic client registration enables self-issued OAuth clients with attacker-controlled redirect_uris and audience, minting valid JWTs with empty scope but controlled aud (from art/lead_nemotron3.txt)
+- [60] api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata / audience-validation divergence at prod gateway (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: File the pending report to bugs.olivermaicher.eu — confirmed Contentful PREVIEW token exposure, class MISCONFIG/exposed-secret, P4. asset help.sumup.com 
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Report confirmed Contentful Preview API token exposure (help.sumup.com, space 214q1nptnllb, 1,082 draft entries incl. 102 articles) to bugs.olivermaicher
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × {app,dashboard,my,secure,me,www}, /callback
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize 404 (not the 302 oracle of api.sumup.com); uniform 404 on swagger/openapi/health/well-
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak verified (cdn 8,337 vs preview 9,419; drafts 1,082 incl. 102 articles; 401 control) — reporta
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset al
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not the 302 oracle of api.sumup.com); uniform 404 on all read paths — no 
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) de
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge
+- LEARN: ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp b
+- LEARN: ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404 with/without token) but empty scope blocks all resource access.
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed.
+- LEARN: REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is NOT token-stealing (bearer_methods_supported=["header"], no cookies/ambient cr
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: crt.sh-derived callback candidates (app-auth×5, checkout, pay, collect, ze-dashboard, gateway, read-api, api.sumup.com 
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: sumup-ios-sdk and unknown IDs → invalid_client ("does not exist") on legacy gateway — legacy SDK clients not registered
+- LEARN: ACCEPTED AUTH @ checkout.sumup.com: New Vercel asset (76.76.21.61); uniform 403 text/plain on all paths — edge-gated same as me.sumup.com; no anonymous surface.
+- LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint.
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Redirect-allowlist divergence + wildcard CORS is the api-gateway template (identical on api.sam-app.ro), distinct from 
+- LEARN: REJECTED MISCONFIG @ tap-to-pay-sdk.fleet.live.sumup.net: 401 Cloudflare Maven host + Fleet CD naming = infra/banner class.
+- LEARN: ACCEPTED OATH @ sam-app.ro: Staging stack (mcp/mcp-theta/api/api-theta/auth/auth-theta) publicly reachable; replicates prod gates byte-for-byte (/mcp 401, /auth
+- LEARN: ACCEPTED BUSLOGIC @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata LIVE (200 JSON) declaring auth.sumup.com as sole autho
+- LEARN: ACCEPTED BUSLOGIC @ api.sam-app.ro/.well-known/oauth-protected-resource: Staging variant LIVE (200 JSON) declaring auth.sam-app.ro; identical structure to prod;
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com/.well-known/mcp.json: 404 JSON-RPC response (not static file); MCP app-directory spec metadata not published by this worker.
+- LEARN: ACCEPTED MISCONFIG @ api.sumup.com/.well-known/openid-configuration: 404 structured problem+json; gateway-handled, no auth-server discovery on API gateway (corr
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-authorization-server: 404 structured problem+json; same gateway handling.
+- LEARN: ACCEPTED OTHER @ JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Cross-env key isolation confirmed at JWKS kid level (expla
+
+## RANKED HYPOTHESES 2026-09-09 01:11:32 UTC
+- [95] auth.sam-app.ro/oauth2/register: Staging dynamic client registration enables cross-environment client sync to production auth.sumup.com (from art/lead_nemotron3.txt)
+- [60] api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata / audience-validation divergence at prod gateway (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: File the pending report to bugs.olivermaicher.eu — confirmed Contentful PREVIEW token exposure, class MISCONFIG/exposed-secret, P4. asset help.sumup.com 
+- NEXT(hypotheses-nemotron3.txt): PROBE: POST https://auth.sam-app.ro/oauth2/register with {"client_name":"recon","redirect_uris":["https://example.com/callback"],"grant_types":["authorization_c
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × {app,dashboard,my,secure,me,www}, /callback
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize 404 (not the 302 oracle of api.sumup.com); uniform 404 on swagger/openapi/health/well-
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak verified (cdn 8,337 vs preview 9,419; drafts 1,082 incl. 102 articles; 401 control) — reporta
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in sp
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset al
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracl
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) de
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope), require PKCE code_challenge, enforce per-client redi
+- LEARN: ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp b
+- LEARN: ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404) but empty scope blocks all resource access
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed at JWKS kid level (prod 8 keys, staging 11 keys, ZE
+- LEARN: REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds)
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle (invalid_client vs invalid_request) + wildcard CORS + legacy/modern redirect-set divergence LIVE; call
+- LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint
+
+## RANKED HYPOTHESES 2026-09-09 06:13:32 UTC
+- [95] auth.sam-app.ro/oauth2/register: Staging dynamic client registration enables cross-environment client sync to production auth.sumup.com (from art/lead_nemotron3.txt)
+- [58] api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 request-level audience validation at prod gateway (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-nemotron3.txt): PROBE: POST https://auth.sam-app.ro/oauth2/register with {"client_name":"recon","redirect_uris":["https://example.com/callback"],"grant_types":["authorization_c
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in sp
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset al
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracl
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) de
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope), require PKCE code_challenge, enforce per-client redi
+- LEARN: ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp b
+- LEARN: ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404) but empty scope blocks all resource access
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed at JWKS kid level (prod 8 keys, staging 11 keys, ZE
+- LEARN: REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds)
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle (invalid_client vs invalid_request) + wildcard CORS + legacy/modern redirect-set divergence LIVE; call
+- LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint
+
+## RANKED HYPOTHESES 2026-09-09 11:46:32 UTC
+- [95] auth.sam-app.ro/oauth2/register: Staging dynamic client registration enables cross-environment client sync to production auth.sumup.com (from art/lead_nemotron3.txt)
+- [55] help.sumup.com: Contentful PREVIEW token drafts include internal test/draft assets with embed refs (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: FILE the pending report to bugs.olivermaicher.eu NOW — MISCONFIG/exposed-secret, P4. asset help.sumup.com → preview.contentful.com/spaces/214q1nptnllb, C
+- NEXT(hypotheses-nemotron3.txt): PROBE: POST https://auth.sam-app.ro/oauth2/register with {"client_name":"recon","redirect_uris":["https://example.com/callback"],"grant_types":["authorization_c
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token scope confirmed bounded to space 214q1nptnllb (environments 404); supplementary unpublished-asset surface 62 
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in sp
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset al
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracl
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) de
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope), require PKCE code_challenge, enforce per-client redi
+- LEARN: ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp b
+- LEARN: ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404) but empty scope blocks all resource access
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed at JWKS kid level (prod 8 keys, staging 11 keys, ZE
+- LEARN: REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds)
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle (invalid_client vs invalid_request) + wildcard CORS + legacy/modern redirect-set divergence LIVE; call
+- LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint
+
+## RANKED HYPOTHESES 2026-09-09 15:37:47 UTC
+- [95] auth.sam-app.ro/oauth2/register: Staging dynamic client registration enables cross-environment client sync to production auth.sumup.com (from art/lead_nemotron3.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste the contents of `reports
+- NEXT(hypotheses-nemotron3.txt): PROBE: POST https://auth.sam-app.ro/oauth2/register with {"client_name":"recon","redirect_uris":["https://example.com/callback"],"grant_types":["authorization_c
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak verified live 2026-09-09 (102 draft articles + 62 unpublished assets, token sha256=52136da5…8
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in Su
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset al
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracl
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) de
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope), require PKCE code_challenge, enforce per-client redi
+- LEARN: ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp b
+- LEARN: ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404) but empty scope blocks all resource access
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed at JWKS kid level (prod 8 keys, staging 11 keys, ZE
+- LEARN: REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds)
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle (invalid_client vs invalid_request) + wildcard CORS + legacy/modern redirect-set divergence LIVE; call
+- LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint
+
+## RANKED HYPOTHESES 2026-09-09 18:47:49 UTC
+- [95] auth.sam-app.ro/oauth2/register: Staging dynamic client registration enables cross-environment client sync to production auth.sumup.com (from art/lead_nemotron3.txt)
+- [72] help.sumup.com: Contentful Preview API token enables broader unpublished-content enumeration beyond articles (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste the contents of `reports
+- NEXT(hypotheses-nemotron3.txt): PROBE: POST https://auth.sam-app.ro/oauth2/register with {"client_name":"recon","redirect_uris":["https://example.com/callback"],"grant_types":["authorization_c
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak — report file `reports/contentful-preview-token-leak.md` CREATED this cycle (was previously r
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token scope bounded to space 214q1nptnllb (environments 404); same-space data only. Strengthens P4 report with expl
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in Su
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset al
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracl
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) de
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope), require PKCE code_challenge, enforce per-client redi
+- LEARN: ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp b
+- LEARN: ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404) but empty scope blocks all resource access
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed at JWKS kid level (prod 8 keys, staging 11 keys, ZE
+- LEARN: REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds)
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle (invalid_client vs invalid_request) + wildcard CORS + legacy/modern redirect-set divergence LIVE; call
+- LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint
+# REPOSCAN FINDINGS — SumUp Public Repositories
+**Scan date:** 2026-09-07
+**Org:** github.com/sumup
+**Repos scanned:** sumup-mcp, sumup-developer, sumup-plugin-medusa, sumup-plugin-vendure, sumup-postman, sumup-openapi, sumup-ai, sumup-android-tap-to-pay, sumup-rs, sumup-cli, sumup-checkout-examples
+
+---
+
+## [HYP] Cloudflare Account ID Hardcoded in wrangler.jsonc
+- **class:** SECRET
+- **asset:** sumup-mcp/wrangler.jsonc (lines 24, 49, 74)
+- **confidence:** 85
+- **reasoning:** Cloudflare account ID `2037fc18a2fb8175c20d20776cac65c5` is hardcoded in all three environment blocks (dev/stage/live). This 32-char hex value is the Cloudflare account identifier used in API calls and dashboard URLs. Not a full credential but enables targeted enumeration of Cloudflare resources (Workers, KV, D1, etc.).
+- **impact:** Low-Medium — enables Cloudflare account enumeration; combined with other info could assist targeted attacks
+- **verify_steps:** 1) Navigate to `https://dash.cloudflare.com/2037fc18a2fb8175c20d20776cac65c5` to confirm account exists. 2) Cloudflare API `GET /client/v4/accounts/2037fc18a2fb8175c20d20776cac65c5` (requires API token — passive verification only).
+
+---
+
+## [HYP] Internal Staging/Development Infrastructure Naming Exposed
+- **class:** MISCONFIG
+- **asset:** sumup-mcp/wrangler.jsonc, sumup-mcp/src/auth.test.ts, sumup-mcp/src/worker.test.ts, sumup-mcp/src/sumup-agent.test.ts, sumup-mcp/.github/workflows/deploy.yaml
+- **confidence:** 90
+- **reasoning:** Full internal infrastructure naming scheme exposed in public repo: `sam-app.ro` domain with subdomains `mcp-theta.sam-app.ro` (dev), `mcp.sam-app.ro` (stage), `api-theta.sam-app.ro` (dev API), `api.sam-app.ro` (stage API), `auth-theta.sam-app.ro` (dev auth), `auth.sam-app.ro` (stage auth), `mcp-beta.sam-app.ro` (beta). Reveals environment topology, naming convention, and staging API hosts. These are live, reachable domains confirmed by prior recon.
+- **impact:** Medium — exposes internal attack surface; attackers can probe staging environments for weaker security controls
+- **verify_steps:** 1) DNS lookup on `sam-app.ro`, `api.sam-app.ro`, `auth.sam-app.ro`, `mcp-theta.sam-app.ro` to confirm resolution. 2) HTTP HEAD/GET to identify running services and software versions. 3) Check if staging environments have weaker auth/debug modes enabled.
+
+---
+
+## [HYP] Wildcard CORS on Production MCP Server
+- **class:** MISCONFIG
+- **asset:** sumup-mcp/src/config.ts:8
+- **confidence:** 80
+- **reasoning:** `Access-Control-Allow-Origin: *` configured on the production MCP server (`mcp.sumup.com`) which handles OAuth-authenticated requests with merchant payment data. The wildcard CORS header allows any website to make credentialed cross-origin requests. Combined with Bearer token authentication, this could enable CSRF-style token exfiltration if a user visits a malicious site while authenticated.
+- **impact:** Medium — any origin can interact with the MCP endpoint; could facilitate token theft via malicious page if browser sends credentials
+- **verify_steps:** 1) `curl -I -X OPTIONS https://mcp.sumup.com/mcp -H "Origin: https://evil.com" -H "Access-Control-Request-Method: POST"` to confirm wildcard CORS active. 2) Verify credentials (cookies/Authorization headers) are actually sent cross-origin in browser context. 3) Test if MCP server respects Origin header for state-changing operations.
+
+---
+
+## [HYP] Wildcard CORS on Developer Portal
+- **class:** MISCONFIG
+- **asset:** sumup-developer/public/_headers:2
+- **confidence:** 70
+- **reasoning:** `Access-Control-Allow-Origin: *` set on all paths (`/*`) of the production developer portal (developer.sumup.com). While the developer portal is primarily documentation, the wildcard CORS could allow cross-origin reading of any non-public API responses if the portal serves authenticated content.
+- **impact:** Low-Medium — documentation site; lower risk than MCP server but still violates CORS best practices for a production SumUp property
+- **verify_steps:** 1) `curl -I https://developer.sumup.com/ -H "Origin: https://evil.com"` to confirm CORS header. 2) Check if any authenticated routes exist on the portal.
+
+---
+
+## [HYP] Committed Secrets File (.dev.vars) Not in .gitignore
+- **class:** MISCONFIG
+- **asset:** sumup-mcp/.dev.vars
+- **confidence:** 70
+- **reasoning:** The `.dev.vars` file (Cloudflare Workers local secrets file) is committed to the public repo. Currently contains only `OPENAI_APPS_CHALLENGE=` (empty value), but this file is specifically designed for local development secrets. It is NOT listed in `.gitignore`, meaning any developer adding real secrets to this file will automatically commit them in future PRs.
+- **impact:** Low — currently empty but dangerous anti-pattern; any future developer adding secrets will leak them
+- **verify_steps:** 1) Verify file at `https://github.com/sumup/sumup-mcp/blob/main/.dev.vars`. 2) Check `.gitignore` to confirm `.dev.vars` is absent. 3) Check git history for any prior secret values.
+
+---
+
+## [HYP] Hardcoded Default JWT/Session Secrets in Docker Example
+- **class:** SECRET
+- **asset:** sumup-plugin-medusa/examples/docker/medusa/medusa-config.ts:12-13, sumup-plugin-medusa/examples/docker/example.env:19-20,36
+- **confidence:** 75
+- **reasoning:** `JWT_SECRET`, `COOKIE_SECRET`, `MEDUSA_ADMIN_PASSWORD` all default to `"supersecret"` when environment variables are unset. The `entrypoint.sh` seeds an admin user with this password on first boot. If a developer deploys the example Docker stack without overriding env vars, the admin dashboard and JWT signing are protected by this trivially guessable value. This is a SumUp-shipped plugin example that could be deployed as-is.
+- **impact:** Medium — requires deploying the Docker example unchanged; affects demo/starter setups shipped by SumUp
+- **verify_steps:** 1) Check if any SumUp-managed demo/staging deployments use these defaults. 2) Search internal deployment configs for `MEDUSA_ADMIN_PASSWORD` or `SUPERADMIN_PASSWORD`. 3) Confirm the example.env is the only file providing these defaults.
+
+---
+
+## [HYP] Hardcoded Default Secrets in Vendure Docker Example
+- **class:** SECRET
+- **asset:** sumup-plugin-vendure/examples/docker/vendure/vendure-config.ts:26,29, sumup-plugin-vendure/examples/docker/example.env:8-9,12-13,16
+- **confidence:** 75
+- **reasoning:** `SUPERADMIN_PASSWORD`, `COOKIE_SECRET`, `SESSION_SECRET` all default to `"supersecret"`. Postgres credentials default to `vendure/vendure`. The `vendure-config.ts` uses these as fallbacks. Combined, deploying the Docker example exposes Postgres with trivial credentials and the admin panel with a guessable password.
+- **impact:** Medium — same as Medusa plugin; affects SumUp-shipped example deployments
+- **verify_steps:** 1) Confirm no SumUp instances use these defaults. 2) Check if Postgres port is exposed externally in any deployment.
+
+---
+
+## [HYP] Internal Maven Artifact Server URL Leaked
+- **class:** MISCONFIG
+- **asset:** sumup-android-tap-to-pay/build.gradle.kts:18
+- **confidence:** 90
+- **reasoning:** URL `https://tap-to-pay-sdk.fleet.live.sumup.net/` reveals an internal Maven artifact server hostname and its infrastructure naming convention (`fleet` = likely a continuous delivery platform). This endpoint serves the proprietary Tap-to-Pay SDK binary. While the server requires Maven credentials (env-var based), the hostname itself leaks internal infrastructure details.
+- **impact:** Low — endpoint requires credentials; URL is not directly exploitable but aids reconnaissance of SumUp build/deploy infrastructure
+- **verify_steps:** 1) Confirm this is the only public reference to this hostname. 2) Check if the Fleet server has additional exposed endpoints. 3) Verify auth requirements on the Maven repo.
+
+---
+
+## [HYP] Internal Mock Service DNS Name in Test Code
+- **class:** MISCONFIG
+- **asset:** sumup-rs/sdk/tests/client.rs:59-60
+- **confidence:** 85
+- **reasoning:** String `https://mock.sumup.internal.test` appears in test code, revealing an internal DNS naming convention for mock services. The `.internal.test` TLD pattern suggests an internal test infrastructure domain.
+- **impact:** Very Low — purely informational; test code only, but leaks naming convention
+- **verify_steps:** 1) Verify the internal domain doesn't resolve from outside. 2) Check if more internal hostnames appear in other repos.
+
+---
+
+## Summary
+
+| # | Finding | Class | Confidence | Impact |
+|---|---------|-------|------------|--------|
+| 1 | Cloudflare Account ID in wrangler.jsonc | SECRET | 85 | Low-Medium |
+| 2 | Internal Staging Infrastructure Exposed | MISCONFIG | 90 | Medium |
+| 3 | Wildcard CORS on MCP Server | MISCONFIG | 80 | Medium |
+| 4 | Wildcard CORS on Developer Portal | MISCONFIG | 70 | Low-Medium |
+| 5 | Committed .dev.vars File | MISCONFIG | 70 | Low |
+| 6 | Default Secrets in Medusa Docker Example | SECRET | 75 | Medium |
+| 7 | Default Secrets in Vendure Docker Example | SECRET | 75 | Medium |
+| 8 | Internal Maven Server URL Leaked | MISCONFIG | 90 | Low |
+| 9 | Internal Mock DNS in Test Code | MISCONFIG | 85 | Very Low |
+
+**Total findings:** 9 (3 SECRET, 6 MISCONFIG)
+# Validated findings (running count 0)
+
+- 1 lead(s) marked VALID at 2026-09-04 06:02:58 UTC
+  - | Q4 Provable non-invasively? | **NO** — all unauthenticated paths return 404; requires valid merchant OAuth token to test. Probe results confirm 404 on every enumerated path (v0/v0.1/v1/v2/merchants/
+
+- 7 lead(s) marked VALID at 2026-09-06 21:30:02 UTC
+  - **Verdict: VALID**
+  - | Impact | Attacker-controlled OAuth clients on staging; mintable JWTs (empty scope blocks resources but token is valid at gateway). Staging environments often lack prod hardening. |
+  - **Verdict: VALID**
+  - **Verdict: VALID**
+  - | 1 | `auth.sam-app.ro` unauthenticated dynamic client registration | **VALID** | 7.5 |
+  - | 2 | `api.sumup.com/authorize` client-ID oracle + wildcard CORS | **VALID** | 5.3 |
+  - | 3 | `mcp.sumup.com` wildcard CORS on Bearer-protected endpoint | **VALID** | 5.3 |
+
+- 3 lead(s) marked VALID at 2026-09-09 15:21:03 UTC
+  - **Verdict: VALID**
+  - | Q3 | Real security impact? | Low — error taxonomy (`invalid_client` vs `invalid_request`) is a standard OAuth error pattern; wildcard CORS on an authorize endpoint that only redirects to error pages
+  - | 1 | help.sumup.com Contentful Preview Token Leak | **VALID** | 5.3 (Medium) | **FILE REPORT** |
+[0m
+[0m$ [0mcat /home/runner/work/sumup-hunt/sumup-hunt/scope.yml 2>/dev/null; echo "===LEADS==="; ls -la /home/runner/work/sumup-hunt/sumup-hunt/leads/ 2>/dev/null
+programs:
+  sumup:
+    name: SumUp Payments Limited / SumUp Group Bug Bounty
+    disclosure_policy: via bugs.olivermaicher.eu (Oliver Maicher private program) - report + PoC + contact + payment
+    assets:
+      - name: "All company-owned infrastructure, payment platforms, merchant portals, APIs, mobile and web applications, point-of-sale systems, cloud services, websites, and domains operated by SumUp Group and its subsidiaries"
+        priority: In
+    out_of_scope:
+- "Network level Denial of Service attacks"
+      - "Application Denial of Service by locking user accounts"
+      - "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)"
+      - "Disclosure of known public files or directories (e.g. robots.txt)"
+      - "Outdated software / library versions"
+      - "OPTIONS / TRACE HTTP method enabled"
+      - "CSRF on logout"
+      - "CSRF on forms that are available to anonymous users"
+      - "Cookies that lack HTTP Only or Secure settings for non-sensitive data"
+      - "Self-XSS and issues exploitable only through Self-XSS"
+      - "Reports resulting from automated scanning utilities without additional details or a POC demonstrating a specific exploit"
+      - "Attacks requiring physical access to a user's device"
+      - "Attacks dependent upon social engineering of employees or vendors"
+      - "Username enumeration based on login or forgot password pages"
+      - "Enforcement policies for brute force, rate limiting, or account lockout"
+      - "SSL/TLS best practices"
+      - "SSL attacks such as BEAST, BREACH, Renegotiation attack"
+      - "Clickjacking, without additional details demonstrating a specific exploit"
+      - "Mail configuration issues including SPF, DKIM, DMARC settings"
+      - "Use of a known-vulnerable library without a description of an exploit specific to our implementation"
+      - "Password and account recovery policies"
+      - "Presence of autocomplete functionality in form fields"
+      - "Publicly accessible login panels"
+      - "Lack of email address verification during account registration or account invitation"
+      - "Lack of email address verification password restore"
+      - "Session control during email/password changes"
+      - "Social engineering, physical attacks, and DoS/DDoS testing (per program notes)"
+      - "Exposure of customer/employee/financial/authentication data during testing (per program notes)"
+    github_orgs:
+      - none-configured
+
+rules:
+  passive_first: false          # deep-hunt agent: active probes allowed when scoped
+  max_requests_per_second: 1    # never hammer live infra
+  no_doom: true                 # no DoS/DDoS, no account-lockout attacks
+  account_creation: restricted  # only on test/sandbox assets, never live customer data
+  no_data_modification: true    # no writes/deletes on live customer data
+  no_pre_disclosure: true       # never disclose before program response
+  poc_required: true            # scanner output alone is REJECTED
+  redact_secrets_in_commits: true
+
+models:
+  - { id: opencode/big-pickle, name: bigpickle }
+  - { id: opencode/nemotron-3-ultra-free, name: nemotron3 }
+  - { id: opencode/longcat-2.0-free, name: longcat }
+  - { id: opencode/ling-3.0-flash-free, name: ling3 }
+  - { id: opencode/laguna-s-2.1-free, name: laguna }
+===LEADS===
+total 896
+drwxr-xr-x  2 runner runner   4096 Sep  9 21:34 .
+drwxr-xr-x 12 runner runner   4096 Sep  9 21:35 ..
+-rw-r--r--  1 runner runner 407084 Sep  9 21:34 lead-bigpickle.md
+-rw-r--r--  1 runner runner   2193 Sep  9 21:34 lead-laguna.md
+-rw-r--r--  1 runner runner   2150 Sep  9 21:34 lead-ling3.md
+-rw-r--r--  1 runner runner   2236 Sep  9 21:34 lead-longcat.md
+-rw-r--r--  1 runner runner     18 Sep  9 21:34 lead-mimo.md
+-rw-r--r--  1 runner runner 457506 Sep  9 21:34 lead-nemotron3.md
+-rw-r--r--  1 runner runner  23075 Sep  9 21:34 reposcan-sumup.md
+[0m
+[0m$ [0mls -la /home/runner/work/sumup-hunt/sumup-hunt/reports/ | grep -i contentful; echo "---"; find /home/runner/work/sumup-hunt/sumup-hunt -iname "*contentful*" 2>/dev/null; echo "---REPORTS DIR---"; ls -la /home/runner/work/sumup-hunt/sumup-hunt/reports/
+---
+---REPORTS DIR---
+total 2132
+drwxr-xr-x  2 runner runner    4096 Sep  9 21:34 .
+drwxr-xr-x 12 runner runner    4096 Sep  9 21:35 ..
+-rw-r--r--  1 runner runner 1166029 Sep  9 21:34 analyst-bigpickle.log
+-rw-r--r--  1 runner runner    9331 Sep  9 21:34 analyst-laguna.log
+-rw-r--r--  1 runner runner    9288 Sep  9 21:34 analyst-ling3.log
+-rw-r--r--  1 runner runner    9374 Sep  9 21:34 analyst-longcat.log
+-rw-r--r--  1 runner runner  741349 Sep  9 21:34 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    3996 Sep  9 21:34 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep  9 21:34 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep  9 21:34 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep  9 21:34 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   13752 Sep  9 21:34 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  176168 Sep  9 21:34 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep  9 21:34 reposcan-findings.md
+-rw-r--r--  1 runner runner    1263 Sep  9 21:34 valid-bugs.md
+[0m
+[0m$ [0mcat /home/runner/work/sumup-hunt/sumup-hunt/leads/lead-bigpickle.txt 2>/dev/null; echo "===HYP-BIGPICKLE==="; cat /home/runner/work/sumup-hunt/sumup-hunt/reports/hypotheses-bigpickle.txt 2>/dev/null
+===HYP-BIGPICKLE===
+## 2026-09-09 18:45:32 UTC [target] (model bigpickle)
+[HYP] Contentful Preview API token enables broader unpublished-content enumeration beyond articles
+class: MISCONFIG
+asset: help.sumup.com → preview.contentful.com/spaces/214q1nptnllb
+confidence: 72
+reasoning: Preview token already confirmed granting access to 102 draft articles + 62 unpublished assets + 1,082 total unpublished entries. The token is live, scoped to a single space, and published as client-side JS. Previously the token was never extracted into a submission-ready report despite 6+ cycles of analysis. The token may rotate — this is the highest-priority actionable finding.
+evidence_needed: Token value itself (sha256=52136da5…8997, already confirmed in KB) and Jira submission.
+verify_steps: PASSIVE — report file now exists at reports/contentful-preview-token-leak.md; Jira submission is the blocking action.
+impact: Unreleased product documentation disclosure (102 draft articles + 62 internal assets). P4 severity. No customer/financial/auth data.
+testability: HUMAN_ONLY (Jira form submission)
+[HYP] Legacy OAuth gateway wildcard CORS enables cross-origin request forgery on authorize flow
+class: MISCONFIG
+asset: api.sumup.com/authorize
+confidence: 60
+reasoning: access-control-allow-origin:* + broad allow-methods + max-age on legacy OAuth gateway, absent on auth.sumup.com. SameSite=None cookies on Domain=sumup.com. However, the endpoint only serves error redirects (302→auth error flow) and no tokens/credentials are returned on this path — CORS misconfig is defense-in-depth, not exploitable for credential theft.
+evidence_needed: Any scenario where auth credentials pass through api.sumup.com/authorize (none identified).
+verify_steps: BLOCKED — would require a full OAuth code flow through the legacy gateway to test if cookies/credentials are set and readable cross-origin.
+impact: Hardening-only; no demonstrated credential theft path. Low.
+testability: AUTH_HELPED
+[HYP] api.sumup.com resource-server aud validation gap
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource → resource paths
+confidence: 58
+reasoning: RFC 9728 metadata declares auth.sumup.com as sole authorization server; prod JWKS rejects staging keys (8 vs 11 kids, ZERO overlap). Request-level aud check (aud=api.sumup.com vs staging aud=api.sam-app.ro) remains untested.
+evidence_needed: Staging-minted JWT replayed at prod resource path.
+verify_steps: BLOCKED — requires staging token + POST (AUTH_HELPED).
+impact: Cross-env token relay → merchant/payment access if aud validation absent. High-latent.
+testability: AUTH_HELPED
+[NEXT] HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste the contents of `reports/contentful-preview-token-leak.md` into the Jira form. The report is now a file on disk. Token may rotate — do not defer.
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak — report file `reports/contentful-preview-token-leak.md` CREATED this cycle (was previously referenced but never written). 102 draft articles + 62 unpublished assets + 1,082 total unpublished entries in space 214q1nptnllb; token sha256=52136da5…8997; verified live 2026-09-09. Ready for Jira submission.
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token scope bounded to space 214q1nptnllb (environments 404); same-space data only. Strengthens P4 report with explicit scope boundary.
+[RISK] sumup: 82 — Principal unrealized value: the single confirmed reportable P4 (Contentful PREVIEW token → 102 draft articles + 62 assets) is verified and NOW HAS A REPORT FILE but remains UNFILED on Jira. Time-sensitive to token rotation. All other high-impact chains (BOLA, OAuth redirect, staging client sync, cross-env token relay) remain AUTH_HELPED/POST-blocked. Legacy OAuth callback host fully exhausted across all enumeration surfaces (crt.sh + ccTLD + custom schemes = 0 HITs, all rejected).
+[0m
+[0m$ [0mgrep -n "contentful-preview-token-leak\|PREVIEW\|52136da5" /home/runner/work/sumup-hunt/sumup-hunt/reports/analyst-bigpickle.log | tail -40
+12567:[HYP] Contentful PREVIEW token drafts include internal test/draft assets with embed refs
+12573:verify_steps: PASSIVE GET preview.contentful.com/spaces/214q1nptnllb/assets?access_token=<PREVIEW>&sys.publishedAt[exists]=false&limit=100 → scan names/descriptions; cross-reference asset IDs referenced by the 102 draft articles for unpublished-image embedding.
+12599:- [FINAL] 1. Contentful PREVIEW token leak incl. 62 unpublished assets (92) — CONFIRMED, PASSIVE, REPORTABLE NOW, token may rotate.
+12604:[NEXT] HUMAN: FILE the pending report to bugs.olivermaicher.eu NOW — MISCONFIG/exposed-secret, P4. asset help.sumup.com → preview.contentful.com/spaces/214q1nptnllb, Contentful PREVIEW API token sha256=52136da5…8997. PoC: (1) GET cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<DELIVERY>&limit=1 → total 8,337; (2) GET preview.contentful.com/spaces/214q1nptnllb/entries?access_token=<PREVIEW>&sys.publishedAt[exists]=false&content_type=article → 102 draft articles; (3) GET preview.contentful.com/spaces/214q1nptnllb/assets?access_token=<PREVIEW>&sys.publishedAt[exists]=false&limit=1 → total 62 unpublished assets (adds asset surface); (4) invalid-token control → 401. Re-verified live 2026-09-09; token may rotate — do not defer (valid-bugs.md still 0).
+12607:- [LEARN] ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token still live (draft articles 102) + 62 unpublished assets readable; scope bounded to space 214q1nptnllb (environments 404) — report strengthened, P4 confirmed.
+12612:[RISK] sumup: 80 — Confirmed reportable P4 (Contentful PREVIEW token → 102 draft articles + 62 unpublished assets, re-verified live 2026-09-09) remains UNFILED: principal unrealized value and time-sensitive to rotation. Legacy OAuth gateway live (client_id oracle, wildcard CORS, redirect divergence) but allowlist host unrecoverable across all enumeration surfaces (exhaustively refuted). Staging auth.sam-app.ro RFC 7591 mints valid empty-scope JWTs with controlled aud; prod/staging JWKS isolation is the confirmed cross-env blocker; client-sync chain untested (would require token/POST). All high-impact chains remain AUTH_HELPED/POST-blocked; financial surface access-controlled.
+12659:[0m$ [0mgrep -n "Contentful\|PREVIEW.*token\|preview.*contentful\|P4\|help.sumup.com\|214q1nptnllb" /home/runner/work/sumup-hunt/sumup-hunt/leads/lead-bigpickle.md | head -60
+12682:1655:[HYP] Exposed Contentful PREVIEW API token reads unpublished/draft help-center content (CONFIRMED by probe)
+12684:1659:reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM". GET preview.contentful.com with it → 200, total 9419 vs cdn 8337; sys.publishedAt[exists]=false → 1082 drafts (102 content_type=article, 143 callout); sample never-published articles updated 2026-09-03/04; invalid token → 401.
+12695:1745:[HYP] Exposed Contentful PREVIEW API token reads unpublished/draft help-center content (CONFIRMED by probe)
+12697:1749:reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM". GET preview.contentful.com with it → 200, total 9419 vs cdn 8337; sys.publishedAt[exists]=false → 1082 drafts (102 content_type=article, 143 callout); sample never-published articles updated 2026-09-03/04; invalid token → 401.
+12708:1833:[HYP] Exposed Contentful PREVIEW API token reads unpublished/draft help-center content (CONFIRMED by probe)
+12710:1837:reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM". GET preview.contentful.com with it → 200, total 9419 vs cdn 8337; sys.publishedAt[exists]=false → 1082 drafts (102 content_type=article, 143 callout); sample never-published articles updated 2026-09-03/04; invalid token → 401.
+12716:1934:[HYP] Exposed Contentful PREVIEW API token reads unpublished/draft help-center content (CONFIRMED by probe)
+12718:1938:reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM". GET preview.contentful.com → 200 total 9419 vs cdn 8337; sys.publishedAt[exists]=false → 1082 drafts (102 articles, 143 callouts) incl. never-published articles updated 2026-09-04; invalid token → 401 AccessTokenInvalid. Not management-scoped.
+12722:[0m← [0mWrite reports/contentful-preview-token-leak.md
+12746:+### 1. Contentful PREVIEW API Token Leak — help.sumup.com (P4)
+12749:+- **Token sha256:** `52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997`
+12750:+- **Status:** Report composed → `reports/contentful-preview-token-leak.md` → MANUAL SUBMISSION REQUIRED to https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9
+12760:- [CHANGED] help.sumup.com Contentful PREVIEW token: re-verified live 2026-09-09 — 102 draft articles + 62 unpublished assets still accessible; environments 404 (scope bounded to single space)
+12771:- [FINAL] Contentful PREVIEW token leak (conf 92) — CONFIRMED, reportable, report composed. No hypothesis to drop.
+12774:[NEXT] HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste the contents of `reports/contentful-preview-token-leak.md` into the Jira form. The report is ready. Token may rotate — do not defer.
+12777:[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak verified live 2026-09-09 (102 draft articles + 62 unpublished assets, token sha256=52136da5…8997) — reportable P4, report composed, awaiting manual submission.
+12784:The report is at `reports/contentful-preview-token-leak.md`. The Jira form URL is:
+12797:[ ] FILE Contentful PREVIEW token report to Jira
+12813:[•] Create contentful-preview-token-leak.md report
+12814:[ ] FILE Contentful PREVIEW token report to Jira
+12816:The critical issue is clear: the Contentful PREVIEW token leak report (`reports/contentful-preview-token-leak.md`) was never created despite multiple rounds of analysis calling for it. Let me create it now and run the full 8-step analysis.
+12817:[0m← [0mWrite reports/contentful-preview-token-leak.md
+12823:[✓] Create contentful-preview-token-leak.md report
+12824:[ ] FILE Contentful PREVIEW token report to Jira
+12831:- NO_DELTA. All inventory hosts, knowledge base entries, and lead state match prior cycle. No new hosts, no config changes on scanned surfaces. The only material delta is that `reports/contentful-preview-token-leak.md` now EXISTS (created this cycle) — previously referenced but never written.
+12834:- [PRIO] help.sumup.com Contentful PREVIEW token,9.5,asset:previously-unfiled-P4-gate-ease:10(fully-passive),business-value:4(draft-help-content-only),tech-exposure:6(client-side-secret-leak),cloud-surface:3(Contentful-hosted),freshness:9(token-may-rotate-anytime)
+12845:evidence_needed: Token value itself (sha256=52136da5…8997, already confirmed in KB) and Jira submission.
+12846:verify_steps: PASSIVE — report file now exists at reports/contentful-preview-token-leak.md; Jira submission is the blocking action.
+12871:- [FINAL-1] Contentful PREVIEW token report: confidence 72, now has a file on disk. Previous cycles all flagged this as the #1 blocker. Priority action: FILE to Jira. No parked — report is ready.
+12877:[NEXT] HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste the contents of `reports/contentful-preview-token-leak.md` into the Jira form. The report is now a file on disk. Token may rotate — do not defer.
+12880:[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak — report file `reports/contentful-preview-token-leak.md` CREATED this cycle (was previously referenced but never written). 102 draft articles + 62 unpublished assets + 1,082 total unpublished entries in space 214q1nptnllb; token sha256=52136da5…8997; verified live 2026-09-09. Ready for Jira submission.
+12881:[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token scope bounded to space 214q1nptnllb (environments 404); same-space data only. Strengthens P4 report with explicit scope boundary.
+12884:[RISK] sumup: 82 — Principal unrealized value: the single confirmed reportable P4 (Contentful PREVIEW token → 102 draft articles + 62 assets) is verified and NOW HAS A REPORT FILE but remains UNFILED on Jira. Time-sensitive to token rotation. All other high-impact chains (BOLA, OAuth redirect, staging client sync, cross-env token relay) remain AUTH_HELPED/POST-blocked. Legacy OAuth callback host fully exhausted across all enumeration surfaces (crt.sh + ccTLD + custom schemes = 0 HITs, all rejected).
+[0m
+[0m$ [0mtail -c 8000 /home/runner/work/sumup-hunt/sumup-hunt/reports/analyst-bigpickle.log
+client sync, cross-env token relay) remain AUTH_HELPED/POST-blocked. Legacy OAuth callback host fully exhausted across all enumeration surfaces (crt.sh + ccTLD + custom schemes = 0 HITs).
+
+---
+
+The report is at `reports/contentful-preview-token-leak.md`. The Jira form URL is:
+```
+https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9
+```
+
+Paste the report contents into the form fields (program: SumUp, vulnerability details, PoC steps, contact, payment details). Token may rotate — submit immediately.
+===== ANALYST bigpickle 2026-09-09 18:47:49 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m# [0mTodos
+[•] STEP 1: DELTA check - inventory vs knowledge base
+[ ] STEP 2-8: Full analysis cycle
+[ ] FILE Contentful PREVIEW token report to Jira
+[0m
+[0m✱ [0mGlob "**/valid-bugs*"[90m 1 match[0m
+[0m✱ [0mGlob "**/*contentful*"[90m 0 matches[0m
+[0m✱ [0mGlob "**/hypotheses*"[90m 6 matches[0m
+[0m✱ [0mGlob "**/reports/*.md"[90m 3 matches[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m→ [0mRead reports/hypotheses-bigpickle.txt
+[0m✱ [0mGlob "**/contentful*"[90m 0 matches[0m
+[0m✱ [0mGlob "reports/**"[90m 13 matches[0m
+[0m→ [0mRead reports/reposcan-findings.md
+[0m→ [0mRead reports/hypotheses.md
+[0m
+[0m# [0mTodos
+[✓] STEP 1: DELTA check - inventory vs knowledge base
+[•] STEP 2-8: Full analysis cycle
+[•] Create contentful-preview-token-leak.md report
+[ ] FILE Contentful PREVIEW token report to Jira
+[0m
+The critical issue is clear: the Contentful PREVIEW token leak report (`reports/contentful-preview-token-leak.md`) was never created despite multiple rounds of analysis calling for it. Let me create it now and run the full 8-step analysis.
+[0m← [0mWrite reports/contentful-preview-token-leak.md
+Wrote file successfully.
+[0m
+[0m# [0mTodos
+[✓] STEP 1: DELTA check - inventory vs knowledge base
+[•] STEP 2-8: Full analysis cycle
+[✓] Create contentful-preview-token-leak.md report
+[ ] FILE Contentful PREVIEW token report to Jira
+[0m
+Report created. Here is the full 8-step analysis:
+
+---
+
+**STEP 1 — DELTA:**
+- NO_DELTA. All inventory hosts, knowledge base entries, and lead state match prior cycle. No new hosts, no config changes on scanned surfaces. The only material delta is that `reports/contentful-preview-token-leak.md` now EXISTS (created this cycle) — previously referenced but never written.
+
+**STEP 2 — PRIORITIZE:**
+- [PRIO] help.sumup.com Contentful PREVIEW token,9.5,asset:previously-unfiled-P4-gate-ease:10(fully-passive),business-value:4(draft-help-content-only),tech-exposure:6(client-side-secret-leak),cloud-surface:3(Contentful-hosted),freshness:9(token-may-rotate-anytime)
+- [PRIO] api.sumup.com/authorize legacy OAuth gateway,7.0,asset:client_id-oracle+wildcard-CORS+redirect-divergence,gate-ease:9(passive-GET),business-value:5(OAuth-flow-anomaly),tech-exposure:7(OAuth-client-oracle),cloud-surface:2(Clflare+API-gw),freshness:4(stable)
+- [PRIO] auth.sam-app.ro dynamic registration,6.5,asset:RFC-7591-registration+JWT-minting,gate-ease:7(passive-registration-but-token-is-POST),business-value:4(staging-only),tech-exposure:6(OAuth-misconfig),cloud-surface:2(staging),freshness:5(stable)
+
+**STEP 3 — HYPOTHESES:**
+
+[HYP] Contentful Preview API token enables broader unpublished-content enumeration beyond articles
+class: MISCONFIG
+asset: help.sumup.com → preview.contentful.com/spaces/214q1nptnllb
+confidence: 72
+reasoning: Preview token already confirmed granting access to 102 draft articles + 62 unpublished assets + 1,082 total unpublished entries. The token is live, scoped to a single space, and published as client-side JS. Previously the token was never extracted into a submission-ready report despite 6+ cycles of analysis. The token may rotate — this is the highest-priority actionable finding.
+evidence_needed: Token value itself (sha256=52136da5…8997, already confirmed in KB) and Jira submission.
+verify_steps: PASSIVE — report file now exists at reports/contentful-preview-token-leak.md; Jira submission is the blocking action.
+impact: Unreleased product documentation disclosure (102 draft articles + 62 internal assets). P4 severity. No customer/financial/auth data.
+testability: HUMAN_ONLY (Jira form submission)
+
+[HYP] Legacy OAuth gateway wildcard CORS enables cross-origin request forgery on authorize flow
+class: MISCONFIG
+asset: api.sumup.com/authorize
+confidence: 60
+reasoning: access-control-allow-origin:* + broad allow-methods + max-age on legacy OAuth gateway, absent on auth.sumup.com. SameSite=None cookies on Domain=sumup.com. However, the endpoint only serves error redirects (302→auth error flow) and no tokens/credentials are returned on this path — CORS misconfig is defense-in-depth, not exploitable for credential theft.
+evidence_needed: Any scenario where auth credentials pass through api.sumup.com/authorize (none identified).
+verify_steps: BLOCKED — would require a full OAuth code flow through the legacy gateway to test if cookies/credentials are set and readable cross-origin.
+impact: Hardening-only; no demonstrated credential theft path. Low.
+testability: AUTH_HELPED
+
+[HYP] api.sumup.com resource-server aud validation gap
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource → resource paths
+confidence: 58
+reasoning: RFC 9728 metadata declares auth.sumup.com as sole authorization server; prod JWKS rejects staging keys (8 vs 11 kids, ZERO overlap). Request-level aud check (aud=api.sumup.com vs staging aud=api.sam-app.ro) remains untested.
+evidence_needed: Staging-minted JWT replayed at prod resource path.
+verify_steps: BLOCKED — requires staging token + POST (AUTH_HELPED).
+impact: Cross-env token relay → merchant/payment access if aud validation absent. High-latent.
+testability: AUTH_HELPED
+
+**STEP 4 — SELF-CRITIQUE:**
+- [FINAL-1] Contentful PREVIEW token report: confidence 72, now has a file on disk. Previous cycles all flagged this as the #1 blocker. Priority action: FILE to Jira. No parked — report is ready.
+- [FINAL-2] api.sumup.com/authorize CORS: confidence 60, no demonstrated exploit. Park as defense-in-depth only — reportable as hardening but not independently.
+- [FINAL-3] api.sumup.com aud validation: confidence 58, blocked on AUTH_HELPED. No passive path. Park until staging token replay is possible.
+- [PARKED] Legacy OAuth callback host recovery: exhaustively refuted across crt.sh (52 combos), ccTLD (96 combos), custom schemes (15 combos) = 0 HITs. All iteration surfaces closed.
+
+**STEP 5 — NEXT ACTION:**
+[NEXT] HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste the contents of `reports/contentful-preview-token-leak.md` into the Jira form. The report is now a file on disk. Token may rotate — do not defer.
+
+**STEP 6 — LEARNING:**
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak — report file `reports/contentful-preview-token-leak.md` CREATED this cycle (was previously referenced but never written). 102 draft articles + 62 unpublished assets + 1,082 total unpublished entries in space 214q1nptnllb; token sha256=52136da5…8997; verified live 2026-09-09. Ready for Jira submission.
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token scope bounded to space 214q1nptnllb (environments 404); same-space data only. Strengthens P4 report with explicit scope boundary.
+
+**STEP 7 — RISK:**
+[RISK] sumup: 82 — Principal unrealized value: the single confirmed reportable P4 (Contentful PREVIEW token → 102 draft articles + 62 assets) is verified and NOW HAS A REPORT FILE but remains UNFILED on Jira. Time-sensitive to token rotation. All other high-impact chains (BOLA, OAuth redirect, staging client sync, cross-env token relay) remain AUTH_HELPED/POST-blocked. Legacy OAuth callback host fully exhausted across all enumeration surfaces (crt.sh + ccTLD + custom schemes = 0 HITs, all rejected).
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && git status --short && echo "===GIT LOG===" && git log --oneline -5 2>/dev/null && echo "===TRACKED REPORTS===" && git ls-files reports/
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+===GIT LOG===
+e1a5d7e reposcan 2026-09-09-21-25
+===TRACKED REPORTS===
+reports/analyst-bigpickle.log
+reports/analyst-laguna.log
+reports/analyst-ling3.log
+reports/analyst-longcat.log
+reports/analyst-nemotron3.log
+reports/hypotheses-bigpickle.txt
+reports/hypotheses-laguna.txt
+reports/hypotheses-ling3.txt
+reports/hypotheses-longcat.txt
+reports/hypotheses-nemotron3.txt
+reports/hypotheses.md
+reports/reposcan-findings.md
+reports/valid-bugs.md
+[0m
+[0m$ [0mecho -n "XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM" | sha256sum
+52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997  -
+[0m
+[0m$ [0mcurl -s -o /tmp/cf_pub.json -w "%{http_code}" "https://cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM&limit=1"; echo; sleep 1.2
+401
+[0m
+[0m$ [0mcurl -s -o /tmp/cf_drafts.json -w "%{http_code}" "https://preview.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM&sys.publishedAt%5Bexists%5D=false&limit=1"; echo; sleep 1.2; curl -s -o /tmp/cf_assets.json -w "%{http_code}" "https://preview.contentful.com/spaces/214q1nptnllb/assets?access_token=XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM&sys.publishedAt%5Bexists%5D=false&limit=1"; echo; sleep 1.2; curl -s -o /tmp/cf_bad.json -w "%{http_code}" "https://preview.contentful.com/spaces/214q1nptnllb/entries?access_token=INVALID_TOKEN_CONTROL&limit=1"; echo
+200
+200
+401
+[0m
+[0m$ [0mpython3 -c "
+import json
+for f in ['/tmp/cf_drafts.json','/tmp/cf_assets.json']:
+    try:
+        d=json.load(open(f))
+        print(f, 'total=', d.get('total'), 'type=', type(d).__name__, 'err=', d.get('message',''))
+    except Exception as e:
+        print(f,'ERR',e)
+"
+/tmp/cf_drafts.json total= 1089 type= dict err= 
+/tmp/cf_assets.json total= 62 type= dict err=
+[0m
+[0m$ [0mcurl -s -o /tmp/cf_arts.json -w "%{http_code}\n" "https://preview.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM&content_type=article&sys.publishedAt%5Bexists%5D=false&limit=5"; sleep 1.2; curl -s -o /tmp/cf_env.json -w "%{http_code}\n" "https://preview.contentful.com/spaces/214q1nptnllb/environments?access_token=XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM"
+200
+404
+[0m
+[0m$ [0mpython3 -c "
+import json
+d=json.load(open('/tmp/cf_arts.json'))
+print('draft articles total=', d.get('total'))
+for it in d.get('items',[]):
+    f=it.get('fields',{})
+    title=f.get('title',{})
+    print('-', (title.get('en-US') or title.get('de-DE') or '?')[:70], '| updated:', it.get('sys',{}).get('updatedAt'))
+"
+Traceback (most recent call last):
+  File "<string>", line 8, in <module>
+AttributeError: 'str' object has no attribute 'get'
+draft articles total= 102
+[0m
+[0m$ [0mpython3 -c "
+import json
+d=json.load(open('/tmp/cf_arts.json'))
+for it in d.get('items',[])[:4]:
+    print('id=', it.get('sys',{}).get('id','')[:16], 'updated=', it.get('sys',{}).get('updatedAt'))
+    f=it.get('fields',{})
+    print('  title fields=', list(f.keys()))
+"
+id= 2Lp5bjHLTi3svjJO updated= 2026-09-09T07:27:27.116Z
+  title fields= ['name', 'title', 'articleDescription', 'slug', 'scArticleBody', 'metaDescription', 'metaTitle', 'intents']
+id= 42BtF9FEWMAltyJZ updated= 2026-09-09T07:27:06.339Z
+  title fields= ['name', 'title', 'articleDescription', 'slug', 'scArticleBody', 'categories', 'sections', 'metaDescription', 'metaTitle', 'userType', 'intents']
+id= 5T50HcbJZ3c22bVO updated= 2026-09-08T09:52:03.091Z
+  title fields= ['slug']
+id= 6gZWzhAO0Am1PlWc updated= 2026-09-04T06:57:30.324Z
+  title fields= ['name', 'title', 'articleDescription', 'slug', 'scArticleBody', 'metaDescription', 'metaTitle', 'intents']
+[0m
+[0m← [0mWrite reports/contentful-preview-token-leak.md
+Wrote file successfully.
+[0m
+Re-verified live: preview token still works (102 draft articles + 62 unpublished assets + 1,089 unpublished entries; environments 404; torn control 401). Configuring the report that the prior cycle claimed to write (missing from disk and git index).
+[0m$ [0mgrep -rno "client_id[=: ]*[a-zA-Z0-9_\-]\{8,\}" /home/runner/work/sumup-hunt/sumup-hunt/reports/hypotheses-nemotron3.txt /home/runner/work/sumup-hunt/sumup-hunt/leads/lead-nemotron3.md 2>/dev/null | grep -vi "dashboard\|sumup-ios\|sample" | head -20
+(no output)
+[0m
+[0m$ [0mgrep -rn "client_credentials\|client_secret_post\|Bearer\|eyJ\|register" /home/runner/work/sumup-hunt/sumup-hunt/reports/hypotheses-nemotron3.txt 2>/dev/null | head -30
+7:[CHANGED] auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register) — staging/prod divergence confirmed  
+10:[PRIO] auth.sam-app.ro/oauth2/register,8.7,attack_surface=9|business_value=8|tech_exposure=9|gate_ease=10|cloud_surface=7|freshness=9  
+19:asset: auth.sam-app.ro/oauth2/register
+21:reasoning: POST /oauth2/register → 201 returns client_id+secret+chosen redirect_uris (declared in openid-configuration). Dynamic clients complete client_credentials grant yielding real JWT access_tokens with empty scp:[] but attacker-controlled aud (https://api.sam-app.ro and https://mcp.sam-app.ro both accepted). Registration rejects explicit scope parameter (invalid_client_metadata) and token_endpoint_auth_method: "none". Prod auth.sumup.com has no /register endpoint (404). Staging replicates prod gates byte-for-byte per OIDC discovery. Cross-env JWKS isolation confirmed (prod 8 keys, staging 11 keys, ZERO kid overlap, mcp.sumup.com prod rejects staging tokens).
+23:verify_steps: POST https://auth.sam-app.ro/oauth2/register with {"client_name":"test","redirect_uris":["https://evil.com/callback"],"grant_types":["authorization_code","client_credentials"],"response_types":["code"],"token_endpoint_auth_method":"client_secret_post"} → observe 201 client_id+secret; POST https://auth.sam-app.ro/oauth2/token with grant_type=client_credentials&client_id=<new_client>&client_secret=<new_secret> → observe JWT with empty scp, attacker-controlled aud; GET https://auth.sam-app.ro/oauth2/auth?client_id=<new_client>&redirect_uri=https://evil.com/callback&response_type=code&scope=openid&code_challenge=<pkce>&code_challenge_method=S256&state=test12345678 → test auth_code+PKCE flow; test registered client_id against prod auth.sumup.com/oauth2/auth and api.sumup.com/authorize
+41:verify_steps: POST https://auth.sumup.com/oauth2/par with client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256 → capture request_uri; POST https://auth.sumup.com/oauth2/token with grant_type=authorization_code&code=<from_par>&client_id=dashboard&code_verifier=test_verifier (no client_secret) → test "none" auth method; POST https://auth.sumup.com/oauth2/auth with request_object=eyJhbGciOiJub25lIn0.eyJjbGllbnRfaWQiOiJkYXNoYm9hcmQiLCJyZWRpcmVjdF91cmkiOiJodHRwczovL21lLnN1bXVwLmNvbS9hcGkvc3NvL2NhbGxiYWNrIiwicmVzcG9uc2VfdHlwZSI6ImNvZGUiLCJzY29wZSI6Im9wZWlkIiwic3RhdGUiOiJ0ZXN0MTIzNDU2NzgifQ. → test alg=none acceptance
+44:[PARKED] RFC 9728 token validation surface: confidence 75 but verify_steps require AUTH_HELPED (valid merchant token, token replay) — cannot test passively; requires live merchant OAuth flow or client_credentials grant which dashboard client may not support on prod.
+45:[PARKED] OAuth "none" auth_method + PAR + alg=none on auth.sumup.com: confidence 70 but verify_steps require AUTH_HELPED (valid PAR flow with registered client) — dashboard client rejects unauthenticated token requests; no public client registration on prod.
+49:[NEXT] PROBE: POST https://auth.sam-app.ro/oauth2/register with {"client_name":"recon","redirect_uris":["https://example.com/callback"],"grant_types":["authorization_code","client_credentials"],"response_types":["code"],"token_endpoint_auth_method":"client_secret_post"} → observe 201 client_id+secret; then POST https://auth.sam-app.ro/oauth2/token with grant_type=client_credentials&client_id=<new_client>&client_secret=<new_secret> → capture JWT; decode and verify aud claim control, empty scp, kid from staging JWKS
+54:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com  
+56:[LEARN] ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp but attacker-controlled aud; scope escalation blocked  
+61:[LEARN] REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)  
+63:[RISK] sumup: 82 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — callback host enumeration exhausted (0 HITs). Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. Contentful Preview token leak on help.sumup.com exposes 1,082 draft entries + 62 unpublished assets (reportable P4, STILL UNFILED). All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but staging registration is fully unauthenticated, and help center leak is immediately exploitable. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, resource server metadata exposure, and content leak.
+[0m
+[0m$ [0mgrep -no "client_id[^,]*" /home/runner/work/sumup-hunt/sumup-hunt/leads/lead-nemotron3.md 2>/dev/null | grep -iv "dashboard\|sumup-ios\|oauth2/applications\|customer_id\|parameter" | head; echo "===AUD==="; grep -c "aud" /home/runner/work/sumup-hunt/sumup-hunt/leads/lead-nemotron3.md 2>/dev/null
+141:client_id and obtain tokens via PAR + token endpoint without client_secret.
+142:client_id only (no client_secret) using authorization_code from PAR flow
+143:client_id
+143:client_id=<same>
+152:client_id=test&redirect_uri=https://evil.com&response_type=code&scope=merchants.read → observe redirect behavior. Test variants: https://sumup.com.evil.com
+170:client_id=test&redirect_uri=https://example.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256` → capture request_uri response; then POST https://auth.sumup.com/oauth2/token with `grant_type=authorization_code&code=<from_par>&client_id=test&code_verifier=test_verifier` (no client_secret) to test "none" auth method.
+178:client_id
+194:client_id only (no client_secret) using authorization_code from PAR flow
+195:client_id=test&redirect_uri=https://example.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256 → capture request_uri. Then POST https://auth.sumup.com/oauth2/token with grant_type=authorization_code&code=<from_par>&client_id=test&code_verifier=test_verifier (no client_secret).
+224:client_id=test&redirect_uri=https://example.com/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256` → capture request_uri response; then POST https://auth.sumup.com/oauth2/token with `grant_type=authorization_code&code=<from_par>&client_id=test&code_verifier=test_verifier` (no client_secret) to test "none" auth method.
+===AUD===
+211
+[0m
+[0m$ [0mls -la /home/runner/work/sumup-hunt/sumup-hunt/reports/contentful-preview-token-leak.md && cd /home/runner/work/sumup-hunt/sumup-hunt && git status --short
+-rw-r--r-- 1 runner runner 4256 Sep  9 21:36 /home/runner/work/sumup-hunt/sumup-hunt/reports/contentful-preview-token-leak.md
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+?? reports/contentful-preview-token-leak.md
+[0m
+STEP 1 — DELTA:
+- [NEW] `reports/contentful-preview-token-leak.md` — referenced by last cycle's NEXT as "file on disk" but was ABSENT from both the filesystem and git index; recreated this cycle with a fresh live re-verification (probe below).
+- [CHANGED] Contentful unpublished-entry total drifted 1,082 → **1,089** (draft articles stable at 102, unpublished assets stable at 62); PREVIEW token re-verified **live 2026-09-09**.
+- [CHANGED] Scope boundary now verified on both axes: PREVIEW token → **401 on cdn.contentful.com** (delivery API) and **404 on /environments** (single-space, preview-only).
+- NO_DELTA on all inventory surfaces (auth/api/legacy-authorize/staging gates unchanged).
+
+STEP 2 — PRIORITIZE:
+- [PRIO] help.sumup.com Contentful PREVIEW token,9.5,asset:confirmed-reportable-P4-now-has-file,gate-ease:10(fully-passive),business-value:4(draft-help-content-only),tech-exposure:6(client-side-secret),cloud-surface:3(Contentful-hosted),freshness:9(token-may-rotate)
+- [PRIO] api.sumup.com/authorize legacy OAuth gateway,6.5,asset:client_id-oracle+wildcard-CORS+redirect-divergence,gate-ease:9(passive-GET),business-value:5(OAuth-flow-anomaly),tech-exposure:7(OAuth-oracle),cloud-surface:2,freshness:4(stable)
+- [PRIO] auth.sam-app.ro RFC7591 dynamic registration,5.5,asset:staging-client-minting,gate-ease:6(needs-registration-POST),business-value:4(staging-only),tech-exposure:7(OAuth-misconfig),cloud-surface:2,freshness:4
+
+STEP 3 — HYPOTHESES:
+
+[HYP] Contentful PREVIEW token exposes unreleased help-center content incl. unpublished-asset embedding
+class: MISCONFIG
+asset: help.sumup.com → preview.contentful.com/spaces/214q1nptnllb
+confidence: 75
+reasoning: Token sha256=52136da5…8997 re-verified live this cycle — 200 on unpublished entries (total 1,089), 200 on unpublished assets (total 62), 200 draft articles (102); 401 control on invalid token; 401 on cdn delivery API; 404 on /environments. Scope bounded to preview API of single space. Report file recreated (was missing despite prior "Wrote file successfully").
+evidence_needed: Jira submission of the report; token rotation will kill reproducibility.
+verify_steps: PASSIVE (done): the 4 probes above plus invalid-token control.
+impact: Unauthenticated disclosure of unreleased/never-published help articles, internal draft copy and assets with internal naming ("Payouts test"). P4; no customer/financial/auth data.
+testability: PASSIVE
+
+[HYP] api.sumup.com resource-server request-level aud validation gap
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource → /v1,/v0.1 resource paths
+confidence: 58
+reasoning: RFC 9728 metadata static (sole auth server auth.sumup.com, header-only bearer); prod/staging JWKS kid isolation proven (8 vs 11, ZERO overlap). Whether the gateway checks token `aud`/resource identity per request remains the only untested link in the validation chain.
+evidence_needed: Staging-minted JWT (aud=api.sam-app.ro) ACK vs REJECT distinction at a prod resource path.
+verify_steps: BLOCKED passive — replaying a minted staging bearer at prod api.sumup.com/v1/* requires a token (AUTH_HELPED).
+impact: Cross-env token relay → merchant/payment resource access if aud/iss not validated. High-latent.
+testability: AUTH_HELPED
+
+[HYP] Staging-registered OAuth clients sync to prod auth.sumup.com trust store
+class: OATH
+asset: auth.sam-app.ro/oauth2/register → auth.sumup.com
+confidence: 55
+reasoning: Staging mints valid empty-scope JWTs with attacker-controlled aud; JWKS isolation refutes key sync, but client/scope-level sync to the prod authorization server provenance DB is untested (last verified only against api.sam-app.ro authorize → invalid_client).
+evidence_needed: A staging-minted client_id exercising a prod flow path.
+verify_steps: BLOCKED — requires a fresh registration POST on staging test asset to obtain client_id, then GET auth.sumup.com/oauth2/auth?client_id=<id>&redirect_uri=<registered> (invalid_client = no sync; divergence = synced). No persisted staging client_id exists in any artifact (AUTH_HELPED).
+impact: Cross-env client reuse → attacker-controlled client on prod authorization surface. Low-now, high-latent.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE:
+- [FINAL] Contentful PREVIEW token (75) — re-verified live, report file recreated on disk, only Jira submission blocks value realization.
+- [FINAL] prod gateway aud validation (58) — survives, but AUTH_HELPED only.
+- [FINAL] staging→prod client sync (55) — survives at reduced confidence; requires registration POST to proceed.
+- [PARKED] Legacy OAuth callback-host recovery — exhaustively refuted (crt.sh 52 + ccTLD 96 + custom schemes; 0 HITs); all iteration surfaces closed.
+- [PARKED] Wildcard CORS on api.sumup.com/authorize — hardening-only (endpoint serves error redirects; no tokens/creds cross this path).
+
+STEP 5 — NEXT ACTION:
+[NEXT] HUMAN: Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste `reports/contentful-preview-token-leak.md` (NOW on disk, re-created this cycle; use counts 1,089 unpublished entries / 102 draft articles / 62 assets). Token re-verified live this session — submit before rotation.
+
+STEP 6 — LEARNING:
+- [LEARN] ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token re-verified live 2026-09-09 — unpublished entries now 1,089 (drift from 1,082), draft articles 102, unpublished assets 62; token rejected by cdn delivery API (401) and bounded single-space (/environments 404).
+- [LEARN] ACCEPTED OTHER @ reports/: contentful-preview-token-leak.md was missing from disk AND git index despite previous "Wrote file successfully" — recreated; untracked (not committed), so it may not persist to the next cycle.
+- [LEARN] REJECTED OATH @ auth.sam-app.ro: no staging-registered client_id persisted in any artifact (lead/log/hypotheses), so the passive prod-sync probe is not executable from saved state — requires a fresh registration POST.
+
+STEP 7 — RISK:
+[RISK] sumup: 83 — The single confirmed, reportable P4 (Contentful PREVIEW token → 102 draft articles + 62 assets + 1,089 unpublished entries) is re-verified LIVE and the report file now exists, but remains **UNFILED on Jira** and the file is uncommitted (prior cycle proves untracked writes may vanish). Time-sensitive to token rotation. Every higher-impact chain (BOLA, legacy OAuth redirect, staging client sync, cross-env token relay) remains AUTH_HELPED/POST-blocked; the legacy callback host is exhaustively refuted; financial surface is access-controlled. Commit the report file and submit.
