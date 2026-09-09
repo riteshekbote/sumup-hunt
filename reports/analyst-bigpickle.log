@@ -12787,3 +12787,98 @@ https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-b
 ```
 
 Paste the report contents into the form fields (program: SumUp, vulnerability details, PoC steps, contact, payment details). Token may rotate — submit immediately.
+===== ANALYST bigpickle 2026-09-09 18:47:49 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m# [0mTodos
+[•] STEP 1: DELTA check - inventory vs knowledge base
+[ ] STEP 2-8: Full analysis cycle
+[ ] FILE Contentful PREVIEW token report to Jira
+[0m
+[0m✱ [0mGlob "**/valid-bugs*"[90m 1 match[0m
+[0m✱ [0mGlob "**/*contentful*"[90m 0 matches[0m
+[0m✱ [0mGlob "**/hypotheses*"[90m 6 matches[0m
+[0m✱ [0mGlob "**/reports/*.md"[90m 3 matches[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m→ [0mRead reports/hypotheses-bigpickle.txt
+[0m✱ [0mGlob "**/contentful*"[90m 0 matches[0m
+[0m✱ [0mGlob "reports/**"[90m 13 matches[0m
+[0m→ [0mRead reports/reposcan-findings.md
+[0m→ [0mRead reports/hypotheses.md
+[0m
+[0m# [0mTodos
+[✓] STEP 1: DELTA check - inventory vs knowledge base
+[•] STEP 2-8: Full analysis cycle
+[•] Create contentful-preview-token-leak.md report
+[ ] FILE Contentful PREVIEW token report to Jira
+[0m
+The critical issue is clear: the Contentful PREVIEW token leak report (`reports/contentful-preview-token-leak.md`) was never created despite multiple rounds of analysis calling for it. Let me create it now and run the full 8-step analysis.
+[0m← [0mWrite reports/contentful-preview-token-leak.md
+Wrote file successfully.
+[0m
+[0m# [0mTodos
+[✓] STEP 1: DELTA check - inventory vs knowledge base
+[•] STEP 2-8: Full analysis cycle
+[✓] Create contentful-preview-token-leak.md report
+[ ] FILE Contentful PREVIEW token report to Jira
+[0m
+Report created. Here is the full 8-step analysis:
+
+---
+
+**STEP 1 — DELTA:**
+- NO_DELTA. All inventory hosts, knowledge base entries, and lead state match prior cycle. No new hosts, no config changes on scanned surfaces. The only material delta is that `reports/contentful-preview-token-leak.md` now EXISTS (created this cycle) — previously referenced but never written.
+
+**STEP 2 — PRIORITIZE:**
+- [PRIO] help.sumup.com Contentful PREVIEW token,9.5,asset:previously-unfiled-P4-gate-ease:10(fully-passive),business-value:4(draft-help-content-only),tech-exposure:6(client-side-secret-leak),cloud-surface:3(Contentful-hosted),freshness:9(token-may-rotate-anytime)
+- [PRIO] api.sumup.com/authorize legacy OAuth gateway,7.0,asset:client_id-oracle+wildcard-CORS+redirect-divergence,gate-ease:9(passive-GET),business-value:5(OAuth-flow-anomaly),tech-exposure:7(OAuth-client-oracle),cloud-surface:2(Clflare+API-gw),freshness:4(stable)
+- [PRIO] auth.sam-app.ro dynamic registration,6.5,asset:RFC-7591-registration+JWT-minting,gate-ease:7(passive-registration-but-token-is-POST),business-value:4(staging-only),tech-exposure:6(OAuth-misconfig),cloud-surface:2(staging),freshness:5(stable)
+
+**STEP 3 — HYPOTHESES:**
+
+[HYP] Contentful Preview API token enables broader unpublished-content enumeration beyond articles
+class: MISCONFIG
+asset: help.sumup.com → preview.contentful.com/spaces/214q1nptnllb
+confidence: 72
+reasoning: Preview token already confirmed granting access to 102 draft articles + 62 unpublished assets + 1,082 total unpublished entries. The token is live, scoped to a single space, and published as client-side JS. Previously the token was never extracted into a submission-ready report despite 6+ cycles of analysis. The token may rotate — this is the highest-priority actionable finding.
+evidence_needed: Token value itself (sha256=52136da5…8997, already confirmed in KB) and Jira submission.
+verify_steps: PASSIVE — report file now exists at reports/contentful-preview-token-leak.md; Jira submission is the blocking action.
+impact: Unreleased product documentation disclosure (102 draft articles + 62 internal assets). P4 severity. No customer/financial/auth data.
+testability: HUMAN_ONLY (Jira form submission)
+
+[HYP] Legacy OAuth gateway wildcard CORS enables cross-origin request forgery on authorize flow
+class: MISCONFIG
+asset: api.sumup.com/authorize
+confidence: 60
+reasoning: access-control-allow-origin:* + broad allow-methods + max-age on legacy OAuth gateway, absent on auth.sumup.com. SameSite=None cookies on Domain=sumup.com. However, the endpoint only serves error redirects (302→auth error flow) and no tokens/credentials are returned on this path — CORS misconfig is defense-in-depth, not exploitable for credential theft.
+evidence_needed: Any scenario where auth credentials pass through api.sumup.com/authorize (none identified).
+verify_steps: BLOCKED — would require a full OAuth code flow through the legacy gateway to test if cookies/credentials are set and readable cross-origin.
+impact: Hardening-only; no demonstrated credential theft path. Low.
+testability: AUTH_HELPED
+
+[HYP] api.sumup.com resource-server aud validation gap
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource → resource paths
+confidence: 58
+reasoning: RFC 9728 metadata declares auth.sumup.com as sole authorization server; prod JWKS rejects staging keys (8 vs 11 kids, ZERO overlap). Request-level aud check (aud=api.sumup.com vs staging aud=api.sam-app.ro) remains untested.
+evidence_needed: Staging-minted JWT replayed at prod resource path.
+verify_steps: BLOCKED — requires staging token + POST (AUTH_HELPED).
+impact: Cross-env token relay → merchant/payment access if aud validation absent. High-latent.
+testability: AUTH_HELPED
+
+**STEP 4 — SELF-CRITIQUE:**
+- [FINAL-1] Contentful PREVIEW token report: confidence 72, now has a file on disk. Previous cycles all flagged this as the #1 blocker. Priority action: FILE to Jira. No parked — report is ready.
+- [FINAL-2] api.sumup.com/authorize CORS: confidence 60, no demonstrated exploit. Park as defense-in-depth only — reportable as hardening but not independently.
+- [FINAL-3] api.sumup.com aud validation: confidence 58, blocked on AUTH_HELPED. No passive path. Park until staging token replay is possible.
+- [PARKED] Legacy OAuth callback host recovery: exhaustively refuted across crt.sh (52 combos), ccTLD (96 combos), custom schemes (15 combos) = 0 HITs. All iteration surfaces closed.
+
+**STEP 5 — NEXT ACTION:**
+[NEXT] HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste the contents of `reports/contentful-preview-token-leak.md` into the Jira form. The report is now a file on disk. Token may rotate — do not defer.
+
+**STEP 6 — LEARNING:**
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak — report file `reports/contentful-preview-token-leak.md` CREATED this cycle (was previously referenced but never written). 102 draft articles + 62 unpublished assets + 1,082 total unpublished entries in space 214q1nptnllb; token sha256=52136da5…8997; verified live 2026-09-09. Ready for Jira submission.
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token scope bounded to space 214q1nptnllb (environments 404); same-space data only. Strengthens P4 report with explicit scope boundary.
+
+**STEP 7 — RISK:**
+[RISK] sumup: 82 — Principal unrealized value: the single confirmed reportable P4 (Contentful PREVIEW token → 102 draft articles + 62 assets) is verified and NOW HAS A REPORT FILE but remains UNFILED on Jira. Time-sensitive to token rotation. All other high-impact chains (BOLA, OAuth redirect, staging client sync, cross-env token relay) remain AUTH_HELPED/POST-blocked. Legacy OAuth callback host fully exhausted across all enumeration surfaces (crt.sh + ccTLD + custom schemes = 0 HITs, all rejected).
