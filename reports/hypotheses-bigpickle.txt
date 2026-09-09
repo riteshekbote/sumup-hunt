@@ -1,4 +1,4 @@
-## 2026-09-08 22:47:57 UTC [target] (model bigpickle)
+## 2026-09-09 01:09:29 UTC [target] (model bigpickle)
 [CHANGED] help.sumup.com Contentful PREVIEW-token leak CONFIRMED and reportable (P4, conf 92) — but report still unfiled (valid-bugs.md=0); token may rotate at any time.
 [CHANGED] api.sumup.com/.well-known/oauth-protected-resource verified STATIC — only untested gap left on that surface is request-level aud validation.
 [NEW] ccTLD legacy-callback oracle exhaustively negative (0 HITs / 96+15 combos) — legacy allowlist-host recovery closed across ccTLD space as well.
@@ -47,3 +47,23 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, dev-docs link; no resource_scopes/audience-oracle field; recon surface exhausted.
 [LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak verified (cdn 8,337 vs preview 9,419; drafts 1,082 incl. 102 articles; 401 control) — reportable, remains unreported.
 [RISK] sumup: 78 — Legacy OAuth gateway live (client_id oracle, wildcard CORS, redirect-set divergence) but allowlist host unrecoverable from crt.sh/common/ccTLD surfaces (exhaustively refuted). Staging auth.sam-app.ro unauthenticated RFC 7591 registers clients and mints valid empty-scope JWTs; prod/staging JWKS isolation is the confirmed cross-env blocker. RFC 9728 metadata static; read-api/sf-gateway closed. Confirmed reportable P4 (Contentful, 1,082 draft help entries) is verified but STILL UNREPORTED — principal unrealized value and time-sensitive (token rotation). All high-impact chains remain AUTH_HELPED/POST-blocked; financial surface access-controlled.
+[HYP] Contentful PREVIEW token scope-extension across environments/spaces + unpublished assets
+class: MISCONFIG
+asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb
+confidence: 50
+reasoning: Confirmed token reads 1,082 drafts (102 articles) on default env. Contentful tokens are space-scoped; the environment binding and sibling-space reach are untested, and `assets` with sys.publishedAt[exists]=false are unenumerated (could expose unreleased imagery/docs with internal refs). Strengthens the pending report's impact/scope.
+evidence_needed: Same token returns 200 for a second env id or second space id; or an unpublished asset/draft body containing internal-only URL/email/infra refs.
+verify_steps: PASSIVE GET preview.contentful.com/spaces/214q1nptnllb/environments; GET /spaces/214q1nptnllb/assets?sys.publishedAt[exists]=false; GET /spaces/214q1nptnllb/entries?content_type=<other>&sys.publishedAt[exists]=false.
+impact: Broadens scope of unreleased-content disclosure (still help-center data only; no customer/financial/auth). Low-moderate.
+testability: PASSIVE (requires the already-recovered token value — not present in workspace; execute at report time)
+[HYP] RFC 9728 resource-server metadata / audience-validation divergence at prod gateway
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource -> /v1,/v0.1 resource paths
+confidence: 58
+reasoning: Prod JWKS rejects staging keys (8 vs 11 kids, ZERO overlap) proving signature isolation; the gateway's aud claim check (aud=api.sumup.com vs staging aud=api.sam-app.ro) is untested at request level.
+evidence_needed: Staging-minted JWT (aud=api.sam-app.ro) accepted vs cleanly rejected at a prod resource path.
+verify_steps: BLOCKED passive — requires replaying a minted staging bearer at prod api.sumup.com/v1/* (AUTH_HELPED).
+impact: Cross-environment token relay → merchant/payment resource access if aud validation absent. High-latent.
+testability: AUTH_HELPED
+[NEXT] HUMAN: FILE the pending report now — bugs.olivermaicher.eu, MISCONFIG/exposed-secret, P4. asset help.sumup.com → preview.contentful.com/spaces/214q1nptnllb, Contentful PREVIEW API token, sha256=preview-contentful. PoC: (1) GET cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<delivery>&limit=1 → total 8,337; (2) GET preview.contentful.com/spaces/214q1nptnllb/entries?access_token=<preview>&sys.publishedAt[exists]=false&content_type=article → 102 drafts (1,082 entries); (3) invalid-token control → 401. Before submitting (10 min), optionally broaden with PASSIVE GETs: /spaces/214q1nptnllb/environments and /assets?sys.publishedAt[exists]=false (scope-extension PoC). Draft/help articles only; no customer/financial/auth data touched. Token may rotate — don't defer.
+[RISK] sumup: 78 — Legacy OAuth gateway live (client_id oracle, wildcard CORS, redirect divergence) but callback allowlist host unrecoverable across crt.sh/common/ccTLD (exhaustively refuted). Staging auth.sam-app.ro unauthenticated RFC 7591 mints valid empty-scope JWTs with controlled aud; prod/staging JWKS isolation confirmed as the cross-env blocker. RFC 9728 metadata static; read-api/sf-gateway closed. The single confirmed reportable P4 (Contentful, 1,082 draft help entries) is verified but STILL UNFILED — principal unrealized value, time-sensitive to token rotation. All high-impact chains remain AUTH_HELPED/POST-blocked; financial surface access-controlled.

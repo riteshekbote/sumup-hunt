@@ -415,3 +415,15 @@ www.sumup.com
 - CHANGED Staging dynamic registration (auth.sam-app.ro) yields real JWTs with empty scope + attacker-controlled aud; cross-env JWKS isolation confirmed (prod 8 keys, staging 11 keys, ZERO kid overlap)
 - CHANGED mcp.sumup.com MCP server: wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds) — REJECTED MISCONFIG class
 - CHANGED api.sumup.com/authorize: client_id oracle + wildcard CORS + redirect divergence remain LIVE but callback host enumeration fully exhausted (crt.sh 52 combos + ccTLD 96 combos + custom schemes = 0 HITs)
+
+## 2026-09-09 01:11:32 UTC
+- CHANGED help.sumup.com Contentful PREVIEW-token leak CONFIRMED and reportable (P4, conf 92) — but report still unfiled (valid-bugs.md=0); token may rotate at any time.
+- CHANGED api.sumup.com/.well-known/oauth-protected-resource verified STATIC — only untested gap left on that surface is request-level aud validation.
+- NEW ccTLD legacy-callback oracle exhaustively negative (0 HITs / 96+15 combos) — legacy allowlist-host recovery closed across ccTLD space as well.
+- NEW read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (no 302 oracle), uniform 404 on swagger/openapi/health/well-known — fully gated, no divergent OAuth oracle.
+- NEW auth-theta.sam-app.ro is the last sibling-divergence candidate; POST-only, untestable passively.
+- NEW help.sumup.com: Contentful Preview API token leak CONFIRMED (1,082 draft entries incl. 102 articles in space 214q1nptnllb) — immediately reproducible via GET preview.contentful.com with leaked token, 
+- NEW auth-theta.sam-app.ro: Theta canary staging auth server separate deploy; config divergence hypothesis documented but untestable without POST (passive-only rule)
+- CHANGED api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset all invalid_request, 0 HITs; legacy allowlist host not rec
+- CHANGED read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracle, fully gated
+- CHANGED api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata verified STATIC — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, dev-docs link; no resource_

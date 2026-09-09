@@ -1033,3 +1033,26 @@
 - LEARN: ACCEPTED MISCONFIG @ api.sumup.com/.well-known/openid-configuration: 404 structured problem+json; gateway-handled, no auth-server discovery on API gateway (corr
 - LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-authorization-server: 404 structured problem+json; same gateway handling.
 - LEARN: ACCEPTED OTHER @ JWKS prod vs staging kid comparison: Prod 8 keys, staging 11 keys, ZERO kid overlap. Cross-env key isolation confirmed at JWKS kid level (expla
+
+## RANKED HYPOTHESES 2026-09-09 01:11:32 UTC
+- [95] auth.sam-app.ro/oauth2/register: Staging dynamic client registration enables cross-environment client sync to production auth.sumup.com (from art/lead_nemotron3.txt)
+- [60] api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 resource-server metadata / audience-validation divergence at prod gateway (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: File the pending report to bugs.olivermaicher.eu — confirmed Contentful PREVIEW token exposure, class MISCONFIG/exposed-secret, P4. asset help.sumup.com 
+- NEXT(hypotheses-nemotron3.txt): PROBE: POST https://auth.sam-app.ro/oauth2/register with {"client_name":"recon","redirect_uris":["https://example.com/callback"],"grant_types":["authorization_c
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × {app,dashboard,my,secure,me,www}, /callback
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize 404 (not the 302 oracle of api.sumup.com); uniform 404 on swagger/openapi/health/well-
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak verified (cdn 8,337 vs preview 9,419; drafts 1,082 incl. 102 articles; 401 control) — reporta
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in sp
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset al
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracl
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) de
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope), require PKCE code_challenge, enforce per-client redi
+- LEARN: ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp b
+- LEARN: ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404) but empty scope blocks all resource access
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed at JWKS kid level (prod 8 keys, staging 11 keys, ZE
+- LEARN: REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds)
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle (invalid_client vs invalid_request) + wildcard CORS + legacy/modern redirect-set divergence LIVE; call
+- LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint
