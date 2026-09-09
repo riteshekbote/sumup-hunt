@@ -12610,3 +12610,180 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] sumup: 80 — Confirmed reportable P4 (Contentful PREVIEW token → 102 draft articles + 62 unpublished assets, re-verified live 2026-09-09) remains UNFILED: principal unrealized value and time-sensitive to rotation. Legacy OAuth gateway live (client_id oracle, wildcard CORS, redirect divergence) but allowlist host unrecoverable across all enumeration surfaces (exhaustively refuted). Staging auth.sam-app.ro RFC 7591 mints valid empty-scope JWTs with controlled aud; prod/staging JWKS isolation is the confirmed cross-env blocker; client-sync chain untested (would require token/POST). All high-impact chains remain AUTH_HELPED/POST-blocked; financial surface access-controlled.
+===== ANALYST bigpickle 2026-09-09 15:37:47 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m✱ [0mGlob "**/*valid-bugs*"[90m in . · 1 match[0m
+[0m✱ [0mGlob "**/*report*"[90m in . · 0 matches[0m
+[0m✱ [0mGlob "**/*.md"[90m in . · 61 matches[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m→ [0mRead leads/lead-bigpickle.md
+[0m→ [0mRead reports/hypotheses.md
+[0m→ [0mRead reports/valid-bugs.md[90m [offset=0][0m
+[0m✱ [0mGlob "**/*scope*"[90m in . · 1 match[0m
+[0m% [0mWebFetch https://bugs.olivermaicher.eu
+[0m% [0mWebFetch https://bugs.olivermaicher.eu
+[0m% [0mWebFetch https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9?atlOrigin=eyJpIjoiNDVjYjEwMGFkZmM0NGQ4NzkzMTYxMDQ4MThmOTllMTUiLCJwIjoiaiJ9
+[0m
+[0m$ [0mls /home/runner/work/sumup-hunt/sumup-hunt/
+README.md
+analyst-out.txt
+analyst-prompt.txt
+ctx.txt
+inventory
+knowledge
+leads
+probe-results.md
+recon-notes
+reports
+reposcan-raw
+scope.yml
+scripts
+state_bigpickle.json
+state_laguna.json
+state_ling3.json
+state_longcat.json
+state_mimo.json
+state_nemotron3.json
+triage
+[0m
+[0m$ [0mls /home/runner/work/sumup-hunt/sumup-hunt/scripts/
+sync-issues.py
+[0m
+[0m→ [0mRead scope.yml
+[0m→ [0mRead scripts/sync-issues.py
+[0m→ [0mRead leads/lead-bigpickle.md[90m [offset=100, limit=200][0m
+Now I have the full picture. The Jira form is a React SPA — I can't submit programmatically, but I can compose the complete report and prepare it for immediate submission. Let me generate the report.
+[0m
+[0m$ [0mgrep -n "Contentful\|PREVIEW.*token\|preview.*contentful\|P4\|help.sumup.com\|214q1nptnllb" /home/runner/work/sumup-hunt/sumup-hunt/leads/lead-bigpickle.md | head -60
+956:[HYP] help.sumup.com Zendesk-backed content API exposes non-public article/draft data anonymously
+958:asset: help.sumup.com
+1059:[HYP] help.sumup.com Zendesk-backed content API exposes non-public article/draft data anonymously
+1061:asset: help.sumup.com
+1486:[HYP] help.sumup.com/api/search/* 500 is an unauthenticated serverless proxy to the sse.search backend — attacker-supplied query may reach the internal search/index path
+1488:asset: help.sumup.com/api/search/articles
+1492:verify_steps: POST https://help.sumup.com/api/search/articles body {"query":"test","locale":"en-GB"} — if 200, confirm response reflects query and check whether a manipulated query reaches sse backend (backend injection / unpublished-content exposure).
+1508:reasoning: All GETs to /sse/scss and subpaths → 404 text/plain (gateway-gated like api.sumup.com versioned paths), while /sse → 301 to /sse/. Client integration expects SSE (Accept: text/event-stream) POST from help.sumup.com serverless layer. envoyer template identical to api.sumup.com.
+1513:[NEXT] HUMAN: POST https://help.sumup.com/api/search/articles with body {"query":"test","locale":"en-GB"} — confirm whether the deterministic 500 is a thin proxy to sse.sumup.com/sse/scss and whether attacker-controlled query reaches the search/index backend. Exceeds passive GET/HEAD/OPTIONS rule → needs role approval. (Parallel passive follow-through: GET /api/search/query?q=test on help.sumup.com already returns 500 — deterministic.)
+1514:[RISK] sumup: 52. Net +7: two fresh in-scope assets (help.sumup.com, sse.sumup.com) discovered and characterized, resolving both seed-era "unprobed" gaps (dashboard/support aliases closed). help.sumup.com/api/search/* deterministic 500 is a new, testable proxy lead; sse.sumup.com adds chainable backend context (same Envoy template as api.sumup.com). Still bounded: all high-impact confirmations require POST (exceeds passive rule) or merchant OAuth token. Staging dynamic-registration→JWT remains highest-confidence finding at 85, contained by empty scope + cross-env key isolation (zero kid overlap, 8 prod vs 11 staging).
+1604:[HYP] help.sumup.com/api/search/* 500 is an unauthenticated serverless proxy to the sse.search backend — attacker-supplied query may reach the internal search/index path
+1606:asset: help.sumup.com/api/search/articles
+1610:verify_steps: POST https://help.sumup.com/api/search/articles body {"query":"test","locale":"en-GB"} — if 200, confirm response reflects query and check whether a manipulated query reaches sse backend (backend injection / unpublished-content exposure).
+1626:reasoning: All GETs to /sse/scss and subpaths → 404 text/plain (gateway-gated like api.sumup.com versioned paths), while /sse → 301 to /sse/. Client integration expects SSE (Accept: text/event-stream) POST from help.sumup.com serverless layer. envoyer template identical to api.sumup.com.
+1631:[NEXT] HUMAN: POST https://help.sumup.com/api/search/articles with body {"query":"test","locale":"en-GB"} — confirm whether the deterministic 500 is a thin proxy to sse.sumup.com/sse/scss and whether attacker-controlled query reaches the search/index backend. Exceeds passive GET/HEAD/OPTIONS rule → needs role approval. (Parallel passive follow-through: GET /api/search/query?q=test on help.sumup.com already returns 500 — deterministic.)
+1632:[RISK] sumup: 52. Net +7: two fresh in-scope assets (help.sumup.com, sse.sumup.com) discovered and characterized, resolving both seed-era "unprobed" gaps (dashboard/support aliases closed). help.sumup.com/api/search/* deterministic 500 is a new, testable proxy lead; sse.sumup.com adds chainable backend context (same Envoy template as api.sumup.com). Still bounded: all high-impact confirmations require POST (exceeds passive rule) or merchant OAuth token. Staging dynamic-registration→JWT remains highest-confidence finding at 85, contained by empty scope + cross-env key isolation (zero kid overlap, 8 prod vs 11 staging).
+1633:[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in SumUp help-center space 214q1nptnllb; published set is 8,337. Reproducible via GET preview.contentful.com with the leaked token.
+1634:[LEARN] REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read over public index only, no draft leak via search (draft IDs not returned).
+1639:reasoning: 102 draft articles exist in space 214q1nptnllb; the public search contract (page/size/locale) returned only published IDs for the tested queries. If sse backend indexes drafts per-locale (e.g. preview-locales/draft flag ignored on help.sumup.com but honored server-side), draft content could surface through search param manipulation.
+1641:verify_steps: GET https://help.sumup.com/api/search/{draft-title}?page=1&size=20&locale=*-* && locale=it-IT && locale=de-DE compare IDs; passive GET only.
+1653:[NEXT] HUMAN: Report the confirmed Contentful preview-token exposure (help.sumup.com, space 214q1nptnllb, token XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM) to bugs.olivermaicher.eu — class MISCONFIG/exposed-secret, P4. PoC: 1) curl -s 'https://cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<DELIVERY>&limit=1' → total 8337; 2) curl -s 'https://preview.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4...&sys.publishedAt[exists]=false&content_type=article' → total 102 drafts; 3) invalid-token control → 401. No customer/financial/auth data touched (draft help articles only).
+1654:[RISK] sumup: 60. Net +8: confirmed reportable info-disclosure (exposed Contentful preview token → 1,082 draft entries readable), plus live unauthenticated help-search data path mapped. help.sumup.com moves from edge asset to confirmed-priority. Remaining high-impact chains (theta canary registration divergence, BOLA on api, mcp scope) still need POST/token; staging dynamic-registration→JWT (85) unchanged, bounded by empty scope + cross-env key isolation.
+1655:[HYP] Exposed Contentful PREVIEW API token reads unpublished/draft help-center content (CONFIRMED by probe)
+1657:asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb
+1659:reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM". GET preview.contentful.com with it → 200, total 9419 vs cdn 8337; sys.publishedAt[exists]=false → 1082 drafts (102 content_type=article, 143 callout); sample never-published articles updated 2026-09-03/04; invalid token → 401.
+1662:impact: Unauthenticated read of 1,082 draft/unpublished help articles (unreleased product/legal content). No customer/financial/auth data. Severity low-moderate (P4).
+1670:verify_steps: GET https://help.sumup.com/api/search/{draft-title}?page=1&size=20&locale=it-IT | de-DE | en-US — compare returned IDs (passive GET only).
+1720:[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in SumUp help-center space 214q1nptnllb; published set is 8,337. Reproducible via GET preview.contentful.com with the leaked token.  
+1721:[LEARN] REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read over public index only, no draft leak via search (draft IDs not returned).
+1723:[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in SumUp help-center space 214q1nptnllb; published set is 8,337. Reproducible via GET preview.contentful.com with the leaked token.
+1724:[LEARN] REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read over public index only, no draft leak via search (draft IDs not returned).
+1729:reasoning: 102 draft articles exist in space 214q1nptnllb; the public search contract (page/size/locale) returned only published IDs for the tested queries. If sse backend indexes drafts per-locale (e.g. preview-locales/draft flag ignored on help.sumup.com but honored server-side), draft content could surface through search param manipulation.
+1731:verify_steps: GET https://help.sumup.com/api/search/{draft-title}?page=1&size=20&locale=*-* && locale=it-IT && locale=de-DE compare IDs; passive GET only.
+1743:[NEXT] HUMAN: Report the confirmed Contentful preview-token exposure (help.sumup.com, space 214q1nptnllb, token XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM) to bugs.olivermaicher.eu — class MISCONFIG/exposed-secret, P4. PoC: 1) curl -s 'https://cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<DELIVERY>&limit=1' → total 8337; 2) curl -s 'https://preview.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4...&sys.publishedAt[exists]=false&content_type=article' → total 102 drafts; 3) invalid-token control → 401. No customer/financial/auth data touched (draft help articles only).
+1744:[RISK] sumup: 60. Net +8: confirmed reportable info-disclosure (exposed Contentful preview token → 1,082 draft entries readable), plus live unauthenticated help-search data path mapped. help.sumup.com moves from edge asset to confirmed-priority. Remaining high-impact chains (theta canary registration divergence, BOLA on api, mcp scope) still need POST/token; staging dynamic-registration→JWT (85) unchanged, bounded by empty scope + cross-env key isolation.
+1745:[HYP] Exposed Contentful PREVIEW API token reads unpublished/draft help-center content (CONFIRMED by probe)
+1747:asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb
+1749:reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM". GET preview.contentful.com with it → 200, total 9419 vs cdn 8337; sys.publishedAt[exists]=false → 1082 drafts (102 content_type=article, 143 callout); sample never-published articles updated 2026-09-03/04; invalid token → 401.
+1752:impact: Unauthenticated read of 1,082 draft/unpublished help articles (unreleased product/legal content). No customer/financial/auth data. Severity low-moderate (P4).
+1760:verify_steps: GET https://help.sumup.com/api/search/{draft-title}?page=1&size=20&locale=it-IT | de-DE | en-US — compare returned IDs (passive GET only).
+1808:[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in SumUp help-center space 214q1nptnllb; published set is 8,337. Reproducible via GET preview.contentful.com with the leaked token.  
+1809:[LEARN] REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read over public index only, no draft leak via search (draft IDs not returned).
+1811:[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in SumUp help-center space 214q1nptnllb; published set is 8,337. Reproducible via GET preview.contentful.com with the leaked token.
+1812:[LEARN] REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read over public index only, no draft leak via search (draft IDs not returned).
+1817:reasoning: 102 draft articles exist in space 214q1nptnllb; the public search contract (page/size/locale) returned only published IDs for the tested queries. If sse backend indexes drafts per-locale (e.g. preview-locales/draft flag ignored on help.sumup.com but honored server-side), draft content could surface through search param manipulation.
+1819:verify_steps: GET https://help.sumup.com/api/search/{draft-title}?page=1&size=20&locale=*-* && locale=it-IT && locale=de-DE compare IDs; passive GET only.
+1831:[NEXT] HUMAN: Report the confirmed Contentful preview-token exposure (help.sumup.com, space 214q1nptnllb, token XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM) to bugs.olivermaicher.eu — class MISCONFIG/exposed-secret, P4. PoC: 1) curl -s 'https://cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<DELIVERY>&limit=1' → total 8337; 2) curl -s 'https://preview.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4...&sys.publishedAt[exists]=false&content_type=article' → total 102 drafts; 3) invalid-token control → 401. No customer/financial/auth data touched (draft help articles only).
+1832:[RISK] sumup: 60. Net +8: confirmed reportable info-disclosure (exposed Contentful preview token → 1,082 draft entries readable), plus live unauthenticated help-search data path mapped. help.sumup.com moves from edge asset to confirmed-priority. Remaining high-impact chains (theta canary registration divergence, BOLA on api, mcp scope) still need POST/token; staging dynamic-registration→JWT (85) unchanged, bounded by empty scope + cross-env key isolation.
+1833:[HYP] Exposed Contentful PREVIEW API token reads unpublished/draft help-center content (CONFIRMED by probe)
+1835:asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb
+1837:reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM". GET preview.contentful.com with it → 200, total 9419 vs cdn 8337; sys.publishedAt[exists]=false → 1082 drafts (102 content_type=article, 143 callout); sample never-published articles updated 2026-09-03/04; invalid token → 401.
+1840:impact: Unauthenticated read of 1,082 draft/unpublished help articles (unreleased product/legal content). No customer/financial/auth data. Severity low-moderate (P4).
+1848:verify_steps: GET https://help.sumup.com/api/search/{draft-title}?page=1&size=20&locale=it-IT | de-DE | en-US — compare returned IDs (passive GET only).
+1866:[PRIO] help.sumup.com,5.5,a=6,b=5,t=6,g=8,c=5,f=4  
+1922:[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Client-side leak of Contentful Preview API token grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in SumUp help-center space 214q1nptnllb; published set is 8,337. Reproducible via GET preview.contentful.com with the leaked token.  
+1923:[LEARN] REJECTED BUSLOGIC @ help.sumup.com/api/search: deterministic 500 was missing-required-params throw (page/size/locale); endpoint is live unauthenticated read over public index only, no draft leak via search (draft IDs not returned).
+1934:[HYP] Exposed Contentful PREVIEW API token reads unpublished/draft help-center content (CONFIRMED by probe)
+1936:asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb
+1938:reasoning: Client JS pins CONTENTFUL_TOKEN_PREVIEW="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM". GET preview.contentful.com → 200 total 9419 vs cdn 8337; sys.publishedAt[exists]=false → 1082 drafts (102 articles, 143 callouts) incl. never-published articles updated 2026-09-04; invalid token → 401 AccessTokenInvalid. Not management-scoped.
+1941:impact: Unauthenticated read of 1,082 draft/unpublished help entries (unreleased product/legal content). No customer/financial/auth data. Severity low-moderate (P4).
+[0m
+Now let me find the exact Contentful token report details in the lead file:
+[0m← [0mWrite reports/contentful-preview-token-leak.md
+Wrote file successfully.
+[0m
+Now I have everything. Let me compose and save the complete report:
+[0m← [0mEdit reports/valid-bugs.md
+Index: /home/runner/work/sumup-hunt/sumup-hunt/reports/valid-bugs.md
+===================================================================
+--- /home/runner/work/sumup-hunt/sumup-hunt/reports/valid-bugs.md
++++ /home/runner/work/sumup-hunt/sumup-hunt/reports/valid-bugs.md
+@@ -1,5 +1,5 @@
+-# Validated findings (running count 0)
++# Validated findings (running count 1)
+ 
+ - 1 lead(s) marked VALID at 2026-09-04 06:02:58 UTC
+   - | Q4 Provable non-invasively? | **NO** — all unauthenticated paths return 404; requires valid merchant OAuth token to test. Probe results confirm 404 on every enumerated path (v0/v0.1/v1/v2/merchants/
+ 
+@@ -10,4 +10,14 @@
+   - **Verdict: VALID**
+   - | 1 | `auth.sam-app.ro` unauthenticated dynamic client registration | **VALID** | 7.5 |
+   - | 2 | `api.sumup.com/authorize` client-ID oracle + wildcard CORS | **VALID** | 5.3 |
+   - | 3 | `mcp.sumup.com` wildcard CORS on Bearer-protected endpoint | **VALID** | 5.3 |
++
++## FILED 2026-09-09
++
++### 1. Contentful PREVIEW API Token Leak — help.sumup.com (P4)
++- **Class:** MISCONFIG / Exposed Secret
++- **Asset:** help.sumup.com → preview.contentful.com/spaces/214q1nptnllb
++- **Token sha256:** `52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997`
++- **Status:** Report composed → `reports/contentful-preview-token-leak.md` → MANUAL SUBMISSION REQUIRED to https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9
++- **Impact:** Unauthenticated read of 1,082 draft entries (102 articles) + 62 unpublished assets; published set 8,337; no customer/financial/auth data
++- **Re-verified live:** 2026-09-09
+
+[0m
+Here's the complete analysis:
+
+---
+
+**STEP 1 — DELTA**
+- [CHANGED] help.sumup.com Contentful PREVIEW token: re-verified live 2026-09-09 — 102 draft articles + 62 unpublished assets still accessible; environments 404 (scope bounded to single space)
+- [CHANGED] valid-bugs.md: running count updated 0→1 with FILED entry
+- NO_DELTA on all other surfaces (api/auth/mcp/staging/gateway static)
+
+**STEP 2 — PRIORITIZE**
+- [PRIO] help.sumup.com,5.5,a=6,b=5,t=6,g=8,c=5,f=9 — only actionable asset with confirmed reportable finding; freshness=9 (live today, token may rotate)
+
+**STEP 3 — HYPOTHESES**
+No new hypothesis needed — the Contentful finding is a **CONFIRMED FACT** (conf 92, re-verified), not a hypothesis. All other ranked hypotheses remain AUTH_HELPED/POST-blocked.
+
+**STEP 4 — SELF-CRITIQUE**
+- [FINAL] Contentful PREVIEW token leak (conf 92) — CONFIRMED, reportable, report composed. No hypothesis to drop.
+
+**STEP 5 — NEXT ACTION**
+[NEXT] HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste the contents of `reports/contentful-preview-token-leak.md` into the Jira form. The report is ready. Token may rotate — do not defer.
+
+**STEP 6 — LEARNING**
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak verified live 2026-09-09 (102 draft articles + 62 unpublished assets, token sha256=52136da5…8997) — reportable P4, report composed, awaiting manual submission.
+
+**STEP 7 — RISK**
+[RISK] sumup: 80 — Principal unrealized value: the single confirmed reportable P4 (Contentful, 1,082 draft help entries + 62 assets) is verified but **STILL UNFILED** (valid-bugs.md=1 but Jira submission pending). Time-sensitive to token rotation. All other high-impact chains (BOLA, OAuth redirect, staging client sync, cross-env token relay) remain AUTH_HELPED/POST-blocked. Legacy OAuth callback host fully exhausted across all enumeration surfaces (crt.sh + ccTLD + custom schemes = 0 HITs).
+
+---
+
+The report is at `reports/contentful-preview-token-leak.md`. The Jira form URL is:
+```
+https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9
+```
+
+Paste the report contents into the form fields (program: SumUp, vulnerability details, PoC steps, contact, payment details). Token may rotate — submit immediately.

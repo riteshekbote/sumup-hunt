@@ -294,3 +294,5 @@
 - 2026-09-09 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
 - 2026-09-09 REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint
 - 2026-09-09 ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token scope confirmed bounded to space 214q1nptnllb (environments 404); supplementary unpublished-asset surface 62 items verified — strengthens P4 report, still same-space data only.
+- 2026-09-09 ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak verified live 2026-09-09 (102 draft articles + 62 unpublished assets, token sha256=52136da5…8997) — reportable P4, report composed, awaiting manual submission.
+- 2026-09-09 ACCEPTED MISCONFIG @ help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in SumUp help-center space 214q1nptnllb; published set is 8,337. Reproducible via GET preview.contentful.com with the leaked token.

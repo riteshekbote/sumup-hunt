@@ -440,3 +440,14 @@ www.sumup.com
 - CHANGED Staging dynamic registration (auth.sam-app.ro) yields real JWTs with empty scope + attacker-controlled aud; cross-env JWKS isolation confirmed (prod 8 keys, staging 11 keys, ZERO kid overlap)
 - CHANGED api.sumup.com/authorize: client_id oracle + wildcard CORS + redirect divergence remain LIVE but callback host enumeration fully exhausted (crt.sh 52 combos + ccTLD 96 combos + custom schemes = 0 HITs)
 - CHANGED auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register) — staging/prod divergence confirmed
+
+## 2026-09-09 15:37:47 UTC
+- NEW Contentful PREVIEW token scope-extension confirmed: 62 unpublished assets readable (incl. "ASSET: Payouts test" internal naming); environments endpoint returns 404 — bounded to space 214q1nptnllb only
+- NEW auth-theta.sam-app.ro identified as separate canary auth deploy; config divergence hypothesis documented but POST-blocked (passive-only rule)
+- CHANGED help.sumup.com Contentful PREVIEW-token leak CONFIRMED reportable (P4, conf 92) — but report STILL UNFILED (valid-bugs.md=0); token LIVE 2026-09-09, may rotate at any time
+- CHANGED api.sumup.com/.well-known/oauth-protected-resource verified STATIC — only untested gap is request-level aud validation (AUTH_HELPED)
+- CHANGED Staging dynamic registration (auth.sam-app.ro) yields real JWTs with empty scope + attacker-controlled aud; cross-env JWKS isolation confirmed (prod 8 keys, staging 11 keys, ZERO kid overlap)
+- CHANGED api.sumup.com/authorize: client_id oracle + wildcard CORS + redirect divergence remain LIVE but callback host enumeration fully exhausted (crt.sh 52 combos + ccTLD 96 combos + custom schemes = 0 HITs)
+- CHANGED auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register) — staging/prod divergence confirmed
+- CHANGED read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — fully gated, no divergent OAuth oracle
+- CHANGED mcp.sumup.com MCP server: wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds) — REJECTED MISCONFIG class

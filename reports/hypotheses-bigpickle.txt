@@ -1,32 +1,4 @@
-## 2026-09-09 11:38:12 UTC [target] (model bigpickle)
-[NEW] MISCONFIG @ preview.contentful.com/spaces/214q1nptnllb: PREVIEW token sha256 52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997 still LIVE 2026-09-09 (draft article total 102 re-verified). NEW: 62 unpublished ASSETS readable incl. internal-named "ASSET: Payouts test" (desc "Payouts"); /environments returns 404 (no env scope-extension via this preview token — env-listing not exposed). Scope-extension evidence: bounded to same space 214q1nptnllb, adds asset surface (imagery/documents) to confirmed P4 report.
-[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token scope confirmed bounded to space 214q1nptnllb (environments 404); supplementary unpublished-asset surface 62 items verified — strengthens P4 report, still same-space data only.
-[HYP] Contentful PREVIEW token drafts include internal test/draft assets with embed refs
-class: MISCONFIG
-asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb/assets
-confidence: 55
-reasoning: 62 unpublished assets returned (200), first item "ASSET: Payouts test" (desc "Payouts", internal test naming); draft articles reference embedded asset IDs; unpublished assets may embed internal-only URLs/names beyond the 102 draft articles already confirmed.
-evidence_needed: Any unpublished asset name/description/title containing internal email, host, path, or unreleased product/financial naming beyond help-center content.
-verify_steps: PASSIVE GET preview.contentful.com/spaces/214q1nptnllb/assets?access_token=<PREVIEW>&sys.publishedAt[exists]=false&limit=100 → scan names/descriptions; cross-reference asset IDs referenced by the 102 draft articles for unpublished-image embedding.
-impact: Broadens unreleased-content disclosure with internal imagery/naming (still help-center space only; no customer/financial/auth). Low-moderate; strengthens pending P4.
-testability: PASSIVE
-[HYP] RFC 9728 request-level audience validation at prod gateway
-class: OATH
-asset: api.sumup.com/.well-known/oauth-protected-resource -> /v1,/v0.1 resource paths
-confidence: 58
-reasoning: Prod JWKS rejects staging keys (8 vs 11 kids, ZERO overlap) = signature isolation proven; request-level aud check (aud=api.sumup.com vs staging aud=api.sam-app.ro) remains the only untested link.
-evidence_needed: Staging-minted JWT (aud=api.sam-app.ro) accepted vs cleanly rejected at a prod resource path (401 token-error vs 404 problem+json).
-verify_steps: BLOCKED passive — requires replaying a minted staging bearer at prod api.sumup.com/v1/* (AUTH_HELPED).
-impact: Cross-env token relay -> merchant/payment resource access if aud validation absent. High-latent.
-testability: AUTH_HELPED
-[HYP] auth.sam-app.ro registered clients sync to production auth.sumup.com trust store
-class: OATH
-asset: auth.sam-app.ro/oauth2/register -> auth.sumup.com
-confidence: 60
-reasoning: Staging dynamic registration mints valid empty-scope JWTs with attacker-controlled aud; prod/staging JWKS isolation confirmed refutes key-level sync, but client/scope-level sync to prod authorization flows is not directly tested.
-evidence_needed: Any staging-registered client_id or minted token exercising a prod auth.sumup.com flow path (authorize/PAR/token) beyond error taxonomy.
-verify_steps: PASSIVE: GET auth.sumup.com/oauth2/auth?client_id=<staging-registered-id>&redirect_uri=<registered>… observe invalid_client (not synced) vs invalid_request/scope divergence (synced). AUTH_HELPED for full token-path replay.
-impact: Cross-env client reuse -> scoped client on prod auth. Low-now, high-latent.
-testability: AUTH_HELPED
-[NEXT] HUMAN: FILE the pending report to bugs.olivermaicher.eu NOW — MISCONFIG/exposed-secret, P4. asset help.sumup.com → preview.contentful.com/spaces/214q1nptnllb, Contentful PREVIEW API token sha256=52136da5…8997. PoC: (1) GET cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<DELIVERY>&limit=1 → total 8,337; (2) GET preview.contentful.com/spaces/214q1nptnllb/entries?access_token=<PREVIEW>&sys.publishedAt[exists]=false&content_type=article → 102 draft articles; (3) GET preview.contentful.com/spaces/214q1nptnllb/assets?access_token=<PREVIEW>&sys.publishedAt[exists]=false&limit=1 → total 62 unpublished assets (adds asset surface); (4) invalid-token control → 401. Re-verified live 2026-09-09; token may rotate — do not defer (valid-bugs.md still 0).
-[RISK] sumup: 80 — Confirmed reportable P4 (Contentful PREVIEW token → 102 draft articles + 62 unpublished assets, re-verified live 2026-09-09) remains UNFILED: principal unrealized value and time-sensitive to rotation. Legacy OAuth gateway live (client_id oracle, wildcard CORS, redirect divergence) but allowlist host unrecoverable across all enumeration surfaces (exhaustively refuted). Staging auth.sam-app.ro RFC 7591 mints valid empty-scope JWTs with controlled aud; prod/staging JWKS isolation is the confirmed cross-env blocker; client-sync chain untested (would require token/POST). All high-impact chains remain AUTH_HELPED/POST-blocked; financial surface access-controlled.
+## 2026-09-09 15:23:02 UTC [target] (model bigpickle)
+[NEXT] HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste the contents of `reports/contentful-preview-token-leak.md` into the Jira form. The report is ready. Token may rotate — do not defer.
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak verified live 2026-09-09 (102 draft articles + 62 unpublished assets, token sha256=52136da5…8997) — reportable P4, report composed, awaiting manual submission.
+[RISK] sumup: 80 — Principal unrealized value: the single confirmed reportable P4 (Contentful, 1,082 draft help entries + 62 assets) is verified but **STILL UNFILED** (valid-bugs.md=1 but Jira submission pending). Time-sensitive to token rotation. All other high-impact chains (BOLA, OAuth redirect, staging client sync, cross-env token relay) remain AUTH_HELPED/POST-blocked. Legacy OAuth callback host fully exhausted across all enumeration surfaces (crt.sh + ccTLD + custom schemes = 0 HITs).

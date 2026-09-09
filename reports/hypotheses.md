@@ -1094,3 +1094,22 @@
 - LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle (invalid_client vs invalid_request) + wildcard CORS + legacy/modern redirect-set divergence LIVE; call
 - LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
 - LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint
+
+## RANKED HYPOTHESES 2026-09-09 15:37:47 UTC
+- [95] auth.sam-app.ro/oauth2/register: Staging dynamic client registration enables cross-environment client sync to production auth.sumup.com (from art/lead_nemotron3.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste the contents of `reports
+- NEXT(hypotheses-nemotron3.txt): PROBE: POST https://auth.sam-app.ro/oauth2/register with {"client_name":"recon","redirect_uris":["https://example.com/callback"],"grant_types":["authorization_c
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak verified live 2026-09-09 (102 draft articles + 62 unpublished assets, token sha256=52136da5…8
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in Su
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset al
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracl
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) de
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope), require PKCE code_challenge, enforce per-client redi
+- LEARN: ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp b
+- LEARN: ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404) but empty scope blocks all resource access
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed at JWKS kid level (prod 8 keys, staging 11 keys, ZE
+- LEARN: REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds)
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle (invalid_client vs invalid_request) + wildcard CORS + legacy/modern redirect-set divergence LIVE; call
+- LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint
