@@ -1157,3 +1157,9 @@
 - LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle (invalid_client vs invalid_request) + wildcard CORS + legacy/modern redirect-set divergence LIVE; call
 - LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
 - LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint
+
+## RANKED HYPOTHESES 2026-09-09 23:34:19 UTC
+- [72] help.sumup.com: Contentful Preview API token enables broader unpublished-content enumeration beyond articles (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste the contents of `reports
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak — report file `reports/contentful-preview-token-leak.md` CREATED this cycle (was previously r
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token scope bounded to space 214q1nptnllb (environments 404); same-space data only. Strengthens P4 report with expl

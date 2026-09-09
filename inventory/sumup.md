@@ -471,3 +471,5 @@ www.sumup.com
 - CHANGED auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register) — staging/prod divergence confirmed
 - CHANGED read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — fully gated
 - CHANGED mcp.sumup.com MCP server: wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds) — REJECTED MISCONFIG class
+
+## 2026-09-09 23:34:19 UTC
