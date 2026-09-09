@@ -293,3 +293,4 @@
 - 2026-09-09 ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle (invalid_client vs invalid_request) + wildcard CORS + legacy/modern redirect-set divergence LIVE; callback host enumeration fully exhausted (crt.sh 52 + ccTLD 96 + custom schemes = 0 HITs)
 - 2026-09-09 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
 - 2026-09-09 REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint
+- 2026-09-09 ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token scope confirmed bounded to space 214q1nptnllb (environments 404); supplementary unpublished-asset surface 62 items verified — strengthens P4 report, still same-space data only.

@@ -429,3 +429,14 @@ www.sumup.com
 - CHANGED api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata verified STATIC — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, dev-docs link; no resource_
 
 ## 2026-09-09 06:13:32 UTC
+
+## 2026-09-09 11:46:32 UTC
+- NEW MISCONFIG @ preview.contentful.com/spaces/214q1nptnllb: PREVIEW token sha256 52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997 still LIVE 2026-09-09 (draft article total 102 re-verified
+- NEW auth-theta.sam-app.ro: Theta canary staging auth server separate deploy; config divergence hypothesis documented but untestable without POST (passive-only rule)
+- NEW ccTLD legacy-callback oracle on api.sumup.com/authorize exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset all invalid_request, 0 HITs; legacy allowlist host not r
+- NEW read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on swagger/openapi/health/well-known — fully gated, no divergent OAuth oracle
+- CHANGED help.sumup.com Contentful PREVIEW-token leak CONFIRMED reportable (P4, conf 92) — but report still unfiled (valid-bugs.md=0); token may rotate at any time
+- CHANGED api.sumup.com/.well-known/oauth-protected-resource verified STATIC — only untested gap left on that surface is request-level aud validation
+- CHANGED Staging dynamic registration (auth.sam-app.ro) yields real JWTs with empty scope + attacker-controlled aud; cross-env JWKS isolation confirmed (prod 8 keys, staging 11 keys, ZERO kid overlap)
+- CHANGED api.sumup.com/authorize: client_id oracle + wildcard CORS + redirect divergence remain LIVE but callback host enumeration fully exhausted (crt.sh 52 combos + ccTLD 96 combos + custom schemes = 0 HITs)
+- CHANGED auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register) — staging/prod divergence confirmed

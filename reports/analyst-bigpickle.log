@@ -12514,3 +12514,99 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 - [RISK] sumup: 78 — Legacy OAuth gateway (client_id oracle, wildcard CORS, redirect-set divergence) live but callback host unrecoverable across crt.sh/common/ccTLD/read-api (exhaustively refuted, closed). Staging auth.sam-app.ro unauthenticated RFC 7591 mints valid empty-scope JWTs with attacker-controlled aud; prod/staging JWKS ZERO-overlap isolation confirmed as the cross-env blocker. RFC 9728 metadata static; read-api/sf-gateway closed; auth-theta POST-blocked. The single confirmed reportable P4 (Contentful, 1,082 draft help entries) is verified but STILL UNFILED — principal unrealized value, degrading with token-rotation window. All high-impact chains remain AUTH_HELPED/POST-blocked; financial surface access-controlled.
+===== ANALYST bigpickle 2026-09-09 11:46:32 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m✱ [0mGlob "**/*.md"[90m 60 matches[0m
+[0m✱ [0mGlob "art/**"[90m 0 matches[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m→ [0mRead reports/hypotheses.md
+[0m→ [0mRead triage/run-2026-09-09-06-06.md
+[0m→ [0mRead leads/lead-bigpickle.md
+[0m→ [0mRead probe-results.md
+[0m✱ [0mGrep "contentful|214q1nptnllb|preview.*token|CFPAT|preview-contentful"[90m in . · 100 matches[0m
+The Contentful token (XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM) was recovered in a prior session and is stored in leads. My open scope-extension hypothesis (env/assets) is PASSIVE and directly strengthens the unfiled report. Let me verify it now before it rotates.
+[0m
+[0m$ [0mT="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM"; echo "sha256: $(printf '%s' "$T" | sha256sum | cut -d' ' -f1)"; echo "--- environments ---"; curl -sS --max-time 15 "https://preview.contentful.com/spaces/214q1nptnllb/environments?access_token=$T" -w '\nHTTP %{http_code}\n' | head -c 1500
+sha256: 52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997
+--- environments ---
+{"sys":{"type":"Error","id":"NotFound"},"message":"The resource could not be found.","requestId":"0b2129d0-b0a7-4023-967a-ba274e7c29b2"}
+
+HTTP 404
+[0m
+[0m$ [0mT="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM"; echo "--- unpublished assets ---"; curl -sS --max-time 20 'https://preview.contentful.com/spaces/214q1nptnllb/assets?access_token='"$T"'&sys.publishedAt%5Bexists%5D=false&limit=1' -w '\nHTTP %{http_code}\n' | head -c 1200; echo; sleep 1; echo "--- draft article control (re-verify) ---"; curl -sS --max-time 20 'https://preview.contentful.com/spaces/214q1nptnllb/entries?access_token='"$T"'&sys.publishedAt%5Bexists%5D=false&content_type=article&limit=1' -w '\nHTTP %{http_code}\n' | head -c 600
+--- unpublished assets ---
+{"sys":{"type":"Array"},"total":62,"skip":0,"limit":1,"items":[{"metadata":{"tags":[],"concepts":[]},"sys":{"space":{"sys":{"type":"Link","linkType":"Space","id":"214q1nptnllb"}},"type":"Asset","id":"CgDJKAUEwjAayPRSpQhEF","revision":0,"createdAt":"2026-07-07T09:01:40.493Z","updatedAt":"2026-07-07T09:02:27.206Z","environment":{"sys":{"id":"master","type":"Link","linkType":"Environment"}},"locale":"Intl"},"fields":{"title":"ASSET: Payouts test ","description":"Payouts","file":{"url":"//images.ctfassets.net/214q1nptnllb/CgDJKAUEwjAayPRSpQhEF/bff77935f6edcf39179cbf382c0997ed/Screenshot_2026-07-07_at_10.58.23.png","details":{"size":213186,"image":{"width":648,"height":275}},"fileName":"Screenshot 2026-07-07 at 10.58.23.png","contentType":"image/png"}}}]}
+
+HTTP 200
+
+--- draft article control (re-verify) ---
+{"sys":{"type":"Array"},"total":102,"skip":0,"limit":1,"items":[{"metadata":{"tags":[],"concepts":[]},"sys":{"space":{"sys":{"type":"Link","linkType":"Space","id":"214q1nptnllb"}},"type":"Entry","id":"2Lp5bjHLTi3svjJO2Z2vpz","contentType":{"sys":{"type":"Link","linkType":"ContentType","id":"article"}},"revision":0,"createdAt":"2026-09-02T09:17:16.019Z","updatedAt":"2026-09-09T07:27:27.116Z","environment":{"sys":{"id":"master","type":"Link","linkType":"Environment"}},"locale":"Intl"},"fields":{"name":"ARTICLE: POS fiscal compliance: what changes once it's activated ","title":"POS fiscal complia
+[0m
+[0m$ [0mcat >> /home/runner/work/sumup-hunt/sumup-hunt/leads/lead-bigpickle.md << 'EOF'
+## 2026-09-09 06:2x UTC [target] (model bigpickle)
+[NEW] MISCONFIG @ preview.contentful.com/spaces/214q1nptnllb: PREVIEW token sha256 52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997 still LIVE 2026-09-09 (draft article total 102 re-verified). NEW: 62 unpublished ASSETS readable incl. internal-named "ASSET: Payouts test" (desc "Payouts"); /environments returns 404 (no env scope-extension via this preview token — env-listing not exposed). Scope-extension evidence: bounded to same space 214q1nptnllb, adds asset surface (imagery/documents) to confirmed P4 report.
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token scope confirmed bounded to space 214q1nptnllb (environments 404); supplementary unpublished-asset surface 62 items verified — strengthens P4 report, still same-space data only.
+EOF
+echo done
+done
+[0m
+Verified: token still live; 62 unpublished **assets** readable (incl. internal-named test asset "ASSET: Payouts test"); environments listing 404 (no env extension). Recording lead, then output.
+STEP 1 — DELTA
+- [NEW] Contentful PREVIEW token (sha256 52136da5…8997) re-verified LIVE 2026-09-09: draft articles still 102 total; report remains UNFILED (valid-bugs.md=0), token-rotation exposure ongoing.
+- [NEW] Scope-extension probe result: 62 unpublished ASSETS readable via same token (incl. internal-named "ASSET: Payouts test" / desc "Payouts"); `/environments` → 404 — extension bounded to same space, adds asset surface only.
+- [CHANGED] Contentful token scope-extension hypothesis: conf 50→55 supported (asset surface), but environment/sibling-space reach REJECTED (404, space-bound token).
+
+STEP 2 — PRIORITIZE
+- [PRIO] help.sumup.com,7.0,attack_surface:7 business_value:5 tech_exposure:6 gate_ease:10 cloud_surface:4 freshness:5 — confirmed, live, time-sensitive (token may rotate).
+- [PRIO] api.sumup.com,6.6,attack_surface:8 business_value:10 tech_exposure:8 gate_ease:4 cloud_surface:7 freshness:3 — RFC 9728 aud-validation gap, AUTH_HELPED only.
+- [PRIO] auth.sam-app.ro,6.1,attack_surface:6 business_value:6 tech_exposure:8 gate_ease:10 cloud_surface:5 freshness:4 — staging oracle already mined; only cross-env client-sync chain (95) left, POST/POC gated.
+
+STEP 3 — HYPOTHESES
+[HYP] Contentful PREVIEW token drafts include internal test/draft assets with embed refs
+class: MISCONFIG
+asset: help.sumup.com -> preview.contentful.com/spaces/214q1nptnllb/assets
+confidence: 55
+reasoning: 62 unpublished assets returned (200), first item "ASSET: Payouts test" (desc "Payouts", internal test naming); draft articles reference embedded asset IDs; unpublished assets may embed internal-only URLs/names beyond the 102 draft articles already confirmed.
+evidence_needed: Any unpublished asset name/description/title containing internal email, host, path, or unreleased product/financial naming beyond help-center content.
+verify_steps: PASSIVE GET preview.contentful.com/spaces/214q1nptnllb/assets?access_token=<PREVIEW>&sys.publishedAt[exists]=false&limit=100 → scan names/descriptions; cross-reference asset IDs referenced by the 102 draft articles for unpublished-image embedding.
+impact: Broadens unreleased-content disclosure with internal imagery/naming (still help-center space only; no customer/financial/auth). Low-moderate; strengthens pending P4.
+testability: PASSIVE
+[HYP] RFC 9728 request-level audience validation at prod gateway
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource -> /v1,/v0.1 resource paths
+confidence: 58
+reasoning: Prod JWKS rejects staging keys (8 vs 11 kids, ZERO overlap) = signature isolation proven; request-level aud check (aud=api.sumup.com vs staging aud=api.sam-app.ro) remains the only untested link.
+evidence_needed: Staging-minted JWT (aud=api.sam-app.ro) accepted vs cleanly rejected at a prod resource path (401 token-error vs 404 problem+json).
+verify_steps: BLOCKED passive — requires replaying a minted staging bearer at prod api.sumup.com/v1/* (AUTH_HELPED).
+impact: Cross-env token relay -> merchant/payment resource access if aud validation absent. High-latent.
+testability: AUTH_HELPED
+[HYP] auth.sam-app.ro registered clients sync to production auth.sumup.com trust store
+class: OATH
+asset: auth.sam-app.ro/oauth2/register -> auth.sumup.com
+confidence: 60
+reasoning: Staging dynamic registration mints valid empty-scope JWTs with attacker-controlled aud; prod/staging JWKS isolation confirmed refutes key-level sync, but client/scope-level sync to prod authorization flows is not directly tested.
+evidence_needed: Any staging-registered client_id or minted token exercising a prod auth.sumup.com flow path (authorize/PAR/token) beyond error taxonomy.
+verify_steps: PASSIVE: GET auth.sumup.com/oauth2/auth?client_id=<staging-registered-id>&redirect_uri=<registered>… observe invalid_client (not synced) vs invalid_request/scope divergence (synced). AUTH_HELPED for full token-path replay.
+impact: Cross-env client reuse -> scoped client on prod auth. Low-now, high-latent.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] auth-theta.sam-app.ro registration divergence: POST-only, JWKS isolation limits blast — parked.
+- [PARKED] Legacy authorize callback recovery: exhaustively refuted (crt.sh 52 + ccTLD 96 + custom schemes = 0 HITs) — closed class.
+- [PARKED] Contentful env/sibling-space extension: 404/space-bound — closed.
+- [FINAL] 1. Contentful PREVIEW token leak incl. 62 unpublished assets (92) — CONFIRMED, PASSIVE, REPORTABLE NOW, token may rotate.
+- [FINAL] 2. RFC 9728 aud-validation divergence (58) — SURVIVES, AUTH_HELPED.
+- [FINAL] 3. Staging client->prod auth sync (55) — SURVIVES, PASSIVE/partial.
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: FILE the pending report to bugs.olivermaicher.eu NOW — MISCONFIG/exposed-secret, P4. asset help.sumup.com → preview.contentful.com/spaces/214q1nptnllb, Contentful PREVIEW API token sha256=52136da5…8997. PoC: (1) GET cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<DELIVERY>&limit=1 → total 8,337; (2) GET preview.contentful.com/spaces/214q1nptnllb/entries?access_token=<PREVIEW>&sys.publishedAt[exists]=false&content_type=article → 102 draft articles; (3) GET preview.contentful.com/spaces/214q1nptnllb/assets?access_token=<PREVIEW>&sys.publishedAt[exists]=false&limit=1 → total 62 unpublished assets (adds asset surface); (4) invalid-token control → 401. Re-verified live 2026-09-09; token may rotate — do not defer (valid-bugs.md still 0).
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token still live (draft articles 102) + 62 unpublished assets readable; scope bounded to space 214q1nptnllb (environments 404) — report strengthened, P4 confirmed.
+- [LEARN] REJECTED OATH @ preview.contentful.com: environments listing 404 and token space-bound — no environment/sibling-space scope-extension via this preview token.
+- [LEARN] ACCEPTED OATH @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static; request-level aud validation remains the sole untested gateway gap (AUTH_HELPED).
+
+STEP 7 — RISK
+[RISK] sumup: 80 — Confirmed reportable P4 (Contentful PREVIEW token → 102 draft articles + 62 unpublished assets, re-verified live 2026-09-09) remains UNFILED: principal unrealized value and time-sensitive to rotation. Legacy OAuth gateway live (client_id oracle, wildcard CORS, redirect divergence) but allowlist host unrecoverable across all enumeration surfaces (exhaustively refuted). Staging auth.sam-app.ro RFC 7591 mints valid empty-scope JWTs with controlled aud; prod/staging JWKS isolation is the confirmed cross-env blocker; client-sync chain untested (would require token/POST). All high-impact chains remain AUTH_HELPED/POST-blocked; financial surface access-controlled.
