@@ -12440,3 +12440,77 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] sumup: 78 — Legacy OAuth gateway live (client_id oracle, wildcard CORS, redirect divergence) but callback allowlist host unrecoverable across crt.sh/common/ccTLD (exhaustively refuted). Staging auth.sam-app.ro unauthenticated RFC 7591 mints valid empty-scope JWTs with controlled aud; prod/staging JWKS isolation confirmed as the cross-env blocker. RFC 9728 metadata static; read-api/sf-gateway closed. The single confirmed reportable P4 (Contentful, 1,082 draft help entries) is verified but STILL UNFILED — principal unrealized value, time-sensitive to token rotation. All high-impact chains remain AUTH_HELPED/POST-blocked; financial surface access-controlled.
+===== ANALYST bigpickle 2026-09-09 06:13:32 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m✱ [0mGlob "**/*.md"[90m 59 matches[0m
+[0m✱ [0mGlob "**/*.txt"[90m 9 matches[0m
+[0m→ [0mRead analyst-out.txt
+[0m→ [0mRead reports/valid-bugs.md
+[0m→ [0mRead reports/hypotheses.md
+Let me review the current state files to understand what's been done.
+[0m→ [0mRead triage/run-2026-09-09-01-09.md
+[0m→ [0mRead reports/hypotheses-bigpickle.txt
+[0m→ [0mRead reports/hypotheses-nemotron3.txt
+I have a good understanding of the state. Let me check the most recent triage run and the recent hypotheses files to understand the very latest state and what the pending next action is.
+I now have a very complete picture of the state. This is a continuation of an ongoing reconnaissance/analysis task on the SumUp bug bounty program. My role is the ANALYST producing structured output blocks (steps 1-7).
+
+The key persisting facts:
+- The single confirmed reportable finding (Contentful PREVIEW token leak, P4) remains **UNFILED** — the repeated [NEXT] HUMAN action across many sessions. This is the primary unrealized value and is time-sensitive to token rotation.
+- All high-impact OAuth chains remain AUTH_HELPED/POST-blocked.
+- The legacy callback host enumeration is exhaustively refuted (closed class).
+- RFC 9728 metadata is static; read-api/sf-gateway closed.
+- auth-theta is the last sibling-divergence candidate but POST-only.
+
+Let me verify whether there's anything I can still do passively that hasn't been exhausted. Let me check if the help.sumup.com environment/assets enumeration was actually done (it was proposed as PASSIVE but the token value isn't in workspace). Let me also check whether there are any truly unexplored passive surfaces.
+
+Let me do some quick verification on a couple of candidate surfaces that I could probe read-only here. But I must be passive, <=1rps, GET/HEAD/OPTIONS only. The workspace rules say the Contentful token value isn't present, so I cannot execute those scope-extension probes. Let me focus my analysis.
+
+Let me produce the structured analyst output. The key observation: this session's delta is essentially NO_DELTA from the previous run — the rank 95 hypothesis (staging cross-env sync) is already well-characterized and its blast is bounded by JWKS isolation. The nemotron3 hypothesis [95] overstates by suggesting cross-env sync possible, but the KB already refuted that (JWKS isolation confirmed, dynamic clients NOT synced).
+
+Let me emit the structured blocks.
+
+STEP 1 — DELTA: The last two analysis runs (bigpickle 01:09, nemotron3 01:11) are essentially identical to the current state. No new probes have been run since. NO_DELTA except echoing that the report remains unfiled.
+
+Let me be faithful and produce the output. I'll do a couple of quick passive verifications to see if there's genuinely anything new — but honestly the surface is exhausted. Let me at least sanity-check that the Contentful report is still pending and there's nothing I can push.
+
+Actually, I should not fabricate. Let me produce the output blocks based on the accumulated state, and my one [NEXT] is the decisive HUMAN action to file the pending P4 report — which has been deferred repeatedly and is the single most valuable concrete action available.
+
+Let me produce the answer now.STEP 1 — DELTA
+- NO_DELTA — no new live probes run since 01:09/01:11 UTC; state identical to prior two analysis runs (bigpickle + nemotron3).
+- [UNCHANGED] Confirmed reportable P4 (Contentful PREVIEW token, 1,082 draft help entries) remains UNFILED — the single actionable, time-sensitive item across all sessions.
+- [UNCHANGED] Rank-95 "staging dynamic registration cross-env sync" — blast is bounded: KB already refutes sync (dynamic clients NOT synced to api.sam-app.ro/authorize: `invalid_client`; prod/staging JWKS ZERO kid overlap; mcp.sumup.com rejects staging tokens). That hypothesis is effectively settled negative at the actionable level; nemotron3's [95] overstates the latent.
+
+STEP 2 — PRIORITIZE
+- [PRIO] help.sumup.com (Contentful PREVIEW token), 7.6, gate10+misconfig-surface+freshness10 (report-ready, token may rotate)
+- [PRIO] auth.sam-app.ro/oauth2/register, 7.3, oath9+gate10+staging (only real registered-client surface; blast bounded)
+- [PRIO] api.sumup.com/.well-known/oauth-protected-resource, 6.6, jwt-cfg7 (request-level aud validation is the only live untested gap, AUTH_HELPED)
+
+STEP 3 — HYPOTHESES
+[HYP] RFC 9728 request-level audience validation at prod gateway
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource -> /v1,/v0.1 resource paths
+confidence: 58
+reasoning: Metadata static (resource=https://api.sumup.com, sole AS auth.sumup.com, header-only bearer, JWKS=auth.sumup.com/.well-known/jwks.json). Prod JWKS rejects staging keys (8 vs 11 kids, ZERO overlap) proving signature isolation; only request-level aud check (aud=api.sumup.com vs staging aud=api.sam-app.ro) remains untested.
+evidence_needed: Staging-minted JWT (aud=api.sam-app.ro) accepted vs cleanly rejected at a prod resource path (404 problem+json vs 401 token-error).
+verify_steps: BLOCKED passive — requires replaying a minted staging bearer at prod api.sumup.com/v1/* (AUTH_HELPED).
+impact: Cross-env token relay -> merchant/payment resource access if aud validation absent. High-latent.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] Contentful token env/space+asset scope-extension (55): PASSIVE and value-additive to the pending report, but token value is NOT in workspace — only executable at report time. Opportunistically folded into the [NEXT] HUMAN submission.
+- [PARKED] auth-theta.sam-app.ro registration divergence (42): near-floor, POST-blocked, JWKS isolation makes blast latent; not actionable without approval.
+- [PARKED] Legacy authorize callback recovery: closed class (crt.sh 52 + ccTLD 96 + custom schemes + read-api/sf-gateway = all refuted); no fresh ≥40 hypothesis on it.
+- [FINAL] 1. Contentful PREVIEW token leak (92) — CONFIRMED, PASSIVE, reportable now, UNFILED.
+- [FINAL] 2. RFC 9728 aud-validation divergence (58) — SURVIVES, AUTH_HELPED, latent.
+- [FINAL] 3. Staging dynamic-registration cross-env sync (bounded) — effectively settled negative by JWKS isolation + non-sync; only latent-env drift remains.
+
+STEP 5 — NEXT ACTION
+- [NEXT] HUMAN: FILE the pending report NOW to bugs.olivermaicher.eu — MISCONFIG/exposed-secret, P4. asset help.sumup.com → preview.contentful.com/spaces/214q1nptnllb, Contentful PREVIEW API token, sha256=preview-contentful. PoC: (1) GET cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<delivery>&limit=1 → total 8,337; (2) GET preview.contentful.com/spaces/214q1nptnllb/entries?access_token=<preview>&sys.publishedAt[exists]=false&content_type=article → 102 drafts (1,082 entries); (3) invalid-token control → 401. Before submitting, optionally broaden with PASSIVE GETs /spaces/214q1nptnllb/environments and /assets?sys.publishedAt[exists]=false (scope-extension). Draft/help articles only; no customer/financial/auth data touched. Token may rotate — do not defer again.
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak verified (cdn 8,337 vs preview 9,419; drafts 1,082 incl. 102 articles; 401 control) — reportable, remains UNFILED across multiple rounds; token rotation risk is the binding constraint.
+
+STEP 7 — RISK
+- [RISK] sumup: 78 — Legacy OAuth gateway (client_id oracle, wildcard CORS, redirect-set divergence) live but callback host unrecoverable across crt.sh/common/ccTLD/read-api (exhaustively refuted, closed). Staging auth.sam-app.ro unauthenticated RFC 7591 mints valid empty-scope JWTs with attacker-controlled aud; prod/staging JWKS ZERO-overlap isolation confirmed as the cross-env blocker. RFC 9728 metadata static; read-api/sf-gateway closed; auth-theta POST-blocked. The single confirmed reportable P4 (Contentful, 1,082 draft help entries) is verified but STILL UNFILED — principal unrealized value, degrading with token-rotation window. All high-impact chains remain AUTH_HELPED/POST-blocked; financial surface access-controlled.

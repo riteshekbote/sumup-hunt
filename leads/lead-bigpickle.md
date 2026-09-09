@@ -2550,3 +2550,13 @@ impact: Cross-environment token relay → merchant/payment resource access if au
 testability: AUTH_HELPED
 [NEXT] HUMAN: FILE the pending report now — bugs.olivermaicher.eu, MISCONFIG/exposed-secret, P4. asset help.sumup.com → preview.contentful.com/spaces/214q1nptnllb, Contentful PREVIEW API token, sha256=preview-contentful. PoC: (1) GET cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=<delivery>&limit=1 → total 8,337; (2) GET preview.contentful.com/spaces/214q1nptnllb/entries?access_token=<preview>&sys.publishedAt[exists]=false&content_type=article → 102 drafts (1,082 entries); (3) invalid-token control → 401. Before submitting (10 min), optionally broaden with PASSIVE GETs: /spaces/214q1nptnllb/environments and /assets?sys.publishedAt[exists]=false (scope-extension PoC). Draft/help articles only; no customer/financial/auth data touched. Token may rotate — don't defer.
 [RISK] sumup: 78 — Legacy OAuth gateway live (client_id oracle, wildcard CORS, redirect divergence) but callback allowlist host unrecoverable across crt.sh/common/ccTLD (exhaustively refuted). Staging auth.sam-app.ro unauthenticated RFC 7591 mints valid empty-scope JWTs with controlled aud; prod/staging JWKS isolation confirmed as the cross-env blocker. RFC 9728 metadata static; read-api/sf-gateway closed. The single confirmed reportable P4 (Contentful, 1,082 draft help entries) is verified but STILL UNFILED — principal unrealized value, time-sensitive to token rotation. All high-impact chains remain AUTH_HELPED/POST-blocked; financial surface access-controlled.
+## 2026-09-09 06:08:47 UTC [target] (model bigpickle)
+[HYP] RFC 9728 request-level audience validation at prod gateway
+class: OATH
+asset: api.sumup.com/.well-known/oauth-protected-resource -> /v1,/v0.1 resource paths
+confidence: 58
+reasoning: Metadata static (resource=https://api.sumup.com, sole AS auth.sumup.com, header-only bearer, JWKS=auth.sumup.com/.well-known/jwks.json). Prod JWKS rejects staging keys (8 vs 11 kids, ZERO overlap) proving signature isolation; only request-level aud check (aud=api.sumup.com vs staging aud=api.sam-app.ro) remains untested.
+evidence_needed: Staging-minted JWT (aud=api.sam-app.ro) accepted vs cleanly rejected at a prod resource path (404 problem+json vs 401 token-error).
+verify_steps: BLOCKED passive — requires replaying a minted staging bearer at prod api.sumup.com/v1/* (AUTH_HELPED).
+impact: Cross-env token relay -> merchant/payment resource access if aud validation absent. High-latent.
+testability: AUTH_HELPED

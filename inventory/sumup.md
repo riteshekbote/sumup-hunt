@@ -427,3 +427,5 @@ www.sumup.com
 - CHANGED api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset all invalid_request, 0 HITs; legacy allowlist host not rec
 - CHANGED read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracle, fully gated
 - CHANGED api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata verified STATIC — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, dev-docs link; no resource_
+
+## 2026-09-09 06:13:32 UTC
