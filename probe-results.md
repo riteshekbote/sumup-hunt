@@ -493,3 +493,13 @@ https://me.sumup.com/api/sso/callback&response_type=code&code_challenge=E9Melhoa
 https://auth.sumup.com/oauth2/token -> HTTP 405
 https://auth.sumup.com/oauth2/auth -> HTTP 405
 https://help.sumup.com/api/auth/callback&scope=openid+offline -> HTTP 404
+
+## 2026-09-10 06:45:08 UTC
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/v1/merchants/self -> HTTP 404
+https://auth.sumup.com/oauth2/par -> HTTP 404
+https://me.sumup.com/api/sso/callback&response_type=code&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256 -> HTTP 404
+https://auth.sumup.com/oauth2/token -> HTTP 405
+https://auth.sumup.com/oauth2/auth -> HTTP 405

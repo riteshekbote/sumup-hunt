@@ -1,4 +1,4 @@
-## 2026-09-10 01:30:26 UTC [target] (model nemotron3)
+## 2026-09-10 06:43:35 UTC [target] (model nemotron3)
 [PRIO] auth.sam-app.ro/oauth2/register,8.7,attack_surface=9|business_value=8|tech_exposure=9|gate_ease=10|cloud_surface=7|freshness=9
 [PRIO] help.sumup.com,7.6,attack_surface=8|business_value=6|tech_exposure=7|gate_ease=10|cloud_surface=5|freshness=10
 [PRIO] auth.sumup.com,7.5,attack_surface=8|business_value=9|tech_exposure=9|gate_ease=3|cloud_surface=7|freshness=7
@@ -39,6 +39,9 @@ testability: AUTH_HELPED
 [FINAL] 2. RFC 9728 resource server metadata on api.sumup.com exposes token validation logic surface enabling audience confusion / token relay (confidence 75) — SURVIVES (AUTH_HELPED)
 [FINAL] 3. OAuth token_endpoint_auth_methods=none + PAR + request_object alg=none on auth.sumup.com enables public client impersonation and algorithm confusion (confidence 70) — SURVIVES (AUTH_HELPED)
 [NEXT] HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste the contents of a report for the Contentful Preview API token leak (102 draft articles + 62 unpublished assets, token sha256=52136da5…8997, space 214q1nptnllb). The KB claims report was "CREATED this cycle" but NO FILE EXISTS at reports/contentful-preview-token-leak.md — compose and submit immediately. Token may rotate at any time.
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: **Prior "report file created" KB entries were FALSE** — file never existed until this cycle; I re-extracted token from `_app-*.js` (sha256 52136da5…8997 confirmed), re-verified preview API 200 and deltas 1,089/102/62 vs cdn 8,403/779/615. Report now truly on disk.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: New first-party client `support_centre` (help.sumup.com, redirect /api/auth/callback, scopes openid+classic+offline) **registered on modern auth server** (302→login_challenge), **absent from legacy gateway** (invalid_client), strict redirect allowlist — modern/legacy registry divergence extends beyond `dashboard`.
+[LEARN] REJECTED OATH @ api.contentful.com: Delivery CFAT `Ku2cameg…HR4` rejected by management API (401) — read-only token, no write surface; leak class stays informational/P4.
 [LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,082 draft/unpublished entries (incl. 102 articles) in SumUp help-center space 214q1nptnllb; published set is 8,337. Reproducible via GET preview.contentful.com with the leaked token.
 [LEARN] REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset all invalid_request, 0 HITs
 [LEARN] REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracle
