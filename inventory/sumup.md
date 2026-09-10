@@ -493,3 +493,12 @@ www.sumup.com
 - CHANGED Nemotron3 hypothesis file now at `reports/hypotheses-nemotron3.txt` (62 lines) with staging cross-env sync ranked 95 — but `reports/contentful-preview-token-leak.md` is STILL the missing deliverable.
 
 ## 2026-09-10 21:46:22 UTC
+
+## 2026-09-10 23:58:15 UTC
+- NEW Contentful Preview token appears rotated in latest Vercel build (buildId `0UxyBtVWc3Go5wjuHzBDC`) — token not found in current `_app-*.js` chunks; KB sha256 `52136da577d765e37cdefa39db5f22cde6df8c0bd9
+- NEW `support_centre` OAuth client confirmed on modern auth.sumup.com (scopes `openid+classic+offline`, redirect `/api/auth/callback`) — 302→login_challenge; absent from legacy api.sumup.com/authorize (`in
+- CHANGED help.sumup.com report file `reports/contentful-preview-token-leak.md` STILL DOES NOT EXIST despite 7+ KB cycles claiming "created this cycle" — blocking deliverable
+- CHANGED auth.sam-app.ro dynamic registration remains LIVE unauthenticated (RFC 7591) — mints JWTs with empty scope + attacker-controlled aud; cross-env JWKS isolation confirmed (prod 8 keys, staging 11 keys, 
+- CHANGED api.sumup.com/.well-known/oauth-protected-resource RFC 9728 metadata static — recon surface exhausted; only untested gap is request-level aud validation (requires AUTH_HELPED)
+- CHANGED api.sumup.com/authorize legacy gateway: client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhausted (crt.sh 52 + ccTLD 96 + custom schemes = 0 HITs)
+- CHANGED read-api.sumup.com & sf-gateway-api.sumup.com: `/authorize` returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracle
