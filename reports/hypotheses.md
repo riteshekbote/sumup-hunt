@@ -1254,3 +1254,30 @@
 - LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle (invalid_client vs invalid_request) + wildcard CORS + legacy/modern redirect-set divergence LIVE; call
 - LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
 - LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint
+
+## RANKED HYPOTHESES 2026-09-10 19:14:06 UTC
+- [95] help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,082+ draft/unpublished entries in help-center space (from art/lead_nemotron3.txt)
+- [95] help.sumup.com: Contentful PREVIEW token leak — report file missing, immediate Jira submission required (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: **SUBMIT NOW** — `reports/contentful-preview-token-leak.md` does NOT exist on disk despite 7+ prior KB claims. Compose the report file immediately from t
+- NEXT(hypotheses-nemotron3.txt): HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste a report for the Content
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token leak — report file `reports/contentful-preview-token-leak.md` does NOT exist on disk despite 7+ KB
+- LEARN: ACCEPTED OATH @ auth.sumup.com: `support_centre` client registered on modern auth server (302→login_challenge), strict redirect allowlist, absent from legacy ga
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 0 HITs across 111 combos.
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404, uniform 404 on all read paths — no divergent OAuth oracle.
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — recon surface exhausted.
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: **Prior "report file created" KB entries were FALSE** — file never existed until this cycle; token re-extracted from `_app-
+- LEARN: ACCEPTED OATH @ auth.sumup.com: New first-party client `support_centre` (help.sumup.com, redirect /api/auth/callback, scopes openid+classic+offline) **registere
+- LEARN: REJECTED OATH @ api.contentful.com: Delivery CFAT `Ku2cameg…HR4` rejected by management API (401) — read-only token, no write surface; leak class stays informat
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,082+ draft/unpublished entries (incl. 102+ articles) in 
+- LEARN: REJECTED OATH @ api.sumup.com/authorize: ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset al
+- LEARN: REJECTED OATH @ read-api.sumup.com & sf-gateway-api.sumup.com: /authorize returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracl
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) de
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope), require PKCE code_challenge, enforce per-client redi
+- LEARN: ACCEPTED AUTH @ auth.sam-app.ro: Dynamic client registration yields real JWT access tokens via client_credentials (client_secret_post); JWT contains empty scp b
+- LEARN: ACCEPTED AUTH @ api.sam-app.ro: Gateway validates JWTs (structured problem+json vs plain 404) but empty scope blocks all resource access.
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: Prod JWKS rejects staging tokens — cross-environment key isolation confirmed at JWKS kid level (prod 8 keys, staging 11 keys, ZE
+- LEARN: REJECTED MISCONFIG @ mcp.sumup.com: Wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds)
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle (invalid_client vs invalid_request) + wildcard CORS + legacy/modern redirect-set divergence LIVE; call
+- LEARN: REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register).
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint.
