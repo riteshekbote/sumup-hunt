@@ -1,11 +1,15 @@
-## 2026-09-10 12:07:01 UTC [target] (model nemotron3)
+## 2026-09-10 16:22:24 UTC [target] (model nemotron3)
+[NEW] Contentful Preview token leak report file `reports/contentful-preview-token-leak.md` does NOT exist on disk despite multiple KB claims it was "created this cycle" — token still LIVE (sha256 `52136da5...8997`), preview API returns 9,530 total entries vs 8,864 CDN (delta 666 unpublished)
+[NEW] `support_centre` first-party client registered on modern `auth.sumup.com` (scopes `openid+classic+offline`, redirect `/api/auth/callback`) — 302→login_challenge; ABSENT from legacy `api.sumup.com/authorize` (invalid_client) — extends modern/legacy registry divergence beyond `dashboard`
+[CHANGED] `api.contentful.com` Delivery CFAT `Ku2cameg...HR4` rejected by Management API (401) — read-only token, no write surface; leak class stays informational/P4
+[CHANGED] `api.sumup.com/authorize` ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset all `invalid_request`, 0 HITs
+[CHANGED] `read-api.sumup.com` & `sf-gateway-api.sumup.com` `/authorize` returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracle
 [PRIO] auth.sam-app.ro/oauth2/register,8.7,attack_surface=9|business_value=8|tech_exposure=9|gate_ease=10|cloud_surface=7|freshness=9
 [PRIO] help.sumup.com,7.6,attack_surface=8|business_value=6|tech_exposure=7|gate_ease=10|cloud_surface=5|freshness=10
 [PRIO] auth.sumup.com,7.5,attack_surface=8|business_value=9|tech_exposure=9|gate_ease=3|cloud_surface=7|freshness=7
 [PRIO] api.sumup.com/.well-known/oauth-protected-resource,7.1,attack_surface=7|business_value=9|tech_exposure=8|gate_ease=3|cloud_surface=6|freshness=8
 [PRIO] api.sumup.com/authorize,6.1,attack_surface=6|business_value=7|tech_exposure=7|gate_ease=5|cloud_surface=5|freshness=5
 [PRIO] mcp.sumup.com,6.1,attack_surface=5|business_value=7|tech_exposure=6|gate_ease=4|cloud_surface=8|freshness=7
-[PRIO] portal.sumup.com,5.5,attack_surface=5|business_value=6|tech_exposure=5|gate_ease=6|cloud_surface=4|freshness=6
 [HYP] Staging dynamic client registration enables cross-environment client sync to production auth.sumup.com
 class: OATH
 asset: auth.sam-app.ro/oauth2/register

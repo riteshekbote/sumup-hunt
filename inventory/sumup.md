@@ -479,3 +479,10 @@ www.sumup.com
 ## 2026-09-10 06:44:55 UTC
 
 ## 2026-09-10 12:07:09 UTC
+
+## 2026-09-10 16:22:36 UTC
+- NEW Contentful Preview token leak report file `reports/contentful-preview-token-leak.md` does NOT exist on disk despite multiple KB claims it was "created this cycle" — token still LIVE (sha256 `52136da5.
+- NEW `support_centre` first-party client registered on modern `auth.sumup.com` (scopes `openid+classic+offline`, redirect `/api/auth/callback`) — 302→login_challenge; ABSENT from legacy `api.sumup.com/auth
+- CHANGED `api.contentful.com` Delivery CFAT `Ku2cameg...HR4` rejected by Management API (401) — read-only token, no write surface; leak class stays informational/P4
+- CHANGED `api.sumup.com/authorize` ccTLD legacy-callback oracle exhaustively negative — 96 combos (15 ccTLDs × 6 hosts /callback) + 15 bare-path subset all `invalid_request`, 0 HITs
+- CHANGED `read-api.sumup.com` & `sf-gateway-api.sumup.com` `/authorize` returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracle

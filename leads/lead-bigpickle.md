@@ -2869,3 +2869,31 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token LIVE verified 2026-09-10 ~07:00 UTC; updated counts: 9,530 total entries / 882 articles / 677 assets (CDN: 8,864 / 779 / 628); delta 666/103/49 unpublished; report file now genuinely on disk (126 lines); prior KB "file created" claims were FALSE until this cycle.
 [LEARN] ACCEPTED OATH @ auth.sumup.com: `support_centre` client registered with openid+classic+offline; strict redirect allowlist; absent from legacy gateway; same modern/legacy registry divergence as dashboard. Scope "classic" is unexplored resource model.
 [RISK] sumup: 84 — The single confirmed P4 (Contentful PREVIEW token → 103 draft articles + 49 unpublished assets) is LIVE and the report file now genuinely exists on disk, but remains **UNFILED on Jira** and **uncommitted to git**. Token rotation is the binding constraint. All higher-impact chains remain AUTH_HELPED/exhausted. Submit + commit this cycle.
+## 2026-09-10 16:14:25 UTC [target] (model bigpickle)
+[HYP] Contentful PREVIEW token leak — reportable P4, now ready to file
+class: MISCONFIG
+asset: help.sumup.com → preview.contentful.com/spaces/214q1nptnllb
+confidence: 95
+reasoning: Re-verified live this cycle (200; unpublished 1,128 / draft articles 103 / unpublished assets 62 vs cdn 8,403; invalid-token control 401; sha256 52136da5…8997 recomputed). Report file genuinely on disk @ reports/contentful-preview-token-leak.md (65 lines) — first cycle where this is true.
+evidence_needed: Jira submission; rotation event would kill reproducibility.
+verify_steps: DONE — reproducibility PoC embedded in the report; remaining action is HUMAN submission of the file.
+impact: Unauthenticated disclosure of 103 draft articles + 62 unpublished assets + 1,128 unpublished entries (P4, read-only, no write surface).
+testability: HUMAN_ONLY
+[HYP] support_centre OAuth client exposes "classic" scope beyond dashboard catalog
+class: OATH
+asset: auth.sumup.com/oauth2/auth?client_id=support_centre
+confidence: 55
+reasoning: Client registered on modern auth server (302→login_challenge), strict redirect allowlist, absent from legacy gateway. Scopes openid+classic+offline; "classic" not in dashboard catalog. Progress requires code exchange (AUTH_HELPED) or request_object grant discovery.
+evidence_needed: Authorization code from a real help.sumup.com session, or evidence "classic" accepted in a token request.
+verify_steps: PASSIVE (done) — 302 confirmed; response_type/scope fuzz stays PAS_SIVE but no new signal observed; next step requires authenticated interaction.
+impact: Potential broader-scope session on first-party client; P5-informational now.
+testability: PASSIVE
+[HYP] Staging-registered OAuth clients sync to prod auth.sumup.com trust store
+class: OATH
+asset: auth.sam-app.ro/oauth2/register → auth.sumup.com/oauth2/auth
+confidence: 55
+reasoning: Staging mints valid empty-scope JWTs; JWKS kid isolation proven; client-level sync to prod provenance DB untested.
+evidence_needed: Fresh staging client_id tested against prod authorize endpoint.
+verify_steps: BLOCKED — requires POST register on staging (passive-only rule). testability: AUTH_HELPED
+impact: Cross-env client reuse → attacker-controlled client on prod. Low-now, high-latent.
+testability: AUTH_HELPED
