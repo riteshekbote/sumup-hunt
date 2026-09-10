@@ -473,3 +473,5 @@ www.sumup.com
 - CHANGED mcp.sumup.com MCP server: wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"], no cookies/ambient creds) — REJECTED MISCONFIG class
 
 ## 2026-09-09 23:34:19 UTC
+
+## 2026-09-10 01:33:10 UTC

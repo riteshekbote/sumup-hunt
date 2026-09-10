@@ -2803,3 +2803,28 @@ confidence: 58
 reasoning: RFC 9728 metadata static; prod/staging JWKS isolation proven; the only untested link is per-request aud/iss check at gateway.
 evidence_needed: Staging-minted JWT (aud=api.sam-app.ro) replay at prod resource path.
 verify_steps: BLOCKED passive — requires a minted token (AUTH_HELPED). testability: AUTH_HELPED
+## 2026-09-10 01:33:01 UTC [target] (model bigpickle)
+[HYP] help.sumup.com `support_centre` OAuth client enables account-free scoped session on help-center
+class: AUTH
+asset: auth.sumup.com/oauth2/auth?client_id=support_centre
+confidence: 60
+reasoning: Client is registered on prod auth server (302→login_challenge = same shape as dashboard). Redirect allowlist strict (evil redirect → invalid_request). `support_centre` grants openid+classic+offline — a class of scope (classic) absent from the dashboard catalog, implying a distinct resource model. Registration proven; exploitability of its scopes untested.
+evidence_needed: An authorization code from a real help.sumup.com session exchanged at token endpoint; or discovery of a supported request_object grant.
+verify_steps: PASSIVE — GET auth.sumup.com/oauth2/auth?client_id=support_centre&response_type=code&redirect_uri=https://help.sumup.com/api/auth/callback&scope=openid+offline (302→login = registered, done); next: request_user/audience-parameter fuzzing on this client to see if aud is attacker-influencable.
+impact: If flows leak tokens/codes cross-client or scopes map to merchant data, ATO/read path; currently informational (new registered client, strict allowlist).
+testability: PASSIVE
+[HYP] Contentful delivery token also embedded client-side enables write to help content
+[HYP] help.sumup.com `support_centre` client registered on prod — scope "classic" maps to an unexplored resource model
+class: OATH
+asset: auth.sumup.com/oauth2/auth → help.sumup.com/api/auth/callback
+confidence: 55
+reasoning: Freshly proven registration (302→login_challenge on auth.sumup.com; invalid_client on legacy gateway; strict redirect allowlist). Distinguishing scope `classic` not present in the known dashboard scope catalog — implies a legacy/parallel permission model reachable with a normal logged-in flow.
+evidence_needed: Deleting/replaying — a code exchange from this client, or evidence the `classic` scope is accepted in a token request.
+verify_steps: PASSIVE — confirm the client supports `response_type=token`/`id_token` discouraged flows via scope/response_type fuzz on the ready-of-login URL; any 302 with a new challenge shape is a signal.
+impact: Potential broader-scope session on a first-party SumUp client; unknown until a token is obtained. P5-informational now.
+testability: PASSIVE
+[NEXT] HUMAN: Submit `reports/contentful-preview-token-leak.md` now at https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 — file verified ON DISK this cycle (was missing/hallucinated in prior KB), token re-verified LIVE with matching sha256. It may rotate; do not defer.
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: **Prior "report file created" KB entries were FALSE** — file never existed until this cycle; I re-extracted token from `_app-*.js` (sha256 52136da5…8997 confirmed), re-verified preview API 200 and deltas 1,089/102/62 vs cdn 8,403/779/615. Report now truly on disk.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: New first-party client `support_centre` (help.sumup.com, redirect /api/auth/callback, scopes openid+classic+offline) **registered on modern auth server** (302→login_challenge), **absent from legacy gateway** (invalid_client), strict redirect allowlist — modern/legacy registry divergence extends beyond `dashboard`.
+[LEARN] REJECTED OATH @ api.contentful.com: Delivery CFAT `Ku2cameg…HR4` rejected by management API (401) — read-only token, no write surface; leak class stays informational/P4.
+[RISK] sumup: 84 — Principal realized value (the P4 Contentful PREVIEW leak) is **re-verified live and the report file now genuinely exists**, but remains **UNFILED on Jira** and **uncommitted to git** (prior cycles prove untracked writes vanish — `git status` shows only stray `analyst-*`/`ctx` files, no report). Time-to-rotation is the binding constraint. Everything higher-impact (BOLA, cross-env token relay, staging-client sync, legacy callback host) stays AUTH_HELPED/exhausted. Submit + commit the report this cycle.
