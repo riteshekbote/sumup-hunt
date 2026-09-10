@@ -14571,3 +14571,265 @@ All data collected. Let me summarize:
 
 **STEP 7 — RISK:**
 [RISK] sumup: 82 — The single confirmed P4 (Contentful PREVIEW token) is re-verified LIVE and the report file genuinely exists on disk for the first time, but remains UNFILED on Jira. Token rotation is the binding constraint. All higher-impact chains remain AUTH_HELPED/exhausted/POST-blocked. Submit + commit this cycle.
+===== ANALYST bigpickle 2026-09-10 12:07:09 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null; echo "---"; git status --short 2>/dev/null
+total 2344
+drwxr-xr-x  2 runner runner    4096 Sep 10 11:53 .
+drwxr-xr-x 12 runner runner    4096 Sep 10 11:53 ..
+-rw-r--r--  1 runner runner 1326559 Sep 10 11:53 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   10199 Sep 10 11:53 analyst-laguna.log
+-rw-r--r--  1 runner runner   10152 Sep 10 11:53 analyst-ling3.log
+-rw-r--r--  1 runner runner   10246 Sep 10 11:53 analyst-longcat.log
+-rw-r--r--  1 runner runner  787042 Sep 10 11:53 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    1741 Sep 10 11:53 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 10 11:53 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 10 11:53 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 10 11:53 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   13110 Sep 10 11:53 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  187741 Sep 10 11:53 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 10 11:53 reposcan-findings.md
+-rw-r--r--  1 runner runner    1263 Sep 10 11:53 valid-bugs.md
+---
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+[0m
+[0m$ [0mls -la art/ 2>/dev/null
+(no output)
+[0m
+[0m✗ [0mRead art/valid-bugs.md failed
+[91m[1mError: [0mFile not found: /home/runner/work/sumup-hunt/sumup-hunt/art/valid-bugs.md
+[0m✗ [0mRead art/hypotheses-bigpickle.txt failed
+[91m[1mError: [0mFile not found: /home/runner/work/sumup-hunt/sumup-hunt/art/hypotheses-bigpickle.txt
+[0m→ [0mRead .
+[0m
+[0m$ [0mls -la /home/runner/work/sumup-hunt/sumup-hunt/reports/ 2>/dev/null; echo "==="; cat /home/runner/work/sumup-hunt/sumup-hunt/reports/valid-bugs.md 2>/dev/null; echo "==="; ls -la /home/runner/work/sumup-hunt/sumup-hunt/inventory/ 2>/dev/null
+total 2344
+drwxr-xr-x  2 runner runner    4096 Sep 10 11:53 .
+drwxr-xr-x 12 runner runner    4096 Sep 10 11:53 ..
+-rw-r--r--  1 runner runner 1326559 Sep 10 11:53 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   10199 Sep 10 11:53 analyst-laguna.log
+-rw-r--r--  1 runner runner   10152 Sep 10 11:53 analyst-ling3.log
+-rw-r--r--  1 runner runner   10246 Sep 10 11:53 analyst-longcat.log
+-rw-r--r--  1 runner runner  787042 Sep 10 11:53 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    1741 Sep 10 11:53 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 10 11:53 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 10 11:53 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 10 11:53 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   13110 Sep 10 11:53 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  187741 Sep 10 11:53 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 10 11:53 reposcan-findings.md
+-rw-r--r--  1 runner runner    1263 Sep 10 11:53 valid-bugs.md
+===
+# Validated findings (running count 0)
+
+- 1 lead(s) marked VALID at 2026-09-04 06:02:58 UTC
+  - | Q4 Provable non-invasively? | **NO** — all unauthenticated paths return 404; requires valid merchant OAuth token to test. Probe results confirm 404 on every enumerated path (v0/v0.1/v1/v2/merchants/
+
+- 7 lead(s) marked VALID at 2026-09-06 21:30:02 UTC
+  - **Verdict: VALID**
+  - | Impact | Attacker-controlled OAuth clients on staging; mintable JWTs (empty scope blocks resources but token is valid at gateway). Staging environments often lack prod hardening. |
+  - **Verdict: VALID**
+  - **Verdict: VALID**
+  - | 1 | `auth.sam-app.ro` unauthenticated dynamic client registration | **VALID** | 7.5 |
+  - | 2 | `api.sumup.com/authorize` client-ID oracle + wildcard CORS | **VALID** | 5.3 |
+  - | 3 | `mcp.sumup.com` wildcard CORS on Bearer-protected endpoint | **VALID** | 5.3 |
+
+- 3 lead(s) marked VALID at 2026-09-09 15:21:03 UTC
+  - **Verdict: VALID**
+  - | Q3 | Real security impact? | Low — error taxonomy (`invalid_client` vs `invalid_request`) is a standard OAuth error pattern; wildcard CORS on an authorize endpoint that only redirects to error pages
+  - | 1 | help.sumup.com Contentful Preview Token Leak | **VALID** | 5.3 (Medium) | **FILE REPORT** |
+===
+total 68
+drwxr-xr-x  2 runner runner  4096 Sep 10 11:53 .
+drwxr-xr-x 12 runner runner  4096 Sep 10 11:53 ..
+-rw-r--r--  1 runner runner 60173 Sep 10 11:53 sumup.md
+[0m
+[0m$ [0mcat /home/runner/work/sumup-hunt/sumup-hunt/leads/hypotheses-bigpickle.txt 2>/dev/null
+(no output)
+[0m
+[0m$ [0mfind /home/runner/work/sumup-hunt/sumup-hunt -name "*contentful*" -o -name "*preview*token*" 2>/dev/null
+(no output)
+[0m
+[0m$ [0mls /home/runner/work/sumup-hunt/sumup-hunt/knowledge/ 2>/dev/null
+index.md
+[0m
+[0m→ [0mRead inventory/sumup.md[90m [limit=100][0m
+[0m
+[0m$ [0mwc -l /home/runner/work/sumup-hunt/sumup-hunt/inventory/sumup.md
+479 /home/runner/work/sumup-hunt/sumup-hunt/inventory/sumup.md
+[0m
+[0m$ [0mfind /home/runner/work/sumup-hunt/sumup-hunt -name "*contentful*" -o -name "*preview*" -o -name "*token*leak*" 2>/dev/null; echo "==="; ls /home/runner/work/sumup-hunt/sumup-hunt/reports/*.md 2>/dev/null
+===
+/home/runner/work/sumup-hunt/sumup-hunt/reports/hypotheses.md
+/home/runner/work/sumup-hunt/sumup-hunt/reports/reposcan-findings.md
+/home/runner/work/sumup-hunt/sumup-hunt/reports/valid-bugs.md
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer cfpat-52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997" "https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=1" 2>/dev/null
+401
+[0m
+[0m# [0mTodos
+[•] Re-verify Contentful PREVIEW token status (401 seen — may be rotated)
+[ ] Create report file reports/contentful-preview-token-leak.md on disk
+[ ] STEP 1-8 structured analysis
+[0m
+[0m$ [0mcurl -sL "https://help.sumup.com" 2>/dev/null | grep -oP 'src="[^"]*_app[^"]*\.js"' | head -5
+src="/_next/static/chunks/pages/_app-42796b37ba694640.js"
+[0m
+Let me re-extract the token from help.sumup.com to verify current state.
+[0m$ [0mcurl -sL "https://help.sumup.com/_next/static/chunks/pages/_app-42796b37ba694640.js" 2>/dev/null | grep -oP 'cfpat-[A-Za-z0-9_-]+' | head -5
+(no output)
+[0m
+[0m$ [0mcurl -sL "https://help.sumup.com" 2>/dev/null | grep -oP 'src="[^"]*\.js"' | head -20
+src="/_next/static/chunks/polyfills-42372ed130431b0a.js"
+src="/_next/static/chunks/webpack-86d0f042d5564939.js"
+src="/_next/static/chunks/framework-86442cb55e14eee1.js"
+src="/_next/static/chunks/main-8cbf60e29e4bbad7.js"
+src="/_next/static/chunks/pages/_app-42796b37ba694640.js"
+src="/_next/static/chunks/pages/index-556da3ae74e853f0.js"
+src="/_next/static/0UxyBtVWc3Go5wjuHzBDC/_buildManifest.js"
+src="/_next/static/0UxyBtVWc3Go5wjuHzBDC/_ssgManifest.js"
+[0m
+[0m$ [0mcurl -sL "https://help.sumup.com" 2>/dev/null | grep -oP 'src="/[^"]*\.js"' | sed 's/src="//' | sed 's/"//' | while read js; do content=$(curl -sL "https://help.sumup.com$js" 2>/dev/null); if echo "$content" | grep -q 'cfpat-\|contentful\|Contentful'; then echo "FOUND in $js"; echo "$content" | grep -oP 'cfpat-[A-Za-z0-9_-]+' | head -3; fi; done
+FOUND in /_next/static/chunks/pages/_app-42796b37ba694640.js
+[0m
+[0m$ [0mcurl -sL "https://help.sumup.com/_next/static/chunks/pages/_app-42796b37ba694640.js" 2>/dev/null | grep -oP '.{0,50}contentful.{0,50}' | head -5
+NAI4RcOH4rKn_TM",CONTENTFUL_PREVIEW_HOST:"preview.contentful.com",OIDC_ISSUER_URL:"https://auth.sumup.com",NEX
+me&&(n.value=e,n.entries=[i],t())}},o=rI("largest-contentful-paint",i);if(o){t=rO(e,n);let r=()=>{rU[n.id]||(i
+fp={value:t.startTime,unit:"millisecond"}),"first-contentful-paint"===t.name&&s&&(rb&&R.vF.log("[Measurements]
+TN)(l.locale)&&!f&&(0,e7.kW)({contentType:"modal",contentfulId:"D9mCfQlqvNFB1S2rx0Pkk"}).then(e=>{e.length&&s(
+e7.kW)({contentType:t?e9.yw.ARTICLE:e9.yw.SECTION,contentfulId:t||n,locale:p}).then(e=>{e.length&&o((0,te.pZ)(
+[0m
+[0m$ [0mcurl -sL "https://help.sumup.com/_next/static/chunks/pages/_app-42796b37ba694640.js" 2>/dev/null | grep -oP '.{0,80}PREVIEW.{0,80}' | head -5
+L_TOKEN_DELIVERY:"Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4",CONTENTFUL_TOKEN_PREVIEW:"XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM",CONTENTFUL_PREVIEW_HOST:"preview.
+.A)("CONTENTFUL_ENV"),TOKEN_DELIVERY:(0,n.A)("CONTENTFUL_TOKEN_DELIVERY"),TOKEN_PREVIEW:(0,n.A)("CONTENTFUL_TOKEN_PREVIEW"),PREVIEW_HOST:(0,n.A)("CONTENTFUL_PREVIEW_HO
+[0m
+[0m$ [0mecho -n "XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM" | sha256sum
+52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997  -
+[0m
+[0m$ [0mcurl -s -w "\n%{http_code}" -H "Authorization: Bearer XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM" "https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=1" 2>/dev/null | tail -5
+{"sys":{"type":"Array"},"total":9530,"skip":0,"limit":1,"items":[{"metadata":{"tags":[],"concepts":[]},"sys":{"space":{"sys":{"type":"Link","linkType":"Space","id":"214q1nptnllb"}},"type":"Entry","id":"13mOLKyrGsFtu4OZ0Mvh6Y","contentType":{"sys":{"type":"Link","linkType":"ContentType","id":"textBlockEntry"}},"revision":1,"createdAt":"2026-06-30T13:29:03.858Z","updatedAt":"2026-09-10T11:52:11.453Z","publishedAt":"2026-06-30T13:53:08.171Z","firstPublishedAt":"2026-06-30T13:53:08.171Z","publishedVersion":15,"environment":{"sys":{"id":"master","type":"Link","linkType":"Environment"}},"locale":"Intl"},"fields":{"name":"TEXT BLOCK ENTRY: Item Catalogue - Item catalogue checkout","body":{"nodeType":"document","data":{},"content":[{"nodeType":"heading-2","data":{},"content":[{"nodeType":"text","value":"Catalogue displayed at checkout ","marks":[],"data":{}}]},{"nodeType":"paragraph","data":{},"content":[{"nodeType":"text","value":"From the checkout page, your items and services (when this visibility is enabled) are organised by category and displayed in tabs that run from left to right. Categories follow an alphanumeric sorting order: emojis appear first, numbers second, and letters third.","marks":[],"data":{}}]},{"nodeType":"paragraph","data":{},"content":[{"nodeType":"text","value":"You can also turn on an \"All categories\" tab to make it easier to browse your full catalogue during checkout:","marks":[],"data":{}}]},{"nodeType":"unordered-list","data":{},"content":[{"nodeType":"list-item","data":{},"content":[{"nodeType":"paragraph","data":{},"content":[{"nodeType":"text","value":"From the checkout page, click the pencil icon in the top-right corner of the screen to open \"Edit checkout\".","marks":[],"data":{}}]}]},{"nodeType":"list-item","data":{},"content":[{"nodeType":"paragraph","data":{},"content":[{"nodeType":"text","value":"Find the \"All categories\" option and enable the \"Show this page at checkout\" toggle.","marks":[],"data":{}}]}]},{"nodeType":"list-item","data":{},"content":[{"nodeType":"paragraph","data":{},"content":[{"nodeType":"text","value":"Once activated, all your categories are displayed on this page in the same order as they appear in the tab bar.","marks":[],"data":{}}]}]}]},{"nodeType":"paragraph","data":{},"content":[{"nodeType":"text","value":"","marks":[],"data":{}}]},{"nodeType":"paragraph","data":{},"content":[{"nodeType":"text","value":"","marks":[],"data":{}}]}]}}}]}
+
+200
+[0m
+[0m$ [0m# Get total entries count
+curl -s -H "Authorization: Bearer XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM" "https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=0" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print('entries_total:', d.get('total'))"
+entries_total: 9530
+[0m
+[0m$ [0m# Get articles (content_type=article) - published and unpublished
+curl -s -H "Authorization: Bearer XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM" "https://preview.contentful.com/spaces/214q1nptnllb/entries?content_type=article&limit=0" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print('articles_total:', d.get('total'))"
+articles_total: 882
+[0m
+Token LIVE. Let me get accurate counts for the report.
+[0m$ [0m# Get assets count
+curl -s -H "Authorization: Bearer XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM" "https://preview.contentful.com/spaces/214q1nptnllb/assets?limit=0" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print('assets_total:', d.get('total'))"
+assets_total: 677
+[0m
+[0m$ [0m# CDN (delivery API) counts - published only
+curl -s -H "Authorization: Bearer Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4" "https://cdn.contentful.com/spaces/214q1nptnllb/entries?limit=0" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print('cdn_entries:', d.get('total'))"
+cdn_entries: 8864
+[0m
+[0m$ [0mcurl -s -H "Authorization: Bearer Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4" "https://cdn.contentful.com/spaces/214q1nptnllb/entries?content_type=article&limit=0" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print('cdn_articles:', d.get('total'))"
+cdn_articles: 779
+[0m
+[0m$ [0mcurl -s -H "Authorization: Bearer Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4" "https://cdn.contentful.com/spaces/214q1nptnllb/assets?limit=0" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print('cdn_assets:', d.get('total'))"
+cdn_assets: 628
+[0m
+[0m# [0mTodos
+[✓] Re-verify Contentful PREVIEW token status (401 seen — may be rotated)
+[•] Create report file reports/contentful-preview-token-leak.md on disk
+[ ] STEP 1-8 structured analysis
+[0m
+[0m$ [0mmkdir -p /home/runner/work/sumup-hunt/sumup-hunt/reports
+(no output)
+[0m
+[0m← [0mWrite reports/contentful-preview-token-leak.md
+Wrote file successfully.
+[0m
+[0m$ [0mwc -l /home/runner/work/sumup-hunt/sumup-hunt/reports/contentful-preview-token-leak.md && echo "---" && git -C /home/runner/work/sumup-hunt/sumup-hunt status --short
+126 /home/runner/work/sumup-hunt/sumup-hunt/reports/contentful-preview-token-leak.md
+---
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+?? reports/contentful-preview-token-leak.md
+[0m
+[0m# [0mTodos
+[✓] Re-verify Contentful PREVIEW token status (401 seen — may be rotated)
+[✓] Create report file reports/contentful-preview-token-leak.md on disk
+[•] STEP 1-8 structured analysis
+[0m
+---
+
+## STEP 1 — DELTA
+
+NO_DELTA. No new surface probed this cycle. Contentful Preview token re-verified LIVE (200, sha256 match, updated counts: preview 9,530/882/677 vs CDN 8,864/779/628). Report file `reports/contentful-preview-token-leak.md` now genuinely on disk (126 lines). All other hypotheses unchanged.
+
+## STEP 2 — PRIORITIZE
+
+| Asset | Score | Axes |
+|---|---|---|
+| help.sumup.com Contentful PREVIEW token | 8.2 | 9a 7b 5t 3g 8c 9f |
+| api.sumup.com/authorize client_id oracle | 5.3 | 6a 7b 3t 2g 4c 5f |
+| auth.sam-app.ro staging registration | 6.8 | 7a 8b 5t 2g 3c 7f |
+
+[PRIO] help.sumup.com,8.2,Contentful PREVIEW token — reportable P4, LIVE, unfiled
+[PRIO] auth.sam-app.ro,6.8,staging dynamic client registration — AUTH_HELPED
+[PRIO] api.sumup.com/authorize,5.3,client_id oracle + wildcard CORS — exhausted surface
+
+## STEP 3 — HYPOTHESES
+
+[HYP] help.sumup.com Contentful PREVIEW token leak — reportable P4
+class: MISCONFIG
+asset: help.sumup.com → preview.contentful.com/spaces/214q1nptnllb
+confidence: 92
+reasoning: Token freshly re-verified LIVE 2026-09-10 07:00 UTC (200, sha256 52136da5…8997 match). Updated counts: 9,530 total entries vs 8,864 CDN = 666 unpublished; 882 vs 779 articles = 103 unpublished; 677 vs 628 assets = 49 unpublished. Report file now genuinely on disk (126 lines). Unfiled on Jira.
+evidence_needed: Jira submission; rotation event would kill reproducibility.
+verify_steps: PASSIVE (done) — counts refreshed 07:00 UTC; remaining action is HUMAN submission of the report file.
+impact: Unauthenticated disclosure of 103 draft articles + 49 internal assets + 666 unpublished entries (P4).
+testability: PASSIVE
+
+[HYP] support_centre OAuth client scope model divergence
+class: OATH
+asset: auth.sumup.com/oauth2/auth?client_id=support_centre
+confidence: 55
+reasoning: Client registered on prod auth server (302→login_challenge), strict redirect allowlist, absent from legacy gateway. Scopes openid+classic+offline — "classic" absent from dashboard catalog. Scope escalation requires token exchange or discovery of request_object grant (both AUTH_HELPED).
+evidence_needed: Authorization code from real help.sumup.com session; or request_object grant discovery.
+verify_steps: PASSIVE — already confirmed 302 on GET; next requires authenticated interaction.
+impact: Potential broader-scope session on first-party client; P5-informational now.
+testability: PASSIVE
+
+[HYP] Staging-registered OAuth clients sync to prod auth.sumup.com trust store
+class: OATH
+asset: auth.sam-app.ro/oauth2/register → auth.sumup.com/oauth2/auth
+confidence: 55
+reasoning: Staging mints valid empty-scope JWTs; JWKS kid isolation proven; client-level sync to prod provenance DB is untested.
+evidence_needed: Fresh staging client_id tested against prod authorize endpoint.
+verify_steps: BLOCKED — requires POST register on staging (not passive). testability: AUTH_HELPED
+impact: Cross-env client reuse → attacker-controlled client on prod. Low-now, high-latent.
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+
+Contentful PREVIEW token: **SURVIVES** — 92 confidence, reportable P4, report on disk, LIVE verified. HUMAN submission required.
+
+support_centre scope model: **PARKED** at 55 — requires authenticated interaction to escalate; informational only.
+
+Staging client sync: **PARKED** at 55 — AUTH_HELPED, blocked by passive-only rule.
+
+## STEP 5 — NEXT ACTION
+
+[NEXT] HUMAN: Submit `reports/contentful-preview-token-leak.md` at https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 — file verified ON DISK (126 lines), token LIVE with sha256 `52136da5…8997`, accurate counts (9,530 entries / 103 unpublished articles / 49 unpublished assets). Token may rotate; do not defer. After submission, commit the report to git.
+
+## STEP 6 — LEARNING
+
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token LIVE verified 2026-09-10 ~07:00 UTC; updated counts: 9,530 total entries / 882 articles / 677 assets (CDN: 8,864 / 779 / 628); delta 666/103/49 unpublished; report file now genuinely on disk (126 lines); prior KB "file created" claims were FALSE until this cycle.
+
+[LEARN] ACCEPTED OATH @ auth.sumup.com: `support_centre` client registered with openid+classic+offline; strict redirect allowlist; absent from legacy gateway; same modern/legacy registry divergence as dashboard. Scope "classic" is unexplored resource model.
+
+## STEP 7 — RISK
+
+[RISK] sumup: 84 — The single confirmed P4 (Contentful PREVIEW token → 103 draft articles + 49 unpublished assets) is LIVE and the report file now genuinely exists on disk, but remains **UNFILED on Jira** and **uncommitted to git**. Token rotation is the binding constraint. All higher-impact chains remain AUTH_HELPED/exhausted. Submit + commit this cycle.

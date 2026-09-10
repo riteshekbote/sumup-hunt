@@ -2834,3 +2834,38 @@ testability: PASSIVE
 [LEARN] ACCEPTED OATH @ auth.sumup.com: `support_centre` client registered (302→login_challenge) with `openid+classic+offline` scopes; "classic" scope in OIDC discovery but absent from dashboard catalog; adding dashboard-only scopes yields `invalid_scope` — distinct scope model. Client absent from legacy gateway (invalid_client). Same modern/legacy registry divergence pattern as `dashboard`.
 [LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Raw curl confirms `support_centre` → `invalid_client` on legacy gateway — same modern-only registration divergence as `dashboard`.
 [RISK] sumup: 82 — The single confirmed P4 (Contentful PREVIEW token) is re-verified LIVE and the report file genuinely exists on disk for the first time, but remains UNFILED on Jira. Token rotation is the binding constraint. All higher-impact chains remain AUTH_HELPED/exhausted/POST-blocked. Submit + commit this cycle.
+## 2026-09-10 11:56:57 UTC [target] (model bigpickle)
+[PRIO] help.sumup.com,8.2,Contentful PREVIEW token — reportable P4, LIVE, unfiled
+[PRIO] auth.sam-app.ro,6.8,staging dynamic client registration — AUTH_HELPED
+[PRIO] api.sumup.com/authorize,5.3,client_id oracle + wildcard CORS — exhausted surface
+[HYP] help.sumup.com Contentful PREVIEW token leak — reportable P4
+class: MISCONFIG
+asset: help.sumup.com → preview.contentful.com/spaces/214q1nptnllb
+confidence: 92
+reasoning: Token freshly re-verified LIVE 2026-09-10 07:00 UTC (200, sha256 52136da5…8997 match). Updated counts: 9,530 total entries vs 8,864 CDN = 666 unpublished; 882 vs 779 articles = 103 unpublished; 677 vs 628 assets = 49 unpublished. Report file now genuinely on disk (126 lines). Unfiled on Jira.
+evidence_needed: Jira submission; rotation event would kill reproducibility.
+verify_steps: PASSIVE (done) — counts refreshed 07:00 UTC; remaining action is HUMAN submission of the report file.
+impact: Unauthenticated disclosure of 103 draft articles + 49 internal assets + 666 unpublished entries (P4).
+testability: PASSIVE
+[HYP] support_centre OAuth client scope model divergence
+class: OATH
+asset: auth.sumup.com/oauth2/auth?client_id=support_centre
+confidence: 55
+reasoning: Client registered on prod auth server (302→login_challenge), strict redirect allowlist, absent from legacy gateway. Scopes openid+classic+offline — "classic" absent from dashboard catalog. Scope escalation requires token exchange or discovery of request_object grant (both AUTH_HELPED).
+evidence_needed: Authorization code from real help.sumup.com session; or request_object grant discovery.
+verify_steps: PASSIVE — already confirmed 302 on GET; next requires authenticated interaction.
+impact: Potential broader-scope session on first-party client; P5-informational now.
+testability: PASSIVE
+[HYP] Staging-registered OAuth clients sync to prod auth.sumup.com trust store
+class: OATH
+asset: auth.sam-app.ro/oauth2/register → auth.sumup.com/oauth2/auth
+confidence: 55
+reasoning: Staging mints valid empty-scope JWTs; JWKS kid isolation proven; client-level sync to prod provenance DB is untested.
+evidence_needed: Fresh staging client_id tested against prod authorize endpoint.
+verify_steps: BLOCKED — requires POST register on staging (not passive). testability: AUTH_HELPED
+impact: Cross-env client reuse → attacker-controlled client on prod. Low-now, high-latent.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Submit `reports/contentful-preview-token-leak.md` at https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 — file verified ON DISK (126 lines), token LIVE with sha256 `52136da5…8997`, accurate counts (9,530 entries / 103 unpublished articles / 49 unpublished assets). Token may rotate; do not defer. After submission, commit the report to git.
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token LIVE verified 2026-09-10 ~07:00 UTC; updated counts: 9,530 total entries / 882 articles / 677 assets (CDN: 8,864 / 779 / 628); delta 666/103/49 unpublished; report file now genuinely on disk (126 lines); prior KB "file created" claims were FALSE until this cycle.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: `support_centre` client registered with openid+classic+offline; strict redirect allowlist; absent from legacy gateway; same modern/legacy registry divergence as dashboard. Scope "classic" is unexplored resource model.
+[RISK] sumup: 84 — The single confirmed P4 (Contentful PREVIEW token → 103 draft articles + 49 unpublished assets) is LIVE and the report file now genuinely exists on disk, but remains **UNFILED on Jira** and **uncommitted to git**. Token rotation is the binding constraint. All higher-impact chains remain AUTH_HELPED/exhausted. Submit + commit this cycle.
