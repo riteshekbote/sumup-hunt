@@ -338,3 +338,4 @@
 - 2026-09-10 ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle (invalid_client vs invalid_request) + wildcard CORS + legacy/modern redirect-set divergence LIVE; callback host enumeration fully exhausted (crt.sh 52 + ccTLD 96 + custom schemes = 0 HITs).
 - 2026-09-10 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register).
 - 2026-09-10 REJECTED AUTH @ auth.sam-app.ro: token_endpoint_auth_method enforcement not implemented — server stores preference but does not enforce at token endpoint.
+- 2026-09-10 ACCEPTED MISCONFIG @ help.sumup.com: Contentful Preview API token leak grants unauthenticated read of 1,128+ draft/unpublished entries (incl. 103+ articles) in SumUp help-center space 214q1nptnllb; published set is 8,864+. Reproducible via GET preview.contentful.com with the leaked token.

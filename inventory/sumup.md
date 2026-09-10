@@ -491,3 +491,5 @@ www.sumup.com
 - NEW `reports/contentful-preview-token-leak.md` still does NOT exist on disk — prior 7+ KB entries claiming "created this cycle" were false; token sha256 `52136da5…8997` confirmed LIVE via prior cycle prob
 - NEW `support_centre` first-party client (auth.sumup.com, scopes openid+classic+offline, redirect /api/auth/callback) confirmed registered on modern auth server, absent from legacy gateway — extends modern
 - CHANGED Nemotron3 hypothesis file now at `reports/hypotheses-nemotron3.txt` (62 lines) with staging cross-env sync ranked 95 — but `reports/contentful-preview-token-leak.md` is STILL the missing deliverable.
+
+## 2026-09-10 21:46:22 UTC
