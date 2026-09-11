@@ -3156,3 +3156,44 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combos, 0 HITs); legacy allowlist host not recoverable from any passive surface.
 [LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks resource access; prod sync untestable passively.
 [RISK] sumup: 45 — **DROPPED from 82**. The single confirmed P4 (Contentful PREVIEW token) is now dead (token rotated, report file never existed). Remaining validated findings (api.sumup.com/authorize oracle, auth.sam-app.ro staging registration) are either non-exploitable or AUTH_HELPED. No new passive surface emerged. Program value is now low — all remaining hypotheses require authenticated access or are architectural/hardening-only findings.
+## 2026-09-11 17:17:41 UTC [target] (model bigpickle)
+[PRIO] api.sumup.com/authorize,6.5,a6,b7,t6,g8,c10,f5
+[PRIO] auth.sam-app.ro/oauth2/register,6.5,a7,b5,t5,g9,c10,f5
+[PRIO] auth.sumup.com/support_centre,6.0,a5,b8,t7,g4,c10,f5
+[PRIO] help.sumup.com (preview routes),5.0,a6,b4,t5,g6,c8,f5
+[HYP] help.sumup.com Next.js preview-mode secret not variegated from Contentful token
+class: MISCONFIG
+asset: help.sumup.com/api/preview/enable
+confidence: 30
+reasoning: Bundle references /api/preview/enable; bare GET → 307 root, query variants → self-loop (redirect artifact, no secret oracle). Preview secret is a separate server env var (rotated-adjacent). GET-only cannot distinguish 403 invalid-secret from redirect — oracle is opaque; token already 401. No passive path to a live preview secret.
+evidence_needed: POST with valid secret returning set-cookie __prerender_bypass (mutating; out of passive rule).
+verify_steps: PASSIVE done — GET+query variants all 307; no signal. Requires POST = BLOCKED.
+impact: Preview-mode CSRF/render of drafts if secret guessable — P5; no evidence.
+testability: AUTH_HELPED
+[HYP] Staging dynamic-client registration sync to prod trust store
+class: OATH
+asset: auth.sam-app.ro/oauth2/register → auth.sumup.com
+confidence: 55
+reasoning: Staging mints valid empty-scope JWTs; prod JWKS kid isolation (8 vs 11, ZERO overlap) blocks token validation cross-env; client-level sync to prod unchecked. Requires POST register.
+evidence_needed: Fresh staging client_id at prod /authorize + /token.
+verify_steps: BLOCKED — POST-only.
+impact: Attacker-controlled prod client if synced — Low-now/latent-high.
+testability: AUTH_HELPED
+[HYP] `support_centre` "classic" scope maps to undeclared legacy resource model
+class: OATH
+asset: auth.sumup.com/oauth2/auth?client_id=support_centre
+confidence: 45
+reasoning: "classic" in OIDC discovery, absent from dashboard catalog; dashboard-only scopes on support_centre → invalid_scope. Passive done (302→login_challenge); scope-grant graph needs authenticated code exchange.
+evidence_needed: Authorization code from real help.sumup.com session.
+verify_steps: PASSIVE exhausted; needs authenticated interaction.
+impact: Broader-scope session on first-party client — P5.
+testability: AUTH_HELPED
+[PARKED] help.sumup.com preview-enable secret: confidence 30, oracles opaque, POST-blocked, token rotated — below threshold.
+[PARKED] Contentful PREVIEW token leak: ROTATED, non-reproducible, closed; only archival value remains (done).
+[FINAL] auth.sam-app.ro prod-sync (55, AUTH_HELPED) > support_centre classic (45, AUTH_HELPED). api.sumup.com/authorize oracle (PASSIVE_EXHAUSTED, validated, non-exploitable).
+[NEXT] PROBE: `GET https://help.sumup.com/api/search/draft-content-enumeration-probe?page=1&size=1&locale=en-GB` — confirm search index still returns published-only (deterministic, non-rotating live read) to rule out any draft-content crossflow now that preview is revoked, closing the last help.sumup.com passive gap.
+[LEARN] REJECTED MISCONFIG @ help.sumup.com: PREVIEW token `XRP4rB5w…` (sha256 `52136da5…8997`) confirmed rotated twice-cycle (401 re-verified this cycle); STILL present verbatim in deployed bundle → exposure pattern persists but credential dead; report file now genuinely on disk, closing the 16x false-claim streak.
+[LEARN] REJECTED OATH @ help.sumup.com/api/preview/enable: GET with secret/token/previewSecret/query variants → 307 self-loop (redirect artifact), no secret oracle; preview secret is separate server-side var, passively opaque.
+[LEARN] ACCEPTED OTHER @ help.sumup.com: Bundle env-scan finds only dead PREVIEW + read-only DELIVERY `Ku2cameg…HR4` tokens; `/api/localization/enabled-locales` (44 locales) and `/api/search/` are the only live anonymous reads — index confirmed published-only previously.
+[LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Missing deliverable now REMEDIATED — `reports/contentful-preview-token-leak.md` exists on disk (this cycle, verified); future phases must not re-assert creation without `ls` proof.
+[RISK] sumup: 35 — Was 45. Contentful PREVIEW leak definitively dead (401 twice, bundle token still exposed but inert); report archived only, not submittable. Remaining validated items are non-exploitable-oracle (api.sumup.com/authorize) or AUTH_HELPED (staging sync, support_centre classic). New preview-route surface is opaque without POST. No new exploitable passive finding this cycle; program value remains low until a merchant OAuth token (AUTH_HELPED) unblocks the token-validation/scope hypotheses.

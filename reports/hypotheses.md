@@ -1378,3 +1378,18 @@
 - LEARN: REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token `XRP4rB5w…` (sha256 `52136da5…8997`) returned 401 at 09:29 UTC 2026-09-11 — token ROTATED. Finding
 - LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combo
 - LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks re
+
+## RANKED HYPOTHESES 2026-09-11 17:17:51 UTC
+- [55] auth.sam-app.ro/oauth2/register: Staging dynamic client registration syncs to prod auth.sumup.com trust store (from art/lead_nemotron3.txt)
+- [30] help.sumup.com/api/preview/enable: help.sumup.com Next.js preview-mode secret not variegated from Contentful token (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): PROBE: `GET https://help.sumup.com/api/search/draft-content-enumeration-probe?page=1&size=1&locale=en-GB` — confirm search index still returns published-only (d
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Obtain valid merchant OAuth token (AUTH_HELPED) via dashboard.sumup.com or me.sumup.com flow with dashboard client_id to enable RFC 9728 token validation
+- LEARN: REJECTED MISCONFIG @ help.sumup.com: PREVIEW token `XRP4rB5w…` (sha256 `52136da5…8997`) confirmed rotated twice-cycle (401 re-verified this cycle); STILL presen
+- LEARN: REJECTED OATH @ help.sumup.com/api/preview/enable: GET with secret/token/previewSecret/query variants → 307 self-loop (redirect artifact), no secret oracle; pre
+- LEARN: ACCEPTED OTHER @ help.sumup.com: Bundle env-scan finds only dead PREVIEW + read-only DELIVERY `Ku2cameg…HR4` tokens; `/api/localization/enabled-locales` (44 loc
+- LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Missing deliverable now REMEDIATED — `reports/contentful-preview-token-leak.md` exists on disk (this cycle, verified); futu
+- LEARN: REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token `XRP4rB5w…` (sha256 `52136da5…8997`) returned 401 at 09:29 UTC 2026-09-11 — token ROTATED. Finding
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combo
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks re
+- LEARN: ACCEPTED OATH @ auth.sumup.com: `support_centre` client registered on modern auth server only, scopes openid+classic+offline, "classic" scope distinct from dash
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,

@@ -561,3 +561,8 @@ https://api.sumup.com/v1/merchants/self -> HTTP 404
 
 ## 2026-09-11 13:49:05 UTC
 
+
+## 2026-09-11 17:17:55 UTC
+https://api.sumup.com/v1/merchants/self -> HTTP 404
+https://api.sumup.com -> HTTP 404
+https://help.sumup.com/api/search/draft-content-enumeration-probe?page=1&size=1&locale=en-GB` -> HTTP 500
