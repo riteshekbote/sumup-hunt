@@ -1371,3 +1371,10 @@
 - LEARN: ACCEPTED MISCONFIG @ help.sumup.com: Report file finally written this cycle after 7+ KB false claims; token re-verified LIVE 2026-09-11 with exact counts in rep
 - LEARN: REJECTED OATH @ preview.contentful.com: Build-chunk absence of token (buildId 0UxyBtVWc3Go5wjuHzBDC) is NOT rotation — plaintext token still authenticates; keep
 - LEARN: ACCEPTED OATH @ auth.sumup.com: `support_centre` client registered on modern auth server only, scopes openid+classic+offline, "classic" scope distinct from dash
+
+## RANKED HYPOTHESES 2026-09-11 13:49:05 UTC
+- [10] help.sumup.com: Contentful PREVIEW token leak — ROTATED, finding closed (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): PROBE: Re-verify Contentful token rotation at `GET https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=1` with `Authorization: Bearer XRP4rB5wIBgOG
+- LEARN: REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token `XRP4rB5w…` (sha256 `52136da5…8997`) returned 401 at 09:29 UTC 2026-09-11 — token ROTATED. Finding
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combo
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks re

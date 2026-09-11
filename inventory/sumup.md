@@ -514,3 +514,5 @@ www.sumup.com
 - CHANGED api.sumup.com/.well-known/oauth-protected-resource RFC 9728 metadata static — recon surface exhausted; only untested gap is request-level aud validation (requires AUTH_HELPED)
 - CHANGED api.sumup.com/authorize legacy gateway: client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhausted (crt.sh 52 + ccTLD 96 + custom schemes = 0 HITs)
 - CHANGED read-api.sumup.com & sf-gateway-api.sumup.com: `/authorize` returns 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracle
+
+## 2026-09-11 13:49:05 UTC

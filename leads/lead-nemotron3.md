@@ -3073,3 +3073,4 @@ testability: AUTH_HELPED
 [LEARN] REJECTED OATH @ preview.contentful.com: Build-chunk absence of token (buildId 0UxyBtVWc3Go5wjuHzBDC) is NOT rotation — plaintext token still authenticates; keep probing token validity directly, not bundle presence.
 [LEARN] ACCEPTED OATH @ auth.sumup.com: `support_centre` client registered on modern auth server only, scopes openid+classic+offline, "classic" scope distinct from dashboard catalog — unexplorable passively.
 [RISK] sumup: 80 — Single confirmed P4 (Contentful PREVIEW token → 1,128 unpublished entries / 103 draft articles / 62 unpublished assets) is LIVE and report file is now genuinely on disk; token rotation is the only binding constraint → submit this cycle. Higher-impact chains (staging client sync, OAuth alg=none, RFC 9728 aud validation, support_centre scope model) all remain AUTH_HELPED and are blocked pending a merchant OAuth token.
+## 2026-09-11 13:48:54 UTC [target] (model nemotron3)
