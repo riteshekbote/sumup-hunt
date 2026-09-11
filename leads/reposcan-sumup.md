@@ -297,3 +297,12 @@ TARGET_ORG not configured for sumup; skipping public-org deep scan.
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
 ## REPOSCAN 2026-09-10 23:12:34 UTC
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-11 01:08:37 UTC
+[HYP] No repositories to audit — zero candidates configured
+class: OTHER
+asset: N/A
+confidence: 100
+reasoning: cands.txt states "no org candidates". scope.yml has github_orgs: ["none-configured"]. reposcan-raw/summary.txt confirms "TARGET_ORG not configured for sumup; skipping public-org deep scan." No repos are available for cloning or GitHub API inspection.
+impact: N/A
+verify_steps: N/A — no candidate repos exist to scan
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
