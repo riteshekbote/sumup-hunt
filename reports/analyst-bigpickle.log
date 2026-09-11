@@ -16412,3 +16412,105 @@ testability: AUTH_HELPED
 
 ## STEP 7 — RISK
 [RISK] sumup: 35 — Was 45. Contentful PREVIEW leak definitively dead (401 twice, bundle token still exposed but inert); report archived only, not submittable. Remaining validated items are non-exploitable-oracle (api.sumup.com/authorize) or AUTH_HELPED (staging sync, support_centre classic). New preview-route surface is opaque without POST. No new exploitable passive finding this cycle; program value remains low until a merchant OAuth token (AUTH_HELPED) unblocks the token-validation/scope hypotheses.
+===== ANALYST bigpickle 2026-09-11 19:56:11 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -sS -o /tmp/papi.txt -D - --max-time 15 "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback" | head -20; echo "---BODY---"; head -c 500 /tmp/papi.txt
+HTTP/2 302 
+date: Fri, 11 Sep 2026 19:50:58 GMT
+content-length: 0
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=Missing+%27client_id%27+or+%27response_type%27+or+%27response_type%27+isn%27t+equal+to+%27code%27.
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+x-envoy-upstream-service-time: 4
+server: cloudflare
+x-request-id: b9104e9d-3d93-9636-b0bc-d8af67602306
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+cf-cache-status: DYNAMIC
+set-cookie: optimizely_experiment_user=553ee3f8-098f-41a1-8633-9f75d5ba65e7; Path=/; Domain=sumup.com; Expires=Fri, 18 Sep 2026 19:50:58 GMT; Secure; SameSite=None
+set-cookie: __cf_bm=nK3lbWxMza7qGyzIx6on80V9BCOkENf4LAhGusKSu_g-1789156258.5708039-1.0.1.1-TJwQK9WKRTtTMnOf07OIRZjFLZDywK.LGuL3TcFtzymG.r2tg6fW8RUGVpPeaoDcOMMXEZOcj3ZL6aR1wuaN_w4V2Ioa6e5kUOkUVGjM1.IldXLoTLwQwYhLxwcfachR_lhITcfCBvZ.4jZA1lpmOw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Fri, 11 Sep 2026 20:20:58 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=nOGdzlsSJ6a1aOxY5mFzUSMgP%2Bxb9LtmVmjxcSYVb%2F6FyWq95F6fhlnL46FulqtIqzefQVhIVxQDT71ZR7OPDamMqviWcgBN1%2F41LoyUcjnBK%2Fc67OaRh7um3iC8tZ8%3D"}]}
+cf-ray: a39934580f0e7816-MSP
+
+---BODY---
+[0m
+[0m$ [0mcurl -sS -o /tmp/pauth.txt -D - --max-time 15 "https://auth.sumup.com/oauth2/auth?client_id=support_centre&redirect_uri=https://help.sumup.com/api/auth/callback&response_type=code" | head -20; echo "---BODY---"; head -c 400 /tmp/pauth.txt
+HTTP/2 303 
+date: Fri, 11 Sep 2026 19:50:59 GMT
+content-length: 0
+location: https://help.sumup.com/api/auth/callback?error=invalid_state&error_description=The+state+is+missing+or+does+not+have+enough+characters+and+is+therefore+considered+too+weak.+Request+parameter+%27state%27+must+be+at+least+be+8+characters+long+to+ensure+sufficient+entropy.&state=
+cache-control: no-store
+pragma: no-cache
+x-envoy-upstream-service-time: 3
+server: cloudflare
+x-request-id: 82c8eac3-de08-9a6b-952e-e23115f8f1c0
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+set-cookie: __cf_bm=m7H6VrV0eMDrOYMv1C.uittvRKbAQ5nj8Czj8Pr6IFc-1789156259.0252814-1.0.1.1-1s9ElQyrnCuclQ.U3UqrjjkMh7vvOLDx25A_qbg4QrbzLlxs7Bo9Gn7MnEUE3slgB66k7A5VGEl2mNk3Yzu1UWjjtQVCWRUjaebdNzbgYBSi5pQCU2ml1lC0sBn7SrTqDbToBTTcKzMeNowEVV_FNQ; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Fri, 11 Sep 2026 20:20:59 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=n12tfRupLNHTB21qbFIanWua5iAShNo7YCQTRU%2F5zo1uNBZbSS3VYbUtJRvU2qrIEPsoGifkHm4ttFCd6jkeuKt4%2BpIg8oD6xMD%2B5RcYlMCYjwB5NTyTIloAcxMAZGoO"}]}
+cf-ray: a399345aed6835c0-ORD
+
+---BODY---
+[0m
+[0m$ [0mcurl -sS -o /dev/null -D - --max-time 15 "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&state=12345678" | grep -iE "^location|^HTTP"
+HTTP/2 302 
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[0m
+STEP 1 — DELTA
+- [NO_DELTA] api.sumup.com/authorize: re-verified LIVE (302 error-flow); legacy/modern redirect-set divergence reconfirmed — dashboard + me.sumup.com/api/sso/callback rejected (redirect_uri mismatch w/ valid state), modern auth accepts same URI (303 invalid_state). Oracle + wildcard CORS + SameSite=None cookies unchanged.
+- [NO_DELTA] auth.sumup.com/oauth2/auth?client_id=support_centre: 303 invalid_state with valid redirect (state≥8 enforced) — strict allowlist intact, same divergence pattern as `dashboard`.
+
+STEP 2 — PRIORITIZE
+- [PRIO] api.sumup.com/authorize,6.5,a6,b7,t6,g8,c10,f5
+- [PRIO] auth.sam-app.ro/oauth2/register,6.0,a7,b5,t5,g9,c10,f4
+- [PRIO] auth.sumup.com/support_centre,6.0,a5,b8,t7,g4,c10,f5
+- [PRIO] api.sumup.com (RFC 9728 token-validation surface),5.0,a6,b8,t5,g3,c8,f3
+
+STEP 3 — HYPOTHESES
+[HYP] Staging dynamic-client registration syncs to prod trust store
+class: OATH
+asset: auth.sam-app.ro/oauth2/register → auth.sumup.com
+confidence: 55
+reasoning: Staging mints valid empty-scope JWTs via client_credentials; prod/staging JWKS kids ZERO overlap (8 vs 11) blocks token validation cross-env; client-level sync to prod provenance DB untested. Re-verified both live paths this cycle.
+evidence_needed: Fresh staging client_id presented to prod /authorize and /token.
+verify_steps: BLOCKED — needs POST /oauth2/register on staging; not passive.
+impact: Attacker-controlled prod client if synced — Low-now/latent-high.
+testability: AUTH_HELPED
+[HYP] `support_centre` "classic" scope maps to undeclared resource model
+class: OATH
+asset: auth.sumup.com/oauth2/auth?client_id=support_centre
+confidence: 40
+reasoning: "classic" in OIDC discovery, absent from dashboard catalog; dashboard-only scopes on support_centre → invalid_scope (dyadic re-verified); grant graph needs authenticated code exchange.
+evidence_needed: Auth code from real help.sumup.com session.
+verify_steps: PASSIVE exhausted (303 invalid_state); AUTH_HELPED.
+impact: Broader-scope session on first-party client — P5.
+testability: AUTH_HELPED
+[HYP] Request-level `aud` validation on api.sumup.com token check
+class: AUTH
+asset: api.sumup.com/{v0,v1}/MERCHANTS_PLACEHOLDER
+confidence: 35
+reasoning: RFC 9728 metadata static (resource=https://api.sumup.com, sole AS auth.sumup.com); only unobserved behavior is how gateway validates aud on a real merchant token. No token available → cannot test.
+evidence_needed: Valid merchant OAuth token (AUTH_HELPED).
+verify_steps: BLOCKED — token required; passive done.
+impact: Token accepted on unintended resource — P5; speculative.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] support_centre classic scope: no passive oracle beyond invalid_scope taxonomy; requires authenticated flow — keep at CONF 40, not actionable.
+- [PARKED] api.sumup.com aud-validation: pure speculation without merchant token; no passive probe distinguishes.
+- [FINAL] auth.sam-app.ro prod-sync (55, AUTH_HELPED) > support_centre classic (40, AUTH_HELPED). api.sumup.com/authorize oracle (PASSIVE_EXHAUSTED, re-verified, non-exploitable without legacy callback).
+
+STEP 5 — NEXT ACTION
+[NEXT] RAG: srch developer docs + sumup-go/sumup-dotnet/sumup-php for any reference to a legacy `dashboard` redirect host or the historical (pre-2020) SumUp dashboard URL (e.g. old app.sumup.com/my-account, dashboard.sumup.com angles) to break the legacy allowlist-host dead-end with a passive source not yet mined.
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Re-verified LIVE this cycle; legacy `dashboard` rejects modern me.sumup.com callback (redirect_uri mismatch) while modern auth.sumup.com accepts it — divergent registry is a stable, reproducible fact; oracle non-exploitable absent a valid legacy callback host.
+- [LEARN] ACCEPTED OATH @ auth.sumup.com: `support_centre` re-verified 303 invalid_state on the accepted redirect; state≥8 enforced; strict allowlist confirmed — no open redirect surface.
+- [LEARN] REJECTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS + SameSite=None + broad allow-methods unchanged but is hardening-only (no ambient creds, bearer-only token transport) — no token-theft path.
+
+STEP 7 — RISK
+- [RISK] sumup: 30 — Down from 35. Re-verification cycle produced zero fresh surface: legacy oracle and staging registration are status-quo AUTH_HELPED/non-exploitable; Contentful finding dead (rotated, archived). Program value remains pinned to obtaining a merchant OAuth token (HUMAN, AUTH_HELPED); no passive-only path yields a reportable finding at current surface.

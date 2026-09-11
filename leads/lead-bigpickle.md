@@ -3197,3 +3197,32 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OTHER @ help.sumup.com: Bundle env-scan finds only dead PREVIEW + read-only DELIVERY `Ku2cameg…HR4` tokens; `/api/localization/enabled-locales` (44 locales) and `/api/search/` are the only live anonymous reads — index confirmed published-only previously.
 [LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Missing deliverable now REMEDIATED — `reports/contentful-preview-token-leak.md` exists on disk (this cycle, verified); future phases must not re-assert creation without `ls` proof.
 [RISK] sumup: 35 — Was 45. Contentful PREVIEW leak definitively dead (401 twice, bundle token still exposed but inert); report archived only, not submittable. Remaining validated items are non-exploitable-oracle (api.sumup.com/authorize) or AUTH_HELPED (staging sync, support_centre classic). New preview-route surface is opaque without POST. No new exploitable passive finding this cycle; program value remains low until a merchant OAuth token (AUTH_HELPED) unblocks the token-validation/scope hypotheses.
+## 2026-09-11 19:51:21 UTC [target] (model bigpickle)
+[HYP] Staging dynamic-client registration syncs to prod trust store
+class: OATH
+asset: auth.sam-app.ro/oauth2/register → auth.sumup.com
+confidence: 55
+reasoning: Staging mints valid empty-scope JWTs via client_credentials; prod/staging JWKS kids ZERO overlap (8 vs 11) blocks token validation cross-env; client-level sync to prod provenance DB untested. Re-verified both live paths this cycle.
+evidence_needed: Fresh staging client_id presented to prod /authorize and /token.
+verify_steps: BLOCKED — needs POST /oauth2/register on staging; not passive.
+impact: Attacker-controlled prod client if synced — Low-now/latent-high.
+testability: AUTH_HELPED
+[HYP] `support_centre` "classic" scope maps to undeclared resource model
+class: OATH
+asset: auth.sumup.com/oauth2/auth?client_id=support_centre
+confidence: 40
+reasoning: "classic" in OIDC discovery, absent from dashboard catalog; dashboard-only scopes on support_centre → invalid_scope (dyadic re-verified); grant graph needs authenticated code exchange.
+evidence_needed: Auth code from real help.sumup.com session.
+verify_steps: PASSIVE exhausted (303 invalid_state); AUTH_HELPED.
+impact: Broader-scope session on first-party client — P5.
+testability: AUTH_HELPED
+[HYP] Request-level `aud` validation on api.sumup.com token check
+class: AUTH
+asset: api.sumup.com/{v0,v1}/MERCHANTS_PLACEHOLDER
+confidence: 35
+reasoning: RFC 9728 metadata static (resource=https://api.sumup.com, sole AS auth.sumup.com); only unobserved behavior is how gateway validates aud on a real merchant token. No token available → cannot test.
+evidence_needed: Valid merchant OAuth token (AUTH_HELPED).
+verify_steps: BLOCKED — token required; passive done.
+impact: Token accepted on unintended resource — P5; speculative.
+testability: AUTH_HELPED
+[NEXT] RAG: srch developer docs + sumup-go/sumup-dotnet/sumup-php for any reference to a legacy `dashboard` redirect host or the historical (pre-2020) SumUp dashboard URL (e.g. old app.sumup.com/my-account, dashboard.sumup.com angles) to break the legacy allowlist-host dead-end with a passive source not yet mined.
