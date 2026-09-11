@@ -3226,3 +3226,4 @@ verify_steps: BLOCKED — token required; passive done.
 impact: Token accepted on unintended resource — P5; speculative.
 testability: AUTH_HELPED
 [NEXT] RAG: srch developer docs + sumup-go/sumup-dotnet/sumup-php for any reference to a legacy `dashboard` redirect host or the historical (pre-2020) SumUp dashboard URL (e.g. old app.sumup.com/my-account, dashboard.sumup.com angles) to break the legacy allowlist-host dead-end with a passive source not yet mined.
+## 2026-09-11 22:23:23 UTC [target] (model bigpickle)

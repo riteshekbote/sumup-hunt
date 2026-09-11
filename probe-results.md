@@ -576,3 +576,13 @@ https://auth.sumup.com/oauth2/auth?client_id={staging_client_id -> HTTP 405
 https://me.sumup.com/api/sso/callback&response_type=code&scope=openid -> HTTP 404
 https://auth.sumup.com/oauth2/auth?client_id=support_centre&redirect_uri=https://help.sumup.com/api/auth/callback&response_type=code&scope=openid+classic+offline -> HTTP 405
 https://api.sumup.com -> HTTP 404
+
+## 2026-09-11 22:25:53 UTC
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://api.sumup.com/v1/merchants/self -> HTTP 404
+https://auth.sumup.com/oauth2/auth?client_id={staging_client_id -> HTTP 405
+https://me.sumup.com/api/sso/callback&response_type=code&scope=openid -> HTTP 404
+https://auth.sumup.com/oauth2/auth?client_id=support_centre&redirect_uri=https://help.sumup.com/api/auth/callback&response_type=code&scope=openid+classic+offline -> HTTP 405
+https://api.sumup.com -> HTTP 404

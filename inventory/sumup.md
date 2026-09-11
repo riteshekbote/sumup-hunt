@@ -528,3 +528,5 @@ www.sumup.com
 - CHANGED Contentful PREVIEW token `XRP4rB5w…` (sha256 `52136da5…8997`) returned 401 at 09:29 UTC 2026-09-11 — token ROTATED, finding closed
 - CHANGED api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combos: crt.sh 52 + ccTLD 96 + custom schemes + bare paths = 
 - CHANGED auth.sam-app.ro: Dynamic client registration LIVE (RFC 7591 unauthenticated POST → 201); mints real JWTs via client_credentials (empty scp, attacker-controlled aud); cross-env JWKS isolation confirmed
+
+## 2026-09-11 22:25:39 UTC
