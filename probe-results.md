@@ -551,3 +551,10 @@ https://auth.sumup.com -> HTTP 403
 https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
 https://api.sumup.com -> HTTP 404
 https://api.sumup.com/v1/merchants/self -> HTTP 404
+
+## 2026-09-11 09:18:39 UTC
+https://help.sumup.com/ -> 200 len=167350
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/v1/merchants/self -> HTTP 404

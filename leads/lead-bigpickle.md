@@ -3090,3 +3090,33 @@ testability: AUTH_HELPED
 [LEARN] REJECTED OATH @ preview.contentful.com: Build-chunk absence of token (buildId 0UxyBtVWc3Go5wjuHzBDC) is NOT rotation — plaintext token still authenticates; keep probing token validity directly, not bundle presence.
 [LEARN] ACCEPTED OATH @ auth.sumup.com: `support_centre` client registered on modern auth server only, scopes openid+classic+offline, "classic" scope distinct from dashboard catalog — unexplorable passively.
 [RISK] sumup: 80 — Single confirmed P4 (Contentful PREVIEW token → 1,128 unpublished entries / 103 draft articles / 62 unpublished assets) is LIVE and report file is now genuinely on disk; token rotation is the only binding constraint → submit this cycle. Higher-impact chains (staging client sync, OAuth alg=none, RFC 9728 aud validation, support_centre scope model) all remain AUTH_HELPED and are blocked pending a merchant OAuth token.
+## 2026-09-11 09:04:27 UTC [target] (model bigpickle)
+[HYP] Contentful PREVIEW token leak — report on disk, submission pending
+class: MISCONFIG
+asset: help.sumup.com → preview.contentful.com/spaces/214q1nptnllb
+confidence: 95
+reasoning: Leaked Preview API token verified LIVE 2026-09-11 (preview 9,543 / CDN 8,864; 103 draft articles; 49 unpublished assets; invalid-token 401 control; environments 404). Report file genuinely on disk (3,869 bytes) with full reproduction + evidence. Only remaining step is program submission; token may rotate.
+evidence_needed: Submission at program Jira form; triage ticket number.
+verify_steps: HUMAN_ONLY — submit https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 using on-disk report.
+impact: Unauthenticated read of 679 unpublished entries / 103 draft articles / 49 unpublished assets (P4, read-only, space-bounded).
+testability: HUMAN_ONLY
+[HYP] Staging dynamic-client registration sync to prod auth.sumup.com trust store
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 55
+reasoning: Staging mints valid empty-scope JWTs via client_credentials; JWKS kid isolation proven (prod 8 vs staging 11 keys, ZERO overlap); client-level sync to prod provenance DB untested. Requires POST register (passive-only rule blocks).
+evidence_needed: Fresh staging client_id presented to prod authorize/token endpoints.
+verify_steps: BLOCKED — needs POST /oauth2/register on staging; not passive.
+impact: Attacker-controlled client on prod if synced — Low-now/latent-high.
+testability: AUTH_HELPED
+[HYP] `support_centre` "classic" scope maps to undeclared legacy resource model
+class: OATH
+asset: auth.sumup.com/oauth2/auth?client_id=support_centre
+confidence: 45
+reasoning: "classic" scope in OIDC discovery, absent from dashboard catalog; adding dashboard-only scopes to support_centre → invalid_scope; distinct scope model. No passive path to enumerate "classic" grants without authenticated code exchange.
+evidence_needed: Authorization code from real help.sumup.com session, or request_object grant discovery.
+verify_steps: PASSIVE done (302→login_challenge); next requires authenticated interaction.
+impact: Potential broader-scope session on first-party client; P5-informational.
+testability: AUTH_HELPED
+[NEXT] HUMAN: **SUBMIT NOW** — Open https://bugs-olivermaicher.atlassian.net/jira/software/form/563ad9fc-8e82-41f1-bab4-2396b07d47b9 and paste `reports/contentful-preview-token-leak.md` (3,869 bytes, on disk this cycle — no longer a KB phantom). Token `XRP4rB5w…` verified LIVE 2026-09-11 (sha256 `52136da5…8997`, preview 9,543 vs CDN 8,864; 103 draft articles; 49 unpublished assets). Submit before rotation.
+[RISK] sumup: 82 — Contentful PREVIEW token leak is LIVE-today and reportable; the single binding constraint was the report file, which now genuinely exists on disk → submission is the only remaining action this cycle. Higher-impact chains (staging client sync, OAuth alg=none, RFC 9728 aud validation, support_centre classic scope) all remain AUTH_HELPED pending a merchant OAuth token, and no new passive surface emerged since the callback-host enumeration closure.
