@@ -322,3 +322,33 @@ TARGET_ORG not configured for sumup; skipping public-org deep scan.
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
 ## REPOSCAN 2026-09-12 05:50:25 UTC
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-12 09:57:27 UTC
+[HYP] Hardcoded Postman Collection UUID in CI Workflow
+class: MISCONFIG
+asset: sumup-postman/.github/workflows/upload-postman.yaml:32
+confidence: 40
+reasoning: The `POSTMAN_COLLECTION_ID` is defined as a secret-derived env var on line 27 (`${{ secrets.POSTMAN_COLLECTION_ID }}`) but the curl command on line 32 hardcodes the UUID `646ec366-4881-41f6-9ec1-c19e9b22ddb7` directly in the URL instead of using `${POSTMAN_COLLECTION_ID}`. This makes the secret definition dead code and the UUID permanently exposed. The UUID alone is not credential material (it identifies a public Postman collection), but the pattern is a misconfiguration that could mask a real secret leak if the variable were later used for sensitive data.
+impact: Low
+verify_steps: Confirm the UUID maps to a publicly listed SumUp Postman collection at https://www.postman.com/sumup; verify the secret `POSTMAN_COLLECTION_ID` is not referenced elsewhere; check if the collection is public or private via Postman API.
+[HYP] Weak Default Credentials in Plugin Example Configs
+class: MISCONFIG
+asset: sumup-plugin-vendure/examples/docker/example.env, sumup-plugin-medusa/examples/docker/example.env
+confidence: 65
+reasoning: Both plugin example `.env` files ship with `supersecret` as the default value for `COOKIE_SECRET`, `SESSION_SECRET`, `SUPERADMIN_PASSWORD`, `MEDUSA_ADMIN_PASSWORD`, and `POSTGRES_PASSWORD`. The Vendure config also uses `process.env.SUPERADMIN_PASSWORD || "supersecret"` as a fallback in `vendure-config.ts:19`. While these are example files clearly marked with comments like "REPLACE_ME", developers who copy them without modification will deploy with known-weak credentials in local/staging environments. The fallback pattern in the code means even without the env file, production could fall back to `supersecret`.
+impact: Medium (local/staging only; depends on developer discipline)
+verify_steps: Check if any deployed instance at `*.sumup.com` or internal staging hosts uses the `supersecret` fallback; verify the vendure-config.ts fallback path is unreachable in production deployments.
+[HYP] Wildcard CORS on Production MCP Server
+class: OTHER
+asset: sumup-mcp/src/config.ts:10
+confidence: 50
+reasoning: The Cloudflare Worker serving `https://mcp.sumup.com/mcp` sets `Access-Control-Allow-Origin: *` in `CORS_HEADERS`. This allows any website to make cross-origin requests to the MCP endpoint. While the endpoint requires a valid Bearer JWT (verified via JWKS), the wildcard CORS means any malicious page can attempt authentication and interact with the MCP API on behalf of a user who has a valid token in their browser context. This is a deliberate design choice for a public MCP server, but expands the attack surface for CSRF-like token-forwarding attacks.
+impact: Low-Medium (mitigated by JWT auth; impacts token-bearing clients only)
+verify_steps: Verify `Access-Control-Allow-Origin: *` is returned by `curl -I https://mcp.sumup.com/mcp`; confirm JWT audience/issuer binding is enforced (it is per auth.ts:80-86).
+[HYP] Internal Staging Hostnames Exposed in Test Files
+class: OTHER
+asset: sumup-mcp/src/auth.test.ts:21, sumup-mcp/src/sumup-agent.test.ts:21, sumup-mcp/src/worker.test.ts:13
+confidence: 25
+reasoning: Test files reference internal hostnames: `mcp-theta.sam-app.ro`, `mcp-beta.sam-app.ro`, `auth.sam-app.ro`. These reveal the existence and naming pattern of SumUp's internal staging infrastructure. While not a secret, this information could be useful for targeted phishing or social engineering against SumUp employees.
+impact: Very Low (informational only; hostnames are not credentials)
+verify_steps: Confirm these hostnames resolve to internal/private IPs; verify they are not accessible from the public internet.
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
