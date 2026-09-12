@@ -20071,3 +20071,450 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] sumup: 35 — Cycle yield is closure+recon only: dashboard scope model fully closed (14/16 rejected), /token route and doc-placeholder IDs reconfirmed, spec 16-scope/anon-alternative model documented. No reportable finding; Contentful leak remains rotated/closed (valid-bugs.md=0 filed; report file verified ABSENT via ls this cycle — no re-assertions). Top three survivors (aud 75, receipts/BOLA 45, staging-sync 45) still AUTH_HELPED / POST-blocked; no passive path substitutes a merchant token. Flat until HUMAN unblocks.
+===== ANALYST bigpickle 2026-09-12 18:51:51 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mecho "== api.sumup.com/.well-known/jwks.json body =="; curl -s --max-time 15 -A "Mozilla/5.0" "https://api.sumup.com/.well-known/jwks.json" | head -c 600; echo; sleep 1.2; echo "== auth.sumup.com jwks kid count =="; curl -s --max-time 15 -A "Mozilla/5.0" "https://auth.sumup.com/.well-known/jwks.json" | tr ',' '\n' | grep -c '"kid"'
+== api.sumup.com/.well-known/jwks.json body ==
+{
+	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",
+	"title": "Not Found",
+	"status": 404,
+	"detail": "Resource not found"
+}
+
+== auth.sumup.com jwks kid count ==
+8
+[0m
+[0m$ [0mfor u in \
+ https://api.sumup.com/.well-known/jwks.json \
+ https://api.sumup.com/.well-known/mcp.json \
+ https://api.sumup.com/swagger.json \
+ https://api.sumup.com/openapi.json \
+ https://api.sumup.com/api-docs \
+ https://api.sumup.com/docs \
+ https://api.sumup.com/health \
+ https://api.sumup.com/healthz \
+ https://api.sumup.com/version \
+ https://api.sumup.com/info \
+ https://api.sumup.com/v1/health \
+ https://api.sumup.com/status ; do
+  code=$(curl -s -o /dev/null -w "%{http_code} %{content_type}" --max-time 15 -A "Mozilla/5.0" "$u"); echo "$code | $u"; sleep 1.2
+done
+404 application/json | https://api.sumup.com/.well-known/jwks.json
+404 application/json | https://api.sumup.com/.well-known/mcp.json
+404 application/json | https://api.sumup.com/swagger.json
+404 application/json | https://api.sumup.com/openapi.json
+404 application/json | https://api.sumup.com/api-docs
+404 application/json | https://api.sumup.com/docs
+404 application/json | https://api.sumup.com/health
+404 application/json | https://api.sumup.com/healthz
+404 application/json | https://api.sumup.com/version
+404 application/json | https://api.sumup.com/info
+404 application/json | https://api.sumup.com/v1/health
+404 application/json | https://api.sumup.com/status
+[0m
+[0m$ [0mecho "== legacy gateway token OPTIONS =="; curl -s -D - -o /dev/null -X OPTIONS --max-time 15 -A "Mozilla/5.0" "https://api.sumup.com/token" | head -20
+== legacy gateway token OPTIONS ==
+HTTP/2 204 
+date: Sat, 12 Sep 2026 18:49:30 GMT
+access-control-allow-origin: api.sumup.com
+access-control-allow-headers: *
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 7d3689d6-8310-908d-a388-7a111bf26229
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=L_uuUK2YRmxgsLY5byFirpuinkTGF4WvXtBvFskJxWI-1789238970.0867176-1.0.1.1-Hks06CCBG1ZfKvzlgHfEuN6WTTYxywGj8Ib2zK8JZZDlm8.f0qlzdK4l_5mb9RTVk_PRgfyn9.ps_PedTw0xR9BfeKspW07xLodCre8Z.CSaW5CUlSjyrspbw4PbA6CGd2f5GWx2.4rQtVBgZ3RDWw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 19:19:30 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=cw4XkjJNbmBLvnydUwS5jnsYsrufFrLtOl%2BT08xn49JPnc3v%2FCSZohYll7o7dpL4D5rNu6RT4u9BJuDZvfCSiI9xjQOwJa3b3cAUd9%2F0eLjcCHoyWq7bwsTZgfLo9lg%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a3a117ab0824cf09-SJC
+[0m
+[0m$ [0mfor cfg in "openapi.yml" "openapi.yaml" "openapi.json"; do
+  for br in "main" "master"; do
+    code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "https://raw.githubusercontent.com/sumup/sumup-openapi/$br/$cfg"); echo "$code raw/$br/$cfg"; 
+  done
+done; sleep 0
+404 raw/main/openapi.yml
+404 raw/master/openapi.yml
+200 raw/main/openapi.yaml
+200 raw/master/openapi.yaml
+200 raw/main/openapi.json
+200 raw/master/openapi.json
+[0m
+[0m$ [0mcd /tmp/opencode 2>/dev/null || mkdir -p /tmp/opencode && cd /tmp/opencode
+curl -s --max-time 20 "https://raw.githubusercontent.com/sumup/sumup-openapi/main/openapi.yaml" -o sumup_openapi.yaml
+wc -l sumup_openapi.yaml
+echo "== servers =="; grep -n -A3 "^servers:" sumup_openapi.yaml | head -20
+echo "== securitySchemes =="; grep -n -B2 -A8 "securitySchemes:" sumup_openapi.yaml | head -40
+echo "== example client ids / dashboard refs =="; grep -niE "client_id|client-secret|bearer|api.?key|X-.*Key|authorization" sumup_openapi.yaml | head -30
+8789 sumup_openapi.yaml
+== servers ==
+12:servers:
+13-  - url: https://api.sumup.com
+14-    description: Production server
+15-tags:
+== securitySchemes ==
+8552-        type: string
+8553-        example: 410fc44a-5956-44e1-b5cc-19c6f8d727a4
+8554:  securitySchemes:
+8555-    apiKey:
+8556-      description: |-
+8557-        API keys allow you easily interact with SumUp APIs. API keys are static tokens. You can create API keys from the [Dashboard](https://me.sumup.com/settings/api-keys)
+8558-      type: http
+8559-      scheme: Bearer
+8560-    oauth2:
+8561-      type: oauth2
+8562-      description: |-
+== example client ids / dashboard refs ==
+8:    You can experiment and work on your integration in a sandbox that doesn't affect your regular data and doesn't process real transactions. To create a sandbox merchant account visit the [dashboard](https://me.sumup.com/settings/developer). To use the sandbox when interacting with SumUp APIs [create an API](https://me.sumup.com/settings/api-keys) key and use it for [authentication](https://developer.sumup.com/api/authentication).
+184:        - apiKey: []
+200:        - apiKey: []
+438:        - apiKey: []
+505:        - apiKey: []
+567:        - apiKey: []
+651:        - apiKey: []
+982:        - apiKey: []
+1143:        - apiKey: []
+1154:        - apiKey: []
+1267:        - apiKey: []
+1333:        - apiKey: []
+1416:        - apiKey: []
+1499:        - apiKey: []
+1586:        - apiKey: []
+1708:        - apiKey: []
+1809:        - apiKey: []
+2054:        - apiKey: []
+2192:        - apiKey: []
+2249:                  authorization_code: '053201'
+2378:        - apiKey: []
+2393:        - apiKey: []
+2594:        - apiKey: []
+2633:        - apiKey: []
+2764:        - apiKey: []
+2815:        - apiKey: []
+2937:        - apiKey: []
+2996:        - apiKey: []
+3041:        - apiKey: []
+3136:        - apiKey: []
+[0m
+[0m$ [0mcd /tmp/opencode
+sed -n '8554,8630p' sumup_openapi.yaml
+echo "== empty-scope / oauth2:[] ops =="
+grep -nE "oauth2: \[\]" sumup_openapi.yaml
+securitySchemes:
+    apiKey:
+      description: |-
+        API keys allow you easily interact with SumUp APIs. API keys are static tokens. You can create API keys from the [Dashboard](https://me.sumup.com/settings/api-keys)
+      type: http
+      scheme: Bearer
+    oauth2:
+      type: oauth2
+      description: |-
+        SumUp supports [OAuth 2.0](https://tools.ietf.org/html/rfc6749) authentication for platforms that want to offer their services to SumUp users.
+
+        To integrate via OAuth 2.0 you will need a client credentials that you can create in the [SumUp Dashboard](https://me.sumup.com/settings/oauth2-applications).
+
+        To maintain security of our users, we highly recommend that you use one of the [recommended OAuth 2.0 libraries](https://oauth.net/code/) for authentication.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.sumup.com/authorize
+          tokenUrl: https://api.sumup.com/token
+          refreshUrl: https://api.sumup.com/token
+          scopes:
+            payments: Make payments by creating and processing checkouts.
+            checkouts.read: View checkouts.
+            checkouts.write: Create, process, and deactivate checkouts.
+            transactions.history: View transactions and transaction history.
+            transactions.read: View transactions and transaction history.
+            refunds.write: Refund transactions.
+            receipts.read: View receipts.
+            user.profile_readonly: View user profile details.
+            user.profile: View and manage your user profile.
+            user.app-settings: View and manage the SumUp mobile application settings.
+            payment_instruments: Manage customers and their payment instruments.
+            customers.read: View customers and their payment instruments.
+            customers.write: Create and manage customers and their payment instruments.
+            user.payout-settings: View and manage your payout settings.
+            payouts.read: View payouts.
+            user.subaccounts: View and manage the user profile details of your employees.
+        clientCredentials:
+          tokenUrl: https://api.sumup.com/token
+          scopes:
+            payments: Make payments by creating and processing checkouts.
+            checkouts.read: View checkouts.
+            checkouts.write: Create, process, and deactivate checkouts.
+            transactions.history: View transactions and transaction history.
+            transactions.read: View transactions and transaction history.
+            refunds.write: Refund transactions.
+            receipts.read: View receipts.
+            user.profile_readonly: View user profile details.
+            user.profile: View and manage your user profile.
+            user.app-settings: View and manage the SumUp mobile application settings.
+            payment_instruments: Manage customers and their payment instruments.
+            customers.read: View customers and their payment instruments.
+            customers.write: Create and manage customers and their payment instruments.
+            user.payout-settings: View and manage your payout settings.
+            payouts.read: View payouts.
+            user.subaccounts: View and manage the user profile details of your employee.
+  examples:
+    CreatedReader:
+      summary: A reader that waits for the physical device to acknowledge the pairing.
+      value:
+        id: rdr_3MSAFM23CK82VSTT4BN6RWSQ65
+        name: Frontdesk
+        status: processing
+        device:
+          identifier: U1DT3NA00-CN
+          model: solo
+        created_at: "2023-05-09T14:50:20.214Z"
+        updated_at: "2023-05-09T14:52:58.714Z"
+  links:
+    UpdateReaderByID:
+      operationId: UpdateReader
+      parameters:
+        reader_id: "$response.body#/id"
+      description: >-
+        Update the reader object. This can be used to set a name after using this endpoint to verify the pairing code.
+    DeleteReaderByID:
+      operationId: DeleteReader
+      parameters:
+== empty-scope / oauth2:[] ops ==
+185:        - oauth2: []
+1144:        - oauth2: []
+[0m
+[0m$ [0mcd /tmp/opencode
+sed -n '160,200p' sumup_openapi.yaml
+echo "==== line 1040-1160 ===="
+sed -n '1060,1160p' sumup_openapi.yaml
+examples:
+                success:
+                  description: Available payment methods
+                  value:
+                    available_payment_methods:
+                      - id: apple_pay
+                      - id: blik
+        '400':
+          description: The request is invalid for the submitted query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailsError'
+              examples:
+                Invalid_Parameter:
+                  description: One or more of the parameters are invalid.
+                  value:
+                    failed_constraints:
+                      - message: >-
+                          Currency must also be specified when filtering by amount
+                        reference: currency
+                    status: 400
+                    title: Bad Request
+      security:
+        - apiKey: []
+        - oauth2: []
+  /v0.1/checkouts:
+    post:
+      operationId: CreateCheckout
+      summary: Create a checkout
+      description: |-
+        Creates a new payment checkout resource. The unique `checkout_reference` created by this request, is used for further manipulation of the checkout.
+
+        For 3DS checkouts, add the `redirect_url` parameter to your request body schema.
+        To use the [Hosted Checkout](https://developer.sumup.com/online-payments/checkouts/hosted-checkout/) page, set the `hosted_checkout.enabled` to `true`.
+
+        Follow by processing a checkout to charge the provided payment instrument.
+      tags:
+        - Checkouts
+      security:
+        - apiKey: []
+==== line 1040-1160 ====
+        session object that your frontend should pass to Apple's JavaScript API.
+      tags:
+        - Checkouts
+      parameters:
+        - name: checkout_id
+          in: path
+          required: true
+          description: Unique identifier of the checkout resource.
+          schema:
+            type: string
+            example: 4e425463-3e1b-431d-83fa-1e51c2925e99
+      x-codegen:
+        method_name: create_apple_pay_session
+      x-scopes: []
+      requestBody:
+        description: The data needed to create an apple pay session for a checkout.
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - context
+                - target
+              properties:
+                context:
+                  type: string
+                  description: the context to create this apple pay session.
+                  format: hostname
+                  example: example.com
+                target:
+                  type: string
+                  description: The target url to create this apple pay session.
+                  format: uri
+                  example: https://apple-pay-gateway-cert.apple.com/paymentservices/startSession
+      responses:
+        '200':
+          description: |
+            Successful request. Returns the Apple Pay merchant session object
+            that should be forwarded to the Apple Pay JS SDK to complete merchant
+            validation and continue the payment flow.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                displayName: Test Account
+                domainName: pay.sumup.com
+                epochTimestamp: 1775323532665
+                expiresAt: 1775327132665
+                merchantIdentifier: 7801D328E6637EFC1ADE6CE01C671D2CD318E32CA4ED1F9FC390D170D827D9AB
+                merchantSessionIdentifier: SSH92CC412E5FCF4FAB88684914C953C0D4_916523AAED1343F5BC5815E12BEE9250AFFDC1A17C46B0DE5A943F0F94927C24
+                nonce: a968a2bf
+                operationalAnalyticsIdentifier: Test Account:7801D328E6637EFC1ADE6CE01C671D2CD318E32CA4ED1F9FC390D170D827D9AB
+                pspId: 7801D328E6637EFC1ADE6CE01C671D2CD318E32CA4ED1F9FC390D170D827D9AB
+                retries: 0
+                signature: <apple-pay-signature>
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Error'
+                  - type: array
+                    description: List of error messages.
+                    items:
+                      $ref: '#/components/schemas/Error'
+              example:
+                error_code: INVALID
+                message: Bad Request
+        '404':
+          description: The requested resource does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Not_Found:
+                  description: The identified resource is not found on the server.
+                  value:
+                    error_code: NOT_FOUND
+                    message: Resource not found
+      security:
+        - apiKey: []
+        - oauth2: []
+  /v0.1/customers:
+    post:
+      operationId: CreateCustomer
+      summary: Create a customer
+      description: |-
+        Creates a new saved customer resource which you can later manipulate and save payment instruments to.
+      tags:
+        - Customers
+      security:
+        - apiKey: []
+        - oauth2:
+            - payment_instruments
+            - customers.write
+      x-codegen:
+        method_name: create
+      x-scopes:
+[0m
+[0m$ [0mcd /tmp/opencode
+echo "== spec: sandbox references =="; grep -niE "sandbox|staging|prelive|test-?api|pre-?prod" sumup_openapi.yaml | head -20
+echo "== spec: first empty-scope op path (lines 100-160) =="; sed -n '96,160p' sumup_openapi.yaml | grep -nE "^  /|operationId|summary" | head
+== spec: sandbox references ==
+8:    You can experiment and work on your integration in a sandbox that doesn't affect your regular data and doesn't process real transactions. To create a sandbox merchant account visit the [dashboard](https://me.sumup.com/settings/developer). To use the sandbox when interacting with SumUp APIs [create an API](https://me.sumup.com/settings/api-keys) key and use it for [authentication](https://developer.sumup.com/api/authentication).
+2430:        - name: resource.attributes.sandbox
+2432:          description: Filter memberships by the sandbox status of the resource the membership is in.
+6813:            sandbox:
+6815:              description: True if the merchant is a sandbox for testing.
+== spec: first empty-scope op path (lines 100-160) ==
+8:  /v0.1/merchants/{merchant_code}/payment-methods:
+10:      operationId: GetPaymentMethods
+11:      summary: Get available payment methods
+[0m
+[0m$ [0mfor h in api-sandbox.sumup.com sandbox-api.sumup.com sandbox.sumup.com auth-sandbox.sumup.com staging-api.sumup.com prelive-api.sumup.com; do
+  ip=$(dig +short "$h" 2>/dev/null | tr '\n' ' ')
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 -A "Mozilla/5.0" "https://$h/" 2>/dev/null)
+  echo "$code | $ip | $h"; sleep 1
+done
+000 |  | api-sandbox.sumup.com
+000 |  | sandbox-api.sumup.com
+000 |  | sandbox.sumup.com
+000 |  | auth-sandbox.sumup.com
+000 |  | staging-api.sumup.com
+000 |  | prelive-api.sumup.com
+[0m
+STEP 1 — DELTA
+- [NEW] api.sumup.com: uniform structured `problem+json` 404 across `/.well-known/jwks.json`, `/.well-known/mcp.json`, `/swagger.json`, `/openapi.json`, `/api-docs`, `/docs`, `/health`, `/healthz`, `/version`, `/info`, `/status`, `/v1/health`, `/mcp.json` — single-route-table gateway fully closed (only RFC 9728 + security.txt routed).
+- [NEW] api.sumup.com/token OPTIONS 204 re-verified: `access-control-allow-origin: api.sumup.com` (NOT `*`, diverges from `/authorize` wildcard), `access-control-allow-headers: *`, identity.svc operation — token issuance routes via `identity` service.
+- [NEW] Official spec (fresh `main/openapi.yaml`, 8789 lines): documents BOTH `authorizationCode` AND `clientCredentials` flows at `https://api.sumup.com/{authorize,token}` with full prod legacy scope catalog; `apiKey` Bearer scheme on every op; exactly 2 ops declared `oauth2: []` — `GET /v0.1/merchants/{merchant_code}/payment-methods` (already closed: anonymous static catalog) and `PUT /v0.2/checkouts/{checkout_id}/apple-pay-session` (`x-scopes: []`, requestBody `{context: hostname, target: uri}`).
+- [NEW] Sandbox is a merchant-attribute on the same host (`merchant.sandbox` + `memberships resource.attributes.sandbox` filter), NOT a separate host — 5 candidates (`api-sandbox`,`sandbox-api`,`sandbox`,`auth-sandbox`,`staging-api`,`prelive-api`.sumup.com) all NXDOMAIN.
+
+STEP 2 — PRIORITIZE
+- [PRIO] api.sumup.com/token (clientCredentials), 6.35, a=7 b=9 t=7 g=0 c=7 f=6
+- [PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session, 5.55, a=6 b=8 t=5 g=0 c=6 f=7
+- [PRIO] auth.sumup.com/oauth2/auth client_id oracle, 5.20, a=5 b=8 t=7 g=0 c=5 f=4
+
+STEP 3 — HYPOTHESES
+[HYP] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session — server-side fetch of attacker-chosen `target` uri + no per-op scope binding (x-scopes [])
+class: BUSLOGIC
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 45
+reasoning: Sole living `oauth2:[]` op in official spec; route live (OPTIONS 204, GET→404, PUT-only); `target` is an arbitrary uri passed into the merchant-session creation flow (spec example `https://apple-pay-gateway-cert.apple.com/paymentservices/startSession`); checkout_id is not inbound merchant-scoped; combined empty-scope + foreign checkout_id = BOLA, arbitrary target = SSRF class when server fetches it.
+evidence_needed: PUT with any-scope token on foreign checkout_id returning non-401 processing (BOLA), or 200 session echoed for target=http://169.254.169.254/… (SSRF).
+verify_steps: AUTH_HELPED: PUT with merchant token on {own, then foreign} checkout_id, target=https://attacker.tld — compare gated vs non-gated; then target=169.254.169.254/latest/meta-data/.
+impact: Cross-tenant checkout interference + potential internal/metadata fetch in a payment-critical path — HIGH if confirmed.
+testability: AUTH_HELPED
+[HYP] Legacy api.sumup.com/token clientCredentials flow enforces weaker client auth than modern auth.sumup.com
+class: AUTH
+asset: api.sumup.com/token
+confidence: 45
+reasoning: Official spec documents clientCredentials at prod /token routed via identity service (OPTIONS 204, wildcard allow-headers); staging twin (auth.sam-app.ro) proven to mint real JWTs via client_secret_post WITHOUT enforcing declared auth_method; prod token_endpoint_auth_methods included "none"; gateway's JWT scope enforcement never observed on prod.
+evidence_needed: client_credentials POST at api.sumup.com/token with client_id=dashboard (or merchant-registered) accepting a weaker/absent secret and returning an access_token.
+verify_steps: AUTH_HELPED: POST grant_type=client_credentials&client_id={known}&scope=transactions.history with/without client_secret → compare 200 token vs invalid_client; confirm returned token accepted on GET /v1/merchants/{own}.
+impact: Token minting for a first-party/high-scope client → full merchant API access — CRITICAL if real.
+testability: AUTH_HELPED
+[HYP] Staging RFC 7591 dynamic-client registry syncs to prod auth.sumup.com trust store
+class: OATH
+asset: auth.sumup.com/oauth2/auth (client_id oracle)
+confidence: 45
+reasoning: Staging registration unauthenticated (201); cross-env JWKS isolation (ZERO kid overlap) proven, but client-registry sync is a separate control never exercised against prod's live oracle (unknown→invalid_client, known→303/302).
+evidence_needed: fresh staging-registered client_id non-invalid_client on prod /oauth2/auth.
+verify_steps: BLOCKED — needs POST /oauth2/register (not passive); if unblocked, GET auth.sumup.com/oauth2/auth?client_id={fresh}&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid.
+impact: Attacker-controlled prod-registered client → latent-high, low now.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] jwks.json/health/spec endpoints on api.sumup.com: uniform 404 structured — single-route-table gateway; no evidence surface, dropped.
+- [PARKED] sandbox API host: 5 candidates NXDOMAIN; sandbox is same-host merchant flag — no separate surface, dropped.
+- [PARKED] /authorize CORS wildcard vs /token ACAO=api.sumup.com: divergence is cosmetic (identity vs authorize config), no read-anywhere since ACAO≠`*` on token.
+- [FINAL] aud/iss binding (75, existing top survivor) → api.sumup.com/v1/merchants/{merchant_code}; apple-pay-session empty-scope+target-fetch (45); /token clientCredentials enforcement (45, NEW); prod/staging registry sync (45).
+
+STEP 5 — NEXT ACTION
+- [NEXT] RAG: enumerate public SumUp repos (github.com/sumup/sumup-mcp wrangler/env + any legacy SDK/terraform) for prod client_id/client_secret references or a merchant-registered OAuth application ID that the legacy `api.sumup.com/authorize` + `/token` pair will accept — passive, may unblock the /token clientCredentials hypothesis without a HUMAN credential.
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED OTHER @ api.sumup.com: gateway route table now exhaustively mapped — 13 additional paths (jwks.json, mcp.json, swagger/openapi/api-docs/docs, health/healthz/version/info/status/v1/health) all structured 404; only RFC 9728 + security.txt routed.
+- [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/token: OPTIONS 204 routes to `apigateway2-headless.identity.svc` with ACAO=api.sumup.com + allow-headers:* (endpoint-specific CORS — not wildcard like /authorize); identity service confirmed as legacy token issuer.
+- [LEARN] ACCEPTED OTHER @ developer.sumup.com spec: official OpenAPI documents an `authorizationCode` AND `clientCredentials` flow pair on the prod legacy endpoints, apiKey Bearer on every op, and exactly 2 `oauth2:[]` ops (payment-methods closed-static, apple-pay-session x-scopes [] with attacker-controlled context/target).
+- [LEARN] ACCEPTED BUSLOGIC @ sandbox: sandbox is a merchant-level flag (`merchant.sandbox`, memberships filter) on the same api.sumup.com host — no dedicated sandbox/staging/prelive hostname exists in public DNS.
+- [LEARN] REJECTED OATH @ api.sumup.com: no client_id attendible via spec — spec contains no client identifiers/secrets; legacy oracle candidates remain dashboard-only.
+
+STEP 7 — RISK
+- [RISK] sumup: 35 — Recon-only yield: gateway route table fully closed (13 paths 404), spec refreshed (clientCredentials flow documented, 2 empty-scope ops pinned), sandbox host hypothesis refuted (same-host flag). No reportable finding; top survivors (aud/iss 75, apple-pay 45, /token 45, staging-sync 45) all still AUTH_HELPED/POST-blocked on a merchant token or a leaked client credential. No integrity regressions (report-file presence not asserted without ls). Flat until a credential path is unblocked.

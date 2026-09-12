@@ -3461,3 +3461,65 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combos, 0 HITs); legacy allowlist host not recoverable from any passive surface
 [LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks resource access; prod sync untestable passively
 [RISK] sumup: 75 — Contentful P4 finding closed (token rotated). Highest remaining risk: RFC 9728 token validation surface on api.sumup.com (confidence 75, AUTH_HELPED) could yield cross-resource-server access to payment APIs if aud/claim validation is flawed. Staging dynamic registration (auth.sam-app.ro) is LIVE but cross-env JWKS isolation (ZERO kid overlap) currently blocks token relay; client-level sync to prod provenance DB untested. Legacy OAuth gateway (api.sumup.com/authorize) has client_id oracle + wildcard CORS but callback enumeration exhausted (0 HITs). `support_centre` client on modern auth server introduces new scope model ("classic") but unexplorable without auth. Two spec-documented empty-scope operations (payment-methods, receipts) are BOLA targets blocked on merchant token. All critical paths require merchant OAuth token (AUTH_HELPED).
+## 2026-09-12 18:49:26 UTC [target] (model nemotron3)
+[NEW] `developer.sumup.com/api` — official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public: 42 operations, exact paths, per-op scopes, apiKey scheme, legacy OAuth pair (authorize+token on api.sumup.com)
+[NEW] `api.sumup.com/token` — legacy token endpoint ROUTED (OPTIONS 204 + structured 404 on GET, wildcard CORS, identity.svc operation) — documented in spec, live on gateway
+[NEW] `auth.sumup.com/oauth2/auth` — scope-acceptance oracle disambiguated: 302 login_challenge=allowed vs 303 invalid_scope; dashboard allows readers.read/terminals.read, rejects all 13 REST spec scopes
+[NEW] `auth.sumup.com` — `support_centre` allowlist exactly {openid, classic, offline}; classic+any scope → invalid_scope; scope oracle exhausted
+[NEW] `api.sumup.com` spec — GET /v0.1/merchants/{merchant_code}/payment-methods and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session declared oauth2:[] (empty-scope BOLA targets)
+[CHANGED] `auth.sumup.com/.well-known/openid-configuration` returns 405 on HEAD (GET works)
+[CHANGED] `auth.sumup.com/oauth2/auth?client_id=support_centre` returns 405 on HEAD (GET returns 302→login_challenge)
+[CHANGED] Contentful PREVIEW token rotated (401) — finding CLOSED, non-reproducible; report file never existed despite KB hallucinations
+[CHANGED] `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
+[PRIO] api.sumup.com/.well-known/oauth-protected-resource → api.sumup.com/v1/*, 7.5, attack_surface=8 business_value=9 tech_exposure=9 gate_ease=1 cloud_surface=7 freshness=6
+[PRIO] auth.sam-app.ro/oauth2/register, 8.2, attack_surface=9 business_value=6 tech_exposure=9 gate_ease=10 cloud_surface=8 freshness=8
+[PRIO] auth.sumup.com/oauth2/auth?client_id=support_centre, 7.5, attack_surface=7 business_value=7 tech_exposure=8 gate_ease=10 cloud_surface=7 freshness=6
+[PRIO] api.sumup.com/authorize, 7.1, attack_surface=7 business_value=6 tech_exposure=8 gate_ease=10 cloud_surface=6 freshness=5
+[PRIO] api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods, 6.8, attack_surface=7 business_value=8 tech_exposure=8 gate_ease=1 cloud_surface=7 freshness=6
+[PRIO] api.sumup.com/v1.1/receipts/{transaction_id}, 6.5, attack_surface=7 business_value=8 tech_exposure=7 gate_ease=1 cloud_surface=7 freshness=6
+[PRIO] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session, 6.3, attack_surface=6 business_value=7 tech_exposure=8 gate_ease=1 cloud_surface=7 freshness=6
+[PRIO] mcp.sumup.com, 5.7, attack_surface=6 business_value=6 tech_exposure=7 gate_ease=2 cloud_surface=7 freshness=6
+[HYP] RFC 9728 token validation on api.sumup.com permits audience/claim confusion
+class: AUTH
+asset: api.sumup.com/.well-known/oauth-protected-resource → api.sumup.com/v1/*
+confidence: 75
+reasoning: RFC 9728 metadata declares sole auth_server=https://auth.sumup.com, bearer_methods_supported=["header"], jwks_uri=https://auth.sumup.com/.well-known/jwks.json. Gateway returns structured problem+json vs plain 404 with/without JWT — validates JWT structure but aud claim, scope enforcement, and key selection logic untested without valid merchant token. Cross-resource-server token relay (staging→prod) blocked by JWKS kid isolation (ZERO overlap), but aud validation on same auth server unproven.
+evidence_needed: Valid merchant JWT (AUTH_HELPED) replayed against v1/merchants/self with manipulated aud claim; token issued for one resource accepted by another; key confusion via JWKS kid mismatch
+verify_steps: PASSIVE: GET https://api.sumup.com/.well-known/oauth-protected-resource (confirmed 200 static metadata). AUTH_HELPED: Obtain merchant OAuth token via dashboard.sumup.com flow (client_id=dashboard). GET https://api.sumup.com/v1/merchants/self with valid token → baseline 200. Replay same token with aud claim modified to "https://api.sam-app.ro" → observe 401/403. Test staging token (from auth.sam-app.ro client_credentials) against prod api.sumup.com → expect 401 "no applicable key". Test empty-scope token vs required scope → observe 403 vs 200.
+impact: Token relay / audience confusion → cross-environment or cross-resource-server access to merchant payment APIs (transactions, payouts, readers, api_keys) — CRITICAL
+testability: AUTH_HELPED
+[HYP] Empty-scope OAuth token reaches GET /v0.1/merchants/{merchant_code}/payment-methods of any merchant (documented oauth2:[])
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 45
+reasoning: Official OpenAPI spec marks this operation oauth2:[] (no scope required); staging dynamic clients yield real JWTs with empty scp; gateway distinguishes valid vs absent JWT (structured problem vs plain 404) but per-operation scope enforcement untested; endpoint exposes payment-method PII.
+evidence_needed: Token with empty/any scope returning 200 on a non-owned merchant_code
+verify_steps: AUTH_HELPED: mint any-scope merchant token via dashboard or registered app; GET https://api.sumup.com/v0.1/merchants/{other_merchant_code}/payment-methods → 200(leak) vs 404/403(gated); repeat on apple-pay-session PUT
+impact: Cross-tenant read of merchant payment-method metadata — CRITICAL if confirmed
+testability: AUTH_HELPED
+[HYP] Cross-tenant receipt disclosure via /v1.1/receipts/{transaction_id} (no merchant scoping in path)
+class: IDOR
+asset: api.sumup.com/v1.1/receipts/{transaction_id}
+confidence: 45
+reasoning: Official OpenAPI spec routes this operation keyed solely on transaction_id (no merchant_code/person scope); receipts contain merchant+customer PII; endpoint is objectively reachable on prod only via token, so ownership binding to token subject is the sole control; pattern candidates (SumUp historically filed such receipt/BOLA cases publicly).
+evidence_needed: 200 with another merchant's receipt for a non-owned transaction_id
+verify_steps: AUTH_HELPED: with own token, GET own receipt → dump transaction_id shape; then GET /v1.1/receipts/{other_transaction_id} → 200(leak) vs 403/404(scoped)
+impact: Cross-tenant merchant/customer PII read — CRITICAL if confirmed
+testability: AUTH_HELPED
+[PARKED] Staging dynamic client registration syncs to prod auth.sumup.com trust store: confidence 50 but verify_steps require POST /oauth2/register (not passive); cross-env JWKS isolation (ZERO kid overlap) makes sync unlikely but unproven
+[PARKED] `support_centre` "classic" scope grants undeclared legacy API resources: confidence 45 but verify_steps require authenticated code exchange; no passive enumeration path
+[PARKED] Merchant-registered legacy OAuth app (api.sumup.com pair) mints REST-scope JWT: confidence 45 but verify_steps require merchant OAuth app registration + authorization code flow (AUTH_HELPED)
+[FINAL] RFC 9728 token validation on api.sumup.com permits audience/claim confusion: confidence 75, survives, AUTH_HELPED — highest-value testable surface once merchant token obtained
+[FINAL] Empty-scope OAuth token reaches GET /v0.1/merchants/{merchant_code}/payment-methods of any merchant: confidence 45, survives, AUTH_HELPED — spec-documented oauth2:[] op, BOLA target
+[FINAL] Cross-tenant receipt disclosure via /v1.1/receipts/{transaction_id}: confidence 45, survives, AUTH_HELPED — spec-documented no-merchant-scope op, BOLA target
+[NEXT] HUMAN: Obtain valid merchant OAuth token (AUTH_HELPED) via dashboard.sumup.com or me.sumup.com flow with dashboard client_id to enable RFC 9728 token validation testing against api.sumup.com/v1/*, and test empty-scope BOLA on /v0.1/merchants/{merchant_code}/payment-methods and /v1.1/receipts/{transaction_id}
+[LEARN] ACCEPTED OTHER @ developer.sumup.com/api: official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public — full 42-op production model incl. exact paths, per-op scopes, apiKey scheme, and legacy OAuth endpoint pair (authorize+token on api.sumup.com); highest-value passive recon of this cycle
+[LEARN] ACCEPTED OATH @ api.sumup.com/token: legacy token endpoint ROUTED (OPTIONS 204 + structured 404 on GET, wildcard CORS, identity.svc operation) — documented in official spec, live on gateway; not previously probed
+[LEARN] ACCEPTED OATH @ auth.sumup.com/oauth2/auth: scope-acceptance oracle disambiguated (302 login_challenge=allowed vs 303 invalid_scope); dashboard allows readers.read/terminals.read, rejects all 13 REST spec scopes — modern dashboard scope set is closed
+[LEARN] ACCEPTED OATH @ auth.sumup.com: support_centre allowlist is exactly {openid, classic, offline}; classic+any scope → invalid_scope; scope oracle for support_centre exhausted
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com spec: GET /v0.1/merchants/{merchant_code}/payment-methods and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session declared oauth2:[] — empty-scope BOLA targets for AUTH_HELPED gating test
+[LEARN] REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token rotated (401) — finding non-reproducible; report file never existed despite KB hallucinations
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combos, 0 HITs); legacy allowlist host not recoverable from any passive surface
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks resource access; prod sync untestable passively
+[LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, JWKS URI; no resource_scopes/audience-oracle field; recon surface exhausted
+[RISK] sumup: 75 — Contentful P4 finding closed (token rotated). Highest remaining risk: RFC 9728 token validation surface on api.sumup.com (confidence 75, AUTH_HELPED) could yield cross-resource-server access to payment APIs if aud/claim validation is flawed. Staging dynamic registration (auth.sam-app.ro) is LIVE but cross-env JWKS isolation (ZERO kid overlap) currently blocks token relay; client-level sync to prod provenance DB untested. Legacy OAuth gateway (api.sumup.com/authorize) has client_id oracle + wildcard CORS but callback enumeration exhausted (0 HITs). `support_centre` client on modern auth server introduces new scope model ("classic") but unexplorable without auth. Two spec-documented empty-scope operations (payment-methods, receipts) are BOLA targets blocked on merchant token. All critical paths require merchant OAuth token (AUTH_HELPED).

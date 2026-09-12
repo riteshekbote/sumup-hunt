@@ -1,30 +1,28 @@
-## 2026-09-12 16:28:40 UTC [target] (model bigpickle)
-[HYP] RFC 9728 aud/iss claim binding on api.sumup.com gateway
-class: AUTH
-asset: api.sumup.com/v1/merchants/{merchant_code}
-confidence: 75
-reasoning: Metadata static with sole AS auth.sumup.com; gateway proves JWT-presence differentiation (structured problem+json vs plain 404) and now proves sig/alg binding (garbage→401, header token→404); spec documents a SECOND authz path (http apiKey Bearer) on every op — ≥2 validation paths to confuse; only aud/iss/kid-claim binding remains unobserved.
-evidence_needed: valid merchant JWT re-encoded with aud=https://api.sam-app.ro then =attacker.com yielding 200 vs 401/403 — proves aud not bound at request time.
-verify_steps: AUTH_HELPED: GET /v1/merchants/{own_code} with original token (baseline 200); same token with aud-mutated header → 200(confusion) vs 401(bound); repeat iss auth.sam-app.ro.
-impact: Token bound to staging/other-surface aud accepted for prod account access — CRITICAL if real.
+## 2026-09-12 18:51:42 UTC [target] (model bigpickle)
+[HYP] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session — server-side fetch of attacker-chosen `target` uri + no per-op scope binding (x-scopes [])
+class: BUSLOGIC
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 45
+reasoning: Sole living `oauth2:[]` op in official spec; route live (OPTIONS 204, GET→404, PUT-only); `target` is an arbitrary uri passed into the merchant-session creation flow (spec example `https://apple-pay-gateway-cert.apple.com/paymentservices/startSession`); checkout_id is not inbound merchant-scoped; combined empty-scope + foreign checkout_id = BOLA, arbitrary target = SSRF class when server fetches it.
+evidence_needed: PUT with any-scope token on foreign checkout_id returning non-401 processing (BOLA), or 200 session echoed for target=http://169.254.169.254/… (SSRF).
+verify_steps: AUTH_HELPED: PUT with merchant token on {own, then foreign} checkout_id, target=https://attacker.tld — compare gated vs non-gated; then target=169.254.169.254/latest/meta-data/.
+impact: Cross-tenant checkout interference + potential internal/metadata fetch in a payment-critical path — HIGH if confirmed.
 testability: AUTH_HELPED
-[HYP] Staging RFC 7591 dynamic-client registry syncs to prod auth.sumup.com
+[HYP] Legacy api.sumup.com/token clientCredentials flow enforces weaker client auth than modern auth.sumup.com
+class: AUTH
+asset: api.sumup.com/token
+confidence: 45
+reasoning: Official spec documents clientCredentials at prod /token routed via identity service (OPTIONS 204, wildcard allow-headers); staging twin (auth.sam-app.ro) proven to mint real JWTs via client_secret_post WITHOUT enforcing declared auth_method; prod token_endpoint_auth_methods included "none"; gateway's JWT scope enforcement never observed on prod.
+evidence_needed: client_credentials POST at api.sumup.com/token with client_id=dashboard (or merchant-registered) accepting a weaker/absent secret and returning an access_token.
+verify_steps: AUTH_HELPED: POST grant_type=client_credentials&client_id={known}&scope=transactions.history with/without client_secret → compare 200 token vs invalid_client; confirm returned token accepted on GET /v1/merchants/{own}.
+impact: Token minting for a first-party/high-scope client → full merchant API access — CRITICAL if real.
+testability: AUTH_HELPED
+[HYP] Staging RFC 7591 dynamic-client registry syncs to prod auth.sumup.com trust store
 class: OATH
 asset: auth.sumup.com/oauth2/auth (client_id oracle)
 confidence: 45
-reasoning: Staging registration live unauthenticated (201, PKCE+redirect-allowlist enforced there); cross-env JWKS isolation (ZERO kid overlap) proven but client-registry sync is a separate control never exercised against prod's live oracle; unknown IDs → invalid_client, known → 303/further — oracle is cheap and validated.
-evidence_needed: fresh staging-registered client_id accepted (non-invalid_client) on prod /oauth2/auth.
-verify_steps: BLOCKED — needs POST /oauth2/register (not passive); if unblocked, GET prod auth?client_id={fresh}&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid.
-impact: Attacker-controlled prod-registered client → token minting for any victim merchant — latent-high.
+reasoning: Staging registration unauthenticated (201); cross-env JWKS isolation (ZERO kid overlap) proven, but client-registry sync is a separate control never exercised against prod's live oracle (unknown→invalid_client, known→303/302).
+evidence_needed: fresh staging-registered client_id non-invalid_client on prod /oauth2/auth.
+verify_steps: BLOCKED — needs POST /oauth2/register (not passive); if unblocked, GET auth.sumup.com/oauth2/auth?client_id={fresh}&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid.
+impact: Attacker-controlled prod-registered client → latent-high, low now.
 testability: AUTH_HELPED
-[HYP] Cross-tenant receipt disclosure via /v1.1/receipts/{transaction_id}
-class: IDOR
-asset: api.sumup.com/v1.1/receipts/{transaction_id}
-confidence: 45
-reasoning: Spec routes this op keyed solely by global transaction_id (no merchant_code inbound scoping); merchant+customer PII payload; scopes receipts.read/transactions.history; ownership binding to token subject is the sole control; same pattern class predates in SumUp's own public history.
-evidence_needed: 200 with non-owned transaction_id returning another merchant's receipt.
-verify_steps: AUTH_HELPED: GET own receipt → recover transaction_id shape; GET /v1.1/receipts/{foreign_id} → 200(leak) vs 403/404(scoped).
-impact: Cross-tenant merchant/customer PII read — CRITICAL if confirmed.
-testability: AUTH_HELPED
-[NEXT] HUMAN: Obtain one merchant OAuth token (register app at me.sumup.com/settings/oauth2-applications, scopes transactions.history+receipts.read, or complete dashboard login) then in ONE session: (1) baseline GET /v1/merchants/{own_code}; (2) re-encode JWT aud→https://api.sam-app.ro and →attacker.com, re-GET → RFC 9728 aud-binding test; (3) GET own receipt then /v1.1/receipts/{foreign_txn} → BOLA test; (4) PUT /v0.2/checkouts/{bogus}/apple-pay-session → empty-scope authz test. Single blocking dependency for all three survivors.
-[RISK] sumup: 35 — Cycle yield is closure+recon only: dashboard scope model fully closed (14/16 rejected), /token route and doc-placeholder IDs reconfirmed, spec 16-scope/anon-alternative model documented. No reportable finding; Contentful leak remains rotated/closed (valid-bugs.md=0 filed; report file verified ABSENT via ls this cycle — no re-assertions). Top three survivors (aud 75, receipts/BOLA 45, staging-sync 45) still AUTH_HELPED / POST-blocked; no passive path substitutes a merchant token. Flat until HUMAN unblocks.
