@@ -622,3 +622,17 @@ https://auth.sumup.com/oauth2/auth?client_id=support_centre&redirect_uri=https:/
 https://api.sumup.com -> HTTP 404
 https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
 https://api.sumup.com/authorize -> HTTP 404
+
+## 2026-09-12 13:18:50 UTC
+https://auth.sumup.com` -> ERR <urlopen error [Errno -2] Name or service not know
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://api.sumup.com/v1/merchants/self -> HTTP 404
+https://auth.sumup.com/oauth2/auth?client_id={staging_client_id -> HTTP 405
+https://me.sumup.com/api/sso/callback&response_type=code&scope=openid -> HTTP 404
+https://auth.sumup.com/oauth2/auth?client_id=support_centre&redirect_uri=https://help.sumup.com/api/auth/callback&response_type=code&scope=openid+classic+offline -> HTTP 405
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com/authorize -> HTTP 404
+https://mcp.sumup.com -> HTTP 404

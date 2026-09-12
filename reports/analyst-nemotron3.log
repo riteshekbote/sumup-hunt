@@ -10368,3 +10368,328 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, dev-docs link; no resource_scopes/audience-oracle field; recon surface exhausted.
 
 [RISK] sumup: 75 — Contentful P4 finding closed (token rotated). Highest remaining risk: RFC 9728 token validation surface on api.sumup.com (confidence 75, AUTH_HELPED) could yield cross-resource-server access to payment APIs if aud/claim validation is flawed. Staging dynamic registration (auth.sam-app.ro) is LIVE but cross-env JWKS isolation (ZERO kid overlap) currently blocks token relay; client-level sync to prod provenance DB untested. Legacy OAuth gateway (api.sumup.com/authorize) has client_id oracle + wildcard CORS but callback enumeration exhausted (0 HITs). `support_centre` client on modern auth server introduces new scope model ("classic") but unexplorable without auth. All critical paths require merchant OAuth token (AUTH_HELPED).
+===== ANALYST nemotron3 2026-09-12 13:18:33 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mcurl -s -I "https://api.sumup.com/.well-known/oauth-protected-resource" 2>&1 | head -20
+HTTP/2 200 
+date: Sat, 12 Sep 2026 13:09:49 GMT
+content-type: application/json
+content-length: 286
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 9ddd401e-ef3a-9abc-9e88-5a8f8954f3a8
+x-envoy-upstream-service-time: 1
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=jkleestNzrxj6kNwiiaiawT._UAWIVqrL0kTXF38hdk-1789218589.2564704-1.0.1.1-ofKJ0k3krSNM3JmdcmkNngeyAbGp4PPC8je9l6ql9KmU6pX8ZUAOeCvI.SpS.wNxifm9kxA0ZPJ.8uPg2rorrhBJAeNDkiBxYdWgSgKlYTGAcUUi45QX35WJmNHsJwbX78RQ9VrbCFy8uYlHVOy9NQ; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 13:39:49 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=7TGeR3%2FjK77p1hBjLhtX9Z5V%2BjyyPPrUmhpcaY6EpuWLelzkUqsYY9%2FJfOGfS0pHiHbVwkRZ8obq1d82dyU3GxTAEDtbqS8%2B8jGtHaOyO0Z3Xy%2FPPP7NySdZT6wMbpU%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a39f2616df701734-IAD
+[0m
+[0m$ [0mcurl -s -I "https://auth.sumup.com/.well-known/openid-configuration" 2>&1 | head -20
+HTTP/2 405 
+date: Sat, 12 Sep 2026 13:09:50 GMT
+content-type: text/plain; charset=utf-8
+content-length: 19
+allow: GET, OPTIONS
+x-content-type-options: nosniff
+x-envoy-upstream-service-time: 2
+server: cloudflare
+x-request-id: 1e1ca3c8-c71f-9d85-b4a5-22b8ab0664fb
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=ZA8GeSNGSIyNvEUpPTt0qFFgRQ17lMWu04wiuCazoyc-1789218589.7342367-1.0.1.1-bUfX4WaQOV.wj7pBIFwGCwRLyZt1HXRhpCFAuwI4KGQjaInyeshW8imbiDz7_SRvx4TrCyhjm6nU9enzGQsEduhcv9EONA6np4EZKASa7i.gRTfiYZEhUn2UFQkU3Iwm3WlFQPjydul7Xo58xHKAIQ; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 13:39:50 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=BYRswJaYS42Wb4Byfj5V2Ah%2FgmcxEv4l9sgWaEk5zbgGXy%2BEK4ZYEfz%2Fjl3reAXfMGQmPaVKJQ2zuRr9JrH7DzTnV3qTdea7GTYbnI%2F3SvwvAvaYZgB13zHxM3qGq5lT"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a39f2619dc14d6e9-IAD
+[0m
+[0m$ [0mcurl -s -I "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid" 2>&1 | head -30
+HTTP/2 404 
+date: Sat, 12 Sep 2026 13:09:50 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: dacee6a5-94a1-93ae-9879-d7f8288fa810
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=L90ozDRhbVoCPNSDVBHOaDuncF5nu4v.JsQIo676M3Y-1789218590.4738944-1.0.1.1-MEmoWi.45xBW7YwTcRrFlDRgLYC7..YoMhhMMLjIW7D_N.odnNJvtXrpeBmhnpMrYE4NgMoct8ke9Ow4x87VsdtDdY8uheTzAng6ZnQqEILoWMT7h8fUGLo6qpI.QTjQ3cMm29O5BY0nBnQeQmegiw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 13:39:50 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=EnOLQT8SJCKlk1irBCHoAX%2Fs%2ByV1Y%2FEN91pJWf32196DSSG%2B2cm4dDLtGleWAefV0iAxrvVBzhroaXxx1XLgEmKgM6YTARW5PqgBF%2BWXsjXSIPV2AO9jVKkqWVKJZhw%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a39f261e785974e8-IAD
+[0m
+[0m$ [0mcurl -s -I "https://auth.sam-app.ro/.well-known/openid-configuration" 2>&1 | head -20
+HTTP/2 404 
+date: Sat, 12 Sep 2026 13:09:51 GMT
+vary: Origin
+x-envoy-upstream-service-time: 26
+server: cloudflare
+x-request-id: 5ee0ad95-c0f8-9d92-8304-f8cf01012e44
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=GTqsWuUKYP99JlzIohpv2CrvGNdyYoAOmMiEz1oz560-1789218591.110831-1.0.1.1-l.3zeGzOnjUIFLU1YBwqYbmFH5fukmL9oi.H4ndEM9tJX47FV0l3NINCi70GUFLJ6bmkXy3wv9AiztyBJzbFOz0otSt1VkfUVEqJgIOsKj7Iq2Vnfeyc2Vq9JN6hPgtu; HttpOnly; SameSite=None; Secure; Path=/; Domain=sam-app.ro; Expires=Sat, 12 Sep 2026 13:39:51 GMT
+cf-ray: a39f26226b0925cc-IAD
+[0m
+[0m$ [0mcurl -s "https://api.sumup.com/.well-known/oauth-protected-resource" 2>&1
+{
+	"resource_name": "SumUp API",
+	"resource": "https://api.sumup.com",
+	"authorization_servers": ["https://auth.sumup.com"],
+	"bearer_methods_supported": ["header"],
+	"jwks_uri": "https://auth.sumup.com/.well-known/jwks.json",
+	"resource_documentation": "https://developer.sumup.com"
+}
+[0m
+[0m$ [0mcurl -s "https://auth.sumup.com/.well-known/openid-configuration" 2>&1
+{"issuer":"https://auth.sumup.com/","authorization_endpoint":"https://auth.sumup.com/oauth2/auth","token_endpoint":"https://auth.sumup.com/oauth2/token","jwks_uri":"https://auth.sumup.com/.well-known/jwks.json","subject_types_supported":["public"],"response_types_supported":["code","code id_token","id_token","token id_token","token","token id_token code"],"claims_supported":["sub","iss","exp","iat"],"grant_types_supported":["authorization_code","implicit","client_credentials","refresh_token"],"response_modes_supported":["query","fragment"],"userinfo_endpoint":"https://auth.sumup.com/userinfo","scopes_supported":["offline_access","offline","openid","email","classic"],"token_endpoint_auth_methods_supported":["client_secret_post","client_secret_basic","private_key_jwt","none"],"userinfo_signing_alg_values_supported":["none","RS256"],"id_token_signing_alg_values_supported":["RS256"],"request_parameter_supported":true,"request_uri_parameter_supported":true,"require_request_uri_registration":true,"claims_parameter_supported":false,"revocation_endpoint":"https://auth.sumup.com/oauth2/revoke","backchannel_logout_supported":true,"backchannel_logout_session_supported":true,"frontchannel_logout_supported":true,"frontchannel_logout_session_supported":true,"end_session_endpoint":"https://auth.sumup.com/oauth2/sessions/logout","request_object_signing_alg_values_supported":["RS256","none"],"code_challenge_methods_supported":["plain","S256"],"nonce_endpoint":"https://auth.sumup.com/oauth2/nonce"}
+[0m
+[0m$ [0mcurl -s "https://auth.sam-app.ro/.well-known/openid-configuration" 2>&1
+{
+  "issuer": "https://auth.sam-app.ro",
+  "authorization_endpoint": "https://auth.sam-app.ro/oauth2/auth",
+  "token_endpoint": "https://auth.sam-app.ro/oauth2/token",
+  "jwks_uri": "https://auth.sam-app.ro/.well-known/jwks.json",
+  "registration_endpoint": "https://auth.sam-app.ro/oauth2/register",
+  "scopes_supported": [
+    "offline_access",
+    "members.read",
+    "members.write",
+    "merchants.read",
+    "merchants.write",
+    "roles.read",
+    "roles.write",
+    "checkouts.read",
+    "checkouts.write",
+    "customers.read",
+    "customers.write",
+    "api_keys.read",
+    "api_keys.write",
+    "receipts.read",
+    "refunds.write",
+    "transactions.read",
+    "payouts.read",
+    "readers.read",
+    "readers.write",
+    "sales.read"
+  ],
+  "response_types_supported": [
+    "code",
+    "code id_token",
+    "id_token",
+    "token id_token",
+    "token",
+    "token id_token code"
+  ],
+  "response_modes_supported": [
+    "query"
+  ],
+  "grant_types_supported": [
+    "authorization_code",
+    "client_credentials",
+    "refresh_token",
+    "urn:ietf:params:oauth:grant-type:device_code"
+  ],
+  "token_endpoint_auth_methods_supported": [
+    "client_secret_post",
+    "private_key_jwt",
+    "none"
+  ],
+  "token_endpoint_auth_signing_alg_values_supported": [
+    "RS256",
+    "EdDSA"
+  ],
+  "dpop_signing_alg_values_supported": [
+    "RS256",
+    "RS384",
+    "RS512",
+    "PS256",
+    "PS384",
+    "PS512",
+    "ES256",
+    "ES384",
+    "ES512"
+  ],
+  "service_documentation": "https://developer.sumup.com/tools/authorization/oauth",
+  "ui_locales_supported": [],
+  "revocation_endpoint": "https://auth.sam-app.ro/oauth2/revoke",
+  "code_challenge_methods_supported": [
+    "S256"
+  ],
+  "subject_types_supported": [
+    "public"
+  ],
+  "claims_supported": [
+    "sub",
+    "iss",
+    "exp",
+    "iat"
+  ],
+  "userinfo_endpoint": "https://auth.sam-app.ro/userinfo",
+  "userinfo_signing_alg_values_supported": [
+    "none",
+    "RS256"
+  ],
+  "id_token_signing_alg_values_supported": [
+    "RS256",
+    "EdDSA"
+  ],
+  "request_parameter_supported": true,
+  "request_uri_parameter_supported": true,
+  "require_request_uri_registration": true,
+  "backchannel_logout_supported": true,
+  "backchannel_logout_session_supported": true,
+  "frontchannel_logout_supported": true,
+  "frontchannel_logout_session_supported": true,
+  "end_session_endpoint": "https://auth.sam-app.ro/oauth2/sessions/logout",
+  "request_object_signing_alg_values_supported": [
+    "RS256",
+    "none"
+  ],
+  "nonce_endpoint": "https://auth.sam-app.ro/oauth2/nonce",
+  "device_authorization_endpoint": "https://auth.sam-app.ro/oauth2/device",
+  "pushed_authorization_request_endpoint": "https://auth.sam-app.ro/oauth2/par"
+}
+[0m
+[0m$ [0mcurl -s -I "https://auth.sumup.com/oauth2/auth?client_id=support_centre&redirect_uri=https://help.sumup.com/api/auth/callback&response_type=code&scope=openid+classic+offline" 2>&1 | head -20
+HTTP/2 405 
+date: Sat, 12 Sep 2026 13:10:27 GMT
+content-type: text/plain; charset=utf-8
+content-length: 19
+allow: GET, OPTIONS, POST
+x-content-type-options: nosniff
+x-envoy-upstream-service-time: 3
+server: cloudflare
+x-request-id: 254284c8-8b21-9baf-a8ed-21b68229e609
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=7FZ5Rc1ntaw.GQ_AFkCnnrN6DIQYEAfQhVpCOaEXDIQ-1789218626.6763792-1.0.1.1-_Dj.pQ5gByEEzbOxd0dg.qhNrEcX6LZDh8bzRKq2gwpnFKyOecHmVdNgtaeuuOU87cnewrQrpTPCn8kGdiO3ku_tWji98aW5bUhsVqLM33YSC_oBKUt_IL4yaOTcOksAT7w_z4kJG0EK36sqjcIQWg; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 13:40:27 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=hv2a1RRhSdZ5%2FjiuIbRrUFEseD6hPhs3FS1e6T1YpTbHhOKXle6bqLCQL2XDlCxHpwRiEVNuWKFCpnGTCVqFy0DFCYvDUgE2O8AGn068dyvyaZIKj5aV3OIEroTFR5uv"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a39f2700bee72d27-IAD
+[0m
+[0m$ [0mcurl -s -I "https://api.sumup.com/token" 2>&1 | head -20
+HTTP/2 404 
+date: Sat, 12 Sep 2026 13:11:30 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: c0f33ec7-d2df-9ae8-b839-af7be782046d
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=Y9EhdQJQcs9zCVtIKhEaWOoo0iARDfzoCoqUtRuQPB0-1789218690.50798-1.0.1.1-lK7xUQtZjY5jSWwrG5Jd2pKNa.qcvbT16igG70JVmpu.F4b8LL2Li3rKnxfrIdgT9sHSmehxw1c3M6YYf5Mm.uCInXh6Yml_jLSh.lbS7Yy_CRv3FkRvNf80B2.J8q5PsMia0NWXE.wUj.m4QfGfCA; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 13:41:30 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=RhOworOxBdZMjJvKqClvOEDjMwblV17T8ZuXczwF1HdvS4ACYoYPFJacCxX3hQL6IF3oUx6DkNqFP1vx4%2BgVhrJR7EepdP1EyvmmAoLZAweg4A4rJ6nijHJUk5WURjI%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a39f288faa9d242f-IAD
+[0m
+[0m$ [0mcurl -s "https://api.sumup.com/.well-known/jwks.json" 2>&1 | head -50
+{
+	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",
+	"title": "Not Found",
+	"status": 404,
+	"detail": "Resource not found"
+}
+[0m
+[0m$ [0mcurl -s "https://auth.sumup.com/.well-known/jwks.json" 2>&1 | head -50
+{"keys":[{"alg":"RS256","e":"AQAB","kid":"public:38618372-f016-4e5d-97b2-d043a975d243","kty":"RSA","n":"sLwnKrTWt5tNIZ-iXjDyO9nbSdE6zxXteb5HZeSq7HQ-Ard-osjsKUPDJSrph5W2c23RmrIr0qASoYsCZoNhidB9Fh0DF1rfqNp9bG5E6toGRfnp7mQhavnFQgx6-odPZ0oQmcv4QnzudRcZw-Gw2g9UpnV_GnkXcRH9DjXXzR32QW9sqguSW9a39uOibvuoJPX7EAZJ_llDLE5vU7Do30Lu5ZaEGK-qZIjTCrB2oDgmxGWZ9gmLffaApmXYq2y2bnA3g5IcVCNl6-2Hr98PT61KlLPYTmUfAARMRoixj4VyktV3bfmA5v5rgzxd4_8bhUuyBopy8F-l-u9HigOFqDOfbJKC5K2IzScDKbcpqS8uYXu4NnF4K9T4RM0NVc35T48j_o0vW03M-RIaDBLJIv8ddfNvVvq0YNLSA_K1OIlSeAZ40Ttz3ubR0r0XajaisFpCAK2SJuNZtxUrcxldVWWNlNonmU7hfb8Qm5YnAn3tHVHqakNaCeIB6kmi57U_Wn7xpOo31vBSFcFcLtC2bkHTQi75U6FTCQLK0Q3t3lEeDoVYJJY4HyQoLQvw_IFmwtuTmL4RaLW8JCvs2TemI1avDA2YePQr7gzXic0zSVVHHfvy0umFAi4f2TCeTGEgnSXkuVKYcgxS71Eo9Mdyo5Q8TaZby_LiAAaBGGoO5F0","use":"sig","x5c":["MIIE7jCCAtagAwIBAgIQTK2taoBeLAyilNpsSSk/xjANBgkqhkiG9w0BAQsFADAzMQswCQYDVQQGEwJJUjEPMA0GA1UEBxMGRHVibGluMRMwEQYDVQQKEwpTdW1VcCBMdGQuMB4XDTI0MDMyMjE0MDUyOFoXDTI5MDMyMTE0MDUyOFowMzELMAkGA1UEBhMCSVIxDzANBgNVBAcTBkR1YmxpbjETMBEGA1UEChMKU3VtVXAgTHRkLjCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBALC8Jyq01rebTSGfol4w8jvZ20nROs8V7Xm+R2Xkqux0PgK3fqLI7ClDwyUq6YeVtnNt0ZqyK9KgEqGLAmaDYYnQfRYdAxda36jafWxuROraBkX56e5kIWr5xUIMevqHT2dKEJnL+EJ87nUXGcPhsNoPVKZ1fxp5F3ER/Q41180d9kFvbKoLklvWt/bjom77qCT1+xAGSf5ZQyxOb1Ow6N9C7uWWhBivqmSI0wqwdqA4JsRlmfYJi332gKZl2Ktstm5wN4OSHFQjZevth6/fD0+tSpSz2E5lHwAETEaIsY+FcpLVd235gOb+a4M8XeP/G4VLsgaKcvBfpfrvR4oDhagzn2ySguStiM0nAym3KakvLmF7uDZxeCvU+ETNDVXN+U+PI/6NL1tNzPkSGgwSySL/HXXzb1b6tGDS0gPytTiJUngGeNE7c97m0dK9F2o2orBaQgCtkibjWbcVK3MZXVVljZTaJ5lO4X2/EJuWJwJ97R1R6mpDWgniAepJoue1P1p+8aTqN9bwUhXBXC7Qtm5B00Iu+VOhUwkCytEN7d5RHg6FWCSWOB8kKC0L8PyBZsLbk5i+EWi1vCQr7Nk3piNWrwwNmHj0K+4M14nNM0lVRx378tLphQIuH9kwnkxhIJ0l5LlSmHIMUu9RKPTHcqOUPE2mW8vy4gAGgRhqDuRdAgMBAAEwDQYJKoZIhvcNAQELBQADggIBAGrl0wgsiDfkZqdP0PxTdNdULXxLis8m2uI5zmTP5fNEZlwmCe0/l7QqNgUObfn2F2J8yVRfyOQub+LSGuXGiuTDSn3tKsxlblFQpsGb+Z694hau8CcyU33b9NhsH+M2qnrxNhSIkHzeZZ9IMXG+d7Ron2TtCqSdeny7P9jnxxz1TUysD2qQeWwAc3zF8AuUP1VAzaVm70bGX/2iHQ3R7RIG09AvNjbFgGsan6kZWrH4r0jyqKyiQ2D9DWYKqd2y2TC8nNIEGWdhoU90MHFnYQBfJxzEP2Tpj1JdPHgW9OOCLE3z8AN2UKCx6OmhIuhu3hBR94OqJXvfEXlywjhcBHp2iLl5SQH7Tx+aCAjsEC5koLb0OMYStujFMw9HUoXOTmrNEXbVdjVcH6gszLqZOTFqYHV/xAVyQmiTJlym4hCduWM6T8l6KxxNO6clyguFUyCNIagKhnb7dV9Ak8xDNa2GwzMGu/y/vHCH1w/EQU2uqekfOb8G7NrC4JvCMvIdgcI5loiRCSJoHp8rQ0tzQtjDGKF70xHVlI76LYU7pL+1IP0W4T3gYNUfTcFQd50wXgZQuwt+usV7yaYy12X0q+gatKhsIcc9EwjjjN6pKRcbQiYskPnx50TZv0NxtGEuh1MOMz+LuGQCV1ZhvDDFkEz4/xB4uZ2Of2WQuPVxLve3"],"x5t":"WaQxd9_X4aoiPPyuKAbZ6WxtzwM"},{"alg":"RS256","e":"AQAB","kid":"public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9","kty":"RSA","n":"rFOEuNrayyHI3hPLfmGU_v6flL-aWSDOwMUe9M3rtTD5s3xb13nipxR_i6a-7SI9Qz-VIoYEfzGXTqRHYe7OgE2PJk76NKJiiYM3UYdlfG1hDl7g7ODcIIC--Ft21THYeUXE4VsTS6N-1vDzkpjYyxvpz82LZY6-EG0mju3HUDnDCcSUF6YXPbqnr61QojbzNkh78wZ1KbdjrP0h7wgxLa6xdO1WBoebPmx3rE7aCGmVFeNhg7pRdV9D0j5SgFyQfVM3LEm0WpRQgIElgrjb9hv2ZCAxmI9lsOfFd6mKQItWnjzxdfGUGQZdc6tjSXkZcWrG4Uf53gZJj3SH3kuaQQ","use":"sig","x5c":["MIIC7jCCAdagAwIBAgIQFfktrnOp9TftFjHKjLZUQjANBgkqhkiG9w0BAQsFADAzMQswCQYDVQQGEwJJUjEPMA0GA1UEBxMGRHVibGluMRMwEQYDVQQKEwpTdW1VcCBMdGQuMB4XDTI0MDMyMjE0MDUyOFoXDTI5MDMyMTE0MDUyOFowMzELMAkGA1UEBhMCSVIxDzANBgNVBAcTBkR1YmxpbjETMBEGA1UEChMKU3VtVXAgTHRkLjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKxThLja2sshyN4Ty35hlP7+n5S/mlkgzsDFHvTN67Uw+bN8W9d54qcUf4umvu0iPUM/lSKGBH8xl06kR2HuzoBNjyZO+jSiYomDN1GHZXxtYQ5e4Ozg3CCAvvhbdtUx2HlFxOFbE0ujftbw85KY2Msb6c/Ni2WOvhBtJo7tx1A5wwnElBemFz26p6+tUKI28zZIe/MGdSm3Y6z9Ie8IMS2usXTtVgaHmz5sd6xO2ghplRXjYYO6UXVfQ9I+UoBckH1TNyxJtFqUUICBJYK42/Yb9mQgMZiPZbDnxXepikCLVp488XXxlBkGXXOrY0l5GXFqxuFH+d4GSY90h95LmkECAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAOl5BWdbwjqIZNdoZiSUiVlh5lt2+bmmm8Q+RbYjCzcRPd8kalg4wkGjBbb+MPlNxs0Zt0/R2TN/TDMLasIppwyNRxW1ptgZeoA2lL3OLMSSBcWieC8gtlKgwWjtMtI7kFf8omA3kHpTmnJd/X7CKld4rC4SLdv7Wo6J9qN656h0Ar0kfQiZbbiEXWVKHxh6RIscOWdwu93QUcgSmgXdyiAbOpDWS7j1Y1ZvkolYkx3xWLq8ynMsz1v5rjjP3ABPOT6Uj4Dn098BoocIaBnz/bO2v6/ajIBkYWQg8myZDYKn8zmLpe9jzLT0ai1pMO8ZElT9k4qA6XTAqO7uFLWmpbA=="],"x5t":"EBet5XYP-qP5jFZ4Pj5AoOvKWUQ"},{"alg":"RS256","e":"AQAB","kid":"public:8c332d17-2b35-4cba-a61e-6843b4375a71","kty":"RSA","n":"sM48GxeV0s0kLQe49kxH-dLCWiEgCj6pH6cyyEHaWYCwO9YXmHmNJK_8BJmZXUKh4uY5PmNLIHS5wcXfePpiSM57Um-250x-gTsp7DOHcdtDkjICPyW6F0FnnPviJ4IuTEUbhW1t8Ww2pGFKFnC-gPw64pOaYcbQcnznfDVEaWE6yti3tNlXMOlotluZIxCbBaTpUZZdf2kdfcMbM9zMchgbxLuY1ddxrQGOD3aRvMm-JkxnUYnm97zyAPHx8ceJDtcg_JfxJmzz9e9T8fnE2yijk98yiS8trUDMp2l6lvJBqAwPK-EGTi9VZazi5orQefqVUogwBnOq_4zE-U2fUXmLdb-kMylJZBZ138hm-ZnX81muxC6ZBitzwgG1Lut_mQUFRlNwQcfPCNkQVEp88ha_eucn-M-o7L9xZTakND7wYbyoetdfMLhMfFhW73aPlV9JqIN4dBJzdU9eUjkywmPdYjgv8ZEOTtK1DcmrpS30_IhEXC3ad45zvI_PKnZtJscCXq6bnlxo7XTv-RuKex-NRGTWb9QdQmzPT76Z0B1dBGMgQWXI6JbI6TaWHLtMVsCuiDavGdFJlsqW972GilkgN0M8uHCbFkQnjpGE2iwFsrIiXaxVZJkBHrYlPnapjZsOy7tewsLSTSQow6qFfQS89QPm2fQhDzgfCwpHUH0","use":"sig","x5c":["MIIE7zCCAtegAwIBAgIRAOC62dWR1UL2Rr+ojRjaJ5EwDQYJKoZIhvcNAQELBQAwMzELMAkGA1UEBhMCSVIxDzANBgNVBAcTBkR1YmxpbjETMBEGA1UEChMKU3VtVXAgTHRkLjAeFw0yNDAzMjIxNDA1MjhaFw0yOTAzMjExNDA1MjhaMDMxCzAJBgNVBAYTAklSMQ8wDQYDVQQHEwZEdWJsaW4xEzARBgNVBAoTClN1bVVwIEx0ZC4wggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQCwzjwbF5XSzSQtB7j2TEf50sJaISAKPqkfpzLIQdpZgLA71heYeY0kr/wEmZldQqHi5jk+Y0sgdLnBxd94+mJIzntSb7bnTH6BOynsM4dx20OSMgI/JboXQWec++Ingi5MRRuFbW3xbDakYUoWcL6A/Drik5phxtByfOd8NURpYTrK2Le02Vcw6Wi2W5kjEJsFpOlRll1/aR19wxsz3MxyGBvEu5jV13GtAY4PdpG8yb4mTGdRieb3vPIA8fHxx4kO1yD8l/EmbPP171Px+cTbKKOT3zKJLy2tQMynaXqW8kGoDA8r4QZOL1VlrOLmitB5+pVSiDAGc6r/jMT5TZ9ReYt1v6QzKUlkFnXfyGb5mdfzWa7ELpkGK3PCAbUu63+ZBQVGU3BBx88I2RBUSnzyFr965yf4z6jsv3FlNqQ0PvBhvKh6118wuEx8WFbvdo+VX0mog3h0EnN1T15SOTLCY91iOC/xkQ5O0rUNyaulLfT8iERcLdp3jnO8j88qdm0mxwJerpueXGjtdO/5G4p7H41EZNZv1B1CbM9PvpnQHV0EYyBBZcjolsjpNpYcu0xWwK6INq8Z0UmWypb3vYaKWSA3Qzy4cJsWRCeOkYTaLAWysiJdrFVkmQEetiU+dqmNmw7Lu17CwtJNJCjDqoV9BLz1A+bZ9CEPOB8LCkdQfQIDAQABMA0GCSqGSIb3DQEBCwUAA4ICAQBycco5JFoNu6Tu0sySa+mIvTLFdQ2zGqBMuOvXRKd+bEaUWo3vLFdZsDsldpQle68fJ2rlPBSqGATKExeHzZrHMMg6rhfR6ibgeJ5q3hZq8IVQRzhkDalHcxT98ORplv5nLvCV/FIaoEU0/yV+mclmPZXa+9nr4I/QTAdluJGuqFxAzn9xMVua4iqhdpXUHHZJyN9L1+f2yNlpM5L4dbxAoKPNsXxQLereYn+YEk3DCw/XSnVcQFTzPmGDNcbhm/rjKxRANmRzZLPlMbc4195azCZ/3flezIx/K5yJJcNu12W3zYnhFxA6QodZ+4kqpbOz6WY2sHRFP2TGE2ZNOLAfuAbWQLm8YNtfD5kamDpAVjOYf32i0YwHoDwc10I4c7cQ2cYPWLm85DQmXN7FpnjIWzx26XF3W5X+fdPwENJ/tcV4gDO5F8d+BTAPRqYqpjquhmdPcm+Irb4ejfB/FGIlBFRfqBdFaHzzTuZhMN2M62NM8BJa6CqNSjVliFmEDarRqpVzCBWIHlnahY5jkSLip/7YLjrgryNMsKLJbEUfF6xjGXoo5Qpx8z+s+iR/tYAp8i65BA4m4KIZfgJzuTsg+XsymCu4l9SIoKfNxZJc4nuQ6CqGlb/0919ZYogxiVceLTybDa1qoFK/ahpl/KVKP2bSVCXRSatM/fWB+/rekg=="],"x5t":"VCl9UD0-_Wrev9uGiURIJmeYgYM"},{"alg":"RS256","e":"AQAB","kid":"public:a4627362-0900-4bfa-8b68-3a740165dbcf","kty":"RSA","n":"2KTHJb4n04wqbZ2lOKBfkVnN7W0-5rw-qfuRzGzmDPSg5e3rstaiPFex0t5mfadTen_04EW-dwiZBnHkUzie76A_xaIhK7pSPXdozeeZEC8UNSOWXLOnZV5_zfcNT5FTTD1DyGOAw6uDzApFDBDR9SIY5wEal1zescuU2Ypkcrw_q7t5ApXTGwXS7eskLXGYSw9TZyKV83yC0x13fpGh9rfVQS4L3j_JeIAn9lN4wTABPG4MjWyvlGJCCBiXLl5P_-3TDBD6TUrLCuBllxSL9O80At7xeYFksnuMEBrMRyiCPfNeSH7hka8XEdMjjcwBsou7e7CCutPzrUSIUMpEfa_DWADPsJShPeS3MQQecNeMuc9Zu8G0Y0BYzJEs5HUkuPPtQFMq0zRuUdsPtGKj37RRcjrZ7Pi3xmUs9mhXNgsHQX2HUhjS5EfbW4l5N6so6Do7Ayrj670BnD4pBaz99RCbpINvjJ-gf331gtbapyLXbpmCKC2RLOkEF5CUvwERDGxJI1lOzc0OCd_2hmivpCM0L0B3I3p_W34v33Kr9_eoMqkwcPe0CHkgwUh7KCuVR-k2npvG7ukuni7nwu-CevbeK4x8BxMpcTAYphDkiNvTqydad128tMtmY_I5IJxSzLZ49UzbgHYA1c2VowEcP6rQh8lQxaGoDasEz2ofQns","use":"sig","x5c":["MIIE7zCCAtegAwIBAgIRALB+WPqKmJe6R3J1qjXN9JwwDQYJKoZIhvcNAQELBQAwMzELMAkGA1UEBhMCSVIxDzANBgNVBAcTBkR1YmxpbjETMBEGA1UEChMKU3VtVXAgTHRkLjAeFw0yNDAzMjIxNDA3MzNaFw0yOTAzMjExNDA3MzNaMDMxCzAJBgNVBAYTAklSMQ8wDQYDVQQHEwZEdWJsaW4xEzARBgNVBAoTClN1bVVwIEx0ZC4wggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDYpMclvifTjCptnaU4oF+RWc3tbT7mvD6p+5HMbOYM9KDl7euy1qI8V7HS3mZ9p1N6f/TgRb53CJkGceRTOJ7voD/FoiErulI9d2jN55kQLxQ1I5Zcs6dlXn/N9w1PkVNMPUPIY4DDq4PMCkUMENH1IhjnARqXXN6xy5TZimRyvD+ru3kCldMbBdLt6yQtcZhLD1NnIpXzfILTHXd+kaH2t9VBLgveP8l4gCf2U3jBMAE8bgyNbK+UYkIIGJcuXk//7dMMEPpNSssK4GWXFIv07zQC3vF5gWSye4wQGsxHKII9815IfuGRrxcR0yONzAGyi7t7sIK60/OtRIhQykR9r8NYAM+wlKE95LcxBB5w14y5z1m7wbRjQFjMkSzkdSS48+1AUyrTNG5R2w+0YqPftFFyOtns+LfGZSz2aFc2CwdBfYdSGNLkR9tbiXk3qyjoOjsDKuPrvQGcPikFrP31EJukg2+Mn6B/ffWC1tqnItdumYIoLZEs6QQXkJS/AREMbEkjWU7NzQ4J3/aGaK+kIzQvQHcjen9bfi/fcqv396gyqTBw97QIeSDBSHsoK5VH6Taem8bu6S6eLufC74J69t4rjHwHEylxMBimEOSI29OrJ1p3Xby0y2Zj8jkgnFLMtnj1TNuAdgDVzZWjARw/qtCHyVDFoagNqwTPah9CewIDAQABMA0GCSqGSIb3DQEBCwUAA4ICAQA2rVVbXVbWt9A6eBe+XM+yWUHXAry3L7fcYufzhR0cwx0JNDyrE2TyUNYFJlL9J+8HTHXIhZulCjhfWTG3bGCzOiuL2utR2Bf2qSk7QvXTbXqiXYdpOTtQu+r5i8gO25+0Hvx7e3gPTkqXM14Wtbcjtv8R1QBuKBq7cfcVbEAjAGo3ANecLjeY3Oc8ptX4iMJIs5LmIKt+Gsi5WwcOuPN8k6u5WAqnDEzagRaezKXGvRg/yDD+Hbu3vJY/JIih6NBWBBxKp5+JkLuzOX6XdedSTPnvfRm75+O+1HEhBnMcFwlS0HRfKDcuGno2GOnVB81hKm2awA5wPwpAvCPS2atvwWbCaY+7ZffloBiQtXsgqHXVnxU8qoRC918FhkuA+9ztyUcybqWZBLwHOmL/F2xjSDfOAzolJAfm3vbu8Gh80WbK9Ie8UNJWT0OXHHGLU4XrKOZGbsL9BCpQEkyrn8DdLVVjRvgVMaJxo+n97hFlQhON5OS7JkGg+px1UaA7ozz9R9ZVo0cmZKUaosXhAPxMlt+01fsuM3V/mOtF841f7PdnaY6Hv+AST4G/r+wrsOQOb7LjSZrTTIRj9lYDCP9jpFCH8z3wFZeQLQFQEUNI0yJKbBqWrZRQ6uWvBLRO0+q7zptuZNXNVjEmZAQBznp9kyEvhNNZWPbN9fdEiWJ8QQ=="],"x5t":"ef1qquoqVotqAEn3YjqsTawhp0U"},{"alg":"RS256","e":"AQAB","kid":"public:32ad4b15-8641-4aaa-9a2e-427bb1848321","kty":"RSA","n":"hRfoeOC-qwlVf48yXkyHbV8ffRTKGTktdt8xqKRc7u7Uy2C_l9iuFSxs3tu72lnDxJPmkggqVL0Snu1EwOUGB5-lgE35sjfhqPPw59XDyemxL1vH-Qvp-GXhq1EDhasDYLq1yGFlOOiXV_f9s-v-niOPPGB9ro33bz3t2_0bl0pEJ2vAtspw5BlWdTw7U6e6n74TrGO1iTYfJEQSbvU0uAdw428pv77DOH68tPCSBFfp3dtne-ACYnzhVJFvzbmTgpUao5Kaleo55ZW64uPLjRHQNI8BFyKnXswhzjAroXqHvykrMSBgi32BfuW9QGxLZL1ns0-2zBzxgJikUFm7PQ","use":"sig","x5c":["MIIC7zCCAdegAwIBAgIRAL7LVUWWHNtNynuOhkn6ACUwDQYJKoZIhvcNAQELBQAwMzELMAkGA1UEBhMCSVIxDzANBgNVBAcTBkR1YmxpbjETMBEGA1UEChMKU3VtVXAgTHRkLjAeFw0yNDAzMjIxNDA3MzNaFw0yOTAzMjExNDA3MzNaMDMxCzAJBgNVBAYTAklSMQ8wDQYDVQQHEwZEdWJsaW4xEzARBgNVBAoTClN1bVVwIEx0ZC4wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCFF+h44L6rCVV/jzJeTIdtXx99FMoZOS123zGopFzu7tTLYL+X2K4VLGze27vaWcPEk+aSCCpUvRKe7UTA5QYHn6WATfmyN+Go8/Dn1cPJ6bEvW8f5C+n4ZeGrUQOFqwNgurXIYWU46JdX9/2z6/6eI488YH2ujfdvPe3b/RuXSkQna8C2ynDkGVZ1PDtTp7qfvhOsY7WJNh8kRBJu9TS4B3Djbym/vsM4fry08JIEV+nd22d74AJifOFUkW/NuZOClRqjkpqV6jnllbri48uNEdA0jwEXIqdezCHOMCuheoe/KSsxIGCLfYF+5b1AbEtkvWezT7bMHPGAmKRQWbs9AgMBAAEwDQYJKoZIhvcNAQELBQADggEBAF40MF+XwPMKW6TUJoKLcDfC7W6YyFH5glBNFKxr1bJ2r5oCvvhTcrX+FifPvbAcAsb7KcmHK2YSKKJFBGlI8gkolkB9pA3I5I3emlBeuAf6GychNHqhI9OK1AXB9aMLN0q970N7lx6hJvYburEfmHep4gkZYQ5hxJ8je8eraVny60mvqPYcQpMeuQy4wV1bYZAiv71iQ2xEsiF/OnCu4j0RSKTeH4afh7epxXlSevWtn8WLxhb8KHzR34VcfHiYZsgUkj7tpcMpBxrknf6pWG2ad2iK+0OlabawRMQFPi+K74PvVN1YZWIODMBbc+RKVnwQX5ol+NnW57mhT/DZKMk="],"x5t":"oCaTQnJIH5EYUbCWzYO-7LwcnYA"},{"alg":"RS256","e":"AQAB","kid":"public:8e43ec38-e8f1-47e4-aa6c-9990c3ae20b3","kty":"RSA","n":"6XAyLuE59DfhH8oTuDM2gzyePMs29vR7YssSNB_KjtZRkqgeW8nMOOwTp-996d0zXDIgMWN0epFoU_k-X3DRLXEZsKKHt7AWz1qQX-vejtNrKSiQoY7h4WyhFfHhbnaJfAT0oFDTKJRubseyKDmLWHFkX520dJeh1PV0ATg7LCbMifSrI0HgB-q546c5jp4a_bBXr7Bz3YXZlqDnzPKL3NPsTCZ4QXi9gLSSfaaDp44wqo-ZKnWKhiv47_yf4sBhE-CCfhQND8cZbe_W_g-mKv2Y8KTzfbM1Uo1MoeEZHjRm8Y2fiT-q_Cd88kzNRh6P0pdt-6erTVDjOU7MVQJ2ds726J0StSOZrXi0DII1OPYs_E_su9yOLnOy4tGs1eKtQKH9gLG9x1zwAgj89QSmK2zWS5OeSpJDmvYHORoVTVlnPfF6C9YDRDOD8Pxxg4mN1o3zzWQ4-r7_KX2Z9cNCqGFKJ7bj1nZQIFwKtcCjVNP9wNmwECE8wwWjGxqpIhAx8v1NJhurA871gZ-x97CxJrWoeMDm97fYQS_kf3yaMrQibZgycSlq2cnQ6NHRVZr1LuYeW9nQMKi4ifQDd6w_Cwh7LiL_YEwQkR62xipQzLlLviqwQrXRf8AdsZ8_mdcSV4sCor32nyVqOnU4ig8qVnzet0hyS1ASeqprJJ48qnc","use":"sig","x5c":["MIIE7zCCAtegAwIBAgIRAKsBm9C1vMPVj9HdOkQNjfIwDQYJKoZIhvcNAQELBQAwMzELMAkGA1UEBhMCSVIxDzANBgNVBAcTBkR1YmxpbjETMBEGA1UEChMKU3VtVXAgTHRkLjAeFw0yNDAzMjIxNDA3MzNaFw0yOTAzMjExNDA3MzNaMDMxCzAJBgNVBAYTAklSMQ8wDQYDVQQHEwZEdWJsaW4xEzARBgNVBAoTClN1bVVwIEx0ZC4wggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDpcDIu4Tn0N+EfyhO4MzaDPJ48yzb29HtiyxI0H8qO1lGSqB5bycw47BOn733p3TNcMiAxY3R6kWhT+T5fcNEtcRmwooe3sBbPWpBf696O02spKJChjuHhbKEV8eFudol8BPSgUNMolG5ux7IoOYtYcWRfnbR0l6HU9XQBODssJsyJ9KsjQeAH6rnjpzmOnhr9sFevsHPdhdmWoOfM8ovc0+xMJnhBeL2AtJJ9poOnjjCqj5kqdYqGK/jv/J/iwGET4IJ+FA0Pxxlt79b+D6Yq/ZjwpPN9szVSjUyh4RkeNGbxjZ+JP6r8J3zyTM1GHo/Sl237p6tNUOM5TsxVAnZ2zvbonRK1I5mteLQMgjU49iz8T+y73I4uc7Li0azV4q1Aof2Asb3HXPACCPz1BKYrbNZLk55KkkOa9gc5GhVNWWc98XoL1gNEM4Pw/HGDiY3WjfPNZDj6vv8pfZn1w0KoYUontuPWdlAgXAq1wKNU0/3A2bAQITzDBaMbGqkiEDHy/U0mG6sDzvWBn7H3sLEmtah4wOb3t9hBL+R/fJoytCJtmDJxKWrZydDo0dFVmvUu5h5b2dAwqLiJ9AN3rD8LCHsuIv9gTBCRHrbGKlDMuUu+KrBCtdF/wB2xnz+Z1xJXiwKivfafJWo6dTiKDypWfN63SHJLUBJ6qmsknjyqdwIDAQABMA0GCSqGSIb3DQEBCwUAA4ICAQBgXADkaIWUV90mzSIhTnuqra4FTTfOTlUyomak2cUKBYiY8YtqVdvuSJFEX97LuApFIGmLqXaCci8QtZ2lltM3aw6mwhv3gyNe24TeSAEylStbefqU7e+79A7TvBrCgcxOVpK31azw7ZF7mLNCsQmzqYlFsYIiNgQakrC4xXXyuoe6oXxukp2e8SejDGXpAR0KryYSCLxypaIEi1CccOAFLbvzYv9T10NWQRB5IzAi/H66VqBPWKYLGV56X55D0nBjrKVuES3BJvjAK2lE7fUHsCj7vqJ8pjjont6PYTdy0BykBJCCSnJoECizyfI3cqnkETTgkxufIxch/b/P2O/t6/rMkBuXT/+FqZq/bq3OR+8dkrmVzI1X9kixYxStXR621u47YOYGOq9ScmTtLzKpCtij4zlwR1YSt0n150R6JhYHkKxr1MRMk3FtUe6I82KEEB+ymeLRue5D2lzIZlFnggMUpUhq0ry3xxTQ5nnlcN/6m8IAOrKQ8bjPaN66zV5hNZaUm23Uyhp7EwKyaF9ypcUk3jsXQ495+p61euGsk/bVtdWf4/xsIif021X8UB6BI7b5IGAU3UWaIJZjjpby8A8ANLb0E5uL5e86HzvgZrZU9Y0lnrL3oR6xMcJYDKwkUvudhXizVHsVjdVE8Zoy5G9kvzUR7Y2tm++Xe5ywbw=="],"x5t":"mD9bCmmm31z207gp-oXR2GQ40gQ"},{"alg":"RS256","e":"AQAB","kid":"1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM","kty":"RSA","n":"5J7Ws13ICMGArQmgXCbImtXCh2aFW4-cpXq6bInn-gDy7TQTkn4be24BSYpw7kZmi0W7VHZcmoK73EGShWCcSXGA9UVlworEvbhoEgWxUf6wEWZJMNTm1_6R9riKFh9hZojOChNjLwOynRfcwnuWHiQWwCKMcchJercXkAJG3dxJFBJu4_stzJe_t7DjKNkULgGBm5taR5BcX3qjvmeWZpbVTf85_md0M1qHD2duGE0Ig8vKSl93azlfwkogxpdSxlzwUTWVYMZ-m73ZY-xaDg6SZQ4oj7-E36qgCYNfDC7vdkk8AhiDS9QB1ekqk4fZ8gMNHgVMWT9gaFRbhAMc9w","x5c":["MIIDETCCAfmgAwIBAgIRALfZGqKNvEsFzWpcEwODso0wDQYJKoZIhvcNAQELBQAwMzELMAkGA1UEBhMCSVIxDzANBgNVBAcTBkR1YmxpbjETMBEGA1UEChMKU3VtVXAgTHRkLjAeFw0yNTExMDYyMDI2MThaFw0zNTExMDQyMDMxMThaMDMxCzAJBgNVBAYTAklSMQ8wDQYDVQQHEwZEdWJsaW4xEzARBgNVBAoTClN1bVVwIEx0ZC4wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDkntazXcgIwYCtCaBcJsia1cKHZoVbj5ylerpsief6APLtNBOSfht7bgFJinDuRmaLRbtUdlyagrvcQZKFYJxJcYD1RWXCisS9uGgSBbFR/rARZkkw1ObX/pH2uIoWH2FmiM4KE2MvA7KdF9zCe5YeJBbAIoxxyEl6txeQAkbd3EkUEm7j+y3Ml7+3sOMo2RQuAYGbm1pHkFxfeqO+Z5ZmltVN/zn+Z3QzWocPZ24YTQiDy8pKX3drOV/CSiDGl1LGXPBRNZVgxn6bvdlj7FoODpJlDiiPv4TfqqAJg18MLu92STwCGINL1AHV6SqTh9nyAw0eBUxZP2BoVFuEAxz3AgMBAAGjIDAeMA4GA1UdDwEB/wQEAwIHgDAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBCwUAA4IBAQBuoCHCJ4ecyMShwyFF7RjtEC0YnRgC0zE0C44az+DYP32D1dZlC53Cwc+QboahF21Fz8BXLiyw/iNB2sPlzDL9/0gLyWPC3bDrAacAJduPuuqA1emIu9tM+7mc7EaRPZ6P+f4BP52Py9uhgnELeWRYRX8xTUvJSzdJJjnGcNVu85OwdFz8jph8PRlup8KesEleQZQLwJrC9r7ktonXIwfp/IGA9ygfrpIJVN+829L0kvSzuq1LgI6AFLLwutU/Et6JckPZ9aCm3D7xboQimXvrgXlX1vyiG/dSgHETXHseMFHcBZHLsXwmMoakDrRYIt8hCVeV5r8G/A22HqzTr2aC"],"x5t":"HwOazZCONhe8izmmeHt_gFvuD7c"},{"alg":"EdDSA","crv":"Ed25519","kid":"-tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4","kty":"OKP","x":"WHiN-0p6x74Kby8zTSEQyEs_xisVSi3ZUd_JjwoPnr0","x5c":["MIIBQzCB9qADAgECAhB2xQl+NFMUA8aE1vViSdhmMAUGAytlcDAzMQswCQYDVQQGEwJJUjEPMA0GA1UEBxMGRHVibGluMRMwEQYDVQQKEwpTdW1VcCBMdGQuMB4XDTI1MTEwNjIwMjYxOFoXDTM1MTEwNDIwMzExOFowMzELMAkGA1UEBhMCSVIxDzANBgNVBAcTBkR1YmxpbjETMBEGA1UEChMKU3VtVXAgTHRkLjAqMAUGAytlcAMhAFh4jftKese+Cm8vM00hEMhLP8YrFUot2VHfyY8KD569oyAwHjAOBgNVHQ8BAf8EBAMCB4AwDAYDVR0TAQH/BAIwADAFBgMrZXADQQBlomHgl0JiAywZP34j849xvWrL+carOhwVomTrem2OaXHRub3k4rlEvBSvnNi7MZOLHDeSAwzjIvYpJACFMfEA"],"x5t":"CCyz5EcHa6pIxznxEL1eNZPLli8"}]}
+[0m
+[0m$ [0mcurl -s "https://auth.sam-app.ro/.well-known/jwks.json" 2>&1 | head -50
+{"keys":[{"alg":"RS256","e":"AQAB","kid":"2ca76842-2487-428f-a87f-603d1f6f6ef0","kty":"RSA","n":"lW29TDD8w6-VQH7H1EgdG1BSXqaCpdOTHlTZQ7IpHJ0UjB8qPYGhPHJzvDQeVGS5swyfVqmHeUIOEUUMCMMyZymFsyL8F_SJbZqnDrFIQaMZwO8rzyfL87Nf2gLQf5Y2wMOl4aIefNkA0h4hKeppHtGq14zSQaUh_2KtJ0GPjUw9ao3wR2lbvoCtDwDN8OTr9gPDQGJ90QLE8qbQeTv1U0C1jrGYccHAS5hobG98PjKDNhyp2tclclBJ1fkTBctTtEziYLon6HVl85UmQseuSD2FYWRBdNpXCRcZBlp6rT1OxE-P5lc5HFq53PLup89bhHjdpSCbiKd6SFDziyOzAw","use":"sig"},{"alg":"EdDSA","crv":"Ed25519","kid":"ugK7GDfOf35HE5n2Pwsy9K3HSnYWNPGbRnWRscc83Lg","kty":"OKP","use":"sig","x":"fb9tygXFp1k9wAGjKvNpJ_qH2cFItaeqAGWmS45iJs8"},{"alg":"RS256","e":"AQAB","kid":"public:73c59380-fbab-4a2f-8d0e-1884cf8ec724","kty":"RSA","n":"4ecTTOZmmdLjIC7_7aSQRMk79SKVYi0Hoe9lozbSxZa7eeXUQw0zKteuT6yBLIdTkgOuDQIjewrg5X3NWl6jYKVUFWakMZ_55HidXnyoyCPlbqfh3jV6VYoLa94giRLQD_diif69EN3Pdc3R7jaG_NMl96ZVTJQSxhznR7dq19R2WzsrFhol7_nPdo5TD6w6rdXM3iEh8fmzDjaE21QV64ci1rsJ3qeBgZwrU3MasjHxe8Shd0KTMASkPqjWA9GLsIuPdiWzW8VhZ2FTybDmo4afUTethRxebOUffUOFe40XBEIQrinT37ZzofPGs1H0HP-dkHZ3MrGEcVThxFkn955iOVFx1ddAWJa9EscXHlkLN1l60lcFFbzG4sdxVhOcrHUlRTF5_nktfUx1nxH_CwQEmneBV8DVfhlTiJRNOVw3lJJ8RGIE62ZgGD_JwkWKZ163myT44Eiz04sAn6r_oJBFxnVPBT0clcpucqTjEHBB7vNICMTd6Gx6Cq5TElOHPf7hr-w5Az2Kw-013RiuIprq_oQP7SU9NSC_gMTPaDrDseWD4BwXlFPy86HpAHIRqkUgjl34NWQCarfRICRVkQs6GXkybxpLB6IuqQEzWk8rVAG_pBCxKL2bQZe6lHvqo5N1j1KDUWn3OgO9l8nYqcCoq1uAOzMSo_jLKnbeXeU","use":"sig","x5c":["MIIE7zCCAtegAwIBAgIRAK7YXCPI97QXedv+XyEekaQwDQYJKoZIhvcNAQELBQAwMzELMAkGA1UEBhMCSVIxDzANBgNVBAcTBkR1YmxpbjETMBEGA1UEChMKU3VtVXAgTHRkLjAeFw0yNDAzMjIxMzMyMjZaFw0yOTAzMjExMzMyMjZaMDMxCzAJBgNVBAYTAklSMQ8wDQYDVQQHEwZEdWJsaW4xEzARBgNVBAoTClN1bVVwIEx0ZC4wggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDh5xNM5maZ0uMgLv/tpJBEyTv1IpViLQeh72WjNtLFlrt55dRDDTMq165PrIEsh1OSA64NAiN7CuDlfc1aXqNgpVQVZqQxn/nkeJ1efKjII+Vup+HeNXpVigtr3iCJEtAP92KJ/r0Q3c91zdHuNob80yX3plVMlBLGHOdHt2rX1HZbOysWGiXv+c92jlMPrDqt1czeISHx+bMONoTbVBXrhyLWuwnep4GBnCtTcxqyMfF7xKF3QpMwBKQ+qNYD0Yuwi492JbNbxWFnYVPJsOajhp9RN62FHF5s5R99Q4V7jRcEQhCuKdPftnOh88azUfQc/52QdncysYRxVOHEWSf3nmI5UXHV10BYlr0SxxceWQs3WXrSVwUVvMbix3FWE5ysdSVFMXn+eS19THWfEf8LBASad4FXwNV+GVOIlE05XDeUknxEYgTrZmAYP8nCRYpnXrebJPjgSLPTiwCfqv+gkEXGdU8FPRyVym5ypOMQcEHu80gIxN3obHoKrlMSU4c9/uGv7DkDPYrD7TXdGK4imur+hA/tJT01IL+AxM9oOsOx5YPgHBeUU/LzoekAchGqRSCOXfg1ZAJqt9EgJFWRCzoZeTJvGksHoi6pATNaTytUAb+kELEovZtBl7qUe+qjk3WPUoNRafc6A72XydipwKirW4A7MxKj+Msqdt5d5QIDAQABMA0GCSqGSIb3DQEBCwUAA4ICAQByUFa4yMETKcNm/z3jmXmTt0VfSE3IELjSflQhFNVZVozRv1KFtTPZ5zCNuT7Stda2U9xaH5N0iA4tHuCrfhe0xhnwCfj5XESEPbUsI4Ht21nvGFUBN3sAKeXxR9NCQh/y8uJBc1/wJgTiMuvVotzQ+94gAap3dCIvZ+dqQOfj0u4QDKGweJo+Nhg8tFsfAnaSpbDSIDBT9Veh/bVdh1ZIm08aN/vvrOFZKOJUDfLNzq4o+F22wTKjCH6sU5zoiYK0d/X+IlN5Y/Si7YJ+9VOSWerUqMkKAWgRgirjX3m4mzo8u/nZs0dNO/UvY1Ba6ZZjF7T0C08ejU6ifg5qO6ei2Le6vXXqiY6VheLh43erbnIzaIUXsl2pblc8nB+gUTiC2CjCgT8LHWGL6RtJeyjfs1tktuAR8cuD3IO1Y1QBGJ0+yTaEa6cRT5J20FwrR2IKEGLPu5u+xpD7r7qX5sTyafFMhVFee5obuJ46lRLrhMs5KlR9iq8OQq2H84aImnWySHrKPgsd9FrcVEjXMZhe+RFXkmlfo3evh6f8WlWHI7//+Qg5ktmXp71vaPUkQ3ZADLk5cGqBkSmJT+I+WHZS5e3zlBVD0jj9YhZ/dZpxsjm/nbUpxeVDfSeWSySxtpDG3IcJgTFovmDw/Z0fcSGQKOurBKX0lFA1TrdGYjRobQ=="],"x5t":"E_0aOp_mug7nbO861BG6mAIRJhk"},{"alg":"RS256","e":"AQAB","kid":"public:b2aafe4c-7d7f-4f32-90a7-66a0fc9cd097","kty":"RSA","n":"zA1bP4mwSNHFzvuENvj-tFlIL09tAGTd3hWrKmPUXE1NQvGWYjwwDMnnBQQQe5Kjw2-DtOv60FDoXFsj80s5jokVtW9hr7Hks3Wb6qSZrBpOmyyhuap6wHnsAypyysO6tyZyBbFjXsGSuRN3p70Gc3LapXommxprcTaqt4MJ5DgcFUMLJQM4V5K9tzC7hrPpA66GNLatiKvRlvJCrMWUigRm8o5Zz127y9wwVgfY030eyMwS61skXijkwcWV5wNz3aGqFyH4xYJk7Ed4yzXpnx3ceonsnjZ4WYCTBzwQm-S8WhBtFFZK0dR7EGziPsNbsjMKGevYxYFfWnT0EWmsdaNUtcfe4i_odmwtpKkRD-GNztf9NeC9mKxOq47zgt3eP13cFICkZt7tH8b-gfu7CZRo1z_GLjnxAvOvl029kXdXhhj1O3qbWYlTkDO1z7aakdHlpPqnz51xNJ-_EBdj6w-XXGNhqr7cVbalUubpUJjTwMsV0QaFaQXgKZtCB3OXYDzOWeKcvlkr4pIs22g5FsskPt1lD35nazgAmAwBfC_YZhpx86w-MNoC06NME7qcqRxCzlXiGWf6eH4h5N3WusM5m1AWA3Pshcrtc3UWabZTPUolUl-buZ7Hw2cG6KJ7zjaAGse05UIQiVP6VCkPSVkAuICssIcxkQx8nT8VrV8","use":"sig","x5c":["MIIE7jCCAtagAwIBAgIQZsQ9hLX5CxWO1bzq28owRzANBgkqhkiG9w0BAQsFADAzMQswCQYDVQQGEwJJUjEPMA0GA1UEBxMGRHVibGluMRMwEQYDVQQKEwpTdW1VcCBMdGQuMB4XDTI0MDMyMjEzMzIyNloXDTI5MDMyMTEzMzIyNlowMzELMAkGA1UEBhMCSVIxDzANBgNVBAcTBkR1YmxpbjETMBEGA1UEChMKU3VtVXAgTHRkLjCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAMwNWz+JsEjRxc77hDb4/rRZSC9PbQBk3d4Vqypj1FxNTULxlmI8MAzJ5wUEEHuSo8Nvg7Tr+tBQ6FxbI/NLOY6JFbVvYa+x5LN1m+qkmawaTpssobmqesB57AMqcsrDurcmcgWxY17BkrkTd6e9BnNy2qV6Jpsaa3E2qreDCeQ4HBVDCyUDOFeSvbcwu4az6QOuhjS2rYir0ZbyQqzFlIoEZvKOWc9du8vcMFYH2NN9HsjMEutbJF4o5MHFlecDc92hqhch+MWCZOxHeMs16Z8d3HqJ7J42eFmAkwc8EJvkvFoQbRRWStHUexBs4j7DW7IzChnr2MWBX1p09BFprHWjVLXH3uIv6HZsLaSpEQ/hjc7X/TXgvZisTquO84Ld3j9d3BSApGbe7R/G/oH7uwmUaNc/xi458QLzr5dNvZF3V4YY9Tt6m1mJU5Aztc+2mpHR5aT6p8+dcTSfvxAXY+sPl1xjYaq+3FW2pVLm6VCY08DLFdEGhWkF4CmbQgdzl2A8zlninL5ZK+KSLNtoORbLJD7dZQ9+Z2s4AJgMAXwv2GYacfOsPjDaAtOjTBO6nKkcQs5V4hln+nh+IeTd1rrDOZtQFgNz7IXK7XN1Fmm2Uz1KJVJfm7mex8NnBuiie842gBrHtOVCEIlT+lQpD0lZALiArLCHMZEMfJ0/Fa1fAgMBAAEwDQYJKoZIhvcNAQELBQADggIBAIBf1YXsFLtCiWhDV9CQ27rWaQFgGXWo74wMXdjnwi+ZK+vQaErqi86nphoWtTQ/VsTZhNYQ1AER343dIJuTdWlEjH8n4ZXmbg+dfGA0nOBtfWAuiPsiwUqBr7vfuncdXQADTvZkuNjI+jIgpLdH5f7Jdafif8c6CgaOoXHthDjbeGfOfluzd8rda081OOkDy3fur1rn7pSEIV0U8FMbjGyM0GWbPlFgzwOOOHIbbfmgy+T/6fm8DxPXLxHIU7VGGmIqVwFvSU2+RRexgY5hca4hDvlLtiUEXu0dGnRrVqTN+ndUj4aS/Fln4yRfZXfwWypjijuszxG6t4LFmaMLQc1YmOjgU/LMxHsXN3XU1iguiAy3besqb/pA2rRLzElJPhoeBjkjDtQo1plnaGIcx7axRx0M3DtCxuLPTvQli5GDMwJ7//f6O81noly4lB43yxP6da4pW8p2nSGJBhXpC4Ck5IA7GPbQjUJs6EXUCdWBhsbAIJX/Km+eLieylfBX5Y/q33T9CpQTBhYufBH6OkPbg7QIrjK/OXX1XZUD1pwVGwM4YCulrUrE6bcodUxJfEk7j0AuS+cWwPRKmGKLx6m2hp8gtp37hyAwf7lNazIX9l3VPMdafQRw2ap9R/1AieMPMWZCoIBPL0XJr0OKylV4e8CdUaLvkSrQKSvTrxI9"],"x5t":"ndh-d_2JwypprkOp3UkkjWeMomI"},{"alg":"RS256","e":"AQAB","kid":"public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a","kty":"RSA","n":"0J_XUWzO6tK0sHZXlKL3-YMXo2s0StzAkIKkPb6I5UENPDGUOVLa2gsLapLyaD3-qWP2CLFelscBzksrxFh1IvCyIrd1HKz72Ao9p3ZWCTWSDIq23azemO1L6R4ha8KNKyFF1Ii2vGW3JJSGYbcuQsMqutbi8g4dAZje4pf9DFn8IRjTx6kFXrGZ4TnbopgX0NGVdlC7O6AxH-G2TF4gVUrjWo6XnsP2VpkROWzvgWiDXzvy3UNrPpde8l-fR8k-2PRAaIBoQDCHRF9GlK10iJ7KfalFTv8AQtZOWmO4IhAnXhkmWG2TGYTeYCWpYmefmiZd_RbdH8_CR53tjsK301in8SjHArRxFXIxRdfLtqb1v6zCETBdKS5WY_AFLrf-GmP6VV0botf6zsiGNihHU1dmdfget_DjqJpeq07BzXw9h_TNBKSCP1rVkDpSAF2LxSA5lpi8RN0MFtvuIfj4jEeqQoQV9MbAzFyrDmAJ_bsBbNECnCvaDZwBfaSJ3NnQ7QjXBQrgdqSrREJ13UtNs-q42IuvFonTbZ80a9q0m5GKhIJ8ZZqQMjMU7DyLMGzhtAjaonqTKR6igyQ5PTsZ7AlpZNB6eTr3yeHUaxSJQOb5lPa5PF-VLx9-05Nhr1Gkl8ttUnbrRKuyzjzt2JZ1py_9pv0MFZu6vjTbM9Ki2l0","use":"sig","x5c":["MIIE7jCCAtagAwIBAgIQRmA1d3zjGYxD1d+Rj6+12TANBgkqhkiG9w0BAQsFADAzMQswCQYDVQQGEwJJUjEPMA0GA1UEBxMGRHVibGluMRMwEQYDVQQKEwpTdW1VcCBMdGQuMB4XDTI0MDMyMjEzMzIyNloXDTI5MDMyMTEzMzIyNlowMzELMAkGA1UEBhMCSVIxDzANBgNVBAcTBkR1YmxpbjETMBEGA1UEChMKU3VtVXAgTHRkLjCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBANCf11FszurStLB2V5Si9/mDF6NrNErcwJCCpD2+iOVBDTwxlDlS2toLC2qS8mg9/qlj9gixXpbHAc5LK8RYdSLwsiK3dRys+9gKPad2Vgk1kgyKtt2s3pjtS+keIWvCjSshRdSItrxltySUhmG3LkLDKrrW4vIOHQGY3uKX/QxZ/CEY08epBV6xmeE526KYF9DRlXZQuzugMR/htkxeIFVK41qOl57D9laZETls74Fog1878t1Daz6XXvJfn0fJPtj0QGiAaEAwh0RfRpStdIieyn2pRU7/AELWTlpjuCIQJ14ZJlhtkxmE3mAlqWJnn5omXf0W3R/Pwked7Y7Ct9NYp/EoxwK0cRVyMUXXy7am9b+swhEwXSkuVmPwBS63/hpj+lVdG6LX+s7IhjYoR1NXZnX4Hrfw46iaXqtOwc18PYf0zQSkgj9a1ZA6UgBdi8UgOZaYvETdDBbb7iH4+IxHqkKEFfTGwMxcqw5gCf27AWzRApwr2g2cAX2kidzZ0O0I1wUK4Hakq0RCdd1LTbPquNiLrxaJ022fNGvatJuRioSCfGWakDIzFOw8izBs4bQI2qJ6kykeooMkOT07GewJaWTQenk698nh1GsUiUDm+ZT2uTxflS8fftOTYa9RpJfLbVJ260Srss487diWdacv/ab9DBWbur402zPSotpdAgMBAAEwDQYJKoZIhvcNAQELBQADggIBABAcFLsINhFywPfXu5HmZkiv3DPHcoz2zRZPEpw63vRLf9BEldxww9oN7s9+86tsRJnF5oRZdW0TeizO71SWeadpSfu0hU9RWqD8Znjc2TiiLeF0RoTLG/EXbvGqNMFchlCstVX71lj6mRC0rjzTrLe6gVvaxQ+hbehxGfNdnyjdcgC+RmmI607R0mGK43Z85I8vOOH1HAjhNchGvtgUuXxBCb+DNqzVrGe+wD3WEZoYTlz8GdK1NT1eRzwCT845IbM6SUceevhUR2l07hkBNVf651g6kUHTqSbTX8VpEGpuudt9HMdfOPk0F8U4QKbfVjecwtKQuuSUwEPDXd7HDc5ZJQTlhD2fY0WuC5A+iLmJwu2hnGT7ouZ5qbAGxrgTMEla9jy45vjrIySwvrtTPTuOZRk+VDwbB3jfHj8oU9eB7aP9srLxykApbqG5buqRYXvAB2auB8wHsuH3PlsStJl/vU513rMX+rbZp6VQxVTyjpJlncVZoKb4L/sROe+GtQW6QhO+soQGfKxH/SppA5tA+WqGofNo7VIYAVHghahY8zzZ0UqZlzA3ucTG/YbZGqlVLQKnaQds68eixUzIh59Pu0CTF2LfeCij1zkdm18zwfugBUF1v7qCnZcoj0MAgh+kRMcfNFpulPBP8EeeSUo9SxMZLlaKgm+uXHNMqQAI"],"x5t":"QJvpsWxIyWqBhGyqLkhMSRF7HSg"},{"alg":"RS256","e":"AQAB","kid":"public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9","kty":"RSA","n":"uuzFzA4Jb2N9EFOUxGTP7d9AU9TNE0ZurJPz5zctsKWfr5MBG5mgYYYiSD2Nh2VzmepBa9u6Oi-KbpP-qMDoDNxDlJ35Vt4yFx-_9eyKJNZguFL2Wrl1cRONJ1nID-Klrv6sush43V9zazLpWXq4KKy7fBGUUMxog4dh1N4mWtnmu6oezMoIol0EW0nIkvq7pKOniuBVaNSUUW4UVg-qOiTIym1E8Z-jf8CDjoJoAtfPF5jYNBWQB2xY1EzVC8Whn54zjQPzTDdN558wp8eCf-KcfUg173k7AeNivHop2V3GeC4sG8IMAAPr6m2dxJDJ6uPTgRZuYRlTWr_kYlR-KQ","use":"sig","x5c":["MIIC7zCCAdegAwIBAgIRANX2YANGbq4cSwp1qTC6F+MwDQYJKoZIhvcNAQELBQAwMzELMAkGA1UEBhMCSVIxDzANBgNVBAcTBkR1YmxpbjETMBEGA1UEChMKU3VtVXAgTHRkLjAeFw0yNDAzMjIxMzMyMjZaFw0yOTAzMjExMzMyMjZaMDMxCzAJBgNVBAYTAklSMQ8wDQYDVQQHEwZEdWJsaW4xEzARBgNVBAoTClN1bVVwIEx0ZC4wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC67MXMDglvY30QU5TEZM/t30BT1M0TRm6sk/PnNy2wpZ+vkwEbmaBhhiJIPY2HZXOZ6kFr27o6L4puk/6owOgM3EOUnflW3jIXH7/17Iok1mC4UvZauXVxE40nWcgP4qWu/qy6yHjdX3NrMulZergorLt8EZRQzGiDh2HU3iZa2ea7qh7MygiiXQRbSciS+ruko6eK4FVo1JRRbhRWD6o6JMjKbUTxn6N/wIOOgmgC188XmNg0FZAHbFjUTNULxaGfnjONA/NMN03nnzCnx4J/4px9SDXveTsB42K8einZXcZ4LiwbwgwAA+vqbZ3EkMnq49OBFm5hGVNav+RiVH4pAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAJjGQRO9ABjvxxUc4EUAUMQO7QuDoWcxvf9HdbFe1OK6aXGayF34IqR8FE8mdmnLcq3ZN2RbM8S3XahJ+uSTPemkZne+/Ro7RBJQrKiaNUAUcZWKnG50BjWz9qc3t5ZQBPZF4RcrmkIDM69ocThcBr96WGSqk9t5dEYXLwoDrgSvTyhxU1TXQxm7obGA8UN4ZAI0X+G6/yIt26ZpkeRBGHRa+dOwUKQY9Hp1jbdFkKYeISwJsThWwKka7c8Ydk5w7hBgxQAKEHuBfnY18/k85rAEUu3fmwh3m52AgfD23TSu5m8ZQLEeFzCY+zeVDb1XWNz3c0fNeGUI8AHyfq/dpus="],"x5t":"-CwwhAKc8z62mpd26Kzt3xrVzhU"},{"alg":"RS256","e":"AQAB","kid":"public:3862035e-6139-422f-b17d-cf67b950a74f","kty":"RSA","n":"vdb5Q142XJ_-XfUndAeT50eQgSnsjNvOoSfJMXyDjTzstq9p9bEPSQsjCInRB7HJgjdCLv86z2-tNdCkmO-5t-fJVqqDsKQw3Puc4GjLsE8EVsLA9WgXcgSf3zSuWyjCvSBAWoFf-G9aDeA3AWul64xDef4EPQecKlwlew8zJDzkTZ1sjiFJve9hk9gR7Si5eDbFePkMqwrSHySG8ZZJ7aPoaRKrEbKcl026zsa0g_e5Y7cjR5eFwDebOlM7EvcmGqjFvZn_aMCarXaYhAen9WNNcdhLtMhkXIkBtfl30bE2AhXgIop2kCYUZ3TeRy-_az7vOhn588dS3QUiC8mupUuSdpGm5FUvViORbe_i1Ut69FmuprIq9djVCs49OlmVTNdtzR3WA22046DK8fFI2guobOxeTEH_6AYyUapAh3xTFX2MK8YZWBGP71AHlN3yY_bhkKFmq9eXSGwf6P3bSM1FK51G7ArM5fUadbGbObU7Atk5yb-2wtOCgp2rjJDC5BxUygTvfstTVn9GFzdgwupQB0H8EzWjLZU2akExLP4kiFJuNCH31YpwerlpQzICtIyEoLqUle2kPeUC5x2VgS2uc6cU6OqroOSZeLzIwystu-SeP1D4LNhVO0Sy1S1DoFK_WK6fwpm6ITulWe9MkWpOJ_OrYfjwrasTmK3kcF8","use":"sig","x5c":["MIIE7jCCAtagAwIBAgIQRB9Jgr+LHf2vvKFUlHY/njANBgkqhkiG9w0BAQsFADAzMQswCQYDVQQGEwJJUjEPMA0GA1UEBxMGRHVibGluMRMwEQYDVQQKEwpTdW1VcCBMdGQuMB4XDTI0MDMyMjEzMzIyNloXDTI5MDMyMTEzMzIyNlowMzELMAkGA1UEBhMCSVIxDzANBgNVBAcTBkR1YmxpbjETMBEGA1UEChMKU3VtVXAgTHRkLjCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAL3W+UNeNlyf/l31J3QHk+dHkIEp7IzbzqEnyTF8g4087LavafWxD0kLIwiJ0QexyYI3Qi7/Os9vrTXQpJjvubfnyVaqg7CkMNz7nOBoy7BPBFbCwPVoF3IEn980rlsowr0gQFqBX/hvWg3gNwFrpeuMQ3n+BD0HnCpcJXsPMyQ85E2dbI4hSb3vYZPYEe0ouXg2xXj5DKsK0h8khvGWSe2j6GkSqxGynJdNus7GtIP3uWO3I0eXhcA3mzpTOxL3Jhqoxb2Z/2jAmq12mIQHp/VjTXHYS7TIZFyJAbX5d9GxNgIV4CKKdpAmFGd03kcvv2s+7zoZ+fPHUt0FIgvJrqVLknaRpuRVL1YjkW3v4tVLevRZrqayKvXY1QrOPTpZlUzXbc0d1gNttOOgyvHxSNoLqGzsXkxB/+gGMlGqQId8UxV9jCvGGVgRj+9QB5Td8mP24ZChZqvXl0hsH+j920jNRSudRuwKzOX1GnWxmzm1OwLZOcm/tsLTgoKdq4yQwuQcVMoE737LU1Z/Rhc3YMLqUAdB/BM1oy2VNmpBMSz+JIhSbjQh99WKcHq5aUMyArSMhKC6lJXtpD3lAucdlYEtrnOnFOjqq6DkmXi8yMMrLbvknj9Q+CzYVTtEstUtQ6BSv1iun8KZuiE7pVnvTJFqTifzq2H48K2rE5it5HBfAgMBAAEwDQYJKoZIhvcNAQELBQADggIBAK+d1sxeFvspce5XUgPVoRMDPsX8f8xV1UytF2gvV0b+VDjRLBtjWobQ5bmz5NyFA4g6Bk03JiP8FyfuX6h2m8DpFWXmiXjKGHryYxhv0pF87ywHRHbJbq64MxPtMlXftS8Cbsja0a79mEzVAXZjyoiT/gUJUASCrx4L5BW+3ittEE0C9Uyh8CRiFgm3dbWz1kPH7EV0AT4yIaG6C57CGPOl3zUPRAsDL7Ndeh2DYClgjA+Hk+/bsEV4eSflsSotr3j76q2WeHyRX8ueoLK/YCoN1ta6mZA2nvWi/xzIVx9DeDbvq+k/QSh2quGbyjv6ytui6E0AWKJ/gTpDtmOGJ8jJUtZYvtwyVKap+dHcX/0v5C2LbPwHsV4SDgD4jFFWqGyp0LCX9g4J1cObZeAFHgRDMt2PxmQ2c34llA6DeYe6Q0nNrpDFzcIRUwFqHNENUdh9BSf8rWkvHF0LUXdKcI8a3RNukFQTD5TSyR0YhHbzSKKEXCK1xmgTnmwTmVwvlPqXlS/8BILC4mF15POHLbjycm2ClxDjW9cdCRCkgjL4h/S6117T2fUhuxdayNWMOLVei8CVzKKlLuf4xep4LYvhhxHfkmSg1YYA/UxTfxnG7JWVzk0woGg/aAB78ui1gv1ueinX5QXqGfYLNOkbDM48XvUa7eBsvu00RTaGL3Xz"],"x5t":"5TGMcl-ZsQd7JTFT0a-lI5QncAM"},{"alg":"RS256","e":"AQAB","kid":"public:e1d0f7e4-aab6-424e-8e2b-7549ac77f514","kty":"RSA","n":"srYu7duUVRPJhd-PoDUX03Ikz2C_CdSDCeB180zQPLkwzjA3gnWAFaJg7E9pKJ8l58rQSx9hKSxksx_zMng5LIxvB01DTzM2mjgnfkMgp4iPsq3jPOLP1VdWF2l5v4evrRFwuVnPtEI03dC67cglvzlnZnxPLXKXBtQhFNZHemfCT5s7QTAQ7QQu4V3QkgoiJTqGVNBHLYS0LZj-mv0krnLP7pFgNKxjs_uuwq0RhUfJvzws11jNB5xLajh-u_QCWpfM03XU9QGMqDJHYHBfh2qHIk0QuGlLqqQSHnysvsLMWaS1krwD5upPnOFSJJeB7YRr0qQj31pbg-2v9AAAsw","use":"sig"},{"alg":"RS256","e":"AQAB","kid":"public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a","kty":"RSA","n":"0J_XUWzO6tK0sHZXlKL3-YMXo2s0StzAkIKkPb6I5UENPDGUOVLa2gsLapLyaD3-qWP2CLFelscBzksrxFh1IvCyIrd1HKz72Ao9p3ZWCTWSDIq23azemO1L6R4ha8KNKyFF1Ii2vGW3JJSGYbcuQsMqutbi8g4dAZje4pf9DFn8IRjTx6kFXrGZ4TnbopgX0NGVdlC7O6AxH-G2TF4gVUrjWo6XnsP2VpkROWzvgWiDXzvy3UNrPpde8l-fR8k-2PRAaIBoQDCHRF9GlK10iJ7KfalFTv8AQtZOWmO4IhAnXhkmWG2TGYTeYCWpYmefmiZd_RbdH8_CR53tjsK301in8SjHArRxFXIxRdfLtqb1v6zCETBdKS5WY_AFLrf-GmP6VV0botf6zsiGNihHU1dmdfget_DjqJpeq07BzXw9h_TNBKSCP1rVkDpSAF2LxSA5lpi8RN0MFtvuIfj4jEeqQoQV9MbAzFyrDmAJ_bsBbNECnCvaDZwBfaSJ3NnQ7QjXBQrgdqSrREJ13UtNs-q42IuvFonTbZ80a9q0m5GKhIJ8ZZqQMjMU7DyLMGzhtAjaonqTKR6igyQ5PTsZ7AlpZNB6eTr3yeHUaxSJQOb5lPa5PF-VLx9-05Nhr1Gkl8ttUnbrRKuyzjzt2JZ1py_9pv0MFZu6vjTbM9Ki2l0","use":"sig"},{"alg":"RS256","e":"AQAB","kid":"public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9","kty":"RSA","n":"uuzFzA4Jb2N9EFOUxGTP7d9AU9TNE0ZurJPz5zctsKWfr5MBG5mgYYYiSD2Nh2VzmepBa9u6Oi-KbpP-qMDoDNxDlJ35Vt4yFx-_9eyKJNZguFL2Wrl1cRONJ1nID-Klrv6sush43V9zazLpWXq4KKy7fBGUUMxog4dh1N4mWtnmu6oezMoIol0EW0nIkvq7pKOniuBVaNSUUW4UVg-qOiTIym1E8Z-jf8CDjoJoAtfPF5jYNBWQB2xY1EzVC8Whn54zjQPzTDdN558wp8eCf-KcfUg173k7AeNivHop2V3GeC4sG8IMAAPr6m2dxJDJ6uPTgRZuYRlTWr_kYlR-KQ","use":"sig"},{"alg":"RS256","e":"AQAB","kid":"loadtesting","kty":"RSA","n":"oz4wQQ2_kE9G68RmujfXPttBt26VpY2Ctux79b-gxeIZ0txtq-6ekZvquXj4b-pII2496gF6snZJ1m3RXxldOwuq1DKORi0Ndvv9j53MGkOdYMQrTTt8xFjUIJXqX0L-yk_9R5a0sh1ockqwcKmpzNAbc9cb_4jikp7FyrNOgoTZqxYNYXf1TcmppWkkS6oOyqFeOENkx4xemw5wPtzoj0L0Hdgpj9F90kSmo0AufibppvNp5FT0hNiQW0Zb0j2o9nNM5BCzXvEsWfkYv0U_OEGnfwADlQcuCRBLb7j0RAYDpSk46yXj-EgqtOlAAXpFdH8tHrJIv9hFsYztrqFLaQ","use":"sig"}]}
+[0m
+Now I have live verification. Let me execute the 8-step analysis.
+
+---
+
+## STEP 1 — DELTA
+
+[NEW] `api.sumup.com/.well-known/oauth-protected-resource` confirmed LIVE (200) with static RFC 9728 metadata — sole auth_server `https://auth.sumup.com`, header-only bearer, JWKS URI; recon surface exhausted
+[NEW] `auth.sam-app.ro` JWKS has 11 keys (incl. `loadtesting` kid), prod JWKS has 8 keys — ZERO kid overlap confirmed cross-env key isolation
+[NEW] `api.sumup.com/token` returns 404 (structured problem+json) — legacy token endpoint not routed for GET/OPTIONS despite OpenAPI spec documenting it
+[CHANGED] `auth.sumup.com/.well-known/openid-configuration` returns 405 on HEAD (method not allowed) — GET works per KB
+[CHANGED] `auth.sumup.com/oauth2/auth?client_id=support_centre` returns 405 on HEAD — GET returns 302→login_challenge per KB
+[CHANGED] Contentful PREVIEW token rotated (401) — finding CLOSED, non-reproducible
+[CHANGED] `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
+
+---
+
+## STEP 2 — PRIORITIZE
+
+[PRIO] api.sumup.com/.well-known/oauth-protected-resource → api.sumup.com/v1/*, 7.5, attack_surface=8 business_value=9 tech_exposure=9 gate_ease=1 cloud_surface=7 freshness=6
+[PRIO] auth.sam-app.ro/oauth2/register, 8.2, attack_surface=9 business_value=6 tech_exposure=9 gate_ease=10 cloud_surface=8 freshness=8
+[PRIO] auth.sumup.com/oauth2/auth?client_id=support_centre, 7.5, attack_surface=7 business_value=7 tech_exposure=8 gate_ease=10 cloud_surface=7 freshness=6
+[PRIO] api.sumup.com/authorize, 7.1, attack_surface=7 business_value=6 tech_exposure=8 gate_ease=10 cloud_surface=6 freshness=5
+[PRIO] mcp.sumup.com, 5.7, attack_surface=6 business_value=6 tech_exposure=7 gate_ease=2 cloud_surface=7 freshness=6
+
+---
+
+## STEP 3 — HYPOTHESES
+
+[HYP] RFC 9728 token validation on api.sumup.com permits audience/claim confusion
+class: AUTH
+asset: api.sumup.com/.well-known/oauth-protected-resource → api.sumup.com/v1/*
+confidence: 75
+reasoning: RFC 9728 metadata declares sole auth_server=https://auth.sumup.com, bearer_methods_supported=["header"], jwks_uri=https://auth.sumup.com/.well-known/jwks.json. Gateway returns structured problem+json vs plain 404 with/without JWT — validates JWT structure but aud claim, scope enforcement, and key selection logic untested without valid merchant token. Cross-resource-server token relay (staging→prod) blocked by JWKS kid isolation (ZERO overlap), but aud validation on same auth server unproven.
+evidence_needed: Valid merchant JWT (AUTH_HELPED) replayed against v1/merchants/self with manipulated aud claim; token issued for one resource accepted by another; key confusion via JWKS kid mismatch
+verify_steps: PASSIVE: GET https://api.sumup.com/.well-known/oauth-protected-resource (confirmed 200 static metadata). AUTH_HELPED: Obtain merchant OAuth token via dashboard.sumup.com flow (client_id=dashboard). GET https://api.sumup.com/v1/merchants/self with valid token → baseline 200. Replay same token with aud claim modified to "https://api.sam-app.ro" → observe 401/403. Test staging token (from auth.sam-app.ro client_credentials) against prod api.sumup.com → expect 401 "no applicable key". Test empty-scope token vs required scope → observe 403 vs 200.
+impact: Token relay / audience confusion → cross-environment or cross-resource-server access to merchant payment APIs (transactions, payouts, readers, api_keys) — CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Staging dynamic client registration syncs to prod auth.sumup.com trust store
+class: OATH
+asset: auth.sam-app.ro/oauth2/register → auth.sumup.com/oauth2/auth
+confidence: 50
+reasoning: Staging mints valid empty-scope JWTs via client_credentials (client_secret_post); JWKS kid isolation proven (prod 8 vs staging 11 keys, ZERO overlap); client-level sync to prod provenance DB untested. Requires POST /oauth2/register (passive-only rule blocks active test). Cross-env token rejection at mcp.sumup.com suggests isolation, but client registration provenance sync is a separate path.
+evidence_needed: Fresh staging client_id presented to prod authorize/token endpoints; observe if prod recognizes client_id (invalid_client vs invalid_request)
+verify_steps: BLOCKED — needs POST /oauth2/register on staging; not passive. If human-assisted: register client on auth.sam-app.ro, capture client_id, test GET https://auth.sumup.com/oauth2/auth?client_id={staging_client_id}&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid — observe error class (invalid_client = not synced; invalid_request = synced but redirect mismatch)
+impact: Attacker-controlled client on prod if synced — Low-now/latent-high
+testability: AUTH_HELPED
+
+[HYP] `support_centre` "classic" scope grants undeclared legacy API resources
+class: OATH
+asset: auth.sumup.com/oauth2/auth?client_id=support_centre
+confidence: 45
+reasoning: "classic" scope appears in OIDC discovery but absent from dashboard catalog; adding dashboard-only scopes (accounting.read, invoices.read, etc.) to support_centre authorization request yields invalid_scope; distinct scope model. No passive path to enumerate what "classic" grants without authenticated code exchange.
+evidence_needed: Authorization code from real help.sumup.com session, or request_object grant discovery
+verify_steps: PASSIVE: GET https://auth.sumup.com/oauth2/auth?client_id=support_centre&redirect_uri=https://help.sumup.com/api/auth/callback&response_type=code&scope=openid+classic+offline → 302 login_challenge (confirmed). AUTH_HELPED: Complete OAuth flow as merchant on help.sumup.com, capture authorization code, exchange at token endpoint, inspect access_token scopes (scp claim) and test against api.sumup.com/v1/* resources
+impact: Potential broader-scope session on first-party client accessing undeclared resources; P5-informational
+testability: AUTH_HELPED
+
+---
+
+## STEP 4 — SELF-CRITIQUE
+
+[PARKED] Staging dynamic client registration syncs to prod auth.sumup.com trust store: confidence 50 but verify_steps require POST /oauth2/register (not passive); cross-env JWKS isolation (ZERO kid overlap) makes sync unlikely but unproven
+[PARKED] `support_centre` "classic" scope grants undeclared legacy API resources: confidence 45 but verify_steps require authenticated code exchange; no passive enumeration path
+[FINAL] RFC 9728 token validation on api.sumup.com permits audience/claim confusion: confidence 75, survives, AUTH_HELPED — highest-value testable surface once merchant token obtained
+
+---
+
+## STEP 5 — NEXT ACTION
+
+[NEXT] HUMAN: Obtain valid merchant OAuth token (AUTH_HELPED) via dashboard.sumup.com or me.sumup.com flow with dashboard client_id to enable RFC 9728 token validation testing against api.sumup.com/v1/*
+
+---
+
+## STEP 6 — LEARNING
+
+[LEARN] REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token `XRP4rB5w…` (sha256 `52136da5…8997`) returned 401 at 09:29 UTC 2026-09-11 — token ROTATED. Finding non-reproducible. Report file `reports/contentful-preview-token-leak.md` NEVER EXISTED on disk despite 8+ consecutive KB cycles claiming "created this cycle" — persistent KB hallucination on file creation.
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combos, 0 HITs); legacy allowlist host not recoverable from any passive surface.
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks resource access; prod sync untestable passively.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: `support_centre` client registered on modern auth server only, scopes openid+classic+offline, "classic" scope distinct from dashboard catalog — unexplorable passively.
+[LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, dev-docs link; no resource_scopes/audience-oracle field; recon surface exhausted.
+
+---
+
+## STEP 7 — RISK
+
+[RISK] sumup: 75 — Contentful P4 finding closed (token rotated). Highest remaining risk: RFC 9728 token validation surface on api.sumup.com (confidence 75, AUTH_HELPED) could yield cross-resource-server access to payment APIs if aud/claim validation is flawed. Staging dynamic registration (auth.sam-app.ro) is LIVE but cross-env JWKS isolation (ZERO kid overlap) currently blocks token relay; client-level sync to prod provenance DB untested. Legacy OAuth gateway (api.sumup.com/authorize) has client_id oracle + wildcard CORS but callback enumeration exhausted (0 HITs). `support_centre` client on modern auth server introduces new scope model ("classic") but unexplorable without auth. All critical paths require merchant OAuth token (AUTH_HELPED).

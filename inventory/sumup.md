@@ -548,3 +548,12 @@ www.sumup.com
 - CHANGED Contentful PREVIEW token `XRP4rB5w…` (sha256 `52136da5…8997`) rotated (401 at 09:29 UTC 2026-09-11) — finding CLOSED, non-reproducible
 - CHANGED Staging `auth.sam-app.ro` dynamic client registration (RFC 7591) LIVE; mints JWTs with empty scope + attacker-controlled `aud`; cross-env JWKS isolation confirmed (prod 8 keys, staging 11 keys, ZERO k
 - CHANGED `read-api.sumup.com` & `sf-gateway-api.sumup.com` `/authorize` return 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracle, fully gated
+
+## 2026-09-12 13:18:33 UTC
+- NEW `api.sumup.com/.well-known/oauth-protected-resource` confirmed LIVE (200) with static RFC 9728 metadata — sole auth_server `https://auth.sumup.com`, header-only bearer, JWKS URI; recon surface exhaust
+- NEW `auth.sam-app.ro` JWKS has 11 keys (incl. `loadtesting` kid), prod JWKS has 8 keys — ZERO kid overlap confirmed cross-env key isolation
+- NEW `api.sumup.com/token` returns 404 (structured problem+json) — legacy token endpoint not routed for GET/OPTIONS despite OpenAPI spec documenting it
+- CHANGED `auth.sumup.com/.well-known/openid-configuration` returns 405 on HEAD (method not allowed) — GET works per KB
+- CHANGED `auth.sumup.com/oauth2/auth?client_id=support_centre` returns 405 on HEAD — GET returns 302→login_challenge per KB
+- CHANGED Contentful PREVIEW token rotated (401) — finding CLOSED, non-reproducible
+- CHANGED `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
