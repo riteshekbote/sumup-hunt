@@ -387,3 +387,5 @@
 - 2026-09-12 ACCEPTED OATH @ auth.sumup.com: support_centre allowlist is exactly {openid, classic, offline}; classic+any scope → invalid_scope; scope oracle for support_centre exhausted.
 - 2026-09-12 ACCEPTED BUSLOGIC @ api.sumup.com spec: GET /v0.1/merchants/{merchant_code}/payment-methods and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session declared oauth2:[] — empty-scope BOLA targets for AUTH_HELPED gating test.
 - 2026-09-12 REJECTED MISCONFIG @ /reports: `contentful-preview-token-leak.md` verified absent again via `ls` (finding closed, token rotated) — do not re-assert file claims beyond this.
+- 2026-09-12 ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, JWKS URI; no resource_scopes/audience-oracle field; recon surface exhausted
+- 2026-09-12 REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token rotated (401) — finding non-reproducible; report file never existed despite KB hallucinations

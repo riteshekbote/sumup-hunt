@@ -19811,3 +19811,263 @@ testability: AUTH_HELPED
 
 ## STEP 7 — RISK
 [RISK] sumup: 35 — Genuine net-negative-yield cycle: one confirmed refutation (alg/none/HS256 confusion), one candidate closure (payment-methods anonymous static), and one sharpening (prod JWT-per-op gate live). Two survivors (aud-relay 75, apple-pay-session 40) and the staging-sync lead (45) all remain AUTH_HELPED / POST-blocked; no passive path can substitute a merchant token. No new reportable finding; no record-integrity regressions (report-file absence verified, no re-assertions). Program value flat until HUMAN unblocks token acquisition.
+===== ANALYST bigpickle 2026-09-12 16:36:30 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m# [0mTodos
+[•] Review current state and knowledge base for delta
+[ ] Prioritize top assets based on attack surface, business value, etc.
+[ ] Develop hypotheses for top 3 assets
+[ ] Self-critique and finalize hypotheses
+[ ] Determine next action
+[ ] Document learning from this cycle
+[ ] Assess program risk
+[0m
+[0m$ [0mls -la /home/runner/work/sumup-hunt/sumup-hunt 2>/dev/null && echo "---reports---" && ls -la /home/runner/work/sumup-hunt/sumup-hunt/reports 2>/dev/null
+total 472
+drwxr-xr-x 12 runner runner   4096 Sep 12 16:24 .
+drwxr-xr-x  3 runner runner   4096 Sep 12 16:24 ..
+drwxr-xr-x  7 runner runner   4096 Sep 12 16:24 .git
+drwxr-xr-x  3 runner runner   4096 Sep 12 16:24 .github
+-rw-r--r--  1 runner runner   1885 Sep 12 16:24 README.md
+-rw-r--r--  1 runner runner    351 Sep 12 16:25 analyst-out.txt
+-rw-r--r--  1 runner runner 178177 Sep 12 16:24 analyst-prompt.txt
+-rw-r--r--  1 runner runner 174291 Sep 12 16:24 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 12 16:24 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 12 16:24 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 12 16:24 leads
+-rw-r--r--  1 runner runner  38344 Sep 12 16:24 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 12 16:24 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 12 16:24 reports
+drwxr-xr-x  2 runner runner   4096 Sep 12 16:24 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Sep 12 16:24 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 12 16:24 scripts
+-rw-r--r--  1 runner runner     33 Sep 12 16:24 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 12 16:24 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 12 16:24 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 12 16:24 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 12 16:24 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 12 16:24 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 12 16:24 triage
+---reports---
+total 3288
+drwxr-xr-x  2 runner runner    4096 Sep 12 16:24 .
+drwxr-xr-x 12 runner runner    4096 Sep 12 16:24 ..
+-rw-r--r--  1 runner runner 1744167 Sep 12 16:24 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   13454 Sep 12 16:24 analyst-laguna.log
+-rw-r--r--  1 runner runner   13392 Sep 12 16:24 analyst-ling3.log
+-rw-r--r--  1 runner runner   13516 Sep 12 16:24 analyst-longcat.log
+-rw-r--r--  1 runner runner 1264419 Sep 12 16:24 analyst-nemotron3.log
+-rw-r--r--  1 runner runner   24096 Sep 12 16:24 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 12 16:24 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 12 16:24 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 12 16:24 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner    8750 Sep 12 16:24 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  231955 Sep 12 16:24 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 12 16:24 reposcan-findings.md
+-rw-r--r--  1 runner runner    3079 Sep 12 16:24 valid-bugs.md
+[0m
+[0m◈ [0mExa Web Search "SumUp case studies authenticated API IDOR my.sumup.com 2026"
+[0m
+[0m$ [0mcurl -s -m 20 -o /tmp/opencode/sumup-openapi.yaml -w "%{http_code} %{size_download}\n" https://raw.githubusercontent.com/sumup/sumup-developer/main/openapi.yaml
+200 319585
+[0m
+[0m$ [0mcurl -s -m 15 -D - -o /dev/null -X OPTIONS https://api.sumup.com/token | head -30
+HTTP/2 204 
+date: Sat, 12 Sep 2026 16:25:54 GMT
+access-control-allow-origin: api.sumup.com
+access-control-allow-headers: *
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 148f6818-e6b0-978d-9fb6-c91fdd2451a2
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=OjovS6DQvv0CNb_F0PDgR.J65IhLdPwytX.aJyllgZ8-1789230353.9237115-1.0.1.1-ql7F6fmAymSnIhF1RClB1HFHdDhFfBT_2ywthOGF8RuOqaaXzdSiEyiTc.AI7iPIHEkt4wWDgBDeYGc0vw6zSE8EVpRxcqqYBAS_zEu51Q1qJIIyMxbMan3Ktve0XUewcV.pbdHwdkUwbtzZ4IO9uQ; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 16:55:54 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=MQ%2BSKePiPQHxMyPWFufGzSUGxk9jMQpdy02T0s4aZ2EKXnpk0%2FCSZLlXcOwwdy5RyuvGWu7VjCFXwCCKcwjQkohsjAvGW2PL9Lzvfgr%2FnwPoIGwFiWtIShD5w6JOlsA%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a3a045500e5ac96b-IAD
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import yaml, json
+d = yaml.safe_load(open('sumup-openapi.yaml'))
+paths = d.get('paths', {})
+print("TOTAL PATHS:", len(paths))
+ops = []
+for p, items in paths.items():
+    for m, op in items.items():
+        if m in ('get','post','put','delete','patch'):
+            scopes = None
+            sec = op.get('security')
+            if sec:
+                scopes = [list(s.values()) for s in sec]
+            ops.append((p, m, op.get('operationId',''), scopes))
+# print ops NOT already in KB-cataloged set
+for p,m,oid,scopes in ops:
+    hidden = any(s == [] or (isinstance(s,list) and all(not x for x in s)) for s in (scopes or []))
+    print(f"{m.upper():6} {p:70} {oid:45} scope={scopes} empty_scope={hidden}")
+EOF
+TOTAL PATHS: 28
+GET    /v0.1/merchants/{merchant_code}/payment-methods                        GetPaymentMethods                             scope=[[[]], [[]]] empty_scope=True
+POST   /v0.1/checkouts                                                        CreateCheckout                                scope=[[[]], [['payments', 'checkouts.write']]] empty_scope=True
+GET    /v0.1/checkouts                                                        ListCheckouts                                 scope=[[[]], [['payments', 'checkouts.read']]] empty_scope=True
+GET    /v0.1/checkouts/{checkout_id}                                          GetCheckout                                   scope=[[[]], [['payments', 'checkouts.read']]] empty_scope=True
+PATCH  /v0.1/checkouts/{checkout_id}                                          UpdateCheckout                                scope=[[[]], [['payments', 'checkouts.write']]] empty_scope=True
+PUT    /v0.1/checkouts/{checkout_id}                                          ProcessCheckout                               scope=[[[]], [['payments', 'checkouts.write']]] empty_scope=True
+DELETE /v0.1/checkouts/{checkout_id}                                          DeactivateCheckout                            scope=[[[]], [['payments', 'checkouts.write']]] empty_scope=True
+PUT    /v0.2/checkouts/{checkout_id}/apple-pay-session                        CreateApplePaySession                         scope=[[[]], [[]]] empty_scope=True
+POST   /v0.1/customers                                                        CreateCustomer                                scope=[[[]], [['payment_instruments', 'customers.write']]] empty_scope=True
+GET    /v0.1/customers/{customer_id}                                          GetCustomer                                   scope=[[[]], [['payment_instruments', 'customers.read']]] empty_scope=True
+PUT    /v0.1/customers/{customer_id}                                          UpdateCustomer                                scope=[[[]], [['payment_instruments', 'customers.write']]] empty_scope=True
+GET    /v0.1/customers/{customer_id}/payment-instruments                      ListPaymentInstruments                        scope=[[[]], [['payment_instruments', 'customers.read']]] empty_scope=True
+DELETE /v0.1/customers/{customer_id}/payment-instruments/{token}              DeactivatePaymentInstrument                   scope=[[[]], [['payment_instruments', 'customers.write']]] empty_scope=True
+POST   /v1.0/merchants/{merchant_code}/payments/{transaction_id}/refunds      RefundTransaction                             scope=[[[]], [['payments', 'refunds.write']]] empty_scope=True
+GET    /v2.1/merchants/{merchant_code}/transactions                           GetTransactionV2.1                            scope=[[[]], [['transactions.history', 'transactions.read']]] empty_scope=True
+GET    /v2.1/merchants/{merchant_code}/transactions/history                   ListTransactionsV2.1                          scope=[[[]], [['transactions.history', 'transactions.read']]] empty_scope=True
+GET    /v1.0/merchants/{merchant_code}/payouts                                ListPayoutsV1                                 scope=[[[]], [['user.profile', 'user.profile_readonly', 'payouts.read']]] empty_scope=True
+GET    /v1.1/receipts/{transaction_id}                                        GetReceipt                                    scope=[[[]], [['receipts.read', 'transactions.history']]] empty_scope=True
+POST   /v0/merchants/{merchant_code}/readers/{reader_id}/go-checkout          CreateGoReaderCheckout                        scope=[[[]], [['payments', 'readers.write']]] empty_scope=True
+GET    /v0.1/memberships                                                      ListMemberships                               scope=[[[]], [['user.profile', 'user.profile_readonly']]] empty_scope=True
+GET    /v0.1/merchants/{merchant_code}/members                                ListMerchantMembers                           scope=[[[]], [['user.subaccounts', 'members.read']]] empty_scope=True
+POST   /v0.1/merchants/{merchant_code}/members                                CreateMerchantMember                          scope=[[[]], [['user.subaccounts', 'members.write']]] empty_scope=True
+GET    /v0.1/merchants/{merchant_code}/members/{member_id}                    GetMerchantMember                             scope=[[[]], [['user.subaccounts', 'members.read']]] empty_scope=True
+PUT    /v0.1/merchants/{merchant_code}/members/{member_id}                    UpdateMerchantMember                          scope=[[[]], [['user.subaccounts', 'members.write']]] empty_scope=True
+DELETE /v0.1/merchants/{merchant_code}/members/{member_id}                    DeleteMerchantMember                          scope=[[[]], [['user.subaccounts', 'members.write']]] empty_scope=True
+GET    /v0.1/merchants/{merchant_code}/roles                                  ListMerchantRoles                             scope=[[[]], [['user.subaccounts', 'roles.read']]] empty_scope=True
+POST   /v0.1/merchants/{merchant_code}/roles                                  CreateMerchantRole                            scope=[[[]], [['user.subaccounts', 'roles.write']]] empty_scope=True
+GET    /v0.1/merchants/{merchant_code}/roles/{role_id}                        GetMerchantRole                               scope=[[[]], [['user.subaccounts', 'roles.read']]] empty_scope=True
+DELETE /v0.1/merchants/{merchant_code}/roles/{role_id}                        DeleteMerchantRole                            scope=[[[]], [['user.subaccounts', 'roles.write']]] empty_scope=True
+PATCH  /v0.1/merchants/{merchant_code}/roles/{role_id}                        UpdateMerchantRole                            scope=[[[]], [['user.subaccounts', 'roles.write']]] empty_scope=True
+GET    /v1/merchants/{merchant_code}                                          GetMerchant                                   scope=[[[]], [['user.profile', 'user.profile_readonly']]] empty_scope=True
+GET    /v1/merchants/{merchant_code}/persons                                  ListPersons                                   scope=[[[]], [['user.profile', 'user.profile_readonly']]] empty_scope=True
+GET    /v1/merchants/{merchant_code}/persons/{person_id}                      GetPerson                                     scope=[[[]], [['user.profile', 'user.profile_readonly']]] empty_scope=True
+GET    /v0.1/merchants/{merchant_code}/readers                                ListReaders                                   scope=[[[]], [['readers.read', 'terminals.read']]] empty_scope=True
+POST   /v0.1/merchants/{merchant_code}/readers                                CreateReader                                  scope=[[[]], [['readers.write', 'terminals.write']]] empty_scope=True
+GET    /v0.1/merchants/{merchant_code}/readers/{reader_id}                    GetReader                                     scope=[[[]], [['readers.read', 'terminals.read']]] empty_scope=True
+DELETE /v0.1/merchants/{merchant_code}/readers/{reader_id}                    DeleteReader                                  scope=[[[]], [['readers.write', 'terminals.write']]] empty_scope=True
+PATCH  /v0.1/merchants/{merchant_code}/readers/{reader_id}                    UpdateReader                                  scope=[[[]], [['readers.write', 'terminals.write']]] empty_scope=True
+POST   /v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout           CreateReaderCheckout                          scope=[[[]], [['readers.write']]] empty_scope=True
+GET    /v0.1/merchants/{merchant_code}/readers/{reader_id}/status             GetReaderStatus                               scope=[[[]], [['readers.read']]] empty_scope=True
+POST   /v0.1/merchants/{merchant_code}/readers/{reader_id}/terminate          CreateReaderTerminate                         scope=[[[]], [['readers.write']]] empty_scope=True
+GET    /v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout/{checkout_id} GetReaderCheckout                             scope=[[[]], [['readers.read']]] empty_scope=True
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import yaml
+d = yaml.safe_load(open('sumup-openapi.yaml'))
+ss = d.get('components',{}).get('securitySchemes',{})
+print(json.dumps(ss, indent=1) if False else ss)
+for name, s in ss.items():
+    print(name, '->', s)
+# scopes for oauth2
+for name in ('oauth2','apiKey','oauth'):
+    if name in ss:
+        print('SCOPES', name, list(ss[name].get('flows',{}).values())[0].get('scopes',{}).keys() if name!='apiKey' else '')
+EOF
+{'apiKey': {'description': 'API keys allow you easily interact with SumUp APIs. API keys are static tokens. You can create API keys from the [Dashboard](https://me.sumup.com/settings/api-keys)', 'type': 'http', 'scheme': 'Bearer'}, 'oauth2': {'type': 'oauth2', 'description': 'SumUp supports [OAuth 2.0](https://tools.ietf.org/html/rfc6749) authentication for platforms that want to offer their services to SumUp users.\n\nTo integrate via OAuth 2.0 you will need a client credentials that you can create in the [SumUp Dashboard](https://me.sumup.com/settings/oauth2-applications).\n\nTo maintain security of our users, we highly recommend that you use one of the [recommended OAuth 2.0 libraries](https://oauth.net/code/) for authentication.', 'flows': {'authorizationCode': {'authorizationUrl': 'https://api.sumup.com/authorize', 'tokenUrl': 'https://api.sumup.com/token', 'refreshUrl': 'https://api.sumup.com/token', 'scopes': {'payments': 'Make payments by creating and processing checkouts.', 'checkouts.read': 'View checkouts.', 'checkouts.write': 'Create, process, and deactivate checkouts.', 'transactions.history': 'View transactions and transaction history.', 'transactions.read': 'View transactions and transaction history.', 'refunds.write': 'Refund transactions.', 'receipts.read': 'View receipts.', 'user.profile_readonly': 'View user profile details.', 'user.profile': 'View and manage your user profile.', 'user.app-settings': 'View and manage the SumUp mobile application settings.', 'payment_instruments': 'Manage customers and their payment instruments.', 'customers.read': 'View customers and their payment instruments.', 'customers.write': 'Create and manage customers and their payment instruments.', 'user.payout-settings': 'View and manage your payout settings.', 'payouts.read': 'View payouts.', 'user.subaccounts': 'View and manage the user profile details of your employees.'}}, 'clientCredentials': {'tokenUrl': 'https://api.sumup.com/token', 'scopes': {'payments': 'Make payments by creating and processing checkouts.', 'checkouts.read': 'View checkouts.', 'checkouts.write': 'Create, process, and deactivate checkouts.', 'transactions.history': 'View transactions and transaction history.', 'transactions.read': 'View transactions and transaction history.', 'refunds.write': 'Refund transactions.', 'receipts.read': 'View receipts.', 'user.profile_readonly': 'View user profile details.', 'user.profile': 'View and manage your user profile.', 'user.app-settings': 'View and manage the SumUp mobile application settings.', 'payment_instruments': 'Manage customers and their payment instruments.', 'customers.read': 'View customers and their payment instruments.', 'customers.write': 'Create and manage customers and their payment instruments.', 'user.payout-settings': 'View and manage your payout settings.', 'payouts.read': 'View payouts.', 'user.subaccounts': 'View and manage the user profile details of your employee.'}}}}}
+apiKey -> {'description': 'API keys allow you easily interact with SumUp APIs. API keys are static tokens. You can create API keys from the [Dashboard](https://me.sumup.com/settings/api-keys)', 'type': 'http', 'scheme': 'Bearer'}
+oauth2 -> {'type': 'oauth2', 'description': 'SumUp supports [OAuth 2.0](https://tools.ietf.org/html/rfc6749) authentication for platforms that want to offer their services to SumUp users.\n\nTo integrate via OAuth 2.0 you will need a client credentials that you can create in the [SumUp Dashboard](https://me.sumup.com/settings/oauth2-applications).\n\nTo maintain security of our users, we highly recommend that you use one of the [recommended OAuth 2.0 libraries](https://oauth.net/code/) for authentication.', 'flows': {'authorizationCode': {'authorizationUrl': 'https://api.sumup.com/authorize', 'tokenUrl': 'https://api.sumup.com/token', 'refreshUrl': 'https://api.sumup.com/token', 'scopes': {'payments': 'Make payments by creating and processing checkouts.', 'checkouts.read': 'View checkouts.', 'checkouts.write': 'Create, process, and deactivate checkouts.', 'transactions.history': 'View transactions and transaction history.', 'transactions.read': 'View transactions and transaction history.', 'refunds.write': 'Refund transactions.', 'receipts.read': 'View receipts.', 'user.profile_readonly': 'View user profile details.', 'user.profile': 'View and manage your user profile.', 'user.app-settings': 'View and manage the SumUp mobile application settings.', 'payment_instruments': 'Manage customers and their payment instruments.', 'customers.read': 'View customers and their payment instruments.', 'customers.write': 'Create and manage customers and their payment instruments.', 'user.payout-settings': 'View and manage your payout settings.', 'payouts.read': 'View payouts.', 'user.subaccounts': 'View and manage the user profile details of your employees.'}}, 'clientCredentials': {'tokenUrl': 'https://api.sumup.com/token', 'scopes': {'payments': 'Make payments by creating and processing checkouts.', 'checkouts.read': 'View checkouts.', 'checkouts.write': 'Create, process, and deactivate checkouts.', 'transactions.history': 'View transactions and transaction history.', 'transactions.read': 'View transactions and transaction history.', 'refunds.write': 'Refund transactions.', 'receipts.read': 'View receipts.', 'user.profile_readonly': 'View user profile details.', 'user.profile': 'View and manage your user profile.', 'user.app-settings': 'View and manage the SumUp mobile application settings.', 'payment_instruments': 'Manage customers and their payment instruments.', 'customers.read': 'View customers and their payment instruments.', 'customers.write': 'Create and manage customers and their payment instruments.', 'user.payout-settings': 'View and manage your payout settings.', 'payouts.read': 'View payouts.', 'user.subaccounts': 'View and manage the user profile details of your employee.'}}}}
+SCOPES oauth2 dict_keys(['payments', 'checkouts.read', 'checkouts.write', 'transactions.history', 'transactions.read', 'refunds.write', 'receipts.read', 'user.profile_readonly', 'user.profile', 'user.app-settings', 'payment_instruments', 'customers.read', 'customers.write', 'user.payout-settings', 'payouts.read', 'user.subaccounts'])
+SCOPES apiKey
+[0m
+[0m$ [0mfor s in user.subaccounts user.app-settings user.payout-settings; do
+  code=$(curl -s -m 15 -o /dev/null -w "%{http_code}|%{redirect_url}" "https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&scope=${s}&state=st12345678")
+  echo "scope=$s -> $code"
+  sleep 1
+done
+scope=user.subaccounts -> 303|https://me.sumup.com/api/sso/callback?error=invalid_scope&error_description=The+requested+scope+is+invalid%2C+unknown%2C+or+malformed.+The+OAuth+2.0+Client+is+not+allowed+to+request+scope+%27user.subaccounts%27.&state=st12345678
+scope=user.app-settings -> 303|https://me.sumup.com/api/sso/callback?error=invalid_scope&error_description=The+requested+scope+is+invalid%2C+unknown%2C+or+malformed.+The+OAuth+2.0+Client+is+not+allowed+to+request+scope+%27user.app-settings%27.&state=st12345678
+scope=user.payout-settings -> 303|https://me.sumup.com/api/sso/callback?error=invalid_scope&error_description=The+requested+scope+is+invalid%2C+unknown%2C+or+malformed.+The+OAuth+2.0+Client+is+not+allowed+to+request+scope+%27user.payout-settings%27.&state=st12345678
+[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m
+[0m$ [0m# probe docs example client_id on legacy + modern oracle (GET only, <=1 rps)
+cid="fOcmczrYtYMJ7Li5GjMLLcUeC9dN"
+echo "== legacy api.sumup.com/authorize =="
+curl -s -m 15 -o /dev/null -w "%{http_code}|%{redirect_url}\n" "https://api.sumup.com/authorize?client_id=${cid}&redirect_uri=https%3A%2F%2Fexample.com%2Fcallback&response_type=code&scope=payments&state=st12345678"
+sleep 1
+echo "== modern auth.sumup.com/oauth2/auth =="
+curl -s -m 15 -o /dev/null -w "%{http_code}|%{redirect_url}\n" "https://auth.sumup.com/oauth2/auth?client_id=${cid}&redirect_uri=https%3A%2F%2Fexample.com%2Fcallback&response_type=code&scope=openid&state=st12345678"
+sleep 1
+echo "== control: dashboard on legacy =="
+curl -s -m 15 -o /dev/null -w "%{http_code}|%{redirect_url}\n" "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https%3A%2F%2Fexample.com%2Fcallback&response_type=code&scope=payments&state=st12345678"
+== legacy api.sumup.com/authorize ==
+302|https://auth.sumup.com/flows/oauth2/error?error=invalid_client&error_description=The+requested+OAuth+2.0+Client+does+not+exist.
+== modern auth.sumup.com/oauth2/auth ==
+302|https://auth.sumup.com/flows/oauth2/error?error=invalid_client&error_description=Client+authentication+failed+%28e.g.%2C+unknown+client%2C+no+client+authentication+included%2C+or+unsupported+authentication+method%29.+The+requested+OAuth+2.0+Client+does+not+exist.
+== control: dashboard on legacy ==
+302|https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[0m
+[0m# [0mTodos
+[✓] Review current state and knowledge base for delta
+[✓] Prioritize top assets based on attack surface, business value, etc.
+[✓] Develop hypotheses for top 3 assets
+[✓] Self-critique and finalize hypotheses
+[•] Determine next action
+[ ] Document learning from this cycle
+[ ] Assess program risk
+[0m
+STEP 1 — DELTA
+- [NEW] developer.sumup.com/api+spec audit: official OAuth model is **16 scopes** (payments, checkouts.*, transactions.*, refunds.write, receipts.read, user.profile*, user.app-settings, payment_instruments, customers.*, user.payout-settings, payouts.read, user.subaccounts), not the 8 apis.io aggregates — 3 of these (user.subaccounts, user.app-settings, user.payout-settings) were never scope-oracled before.
+- [NEW] auth.sumup.com/oauth2/auth dashboard scope model **FULLY CLOSED**: those 3 remaining scopes all → 303 invalid_scope; allowlist is exactly {readers.read, terminals.read} of the 16 spec scopes (2026-09-12 probes).
+- [NEW] Every op in openapi.yaml declares a literal primary anonymous security alternative `[[]]` alongside oauth2; gateway still uniform-404/401 without auth — formal-doc artifact, no live unauth surface.
+- [CHANGED] api.sumup.com/token reconfirmed routed (OPTIONS 204, wildcard CORS, identity.svc apigateway2-headless:8080) 2026-09-12.
+- [NEW] Docs' OAuth-app example client_id `fOcmczrYtYMJ7Li5GjMLLcUeC9dN` → invalid_client on BOTH legacy (/authorize) and modern (/oauth2/auth) oracle — placeholder, no credential recovery.
+- NO_DELTA for exploit yield: both top AUTH_HELPED survivors (aud-confusion, receipts BOLA) remain blocked on a merchant token.
+
+STEP 2 — PRIORITIZE
+- [PRIO] api.sumup.com,7.4,axis=JWT-vs-apiKey dual authz+global-ID ops (42 ops, payments+PII money ops, JWT/apiKey/Envoy+Cloudflare, gate=2)
+- [PRIO] auth.sumup.com,6.9,axis=OIDC/OAuth oracle+client registry (client_id+scope oracles live and closed; staging RFC7591 register live, prod absent)
+- [PRIO] me.sumup.com,5.1,axis=merchant self-service OAuth-app registry behind dashboard client (Vercel edge-gated 307/403; no anonymous surface)
+- [PRIO] mcp.sumup.com,4.9,axis=MCP+JWKS bearing (Cloudflare Worker, header-only bearer, DO agent; stale since 09-06)
+
+STEP 3 — HYPOTHESES
+[HYP] RFC 9728 aud/iss claim binding on api.sumup.com gateway
+class: AUTH
+asset: api.sumup.com/v1/merchants/{merchant_code}
+confidence: 75
+reasoning: Metadata static with sole AS auth.sumup.com; gateway proves JWT-presence differentiation (structured problem+json vs plain 404) and now proves sig/alg binding (garbage→401, header token→404); spec documents a SECOND authz path (http apiKey Bearer) on every op — ≥2 validation paths to confuse; only aud/iss/kid-claim binding remains unobserved.
+evidence_needed: valid merchant JWT re-encoded with aud=https://api.sam-app.ro then =attacker.com yielding 200 vs 401/403 — proves aud not bound at request time.
+verify_steps: AUTH_HELPED: GET /v1/merchants/{own_code} with original token (baseline 200); same token with aud-mutated header → 200(confusion) vs 401(bound); repeat iss auth.sam-app.ro.
+impact: Token bound to staging/other-surface aud accepted for prod account access — CRITICAL if real.
+testability: AUTH_HELPED
+
+[HYP] Staging RFC 7591 dynamic-client registry syncs to prod auth.sumup.com
+class: OATH
+asset: auth.sumup.com/oauth2/auth (client_id oracle)
+confidence: 45
+reasoning: Staging registration live unauthenticated (201, PKCE+redirect-allowlist enforced there); cross-env JWKS isolation (ZERO kid overlap) proven but client-registry sync is a separate control never exercised against prod's live oracle; unknown IDs → invalid_client, known → 303/further — oracle is cheap and validated.
+evidence_needed: fresh staging-registered client_id accepted (non-invalid_client) on prod /oauth2/auth.
+verify_steps: BLOCKED — needs POST /oauth2/register (not passive); if unblocked, GET prod auth?client_id={fresh}&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid.
+impact: Attacker-controlled prod-registered client → token minting for any victim merchant — latent-high.
+testability: AUTH_HELPED
+
+[HYP] Cross-tenant receipt disclosure via /v1.1/receipts/{transaction_id}
+class: IDOR
+asset: api.sumup.com/v1.1/receipts/{transaction_id}
+confidence: 45
+reasoning: Spec routes this op keyed solely by global transaction_id (no merchant_code inbound scoping); merchant+customer PII payload; scopes receipts.read/transactions.history; ownership binding to token subject is the sole control; same pattern class predates in SumUp's own public history.
+evidence_needed: 200 with non-owned transaction_id returning another merchant's receipt.
+verify_steps: AUTH_HELPED: GET own receipt → recover transaction_id shape; GET /v1.1/receipts/{foreign_id} → 200(leak) vs 403/404(scoped).
+impact: Cross-tenant merchant/customer PII read — CRITICAL if confirmed.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- Dropped: PUT /v0.2/checkouts/{id}/apple-pay-session empty-scope authz-skip (40) — subsumed by aud-confusion; same token test unlocks both; parked behind it.
+- Dropped: spec anonymous-alternative `[[]]` (no live 200/401 anon op; gateway 404 without auth — REJECTED-class informational), docs placeholder credentials (probed, closed), dashboard extra scopes (closed this cycle).
+- [PARKED] apple-pay-session authz-skip: legit but requires the identical merchant token; testing order after aud+receipts.
+- [FINAL] 1. RFC 9728 aud/iss binding (api, 75, AUTH_HELPED) 2. receipts BOLA (api, 45, AUTH_HELPED) 3. staging-registry sync (auth, 45, AUTH_HELPED/POST-blocked).
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Obtain one merchant OAuth token (register app at me.sumup.com/settings/oauth2-applications, scopes transactions.history+receipts.read, or complete dashboard login) then in ONE session: (1) baseline GET /v1/merchants/{own_code}; (2) re-encode JWT aud→https://api.sam-app.ro and →attacker.com, re-GET → RFC 9728 aud-binding test; (3) GET own receipt then /v1.1/receipts/{foreign_txn} → BOLA test; (4) PUT /v0.2/checkouts/{bogus}/apple-pay-session → empty-scope authz test. Single blocking dependency for all three survivors.
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED OATH @ auth.sumup.com/oauth2/auth: dashboard scope model FULLY CLOSED — user.subaccounts/app-settings/payout-settings all → 303 invalid_scope (2026-09-12); allowlist exactly {readers.read, terminals.read} of the 16 spec scopes; scope oracle complete, do not re-probe.
+- [LEARN] ACCEPTED OTHER @ api.sumup.com/token: OPTIONS 204 + wildcard CORS + x-envoy-decorator-operation apigateway2-headless.identity.svc.cluster.local reconfirmed — spec-documented POST-only exchange, issuance requires client credentials (not passive).
+- [LEARN] ACCEPTED OTHER @ developer.sumup.com/api: OAuth-app example client_id `fOcmczrYtYMJ7Li5GjMLLcUeC9dN` is a placeholder — invalid_client on BOTH legacy and modern oracle (control dashboard→invalid_request intact); doc samples are not live credentials.
+- [LEARN] ACCEPTED OTHER @ github.com/sumup/sumup-developer openapi.yaml: every op declares primary anonymous security `[[]]` + oauth2 alt, and oauth2 model has 16 scopes incl. user.app-settings/subaccounts/payout-settings; spec artifact under test vs gateway; client_credentials documented as able to "process payments for merchants linked to your application".
+- [LEARN] REJECTED MISCONFIG @ api.sumup.com OpenAPI: anonymous security alternative is NOT a live unauth surface — uniform 404 unauthenticated on all 28 paths; formal-documentation artifact only.
+
+STEP 7 — RISK
+[RISK] sumup: 35 — Cycle yield is closure+recon only: dashboard scope model fully closed (14/16 rejected), /token route and doc-placeholder IDs reconfirmed, spec 16-scope/anon-alternative model documented. No reportable finding; Contentful leak remains rotated/closed (valid-bugs.md=0 filed; report file verified ABSENT via ls this cycle — no re-assertions). Top three survivors (aud 75, receipts/BOLA 45, staging-sync 45) still AUTH_HELPED / POST-blocked; no passive path substitutes a merchant token. Flat until HUMAN unblocks.

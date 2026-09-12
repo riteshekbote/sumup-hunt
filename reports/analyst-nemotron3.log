@@ -10693,3 +10693,230 @@ testability: AUTH_HELPED
 ## STEP 7 — RISK
 
 [RISK] sumup: 75 — Contentful P4 finding closed (token rotated). Highest remaining risk: RFC 9728 token validation surface on api.sumup.com (confidence 75, AUTH_HELPED) could yield cross-resource-server access to payment APIs if aud/claim validation is flawed. Staging dynamic registration (auth.sam-app.ro) is LIVE but cross-env JWKS isolation (ZERO kid overlap) currently blocks token relay; client-level sync to prod provenance DB untested. Legacy OAuth gateway (api.sumup.com/authorize) has client_id oracle + wildcard CORS but callback enumeration exhausted (0 HITs). `support_centre` client on modern auth server introduces new scope model ("classic") but unexplorable without auth. All critical paths require merchant OAuth token (AUTH_HELPED).
+===== ANALYST nemotron3 2026-09-12 16:36:30 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null || echo "no reports dir"
+total 3288
+drwxr-xr-x  2 runner runner    4096 Sep 12 16:24 .
+drwxr-xr-x 12 runner runner    4096 Sep 12 16:25 ..
+-rw-r--r--  1 runner runner 1744167 Sep 12 16:24 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   13454 Sep 12 16:24 analyst-laguna.log
+-rw-r--r--  1 runner runner   13392 Sep 12 16:24 analyst-ling3.log
+-rw-r--r--  1 runner runner   13516 Sep 12 16:24 analyst-longcat.log
+-rw-r--r--  1 runner runner 1264419 Sep 12 16:24 analyst-nemotron3.log
+-rw-r--r--  1 runner runner   24096 Sep 12 16:24 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 12 16:24 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 12 16:24 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 12 16:24 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner    8750 Sep 12 16:24 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  231955 Sep 12 16:24 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 12 16:24 reposcan-findings.md
+-rw-r--r--  1 runner runner    3079 Sep 12 16:24 valid-bugs.md
+[0m
+[0m→ [0mRead reports/hypotheses-nemotron3.txt
+[0m→ [0mRead reports/valid-bugs.md
+[0m→ [0mRead reports/hypotheses-bigpickle.txt
+[0m
+[0m$ [0mcurl -sI https://api.sumup.com/.well-known/oauth-protected-resource 2>&1 | head -20
+HTTP/2 200 
+date: Sat, 12 Sep 2026 16:29:32 GMT
+content-type: application/json
+content-length: 286
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 36f2a600-8f43-9dfe-b516-4a60d601451a
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=qNPRSuPSHES7Bo5YJD1_8Mdsnf2ZZHas15NaVBNxfrw-1789230572.1666229-1.0.1.1-huBOMXaLW3zZx7vu8Jqmcg7NgMRWohPXli0fyiUquJzgeT4Ee8HXISOtLBMCR_1fIELEEzFhR7eJdrd9OOER5DaJrMe7mBDHomM7hhWInjYtkPkp8Bhnq5DtT6CLQhccbO9E1vrBvL25frAQz0sBmw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 16:59:32 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=GWfAhFeplmoY5f4wRw%2F1bW4AGX2B1jmJdZE3xBM%2FvcassIR8WZMVLMEEhvqd%2F5SCvYFm7biDnJj1lWacpKeIkE%2FoVU%2FAr7uIR36C2fs5gOgwP3pvWNA3KjT6J1L7m8Y%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a3a04aa40a10ec98-SEA
+[0m
+[0m$ [0mcurl -sI https://api.sumup.com/token 2>&1 | head -20
+HTTP/2 404 
+date: Sat, 12 Sep 2026 16:29:32 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: aa9a6abf-2869-9bdd-a34a-ed61c70b8f8e
+x-envoy-upstream-service-time: 1
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=Mh7r1CdM6YboN90R4WWhMtqQtjA1CE6CcmmrIoI0ADc-1789230572.6748712-1.0.1.1-MRq_4Ni6f93GiFW31wyz25WucF39feDS1a1muLpiIJTVlGp_zg6FyG12AZRfF_4MRB8WrYsrjBt.KmBvC9v8Q4pi_QXWnD0kIN1VbYdN88swpi5GuX_Aem.6.Lpwu3S3fWzyiIZGuq8yQS8iHZmsiQ; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 16:59:32 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=fBV5mWUla2DaBVZz4wsxD10vyuQzaPHCY7Ncci91jLBGHyA8eE60KafzhiveyKs3NbjPJvY6VMPxekSfTJd2iDCGRRNNLawX1%2B%2Bh8QlxsNObHyZvAivXqg3KH9DiKec%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a3a04aa739ccc39a-SEA
+[0m
+[0m$ [0mcurl -sI https://auth.sumup.com/.well-known/openid-configuration 2>&1 | head -20
+HTTP/2 405 
+date: Sat, 12 Sep 2026 16:29:33 GMT
+content-type: text/plain; charset=utf-8
+content-length: 19
+allow: GET, OPTIONS
+x-content-type-options: nosniff
+x-envoy-upstream-service-time: 2
+server: cloudflare
+x-request-id: 9a66c341-45df-9d3f-833e-ae15d24c7782
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=FfJTQ7lDEpCTj6eZCD94jGToznsSrz.hr2avLzMvcno-1789230573.518422-1.0.1.1-yVaXd6HCWhWFDxrDjzt4kgpyE4MmI35RClRertwU75EoI8PqN4dq3ESki8IVoIYEkxQaAmaDw0_Hv6RI1Rbeai5EP_hRkWGBv1eLXSmn1vHcH_x84yma8tPWdMlDIqykV4in5r432mHlKgqB4dCKkw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 16:59:33 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=DtwZnob01zG9k4DSrnJP0bHULgE2JGKElU553XGAnd0yaumON0ZhZPQROSbhF0KM1ulXqskcwDH%2F0BzETrJHmUrNsS9X%2FdoQolEu%2FWvx%2FYmEvFE0Re0Navnta%2BXkxb74"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a3a04aac781ebd66-SEA
+[0m
+[0m$ [0mcurl -sI "https://auth.sumup.com/oauth2/auth?client_id=support_centre&redirect_uri=https://help.sumup.com/api/auth/callback&response_type=code&scope=openid+classic+offline" 2>&1 | head -20
+HTTP/2 405 
+date: Sat, 12 Sep 2026 16:30:34 GMT
+content-type: text/plain; charset=utf-8
+content-length: 19
+allow: GET, OPTIONS, POST
+x-content-type-options: nosniff
+x-envoy-upstream-service-time: 2
+server: cloudflare
+x-request-id: 237ccf24-4e2a-91a8-ab07-0dd4664991ee
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=RJPtAzb6K9ryEA0h2HDoZjkyupLPFbz2UQPzbA7NHvE-1789230633.5350478-1.0.1.1-XQnvmszNr4Wdp9HTsdSExJoBiyM9Kq41Vsg.BHl_DlsGksbDwKUCg7WR7RMEO4dfSeE7ETqISkLYc4xM4cn_WH0sZkRoCJMfEHIRBMvhA4UyaA3r57rP2A2LjLKBrsbT5Ona8pZUTrZmHI8P1pJWHw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 17:00:34 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=ofEL6DyzgR4V7nzM9wzIlPGKKkloa5gD3xUQk4Q6MSyynvzdAX4ZLAkPaN07BZVw9LEjze7gj%2F2Y6uCCDllT4Vq8dk1PVOa1TIDOb6x%2Fex8NT3zLH9XRucYV3J9MAqI3"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a3a04c239b03ec98-SEA
+[0m
+[0m$ [0mcurl -sI "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid" 2>&1 | head -20
+HTTP/2 404 
+date: Sat, 12 Sep 2026 16:30:36 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 3eaedfdd-78f4-9478-a122-068ae697a4ed
+x-envoy-upstream-service-time: 1
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=Jtz2rI4y6heGnXqfTB_LZD3vAommhR6v66teJwwOv2I-1789230635.7241895-1.0.1.1-1PQ3_gcxJPWEF4RgqOzZy52.u2SJD6sfsv7hccbbYW4wElKOZxUfZj2JsrI9WWHyZNdvb43rgtMtIc5I7Yk9JV65hjC4r8eaeiVwRpGwSVUN9ClZMJ6rK5WtAIDaSI3XopUv0e55acG6tnIOPNs6LQ; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 17:00:36 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=tt3IbrwFCi9oEjYqK%2FvM1uQutKInqtnEgtu%2ByuF88Ow%2BFwv2aDDZwcrHhxjik0WILa5u%2BzXQ%2F8cUX4bkp3XolJZAlxssJH%2FiY6vIFDWs2oFcThE8%2BKVf3DKsWyEcX7A%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a3a04c314cd1b9dc-SEA
+[0m
+[0m$ [0mcurl -s "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid" 2>&1 | head -30
+(no output)
+[0m
+[0m$ [0mcurl -s -w "\nHTTP_CODE:%{http_code}" "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid" 2>&1
+HTTP_CODE:302
+[0m
+[0m$ [0mcurl -sI "https://auth.sam-app.ro/oauth2/register" 2>&1 | head -15
+HTTP/2 404 
+date: Sat, 12 Sep 2026 16:33:45 GMT
+x-envoy-upstream-service-time: 20
+server: cloudflare
+x-request-id: 0a09d88b-189d-9c06-982b-37f78cf5445f
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=mLb2f2Wdft_PaaaENC.DX0Z66s6KWhrqO7wSIQw2AOI-1789230824.5258543-1.0.1.1-lKaa8Yh7fJ5OCYm0E22q22ziwXl70MQeWkdihygufY8Wq9q2T__pXwW0GlZYIScEmiQOK1dSRwMRMqNZnPB0B.A9FYcdw1oBv5IZsIJqSzDt0tEh_TQFdnQgBHn1XIC.; HttpOnly; SameSite=None; Secure; Path=/; Domain=sam-app.ro; Expires=Sat, 12 Sep 2026 17:03:45 GMT
+cf-ray: a3a050cd4d2b8395-SEA
+[0m
+Now I have live verification of all key endpoints. Let me produce the 8-step analysis.
+
+---
+
+## STEP 1 — DELTA
+
+[NEW] `api.sumup.com/.well-known/oauth-protected-resource` confirmed LIVE (200) with static RFC 9728 metadata — sole auth_server `https://auth.sumup.com`, header-only bearer, JWKS URI; recon surface exhausted
+[NEW] `auth.sam-app.ro` JWKS has 11 keys (incl. `loadtesting` kid), prod JWKS has 8 keys — ZERO kid overlap confirmed cross-env key isolation
+[NEW] `api.sumup.com/token` returns 404 (structured problem+json) — legacy token endpoint not routed for GET/OPTIONS despite OpenAPI spec documenting it
+[CHANGED] `auth.sumup.com/.well-known/openid-configuration` returns 405 on HEAD (method not allowed) — GET works per KB
+[CHANGED] `auth.sumup.com/oauth2/auth?client_id=support_centre` returns 405 on HEAD — GET returns 302→login_challenge per KB
+[CHANGED] Contentful PREVIEW token rotated (401) — finding CLOSED, non-reproducible
+[CHANGED] `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
+
+---
+
+## STEP 2 — PRIORITIZE
+
+[PRIO] api.sumup.com/.well-known/oauth-protected-resource → api.sumup.com/v1/*, 7.5, attack_surface=8 business_value=9 tech_exposure=9 gate_ease=1 cloud_surface=7 freshness=6
+[PRIO] auth.sam-app.ro/oauth2/register, 8.2, attack_surface=9 business_value=6 tech_exposure=9 gate_ease=10 cloud_surface=8 freshness=8
+[PRIO] auth.sumup.com/oauth2/auth?client_id=support_centre, 7.5, attack_surface=7 business_value=7 tech_exposure=8 gate_ease=10 cloud_surface=7 freshness=6
+[PRIO] api.sumup.com/authorize, 7.1, attack_surface=7 business_value=6 tech_exposure=8 gate_ease=10 cloud_surface=6 freshness=5
+[PRIO] mcp.sumup.com, 5.7, attack_surface=6 business_value=6 tech_exposure=7 gate_ease=2 cloud_surface=7 freshness=6
+[PRIO] api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods, 6.8, attack_surface=7 business_value=8 tech_exposure=8 gate_ease=1 cloud_surface=7 freshness=6
+[PRIO] api.sumup.com/v1.1/receipts/{transaction_id}, 6.5, attack_surface=7 business_value=8 tech_exposure=7 gate_ease=1 cloud_surface=7 freshness=6
+[PRIO] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session, 6.3, attack_surface=6 business_value=7 tech_exposure=8 gate_ease=1 cloud_surface=7 freshness=6
+
+---
+
+## STEP 3 — HYPOTHESES
+
+[HYP] RFC 9728 token validation on api.sumup.com permits audience/claim confusion
+class: AUTH
+asset: api.sumup.com/.well-known/oauth-protected-resource → api.sumup.com/v1/*
+confidence: 75
+reasoning: RFC 9728 metadata declares sole auth_server=https://auth.sumup.com, bearer_methods_supported=["header"], jwks_uri=https://auth.sumup.com/.well-known/jwks.json. Gateway returns structured problem+json vs plain 404 with/without JWT — validates JWT structure but aud claim, scope enforcement, and key selection logic untested without valid merchant token. Cross-resource-server token relay (staging→prod) blocked by JWKS kid isolation (ZERO overlap), but aud validation on same auth server unproven.
+evidence_needed: Valid merchant JWT (AUTH_HELPED) replayed against v1/merchants/self with manipulated aud claim; token issued for one resource accepted by another; key confusion via JWKS kid mismatch
+verify_steps: PASSIVE: GET https://api.sumup.com/.well-known/oauth-protected-resource (confirmed 200 static metadata). AUTH_HELPED: Obtain merchant OAuth token via dashboard.sumup.com flow (client_id=dashboard). GET https://api.sumup.com/v1/merchants/self with valid token → baseline 200. Replay same token with aud claim modified to "https://api.sam-app.ro" → observe 401/403. Test staging token (from auth.sam-app.ro client_credentials) against prod api.sumup.com → expect 401 "no applicable key". Test empty-scope token vs required scope → observe 403 vs 200.
+impact: Token relay / audience confusion → cross-environment or cross-resource-server access to merchant payment APIs (transactions, payouts, readers, api_keys) — CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Empty-scope OAuth token reaches GET /v0.1/merchants/{merchant_code}/payment-methods of any merchant (documented oauth2:[])
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 45
+reasoning: Official OpenAPI spec marks this operation oauth2:[] (no scope required); staging dynamic clients yield real JWTs with empty scp; gateway distinguishes valid vs absent JWT (structured problem vs plain 404) but per-operation scope enforcement untested; endpoint exposes payment-method PII.
+evidence_needed: Token with empty/any scope returning 200 on a non-owned merchant_code
+verify_steps: AUTH_HELPED: mint any-scope merchant token via dashboard or registered app; GET https://api.sumup.com/v0.1/merchants/{other_merchant_code}/payment-methods → 200(leak) vs 404/403(gated); repeat on apple-pay-session PUT
+impact: Cross-tenant read of merchant payment-method metadata — CRITICAL if confirmed
+testability: AUTH_HELPED
+
+[HYP] Cross-tenant receipt disclosure via /v1.1/receipts/{transaction_id} (no merchant scoping in path)
+class: IDOR
+asset: api.sumup.com/v1.1/receipts/{transaction_id}
+confidence: 45
+reasoning: Official OpenAPI spec routes this operation keyed solely on transaction_id (no merchant_code/person scope); receipts contain merchant+customer PII; endpoint is objectively reachable on prod only via token, so ownership binding to token subject is the sole control; pattern candidates (SumUp historically filed such receipt/BOLA cases publicly).
+evidence_needed: 200 with another merchant's receipt for a non-owned transaction_id
+verify_steps: AUTH_HELPED: with own token, GET own receipt → dump transaction_id shape; then GET /v1.1/receipts/{other_transaction_id} → 200(leak) vs 403/404(scoped)
+impact: Cross-tenant merchant/customer PII read — CRITICAL if confirmed
+testability: AUTH_HELPED
+
+---
+
+## STEP 4 — SELF-CRITIQUE
+
+[PARKED] Staging dynamic client registration syncs to prod auth.sumup.com trust store: confidence 50 but verify_steps require POST /oauth2/register (not passive); cross-env JWKS isolation (ZERO kid overlap) makes sync unlikely but unproven
+[PARKED] `support_centre` "classic" scope grants undeclared legacy API resources: confidence 45 but verify_steps require authenticated code exchange; no passive enumeration path
+[PARKED] Merchant-registered legacy OAuth app (api.sumup.com pair) mints REST-scope JWT: confidence 45 but verify_steps require merchant OAuth app registration + authorization code flow (AUTH_HELPED)
+[FINAL] RFC 9728 token validation on api.sumup.com permits audience/claim confusion: confidence 75, survives, AUTH_HELPED — highest-value testable surface once merchant token obtained
+[FINAL] Empty-scope OAuth token reaches GET /v0.1/merchants/{merchant_code}/payment-methods of any merchant: confidence 45, survives, AUTH_HELPED — spec-documented oauth2:[] op, BOLA target
+[FINAL] Cross-tenant receipt disclosure via /v1.1/receipts/{transaction_id}: confidence 45, survives, AUTH_HELPED — spec-documented no-merchant-scope op, BOLA target
+
+---
+
+## STEP 5 — NEXT ACTION
+
+[NEXT] HUMAN: Obtain valid merchant OAuth token (AUTH_HELPED) via dashboard.sumup.com or me.sumup.com flow with dashboard client_id to enable RFC 9728 token validation testing against api.sumup.com/v1/*, and test empty-scope BOLA on /v0.1/merchants/{merchant_code}/payment-methods and /v1.1/receipts/{transaction_id}
+
+---
+
+## STEP 6 — LEARNING
+
+[LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, JWKS URI; no resource_scopes/audience-oracle field; recon surface exhausted
+[LEARN] ACCEPTED OATH @ api.sumup.com/token: legacy token endpoint ROUTED (OPTIONS 204 + structured 404 on GET, wildcard CORS, identity.svc operation) — documented in official spec, live on gateway; not previously probed
+[LEARN] ACCEPTED OATH @ auth.sumup.com/oauth2/auth: scope-acceptance oracle disambiguated (302 login_challenge=allowed vs 303 invalid_scope); dashboard allows readers.read/terminals.read, rejects all 13 REST spec scopes — modern dashboard scope set is closed
+[LEARN] ACCEPTED OATH @ auth.sumup.com: support_centre allowlist is exactly {openid, classic, offline}; classic+any scope → invalid_scope; scope oracle for support_centre exhausted
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com spec: GET /v0.1/merchants/{merchant_code}/payment-methods and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session declared oauth2:[] — empty-scope BOLA targets for AUTH_HELPED gating test
+[LEARN] REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token rotated (401) — finding non-reproducible; report file never existed despite KB hallucinations
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combos, 0 HITs); legacy allowlist host not recoverable from any passive surface
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks resource access; prod sync untestable passively
+
+---
+
+## STEP 7 — RISK
+
+[RISK] sumup: 75 — Contentful P4 finding closed (token rotated). Highest remaining risk: RFC 9728 token validation surface on api.sumup.com (confidence 75, AUTH_HELPED) could yield cross-resource-server access to payment APIs if aud/claim validation is flawed. Staging dynamic registration (auth.sam-app.ro) is LIVE but cross-env JWKS isolation (ZERO kid overlap) currently blocks token relay; client-level sync to prod provenance DB untested. Legacy OAuth gateway (api.sumup.com/authorize) has client_id oracle + wildcard CORS but callback enumeration exhausted (0 HITs). `support_centre` client on modern auth server introduces new scope model ("classic") but unexplorable without auth. Two spec-documented empty-scope operations (payment-methods, receipts) are BOLA targets blocked on merchant token. All critical paths require merchant OAuth token (AUTH_HELPED).

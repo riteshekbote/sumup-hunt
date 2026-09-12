@@ -557,3 +557,12 @@ www.sumup.com
 - CHANGED `auth.sumup.com/oauth2/auth?client_id=support_centre` returns 405 on HEAD — GET returns 302→login_challenge per KB
 - CHANGED Contentful PREVIEW token rotated (401) — finding CLOSED, non-reproducible
 - CHANGED `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
+
+## 2026-09-12 16:36:30 UTC
+- NEW `api.sumup.com/.well-known/oauth-protected-resource` confirmed LIVE (200) with static RFC 9728 metadata — sole auth_server `https://auth.sumup.com`, header-only bearer, JWKS URI; recon surface exhaust
+- NEW `auth.sam-app.ro` JWKS has 11 keys (incl. `loadtesting` kid), prod JWKS has 8 keys — ZERO kid overlap confirmed cross-env key isolation
+- NEW `api.sumup.com/token` returns 404 (structured problem+json) — legacy token endpoint not routed for GET/OPTIONS despite OpenAPI spec documenting it
+- CHANGED `auth.sumup.com/.well-known/openid-configuration` returns 405 on HEAD (method not allowed) — GET works per KB
+- CHANGED `auth.sumup.com/oauth2/auth?client_id=support_centre` returns 405 on HEAD — GET returns 302→login_challenge per KB
+- CHANGED Contentful PREVIEW token rotated (401) — finding CLOSED, non-reproducible
+- CHANGED `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
