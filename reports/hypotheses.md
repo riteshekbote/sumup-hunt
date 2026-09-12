@@ -1413,3 +1413,23 @@
 - LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks re
 - LEARN: ACCEPTED OATH @ auth.sumup.com: `support_centre` client registered on modern auth server only, scopes openid+classic+offline, "classic" scope distinct from dash
 - LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+
+## RANKED HYPOTHESES 2026-09-12 00:40:16 UTC
+- [75] api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 token validation on api.sumup.com permits audience/claim confusion (from art/lead_nemotron3.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Obtain valid merchant OAuth token (AUTH_HELPED) via dashboard.sumup.com or me.sumup.com flow with dashboard client_id to enable RFC 9728 token validation
+- NEXT(hypotheses-nemotron3.txt): HUMAN: Obtain valid merchant OAuth token (AUTH_HELPED) via dashboard.sumup.com or me.sumup.com flow with dashboard client_id to enable RFC 9728 token validation
+- LEARN: REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token `XRP4rB5w…` (sha256 `52136da5…8997`) returned 401 at 09:29 UTC 2026-09-11 — token ROTATED. Finding
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combo
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks re
+- LEARN: ACCEPTED OATH @ auth.sumup.com: `support_centre` client registered on modern auth server only, scopes openid+classic+offline, "classic" scope distinct from dash
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED OATH @ help.sumup.com/api/auth/callback: support_centre registered redirect serves Next.js 404 shell anonymously — auth-side accept vs host-side dead r
+- LEARN: ACCEPTED OATH @ auth.sumup.com/oauth2/auth: client_id oracle viable on modern server (invalid_client vs 303 invalid_state); 8 first-party candidates negative; r
+- LEARN: REJECTED OTHER @ app-auth.sumup.com: NXDOMAIN this cycle; CT-listed name with no dangling record; prior "Cloudflare-fronted" inventory note stale.
+- LEARN: REJECTED MISCONFIG @ help.sumup.com/reports: `contentful-preview-token-leak.md` verified ABSENT on disk again — prior-cycle "REMEDIATED, exists on disk" LEARN w
+- LEARN: ACCEPTED OTHER @ help.sumup.com: cached static responses set access-control-allow-origin:* + originCountry cookie — static-site default, informational.
+- LEARN: REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token `XRP4rB5w…` (sha256 `52136da5…8997`) returned 401 at 09:29 UTC 2026-09-11 — token ROTATED. Finding
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combo
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks re
+- LEARN: ACCEPTED OATH @ auth.sumup.com: `support_centre` client registered on modern auth server only, scopes openid+classic+offline, "classic" scope distinct from dash
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,

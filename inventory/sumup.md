@@ -530,3 +530,5 @@ www.sumup.com
 - CHANGED auth.sam-app.ro: Dynamic client registration LIVE (RFC 7591 unauthenticated POST → 201); mints real JWTs via client_credentials (empty scp, attacker-controlled aud); cross-env JWKS isolation confirmed
 
 ## 2026-09-11 22:25:39 UTC
+
+## 2026-09-12 00:40:16 UTC
