@@ -540,3 +540,11 @@ www.sumup.com
 - CHANGED Contentful PREVIEW token `XRP4rB5w…` (sha256 `52136da5…8997`) rotated (401 at 09:29 UTC 2026-09-11) — finding CLOSED, non-reproducible
 - CHANGED Staging `auth.sam-app.ro` dynamic client registration (RFC 7591) LIVE; mints JWTs with empty scope + attacker-controlled `aud`; cross-env JWKS isolation confirmed (prod 8 keys, staging 11 keys, ZERO k
 - CHANGED `read-api.sumup.com` & `sf-gateway-api.sumup.com` `/authorize` return 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracle, fully gated
+
+## 2026-09-12 09:33:14 UTC
+- NEW RFC 9728 metadata on `api.sumup.com/.well-known/oauth-protected-resource` confirmed LIVE (200 JSON) — static, declares sole auth_server `https://auth.sumup.com`, header-only bearer, JWKS URI; recon su
+- NEW `support_centre` client confirmed registered on modern `auth.sumup.com` (303 invalid_state with valid redirect) but ABSENT from legacy `api.sumup.com/authorize` — modern/legacy registry divergence ext
+- NEW Legacy gateway `api.sumup.com/authorize` client_id oracle LIVE: unknown client → `invalid_client` ("does not exist"), known `dashboard` with wrong redirect → `invalid_request`; wildcard CORS + SameSit
+- CHANGED Contentful PREVIEW token `XRP4rB5w…` (sha256 `52136da5…8997`) rotated (401 at 09:29 UTC 2026-09-11) — finding CLOSED, non-reproducible
+- CHANGED Staging `auth.sam-app.ro` dynamic client registration (RFC 7591) LIVE; mints JWTs with empty scope + attacker-controlled `aud`; cross-env JWKS isolation confirmed (prod 8 keys, staging 11 keys, ZERO k
+- CHANGED `read-api.sumup.com` & `sf-gateway-api.sumup.com` `/authorize` return 404 (not 302 oracle), uniform 404 on all read paths — no divergent OAuth oracle, fully gated

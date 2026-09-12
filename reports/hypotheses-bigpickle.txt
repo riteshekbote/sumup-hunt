@@ -1,4 +1,4 @@
-## 2026-09-12 05:08:40 UTC [target] (model bigpickle)
+## 2026-09-12 09:33:04 UTC [target] (model bigpickle)
 [HYP] Merchant-registered legacy OAuth app (api.sumup.com pair) mints REST-scope JWT validated by api gateway; empty-scope ops skip authz
 class: OATH
 asset: api.sumup.com/token + api.sumup.com/authorize
@@ -34,3 +34,32 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com spec: GET /v0.1/merchants/{merchant_code}/payment-methods and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session declared oauth2:[] — empty-scope BOLA targets for AUTH_HELPED gating test.
 [LEARN] REJECTED MISCONFIG @ /reports: `contentful-preview-token-leak.md` verified absent again via `ls` (finding closed, token rotated) — do not re-assert file claims beyond this.
 [RISK] sumup: 40 — No new exploitable passive finding; this cycle's yield is recon-value (official spec, live legacy token route, closed scope model for both first-party clients) that only sharpens AUTH_HELPED targets. Highest-value surface remains the RFC 9728 aud-claim test + the two spec-documented empty-scope ops, all blocked on a merchant OAuth token (HUMAN). Staging-sync (POST-gated) and support_centre "classic" (oracle-exhausted) are closed/low. Program-side risk is unchanged record-integrity on report-file claims (none created this cycle by design).
+[HYP] RFC 9728 aud/claim confusion on api.sumup.com JWT validation (unchanged top)
+class: AUTH
+asset: api.sumup.com/v1/merchants/{merchant_code}
+confidence: 75
+reasoning: RFC 9728 metadata static, single auth_server auth.sumup.com, header-only bearer; gateway proves JWT-presence differentiation (structured problem vs plain 404); aud/iss/kid selection logic unobserved; apiKey alternative on every op means the gateway has ≥2 validation paths to confuse.
+evidence_needed: valid merchant JWT with mutated aud/iss/kid claim returning 200 vs 401/403 — proves claims not bound at gateway.
+verify_steps: AUTH_HELPED: obtain any merchant OAuth token (dashboard or registered app); re-encode JWT with aud=https://api.sam-app.ro then =attacker.com; GET /v1/merchants/{own_code} → 200(confusion) vs 401(bound).
+impact: token from staging/other-aud bound to prod account access — CRITICAL if real.
+testability: AUTH_HELPED
+[HYP] Cross-tenant receipt disclosure via /v1.1/receipts/{transaction_id} (no merchant scoping in path)
+class: IDOR
+asset: api.sumup.com/v1.1/receipts/{transaction_id}
+confidence: 45
+reasoning: Spec routes this op keyed solely on transaction_id (no merchant_code/person scope); receipts contain merchant+customer PII; endpoint is objectively reachable on prod only via token, so ownership binding to token subject is the sole control; pattern candidates (SumUp historically filed such receipt/BOLA cases publicly).
+evidence_needed: 200 with another merchant's receipt for a non-owned transaction_id.
+verify_steps: AUTH_HELPED: with own token, GET own receipt → dump transaction_id shape; then GET /v1.1/receipts/{other_transaction_id} → 200(leak) vs 403/404(scoped).
+impact: cross-tenant merchant/customer PII read — CRITICAL if confirmed.
+testability: AUTH_HELPED
+[HYP] Staging dynamic-client registration synchronises to prod provenance DB (independent of JWKS isolation)
+class: OATH
+asset: auth.sumup.com/oauth2/auth vs auth.sam-app.ro/oauth2/register
+confidence: 45
+reasoning: Staging RFC 7591 registration live unauthenticated; cross-env JWKS isolation (ZERO kid overlap) verified but client-registry sync is a separate control, untested; prod scope oracle is cheap and validated.
+evidence_needed: fresh staging client_id accepted on prod /oauth2/auth (302) vs invalid_client (not synced).
+verify_steps: BLOCKED — requires POST /oauth2/register on staging (not passive); if unblocked: register, then GET prod auth/auth?client_id={fresh}&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid.
+impact: attacker-controlled prod-registered client — Low-now/latent-high.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Obtain one merchant OAuth token (me.sumup.com/settings/oauth2-applications, REST scope `transactions.history`) — with it, in one session: (1) GET /v1.1/receipts/{own_txn} then {foreign_txn} → receipts BOLA test; (2) re-encode JWT with mutated aud → RFC 9728 aud test; (3) replay on /v1/merchants/{other_code} → cross-tenant check. This is the only blocking dependency for the two highest-value survivors.
+[RISK] sumup: 35 — Cycle yield is knowledge, not exploit: one genuine KB correction (anonymous 200 op) resolves to a static no-impact catalog and actually closes an old candidate; scope-oracle delivers a complete closed dashboard model. No new reportable finding (Contentful leak rotated/closed). Both live AUTH_HELPED survivors (aud confusion 75, receipts BOLA 45) remain blocked on a merchant token that no passive path can substitute. Program-side integrity: no report-file claims made this cycle (prior hallucination streak acknowledged, not re-triggered).
