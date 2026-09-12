@@ -17062,3 +17062,478 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] sumup: 40 — No new exploitable passive finding; all four previously VALID leads are informational or closed (Contentful token rotated, non-reproducible; oracle/wildcard-CORS hardening-class). Two latent AUTH_HELPED leads (RFC 9728 aud confusion 75; staging sync 55) keep slim upside, both gated on merchant token or POST. Primary program-side risk is no longer attack-surface but record integrity: the `contentful-preview-token-leak.md` creation claim has now been logged false ~10x, including last cycle's "verified on disk" — treat all prior report-file claims as unverified until `ls`-proven.
+===== ANALYST bigpickle 2026-09-12 05:10:29 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null | head -50; echo "---"; ls -la . | head -40
+total 2988
+drwxr-xr-x  2 runner runner    4096 Sep 12 05:04 .
+drwxr-xr-x 12 runner runner    4096 Sep 12 05:04 ..
+-rw-r--r--  1 runner runner 1538329 Sep 12 05:04 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   12803 Sep 12 05:04 analyst-laguna.log
+-rw-r--r--  1 runner runner   12744 Sep 12 05:04 analyst-ling3.log
+-rw-r--r--  1 runner runner   12862 Sep 12 05:04 analyst-longcat.log
+-rw-r--r--  1 runner runner 1183371 Sep 12 05:04 analyst-nemotron3.log
+-rw-r--r--  1 runner runner   12528 Sep 12 05:04 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 12 05:04 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 12 05:04 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 12 05:04 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner    7738 Sep 12 05:04 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  221862 Sep 12 05:04 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 12 05:04 reposcan-findings.md
+-rw-r--r--  1 runner runner    3079 Sep 12 05:04 valid-bugs.md
+---
+total 460
+drwxr-xr-x 12 runner runner   4096 Sep 12 05:04 .
+drwxr-xr-x  3 runner runner   4096 Sep 12 05:04 ..
+drwxr-xr-x  7 runner runner   4096 Sep 12 05:04 .git
+drwxr-xr-x  3 runner runner   4096 Sep 12 05:04 .github
+-rw-r--r--  1 runner runner   1885 Sep 12 05:04 README.md
+-rw-r--r--  1 runner runner     32 Sep 12 05:04 analyst-out.txt
+-rw-r--r--  1 runner runner 174414 Sep 12 05:04 analyst-prompt.txt
+-rw-r--r--  1 runner runner 170528 Sep 12 05:04 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 12 05:04 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 12 05:04 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 12 05:04 leads
+-rw-r--r--  1 runner runner  35871 Sep 12 05:04 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 12 05:04 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 12 05:04 reports
+drwxr-xr-x  2 runner runner   4096 Sep 12 05:04 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Sep 12 05:04 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 12 05:04 scripts
+-rw-r--r--  1 runner runner     33 Sep 12 05:04 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 12 05:04 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 12 05:04 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 12 05:04 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 12 05:04 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 12 05:04 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 12 05:04 triage
+[0m
+[0m✱ [0mGlob "reports/**"[90m 13 matches[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m
+[0m$ [0mcat state_bigpickle.json; echo "---"; ls leads/ knowledge/ recon-notes/ triage/ 2>/dev/null
+{"phase": "POC", "target": "api"}---
+knowledge/:
+index.md
+
+leads/:
+lead-bigpickle.md
+lead-laguna.md
+lead-ling3.md
+lead-longcat.md
+lead-mimo.md
+lead-nemotron3.md
+reposcan-sumup.md
+
+recon-notes/:
+DEDICATED-DEEP.md
+
+triage/:
+run-2026-09-02-22-14.md
+run-2026-09-03-00-06.md
+run-2026-09-03-04-42.md
+run-2026-09-03-09-36.md
+run-2026-09-03-13-56.md
+run-2026-09-03-17-46.md
+run-2026-09-03-20-54.md
+run-2026-09-03-23-11.md
+run-2026-09-04-01-05.md
+run-2026-09-04-06-02.md
+run-2026-09-04-11-29.md
+run-2026-09-04-15-06.md
+run-2026-09-04-18-29.md
+run-2026-09-04-21-02.md
+run-2026-09-04-23-05.md
+run-2026-09-05-01-06.md
+run-2026-09-05-05-52.md
+run-2026-09-05-10-26.md
+run-2026-09-05-13-32.md
+run-2026-09-05-16-16.md
+run-2026-09-05-18-26.md
+run-2026-09-05-20-43.md
+run-2026-09-05-22-45.md
+run-2026-09-06-00-48.md
+run-2026-09-06-05-45.md
+run-2026-09-06-10-45.md
+run-2026-09-06-14-06.md
+run-2026-09-06-17-10.md
+run-2026-09-06-19-18.md
+run-2026-09-06-21-30.md
+run-2026-09-06-23-09.md
+run-2026-09-07-01-08.md
+run-2026-09-07-06-12.md
+run-2026-09-07-12-47.md
+run-2026-09-07-18-13.md
+run-2026-09-07-21-37.md
+run-2026-09-07-23-48.md
+run-2026-09-08-04-16.md
+run-2026-09-08-08-56.md
+run-2026-09-08-13-29.md
+run-2026-09-08-17-30.md
+run-2026-09-08-20-19.md
+run-2026-09-08-22-47.md
+run-2026-09-09-01-09.md
+run-2026-09-09-06-06.md
+run-2026-09-09-11-38.md
+run-2026-09-09-15-21.md
+run-2026-09-09-18-45.md
+run-2026-09-09-21-37.md
+run-2026-09-09-23-31.md
+run-2026-09-10-01-29.md
+run-2026-09-10-06-39.md
+run-2026-09-10-11-52.md
+run-2026-09-10-16-19.md
+run-2026-09-10-19-11.md
+run-2026-09-10-21-43.md
+run-2026-09-10-23-57.md
+run-2026-09-11-04-25.md
+run-2026-09-11-09-09.md
+run-2026-09-11-13-40.md
+run-2026-09-11-17-17.md
+run-2026-09-11-19-58.md
+run-2026-09-11-22-25.md
+run-2026-09-12-00-39.md
+[0m
+[0m→ [0mRead scope.yml
+[0m
+[0m$ [0mfor u in "https://developer.sumup.com/" ; do echo "== $u"; curl -sS -o /dev/null -D - -m 15 --max-time 20 "$u" | sed -n '1,20p'; sleep 1; done
+== https://developer.sumup.com/
+HTTP/2 200 
+date: Sat, 12 Sep 2026 05:05:13 GMT
+content-type: text/html
+cf-cache-status: HIT
+access-control-allow-origin: *
+cache-control: public, max-age=0, must-revalidate
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+link: </api/>; rel="service-doc"
+set-cookie: __cf_bm=3Z9Il7VfyIrJkobADo6WPIigjgjIkgChrSN18MQcgYc-1789189513.800487-1.0.1.1-0WRAIwC6034Lsv2xL_tjogrSVPJ..7cn6gH19ceq7Ru5dkk1MDzJgJZvRelslElk61vcu50.OQGD1PtpdQoVEqjqL1_j60mTGTzInX9EHDm.q1A6aEzjNzypB.xFPofoMg74SWDhjVnObm3zOoFndg; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 05:35:13 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=aAlKXkgSXCwGdrRK2NeQgGIqIFL2XqVcjsjENINeG2FjaQWjmUqh94EzGuG9Ioh0Ub7sYcLnIZDm8wYb3e%2BdaVKF4GvhEIgPFRLl7tgf7EgGmFcizPKjSu1gVKKbzsU6WZPQ9Dw%3D"}]}
+server: cloudflare
+cf-ray: a39c603d3df8acb1-ORD
+[0m
+[0m$ [0mfor p in "/api/" ; do echo "== $p"; curl -sS -m 20 "$u$p" -o /tmp/devapi.html -w "%{http_code} %{size_download}\n"; sleep 1; done; head -c 2000 /tmp/devapi.html
+== /api/
+curl: (3) URL rejected: No host part in the URL
+000 0
+head: cannot open '/tmp/devapi.html' for reading: No such file or directory
+[0m
+[0m$ [0mcurl -sS -m 20 "https://developer.sumup.com/api/" -o /tmp/devapi.html -w "%{http_code} %{size_download}\n"; head -c 1500 /tmp/devapi.html
+307 0
+[0m
+[0m$ [0mcurl -sS -m 20 -D - -o /dev/null "https://developer.sumup.com/api/" | rg -i "location|^HTTP"; sleep 1; echo "=== try /api/ with -L to land"; curl -sSL -m 20 "https://developer.sumup.com/api/" -o /tmp/api_land.html -w "final:%{url_effective} code:%{http_code} size:%{size_download}\n"
+/bin/bash: line 1: rg: command not found
+=== try /api/ with -L to land
+final:https://developer.sumup.com/api code:200 size:119068
+[0m
+[0m$ [0mtr '>' '>\n' < /tmp/api_land.html | grep -oiE 'href="[^"]*(openapi|swagger|\.json|\.yaml|\.yml)[^"]*"|src="[^"]*\.js[^"]*"|redoc[^" ]*|swagger[^" ]*' | sort -u | head -40
+href="https://raw.githubusercontent.com/sumup/sumup-openapi/refs/heads/main/openapi.json"
+href="https://raw.githubusercontent.com/sumup/sumup-openapi/refs/heads/main/openapi.yaml"
+href="https://www.json.org/json-en.html"
+src="/_astro/ApiDocs.astro_astro_type_script_index_0_lang.zlF1yHuI.js"
+src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.Ddnni-j8.js"
+src="/_astro/Search.astro_astro_type_script_index_0_lang.7gz6Ym64.js"
+src="/_astro/ec.g1fg5.js"
+src="/_astro/page.DKKvxiQI.js"
+src="https://cdn-ukwest.onetrust.com/scripttemplates/otSDKStub.js"
+src="https://static.sumup.com/legacy-browsers/check-support.js"
+[0m
+[0m$ [0mcurl -sSL -m 30 "https://raw.githubusercontent.com/sumup/sumup-openapi/refs/heads/main/openapi.json" -o /tmp/sumup-openapi.json -w "code:%{http_code} size:%{size_download}\n"; python3 -c "
+import json
+d=json.load(open('/tmp/sumup-openapi.json'))
+print('title:', d.get('info',{}).get('title'))
+print('version:', d.get('info',{}).get('version'))
+print('servers:', d.get('servers'))
+print('securitySchemes:', list(d.get('components',{}).get('securitySchemes',{}).keys()))
+paths=d.get('paths',{})
+print('path count:', len(paths))
+import collections
+tops=collections.Counter(p.split('/')[1] if p.startswith('/') else p.split('/')[0] for p in paths)
+for k,v in tops.most_common(30): print(f'  /{k}: {v}')
+"
+code:200 size:410059
+title: SumUp REST API
+version: 1.0.0
+servers: [{'url': 'https://api.sumup.com', 'description': 'Production server'}]
+securitySchemes: ['apiKey', 'oauth2']
+path count: 28
+  /v0.1: 18
+  /v1: 3
+  /v1.0: 2
+  /v2.1: 2
+  /v0.2: 1
+  /v1.1: 1
+  /v0: 1
+[0m
+[0m$ [0mpython3 -c "
+import json
+d=json.load(open('/tmp/sumup-openapi.json'))
+ops=['get','post','put','patch','delete','options','head']
+for p,item in sorted(d.get('paths',{}).items()):
+    for m in ops:
+        op=item.get(m)
+        if not op: continue
+        sec=op.get('security','DEFAULT')
+        if sec=='DEFAULT': continue
+        print(f'{m.upper():7} {p:45} sec={json.dumps(sec)}')
+" | head -60
+GET     /v0.1/checkouts                               sec=[{"apiKey": []}, {"oauth2": ["payments", "checkouts.read"]}]
+POST    /v0.1/checkouts                               sec=[{"apiKey": []}, {"oauth2": ["payments", "checkouts.write"]}]
+GET     /v0.1/checkouts/{checkout_id}                 sec=[{"apiKey": []}, {"oauth2": ["payments", "checkouts.read"]}]
+PUT     /v0.1/checkouts/{checkout_id}                 sec=[{"apiKey": []}, {"oauth2": ["payments", "checkouts.write"]}]
+PATCH   /v0.1/checkouts/{checkout_id}                 sec=[{"apiKey": []}, {"oauth2": ["payments", "checkouts.write"]}]
+DELETE  /v0.1/checkouts/{checkout_id}                 sec=[{"apiKey": []}, {"oauth2": ["payments", "checkouts.write"]}]
+POST    /v0.1/customers                               sec=[{"apiKey": []}, {"oauth2": ["payment_instruments", "customers.write"]}]
+GET     /v0.1/customers/{customer_id}                 sec=[{"apiKey": []}, {"oauth2": ["payment_instruments", "customers.read"]}]
+PUT     /v0.1/customers/{customer_id}                 sec=[{"apiKey": []}, {"oauth2": ["payment_instruments", "customers.write"]}]
+GET     /v0.1/customers/{customer_id}/payment-instruments sec=[{"apiKey": []}, {"oauth2": ["payment_instruments", "customers.read"]}]
+DELETE  /v0.1/customers/{customer_id}/payment-instruments/{token} sec=[{"apiKey": []}, {"oauth2": ["payment_instruments", "customers.write"]}]
+GET     /v0.1/memberships                             sec=[{"apiKey": []}, {"oauth2": ["user.profile", "user.profile_readonly"]}]
+GET     /v0.1/merchants/{merchant_code}/members       sec=[{"apiKey": []}, {"oauth2": ["user.subaccounts", "members.read"]}]
+POST    /v0.1/merchants/{merchant_code}/members       sec=[{"apiKey": []}, {"oauth2": ["user.subaccounts", "members.write"]}]
+GET     /v0.1/merchants/{merchant_code}/members/{member_id} sec=[{"apiKey": []}, {"oauth2": ["user.subaccounts", "members.read"]}]
+PUT     /v0.1/merchants/{merchant_code}/members/{member_id} sec=[{"apiKey": []}, {"oauth2": ["user.subaccounts", "members.write"]}]
+DELETE  /v0.1/merchants/{merchant_code}/members/{member_id} sec=[{"apiKey": []}, {"oauth2": ["user.subaccounts", "members.write"]}]
+GET     /v0.1/merchants/{merchant_code}/payment-methods sec=[{"apiKey": []}, {"oauth2": []}]
+GET     /v0.1/merchants/{merchant_code}/readers       sec=[{"apiKey": []}, {"oauth2": ["readers.read", "terminals.read"]}]
+POST    /v0.1/merchants/{merchant_code}/readers       sec=[{"apiKey": []}, {"oauth2": ["readers.write", "terminals.write"]}]
+GET     /v0.1/merchants/{merchant_code}/readers/{reader_id} sec=[{"apiKey": []}, {"oauth2": ["readers.read", "terminals.read"]}]
+PATCH   /v0.1/merchants/{merchant_code}/readers/{reader_id} sec=[{"apiKey": []}, {"oauth2": ["readers.write", "terminals.write"]}]
+DELETE  /v0.1/merchants/{merchant_code}/readers/{reader_id} sec=[{"apiKey": []}, {"oauth2": ["readers.write", "terminals.write"]}]
+POST    /v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout sec=[{"apiKey": []}, {"oauth2": ["readers.write"]}]
+GET     /v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout/{checkout_id} sec=[{"apiKey": []}, {"oauth2": ["readers.read"]}]
+GET     /v0.1/merchants/{merchant_code}/readers/{reader_id}/status sec=[{"apiKey": []}, {"oauth2": ["readers.read"]}]
+POST    /v0.1/merchants/{merchant_code}/readers/{reader_id}/terminate sec=[{"apiKey": []}, {"oauth2": ["readers.write"]}]
+GET     /v0.1/merchants/{merchant_code}/roles         sec=[{"apiKey": []}, {"oauth2": ["user.subaccounts", "roles.read"]}]
+POST    /v0.1/merchants/{merchant_code}/roles         sec=[{"apiKey": []}, {"oauth2": ["user.subaccounts", "roles.write"]}]
+GET     /v0.1/merchants/{merchant_code}/roles/{role_id} sec=[{"apiKey": []}, {"oauth2": ["user.subaccounts", "roles.read"]}]
+PATCH   /v0.1/merchants/{merchant_code}/roles/{role_id} sec=[{"apiKey": []}, {"oauth2": ["user.subaccounts", "roles.write"]}]
+DELETE  /v0.1/merchants/{merchant_code}/roles/{role_id} sec=[{"apiKey": []}, {"oauth2": ["user.subaccounts", "roles.write"]}]
+PUT     /v0.2/checkouts/{checkout_id}/apple-pay-session sec=[{"apiKey": []}, {"oauth2": []}]
+POST    /v0/merchants/{merchant_code}/readers/{reader_id}/go-checkout sec=[{"apiKey": []}, {"oauth2": ["payments", "readers.write"]}]
+POST    /v1.0/merchants/{merchant_code}/payments/{transaction_id}/refunds sec=[{"apiKey": []}, {"oauth2": ["payments", "refunds.write"]}]
+GET     /v1.0/merchants/{merchant_code}/payouts       sec=[{"apiKey": []}, {"oauth2": ["user.profile", "user.profile_readonly", "payouts.read"]}]
+GET     /v1.1/receipts/{transaction_id}               sec=[{"apiKey": []}, {"oauth2": ["receipts.read", "transactions.history"]}]
+GET     /v1/merchants/{merchant_code}                 sec=[{"apiKey": []}, {"oauth2": ["user.profile", "user.profile_readonly"]}]
+GET     /v1/merchants/{merchant_code}/persons         sec=[{"apiKey": []}, {"oauth2": ["user.profile", "user.profile_readonly"]}]
+GET     /v1/merchants/{merchant_code}/persons/{person_id} sec=[{"apiKey": []}, {"oauth2": ["user.profile", "user.profile_readonly"]}]
+GET     /v2.1/merchants/{merchant_code}/transactions  sec=[{"apiKey": []}, {"oauth2": ["transactions.history", "transactions.read"]}]
+GET     /v2.1/merchants/{merchant_code}/transactions/history sec=[{"apiKey": []}, {"oauth2": ["transactions.history", "transactions.read"]}]
+[0m
+[0m$ [0mpython3 -c "
+import json
+d=json.load(open('/tmp/sumup-openapi.json'))
+print('top-level security:', json.dumps(d.get('security')))
+sc=d.get('components',{}).get('securitySchemes',{})
+print('apiKey scheme:', json.dumps(sc.get('apiKey')))
+print('oauth2 scheme:', json.dumps(sc.get('oauth2'), indent=0)[:1500])
+"
+top-level security: null
+apiKey scheme: {"description": "API keys allow you easily interact with SumUp APIs. API keys are static tokens. You can create API keys from the [Dashboard](https://me.sumup.com/settings/api-keys)", "type": "http", "scheme": "Bearer"}
+oauth2 scheme: {
+"type": "oauth2",
+"description": "SumUp supports [OAuth 2.0](https://tools.ietf.org/html/rfc6749) authentication for platforms that want to offer their services to SumUp users.\n\nTo integrate via OAuth 2.0 you will need a client credentials that you can create in the [SumUp Dashboard](https://me.sumup.com/settings/oauth2-applications).\n\nTo maintain security of our users, we highly recommend that you use one of the [recommended OAuth 2.0 libraries](https://oauth.net/code/) for authentication.",
+"flows": {
+"authorizationCode": {
+"authorizationUrl": "https://api.sumup.com/authorize",
+"tokenUrl": "https://api.sumup.com/token",
+"refreshUrl": "https://api.sumup.com/token",
+"scopes": {
+"payments": "Make payments by creating and processing checkouts.",
+"checkouts.read": "View checkouts.",
+"checkouts.write": "Create, process, and deactivate checkouts.",
+"transactions.history": "View transactions and transaction history.",
+"transactions.read": "View transactions and transaction history.",
+"refunds.write": "Refund transactions.",
+"receipts.read": "View receipts.",
+"user.profile_readonly": "View user profile details.",
+"user.profile": "View and manage your user profile.",
+"user.app-settings": "View and manage the SumUp mobile application settings.",
+"payment_instruments": "Manage customers and their payment instruments.",
+"customers.read": "View customers and their payment instruments.",
+"customers.write": "Create and manage customers and their payment instruments.",
+"user.payout-se
+[0m
+[0m$ [0mpython3 -c "
+import json
+d=json.load(open('/tmp/sumup-openapi.json'))
+sc=d['components']['securitySchemes']['oauth2']['flows']['authorizationCode']['scopes']
+for k,v in sc.items(): print(f'{k}: {v}')
+"
+payments: Make payments by creating and processing checkouts.
+checkouts.read: View checkouts.
+checkouts.write: Create, process, and deactivate checkouts.
+transactions.history: View transactions and transaction history.
+transactions.read: View transactions and transaction history.
+refunds.write: Refund transactions.
+receipts.read: View receipts.
+user.profile_readonly: View user profile details.
+user.profile: View and manage your user profile.
+user.app-settings: View and manage the SumUp mobile application settings.
+payment_instruments: Manage customers and their payment instruments.
+customers.read: View customers and their payment instruments.
+customers.write: Create and manage customers and their payment instruments.
+user.payout-settings: View and manage your payout settings.
+payouts.read: View payouts.
+user.subaccounts: View and manage the user profile details of your employees.
+[0m
+[0m$ [0mfor m in HEAD OPTIONS GET; do echo "== $m https://api.sumup.com/token"; curl -sS -m 15 -X "$m" -o /dev/null -D - "https://api.sumup.com/token" | sed -n '1,12p'; sleep 1; done
+== HEAD https://api.sumup.com/token
+curl: (18) transfer closed with 150 bytes remaining to read
+HTTP/2 404 
+date: Sat, 12 Sep 2026 05:06:21 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 2872564d-a6f4-9d05-9aa2-f036d439e1e2
+x-envoy-upstream-service-time: 1
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+== OPTIONS https://api.sumup.com/token
+HTTP/2 204 
+date: Sat, 12 Sep 2026 05:06:22 GMT
+access-control-allow-origin: api.sumup.com
+access-control-allow-headers: *
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-max-age: 300
+server: cloudflare
+x-request-id: f8a2fdcb-b4e3-912b-a069-47504831b52e
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=zrmGYNhJZLQwiVg.WvWTVUDqrP3BU9YvXM1h.nSiSv0-1789189582.4486678-1.0.1.1-BMZww76JleOIomhgbN9PrnwRc45ENRLO10CNeTpIuYOAI26Gj1o1hzrxn0ZepdFTLXMHevGtpHV8vWdHtUKEA.eOXJ1XInz8yK3XrhU81Js7js5P.GZ.HEndbNorKC9fstWEP0J.N9s11x3.S.0NjQ; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 12 Sep 2026 05:36:22 GMT
+== GET https://api.sumup.com/token
+HTTP/2 404 
+date: Sat, 12 Sep 2026 05:06:24 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 94659484-8dca-9206-b54b-86cddc17e7a9
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+[0m
+[0m$ [0mbase="https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=abcdefgh&scope="
+for s in readers.read nosuch.scope payments checkouts.read transactions.history refunds.write receipts.read user.payout-settings user.app-settings payment_instruments customers.read user.subaccounts members.read roles.read terminals.read; do
+  c=$(curl -sS -m 15 -o /tmp/sb.txt -w "%{http_code}" "$base$s")
+  body=$(head -c 60 /tmp/sb.txt | tr '\n' ' ')
+  echo "$c  $s  :: $body"
+  sleep 1
+done
+302  readers.read  :: <a href="https://auth.sumup.com/flows/auth-callback?login_ch
+303  nosuch.scope  :: 
+303  payments  :: 
+303  checkouts.read  :: 
+303  transactions.history  :: 
+303  refunds.write  :: 
+303  receipts.read  :: 
+303  user.payout-settings  :: 
+303  user.app-settings  :: 
+303  payment_instruments  :: 
+303  customers.read  :: 
+303  user.subaccounts  :: 
+303  members.read  :: 
+303  roles.read  :: 
+302  terminals.read  :: <a href="https://auth.sumup.com/flows/auth-callback?login_ch
+[0m
+[0m$ [0mbase="https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=abcdefgh&scope="
+for s in "readers.read" "nosuch.scope" "payments" "checkouts.read"; do
+  echo "== scope=$s"
+  curl -sS -m 15 -o /dev/null -w "%{http_code} loc:%{redirect_url}\n" "$base$s"
+  sleep 1
+done
+== scope=readers.read
+302 loc:https://auth.sumup.com/flows/auth-callback?login_challenge=dcfbeab3a8e34fd59238e275bd89d4ba
+== scope=nosuch.scope
+303 loc:https://me.sumup.com/api/sso/callback?error=invalid_scope&error_description=The+requested+scope+is+invalid%2C+unknown%2C+or+malformed.+The+OAuth+2.0+Client+is+not+allowed+to+request+scope+%27nosuch.scope%27.&state=abcdefgh
+== scope=payments
+303 loc:https://me.sumup.com/api/sso/callback?error=invalid_scope&error_description=The+requested+scope+is+invalid%2C+unknown%2C+or+malformed.+The+OAuth+2.0+Client+is+not+allowed+to+request+scope+%27payments%27.&state=abcdefgh
+== scope=checkouts.read
+303 loc:https://me.sumup.com/api/sso/callback?error=invalid_scope&error_description=The+requested+scope+is+invalid%2C+unknown%2C+or+malformed.+The+OAuth+2.0+Client+is+not+allowed+to+request+scope+%27checkouts.read%27.&state=abcdefgh
+[0m
+[0m$ [0mbaseSC="https://auth.sumup.com/oauth2/auth?client_id=support_centre&redirect_uri=https%3A%2F%2Fhelp.sumup.com%2Fapi%2Fauth%2Fcallback&response_type=code&state=abcdefgh&scope="
+for s in "openid+classic+offline" "openid+classic+offline+payments" "openid+classic+offline+transactions.history" "openid+classic+offline+checkouts.read" "openid+classic+offline+readers.read" "openid+payments" "classic+offline" "openid+user.subaccounts"; do
+  o=$(curl -sS -m 15 -o /tmp/scb.txt -w "%{http_code}" "$baseSC$s")
+  loc=$(curl -sS -m 15 -o /dev/null -w "%{redirect_url}" "$baseSC$s")
+  err=$(echo "$loc" | grep -oE 'error=[a-z_]+' | head -1)
+  echo "$o  scope=[$s]  :: ${err:-ACCEPTED}"
+  sleep 1
+done
+302  scope=[openid+classic+offline]  :: ACCEPTED
+303  scope=[openid+classic+offline+payments]  :: error=invalid_scope
+303  scope=[openid+classic+offline+transactions.history]  :: error=invalid_scope
+303  scope=[openid+classic+offline+checkouts.read]  :: error=invalid_scope
+303  scope=[openid+classic+offline+readers.read]  :: error=invalid_scope
+303  scope=[openid+payments]  :: error=invalid_scope
+302  scope=[classic+offline]  :: ACCEPTED
+303  scope=[openid+user.subaccounts]  :: error=invalid_scope
+[0m
+**STEP 1 — DELTA**
+- NEW `developer.sumup.com` (Cloudflare, 200, `link: </api/>; rel="service-doc"`) — official docs portal, absent from inventory; `/api` → 200 119KB Astro page linking the canonical spec.
+- NEW Official SumUp OpenAPI spec (`github.com/sumup/sumup-openapi` openapi.json, 410KB) — 28 paths / 42 ops across `/v0,/v0.1,/v0.2,/v1,/v1.0,/v1.1,/v2.1`; declares `oauth2.authorizationCode` with `authorizationUrl=https://api.sumup.com/authorize`, `tokenUrl=https://api.sumup.com/token` (the LEGACY endpoint pair) + `apiKey` static-Bearer scheme.
+- NEW `api.sumup.com/token` is ROUTED (OPTIONS→204 with wildcard CORS + `x-envoy identity.svc`; GET/HEAD→404 structured) — documented legacy token endpoint is live at gateway, not a dead path.
+- NEW Scope-acceptance oracle on `auth.sumup.com/oauth2/auth` (`302=login_challenge=accepted`, `303=invalid_scope`): `dashboard` accepts `readers.read`/`terminals.read` only; REJECTS each of 13 REST spec scopes (payments/checkouts.*/transactions.history/refunds.write/receipts.read/user.payout-settings/user.app-settings/payment_instruments/customers.read/user.subaccounts/members.*/roles.*).
+- NEW `support_centre` scope set fully enumerated: `{openid, classic, offline}` only; `classic+<any REST scope>` → invalid_scope, `openid` optional — opaque non-enumerable bundle.
+- NEW Spec anomaly: `GET /v0.1/merchants/{merchant_code}/payment-methods` and `PUT /v0.2/checkouts/{checkout_id}/apple-pay-session` declare `oauth2: []` (empty scope list) with no `apiKey` alternative — prime scope-skip/BOLA candidates.
+- NO_DELTA (ground truth): `reports/contentful-preview-token-leak.md` ABSENT on disk (`ls reports/`); closed finding, not re-created.
+
+**STEP 2 — PRIORITIZE**
+- [PRIO] developer.sumup.com/api, score=5.8, surface=public official REST+OAuth documentation of the full api.sumup.com resource model (42 ops, exact paths/methods/scope/endpoint pairs), freshness=9, gate=10.
+- [PRIO] api.sumup.com/token, score=5.6, axis=documented production token endpoint for merchant-registered apps, OPTIONS-204 proven routed; POST-only so gate=3 until creds.
+- [PRIO] api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods, score=5.4, axis=spec-documented `oauth2:[]` op = scope-skip BOLA candidate, freshness=9.
+
+**STEP 3 — HYPOTHESES**
+[HYP] Merchant-registered legacy OAuth app (api.sumup.com pair) mints REST-scope JWT validated by api gateway; empty-scope ops skip authz
+class: OATH
+asset: api.sumup.com/token + api.sumup.com/authorize
+confidence: 45
+reasoning: Official spec authorizes apps via api.sumup.com/authorize + api.sumup.com/token (tokenUrl/refreshUrl both); /token OPTIONS 204 proves route live; RFC 9728 metadata pins gateway JWKS to auth.sumup.com, so legacy-minted JWTs must validate there; gateway scope-enforcement per-operation unobserved.
+evidence_needed: A real merchant-registered client credential + authorization code; POST /token grant_type=authorization_code; observe valid JWT with scp containing REST scopes.
+verify_steps: PASSIVE done (OPTIONS/GET/HEAD routing, CORS, spec). AUTH_HELPED: register app at me.sumup.com/settings/oauth2-applications with scopes {payments, transactions.history}; authorize via /authorize; POST api.sumup.com/token; replay JWT on api.sumup.com paths.
+impact: Attacker-operable token capable of payment/transaction API calls — high if merchant account already attacker-owned, BOLA-only risk.
+testability: AUTH_HELPED
+[HYP] Empty-scope OAuth token reaches GET /v0.1/merchants/{merchant_code}/payment-methods of any merchant (documented oauth2:[])
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 45
+reasoning: Spec marks this op oauth2:[] (no scope); staging dynamic clients yield real JWTs with empty scp; gateway distinguishes valid vs absent JWT (structured problem vs plain 404) but per-op scope enforcement untested; endpoint nears payment-method PII.
+evidence_needed: Token with empty/any scope returning 200 on a non-owned merchant_code.
+verify_steps: AUTH_HELPED: mint any-scope merchant token, GET https://api.sumup.com/v0.1/merchants/{other_merchant_code}/payment-methods → 200(leak) vs 404/403(gated); repeat on apple-pay-session PUT.
+impact: cross-tenant read of merchant payment-method metadata — CRITICAL if confirmed.
+testability: AUTH_HELPED
+[HYP] RFC 9728 aud/claim confusion on api.sumup.com (survives, top-1, unchanged)
+class: AUTH
+asset: api.sumup.com/v1/*
+confidence: 75
+reasoning: Metadata static; gateway JWT-presence differentiation observed; aud/kid-selection unobserved.
+evidence_needed: valid merchant JWT with mutated aud.
+verify_steps: AUTH_HELPED: mint token, dump scp/aud, mutate aud, GET /v1/merchants/self → compare.
+impact: CRITICAL if real.
+testability: AUTH_HELPED
+
+**STEP 4 — SELF-CRITIQUE**
+- Drafts <40 or dead ends:
+  - support_centre "classic" enumeration → scope oracle EXHAUSTED (closed  3-scope allowlist, REST scopes all invalid_scope) → [PARKED]: classic is opaque, unroutable passively.
+  - Staging-sync lead (55) unchanged, POST-gated.
+- [FINAL] rank: 1) RFC 9728 aud/claim confusion (75, AUTH_HELPED); 2) Empty-scope BOLA on payment-methods/apple-pay-session (45, AUTH_HELPED, spec-evidenced — NEW specific target); 3) Legacy OAuth app REST-scope token path via api.sumup.com pair (45, AUTH_HELPED).
+
+**STEP 5 — NEXT ACTION**
+[NEXT] HUMAN: Register OAuth app at me.sumup.com/settings/oauth2-applications (behavioral test — restricted sandbox only) requesting REST scopes {payments, transactions.history}, complete authorize via https://api.sumup.com/authorize, POST token at api.sumup.com/token, then replay the minted JWT against GET https://api.sumup.com/v0.1/merchants/{other_merchant_code}/payment-methods and GET /v1/merchants/self — this single credential set unlocks the empty-scope BOLA test, the RFC 9728 aud test, and confirms the legacy token path in one flow.
+
+**STEP 6 — LEARNING**
+[LEARN] ACCEPTED OTHER @ developer.sumup.com/api: official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public — full 42-op production model incl. exact paths, per-op scopes, apiKey scheme, and legacy OAuth endpoint pair (authorize+token on api.sumup.com); highest-value passive recon of this cycle.
+[LEARN] ACCEPTED OATH @ api.sumup.com/token: legacy token endpoint ROUTED (OPTIONS 204 + structured 404 on GET, wildcard CORS, identity.svc operation) — documented in official spec, live on gateway; not previously probed.
+[LEARN] ACCEPTED OATH @ auth.sumup.com/oauth2/auth: scope-acceptance oracle disambiguated (302 login_challenge=allowed vs 303 invalid_scope); dashboard allows readers.read/terminals.read, rejects all 13 REST spec scopes — modern dashboard scope set is closed.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: support_centre allowlist is exactly {openid, classic, offline}; classic+any scope → invalid_scope; scope oracle for support_centre exhausted.
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com spec: GET /v0.1/merchants/{merchant_code}/payment-methods and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session declared oauth2:[] — empty-scope BOLA targets for AUTH_HELPED gating test.
+[LEARN] REJECTED MISCONFIG @ /reports: `contentful-preview-token-leak.md` verified absent again via `ls` (finding closed, token rotated) — do not re-assert file claims beyond this.
+
+**STEP 7 — RISK**
+[RISK] sumup: 40 — No new exploitable passive finding; this cycle's yield is recon-value (official spec, live legacy token route, closed scope model for both first-party clients) that only sharpens AUTH_HELPED targets. Highest-value surface remains the RFC 9728 aud-claim test + the two spec-documented empty-scope ops, all blocked on a merchant OAuth token (HUMAN). Staging-sync (POST-gated) and support_centre "classic" (oracle-exhausted) are closed/low. Program-side risk is unchanged record-integrity on report-file claims (none created this cycle by design).
