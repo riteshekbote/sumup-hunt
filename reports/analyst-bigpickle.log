@@ -20518,3 +20518,1637 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 - [RISK] sumup: 35 — Recon-only yield: gateway route table fully closed (13 paths 404), spec refreshed (clientCredentials flow documented, 2 empty-scope ops pinned), sandbox host hypothesis refuted (same-host flag). No reportable finding; top survivors (aud/iss 75, apple-pay 45, /token 45, staging-sync 45) all still AUTH_HELPED/POST-blocked on a merchant token or a leaked client credential. No integrity regressions (report-file presence not asserted without ls). Flat until a credential path is unblocked.
+===== ANALYST bigpickle 2026-09-12 21:25:02 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s --max-time 20 https://api.sumup.com/.well-known/oauth-protected-resource | head -c 1500; echo; echo "---HTTP---"; curl -s -o /dev/null -w "%{http_code} %{content_type}" --max-time 20 https://api.sumup.com/.well-known/oauth-protected-resource
+{
+	"resource_name": "SumUp API",
+	"resource": "https://api.sumup.com",
+	"authorization_servers": ["https://auth.sumup.com"],
+	"bearer_methods_supported": ["header"],
+	"jwks_uri": "https://auth.sumup.com/.well-known/jwks.json",
+	"resource_documentation": "https://developer.sumup.com"
+}
+
+---HTTP---
+200 application/json
+[0m
+[0m$ [0mcurl -s --max-time 20 https://auth.sumup.com/.well-known/openid-configuration | python3 -c "import sys,json; d=json.load(sys.stdin); print('scopes:', json.dumps(d.get('scopes_supported'))); print('auth_methods:', json.dumps(d.get('token_endpoint_auth_methods_supported'))); print('reg_ep:', d.get('registration_endpoint')); print('authorization:', d.get('authorization_endpoint'))" 2>&1 | head -c 2000
+scopes: ["offline_access", "offline", "openid", "email", "classic"]
+auth_methods: ["client_secret_post", "client_secret_basic", "private_key_jwt", "none"]
+reg_ep: None
+authorization: https://auth.sumup.com/oauth2/auth
+[0m
+[0m% [0mWebFetch https://github.com/sumup/sumup-mcp
+[0m% [0mWebFetch https://github.com/sumup/sumup-openapi
+[0m
+[0m$ [0mfor p in ".well-known/oauth-protected-resource" ".well-known/oauth-authorization-server" "mcp.json"; do echo "== mcp.sumup.com/$p =="; curl -s --max-time 20 -o /tmp/mcp_$(basename $p).txt -w "%{http_code} %{content_type}\n" "https://mcp.sumup.com/$p"; head -c 600 /tmp/mcp_$(basename $p).txt; echo; done
+== mcp.sumup.com/.well-known/oauth-protected-resource ==
+200 application/json
+{"resource":"https://mcp.sumup.com/mcp","authorization_servers":["https://auth.sumup.com"],"bearer_methods_supported":["header"],"scopes_supported":["offline_access","email"],"resource_name":"SumUp MCP","resource_documentation":"https://developer.sumup.com/tools/llms"}
+== mcp.sumup.com/.well-known/oauth-authorization-server ==
+404 application/json
+{"jsonrpc":"2.0","error":{"code":-32010,"message":"Not Found"},"id":null}
+== mcp.sumup.com/mcp.json ==
+404 application/json
+{"jsonrpc":"2.0","error":{"code":-32010,"message":"Not Found"},"id":null}
+[0m
+[0m$ [0mcurl -s --max-time 25 -o /tmp/openapi.yaml "https://raw.githubusercontent.com/sumup/sumup-openapi/main/openapi.yaml" && wc -l /tmp/openapi.yaml && python3 - <<'EOF'
+import re
+txt = open('/tmp/openapi.yaml').read()
+sec=[]
+for m in re.finditer(r'security:\s*\n((?:\s+- .*\n)+)', txt):
+    block=m.group(1)
+    if 'oauth2' not in block and 'apiKey' not in block:
+        continue
+    sec.append((block.strip()[:120]))
+# find operations with empty security (anonymous) or apiKey-only
+anons = re.findall(r'security:\s*\[\]\s*\n', txt)
+print("anon security occurrences:", len(anons))
+# list every path with its methods
+paths = re.findall(r'^  /([^:]+):\s*$\n(.*?)(?=^  /|\Z)', txt, re.M|re.S)
+import collections
+for p, body in paths:
+    meths = re.findall(r'^    (get|post|put|patch|delete|head|options):', body, re.M)
+    scopes = re.findall(r'x-scopes:\s*\[([^\]]*)\]', body)
+    secs = re.findall(r'^\s+security:\s*(.*)$', body, re.M)
+    has_empty = any('[]' in s for s in secs)
+    print(f"/{p.strip()[:70]} {meths} xscopes={scopes} empty_sec={has_empty}")
+EOF
+8789 /tmp/openapi.yaml
+anon security occurrences: 0
+/v0.1/merchants/{merchant_code}/payment-methods ['get'] xscopes=[''] empty_sec=True
+/v0.1/checkouts ['post', 'get'] xscopes=[] empty_sec=True
+/v0.1/checkouts/{checkout_id} ['get', 'patch', 'put', 'delete'] xscopes=[] empty_sec=True
+/v0.2/checkouts/{checkout_id}/apple-pay-session ['put'] xscopes=[''] empty_sec=True
+/v0.1/customers ['post'] xscopes=[] empty_sec=True
+/v0.1/customers/{customer_id} ['get', 'put'] xscopes=[] empty_sec=True
+/v0.1/customers/{customer_id}/payment-instruments ['get'] xscopes=[] empty_sec=True
+/v0.1/customers/{customer_id}/payment-instruments/{token} ['delete'] xscopes=[] empty_sec=True
+/v1.0/merchants/{merchant_code}/payments/{transaction_id}/refunds ['post'] xscopes=[] empty_sec=True
+/v2.1/merchants/{merchant_code}/transactions ['get'] xscopes=[] empty_sec=True
+/v2.1/merchants/{merchant_code}/transactions/history ['get'] xscopes=[] empty_sec=True
+/v1.0/merchants/{merchant_code}/payouts ['get'] xscopes=[] empty_sec=True
+/v1.1/receipts/{transaction_id} ['get'] xscopes=[] empty_sec=True
+/v0/merchants/{merchant_code}/readers/{reader_id}/go-checkout ['post'] xscopes=['payments, readers.write'] empty_sec=True
+/v0.1/memberships ['get'] xscopes=['"user.profile", "user.profile_readonly"'] empty_sec=True
+/v0.1/merchants/{merchant_code}/members ['get', 'post'] xscopes=['user.subaccounts, members.read', 'user.subaccounts, members.write'] empty_sec=True
+/v0.1/merchants/{merchant_code}/members/{member_id} ['get', 'put', 'delete'] xscopes=['user.subaccounts, members.read', 'user.subaccounts, members.write', 'user.subaccounts, members.write'] empty_sec=True
+/v0.1/merchants/{merchant_code}/roles ['get', 'post'] xscopes=['user.subaccounts, roles.read', 'user.subaccounts, roles.write'] empty_sec=True
+/v0.1/merchants/{merchant_code}/roles/{role_id} ['get', 'delete', 'patch'] xscopes=['user.subaccounts, roles.read', 'user.subaccounts, roles.write', 'user.subaccounts, roles.write'] empty_sec=True
+/v1/merchants/{merchant_code} ['get'] xscopes=['"user.profile", "user.profile_readonly"'] empty_sec=True
+/v1/merchants/{merchant_code}/persons ['get'] xscopes=['"user.profile", "user.profile_readonly"'] empty_sec=True
+/v1/merchants/{merchant_code}/persons/{person_id} ['get'] xscopes=['"user.profile", "user.profile_readonly"'] empty_sec=True
+/v0.1/merchants/{merchant_code}/readers ['get', 'post'] xscopes=['readers.read, terminals.read', 'readers.write, terminals.write'] empty_sec=True
+/v0.1/merchants/{merchant_code}/readers/{reader_id} ['get', 'delete', 'patch'] xscopes=['readers.read, terminals.read', 'readers.write, terminals.write', 'readers.write, terminals.write'] empty_sec=True
+/v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout ['post'] xscopes=[] empty_sec=True
+/v0.1/merchants/{merchant_code}/readers/{reader_id}/status ['get'] xscopes=[] empty_sec=True
+/v0.1/merchants/{merchant_code}/readers/{reader_id}/terminate ['post'] xscopes=[] empty_sec=True
+/v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout/{checkout_ ['get', 'post', 'post', 'post', 'post', 'post'] xscopes=[] empty_sec=True
+[0m
+[0m$ [0mcurl -s --max-time 20 "https://api.github.com/repos/sumup/sumup-mcp/contents/src" | python3 -c "import sys,json; [print(x['path'], x['size']) for x in json.load(sys.stdin)]" 2>&1 | head -20
+src/auth.test.ts 3102
+src/auth.ts 4659
+src/config.ts 744
+src/protocol.ts 546
+src/sumup-agent.test.ts 1895
+src/sumup-agent.ts 947
+src/worker.test.ts 4545
+src/worker.ts 6154
+[0m
+[0m$ [0mfor f in wrangler.jsonc server.json .dev.vars README.md; do echo "===== $f ====="; curl -s --max-time 20 "https://raw.githubusercontent.com/sumup/sumup-mcp/main/$f" | head -c 2500; echo; done
+===== wrangler.jsonc =====
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "sumup-mcp",
+	"main": "src/worker.ts",
+	"compatibility_date": "2025-08-15",
+	"workers_dev": true,
+	"preview_urls": true,
+	"upload_source_maps": true,
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": {
+		"enabled": true
+	},
+	"build": {
+		"command": "npm run build"
+	},
+	"migrations": [
+		{
+			"new_sqlite_classes": ["SumUpMcpAgent"],
+			"tag": "v1"
+		}
+	],
+	"env": {
+		"dev": {
+			"account_id": "2037fc18a2fb8175c20d20776cac65c5",
+			"build": {
+				"command": "npm run build"
+			},
+			"vars": {
+				"HOST": "https://mcp-theta.sam-app.ro",
+				"SUMUP_API_HOST": "https://api-theta.sam-app.ro",
+				"SUMUP_AUTH_HOST": "https://auth-theta.sam-app.ro"
+			},
+			"routes": [
+				{
+					"pattern": "mcp-theta.sam-app.ro",
+					"custom_domain": true
+				}
+			],
+			"durable_objects": {
+				"bindings": [
+					{
+						"name": "SUMUP_MCP_AGENT",
+						"class_name": "SumUpMcpAgent"
+					}
+				]
+			}
+		},
+		"stage": {
+			"account_id": "2037fc18a2fb8175c20d20776cac65c5",
+			"build": {
+				"command": "npm run build"
+			},
+			"vars": {
+				"HOST": "https://mcp.sam-app.ro",
+				"SUMUP_API_HOST": "https://api.sam-app.ro",
+				"SUMUP_AUTH_HOST": "https://auth.sam-app.ro"
+			},
+			"routes": [
+				{
+					"pattern": "mcp.sam-app.ro",
+					"custom_domain": true
+				}
+			],
+			"durable_objects": {
+				"bindings": [
+					{
+						"name": "SUMUP_MCP_AGENT",
+						"class_name": "SumUpMcpAgent"
+					}
+				]
+			}
+		},
+		"live": {
+			"account_id": "2037fc18a2fb8175c20d20776cac65c5",
+			"build": {
+				"command": "npm run build"
+			},
+			"vars": {
+				"HOST": "https://mcp.sumup.com",
+				"SUMUP_API_HOST": "https://api.sumup.com",
+				"SUMUP_AUTH_HOST": "https://auth.sumup.com"
+			},
+			"routes": [
+				{
+					"pattern": "mcp.sumup.com",
+					"custom_domain": true
+				}
+			],
+			"durable_objects": {
+				"bindings": [
+					{
+						"name": "SUMUP_MCP_AGENT",
+						"class_name": "SumUpMcpAgent"
+					}
+				]
+			}
+		}
+	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "SUMUP_MCP_AGENT",
+				"class_name": "SumUpMcpAgent"
+			}
+		]
+	}
+}
+
+===== server.json =====
+{
+	"$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+	"name": "io.github.sumup/mcp",
+	"title": "SumUp MCP Server",
+	"description": "Tools to explore SumUp accounts, payments, customers, and payouts.",
+	"repository": {
+		"url": "https://github.com/sumup/sumup-mcp",
+		"source": "github"
+	},
+	"version": "0.1.1",
+	"remotes": [
+		{
+			"type": "streamable-http",
+			"url": "https://mcp.sumup.com",
+			"headers": [
+				{
+					"name": "Authentication",
+					"description": "SumUp API key for authentication.",
+					"is_required": true,
+					"is_secret": true
+				}
+			]
+		}
+	]
+}
+
+===== .dev.vars =====
+HOST=https://mcp.sumup.com
+SUMUP_API_HOST=https://api.sumup.com
+SUMUP_AUTH_HOST=https://auth.sumup.com
+OPENAI_APPS_CHALLENGE=
+
+===== README.md =====
+<div align="center">
+
+# SumUp MCP Server
+
+[![Documentation][docs-badge]](https://developer.sumup.com)
+[![License](https://img.shields.io/github/license/sumup/sumup-ts)](./LICENSE)
+
+</div>
+
+SumUp's [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) server for interactions between large language models (LLMs) and SumUp APIs. The MCP server allows you to connect to SumUp's services from an MCP client (e.g. Cursor, Claude) and use natural language to work with your SumUp account.
+
+This package runs as a Cloudflare Worker and serves the MCP transport for SumUp.
+
+Authentication follows the MCP OAuth resource-server flow:
+
+- The worker publishes protected resource metadata that points clients to the SumUp authorization server.
+- Clients send `Authorization: Bearer <access-token>` to `/mcp`.
+- Bearer tokens must be JWT access tokens issued by `SUMUP_AUTH_HOST` and valid for the worker resource URL.
+
+SumUp API keys such as `sup_sk_...` are not valid Bearer tokens for the hosted server.
+
+The worker exposes `/mcp` for Streamable HTTP and `/sse` for the legacy SSE transport. Both routes are pinned to a Durable Object so MCP session state survives across requests within the same Worker deployment.
+
+## Using from an MCP client
+
+Any client that speaks the Streamable HTTP transport can connect to this server. For example, using [`mcp-remote`](https://www.npmjs.com/package/mcp-remote):
+
+```json
+{
+  "mcpServers": {
+    "sumup": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://mcp.sumup.com/mcp",
+        "--headers",
+        "Authorization: Bearer <your-access-token>"
+      ]
+    }
+  }
+}
+```
+
+Replace `<your-access-token>` with an OAuth access token issued for the MCP resource. OAuth-capable clients can discover the authorization server from the protected resource metadata instead of requiring a token to be configured manually.
+
+## Development
+
+Development setup, local testing, and contributor workflow live in [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+[docs-badge]: https://img.shields.io/badge/SumUp-documentation-white.svg?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgY29sb3I9IndoaXRlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogICAgPHBhdGggZD0iTTIyLjI5IDBIMS43Qy43NyAwIDAgLjc3IDAgMS43MVYyMi4zYzAgLjkzLjc3IDEuNyAxLjcxIDEuN0gyMi4zYy45NCAwIDEuNzEtLjc3IDEuNzEtMS43MVYxLjdDMjQgLjc3IDIzLjIzIDAgMjIuMjkgMFptLTcuMjIgMTguMDdhNS42MiA1LjYyIDAgMCAxLTcuNjguMjQuMzYuMzY
+[0m
+[0m$ [0mfor f in src/auth.ts src/config.ts src/worker.ts; do echo "===== $f ====="; curl -s --max-time 20 "https://raw.githubusercontent.com/sumup/sumup-mcp/main/$f"; echo; done
+===== src/auth.ts =====
+import type { OAuthTokenVerifier } from "@modelcontextprotocol/sdk/server/auth/provider.js";
+import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
+import type { OAuthProtectedResourceMetadata } from "@modelcontextprotocol/sdk/shared/auth.js";
+import { checkResourceAllowed } from "@modelcontextprotocol/sdk/shared/auth-utils.js";
+import { createRemoteJWKSet, jwtVerify } from "jose";
+
+import {
+	MCP_ROUTE,
+	SCOPES_SUPPORTED,
+	SERVICE_DOCUMENTATION_URL,
+} from "./config";
+
+// Reuse one remote JWKS resolver per URL so jose can keep its own fetch/cache
+// state across token verifications instead of rebuilding it on every request.
+const remoteJwksCache = new Map<
+	string,
+	ReturnType<typeof createRemoteJWKSet>
+>();
+
+export interface AuthEnv {
+	HOST: string;
+	SUMUP_AUTH_HOST: string;
+}
+
+export class SumUpOAuthTokenVerifier implements OAuthTokenVerifier {
+	constructor(private readonly env: AuthEnv) {}
+
+	verifyAccessToken(token: string): Promise<AuthInfo> {
+		return verifyAccessToken(this.env, token);
+	}
+}
+
+export function protectedResourceMetadata(
+	env: AuthEnv,
+): OAuthProtectedResourceMetadata {
+	return {
+		resource: new URL(MCP_ROUTE, env.HOST).toString(),
+		authorization_servers: [env.SUMUP_AUTH_HOST],
+		bearer_methods_supported: ["header"],
+		scopes_supported: SCOPES_SUPPORTED,
+		resource_name: "SumUp MCP",
+		resource_documentation: SERVICE_DOCUMENTATION_URL.toString(),
+	};
+}
+
+/**
+ * Verifies a JWT bearer access token against the configured issuer and JWKS.
+ *
+ * JWT validation is the only bearer validation mode supported by the worker.
+ */
+export async function verifyAccessToken(
+	env: AuthEnv,
+	token: string,
+): Promise<AuthInfo> {
+	const resourceUrl = new URL(MCP_ROUTE, env.HOST).toString();
+	const issuer = env.SUMUP_AUTH_HOST;
+	const payload = await defaultVerifyJwt(token, {
+		issuer,
+		audience: [resourceUrl],
+		jwksUrl: new URL("/.well-known/jwks.json", issuer).toString(),
+	});
+
+	validateAudience(resourceUrl, payload);
+	return buildAuthInfo(token, payload);
+}
+
+/**
+ * Default JWT verifier backed by a remote JWKS endpoint.
+ */
+async function defaultVerifyJwt(
+	token: string,
+	options: {
+		issuer: string;
+		audience: string[];
+		jwksUrl: string;
+	},
+): Promise<Record<string, unknown>> {
+	const { payload } = await jwtVerify(token, remoteJwks(options.jwksUrl), {
+		issuer: options.issuer,
+		audience: options.audience,
+	});
+	return payload as Record<string, unknown>;
+}
+
+function remoteJwks(jwksUrl: string): ReturnType<typeof createRemoteJWKSet> {
+	const cached = remoteJwksCache.get(jwksUrl);
+	if (cached) {
+		return cached;
+	}
+
+	const jwks = createRemoteJWKSet(new URL(jwksUrl));
+	remoteJwksCache.set(jwksUrl, jwks);
+	return jwks;
+}
+
+function buildAuthInfo(
+	token: string,
+	claims: Record<string, unknown>,
+): AuthInfo {
+	const scopes = parseScopes(claims);
+	const subject = stringClaim(claims, "sub");
+	return {
+		token,
+		clientId:
+			stringClaim(claims, "client_id") ??
+			stringClaim(claims, "azp") ??
+			subject ??
+			"sumup-mcp",
+		scopes,
+		expiresAt: numberClaim(claims, "exp"),
+		extra: subject ? { subject } : undefined,
+	};
+}
+
+function parseScopes(claims: Record<string, unknown>): string[] {
+	const scope = claims.scope;
+	if (typeof scope === "string") {
+		return scope.split(/\s+/).filter(Boolean);
+	}
+
+	const scopes = claims.scopes;
+	if (Array.isArray(scopes)) {
+		return scopes.filter((value): value is string => typeof value === "string");
+	}
+
+	const scp = claims.scp;
+	if (Array.isArray(scp)) {
+		return scp.filter((value): value is string => typeof value === "string");
+	}
+
+	return [];
+}
+
+function validateAudience(
+	configuredResource: string,
+	claims: Record<string, unknown>,
+): void {
+	const audiences = audienceClaims(claims);
+	if (audiences.length === 0) {
+		return;
+	}
+
+	const allowed = audiences.some((audience) =>
+		checkResourceAllowed({
+			requestedResource: audience,
+			configuredResource,
+		}),
+	);
+
+	if (!allowed) {
+		throw new Error(
+			"Access token audience does not match the protected resource",
+		);
+	}
+}
+
+function audienceClaims(claims: Record<string, unknown>): string[] {
+	const aud = claims.aud;
+	if (typeof aud === "string") {
+		return [aud];
+	}
+
+	if (Array.isArray(aud)) {
+		return aud.filter((value): value is string => typeof value === "string");
+	}
+
+	return [];
+}
+
+function stringClaim(
+	claims: Record<string, unknown>,
+	key: string,
+): string | undefined {
+	const value = claims[key];
+	return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+function numberClaim(
+	claims: Record<string, unknown>,
+	key: string,
+): number | undefined {
+	const value = claims[key];
+	return typeof value === "number" ? value : undefined;
+}
+
+===== src/config.ts =====
+export const MCP_ROUTE = "/mcp";
+export const OPENAI_APPS_CHALLENGE_ROUTE = "/.well-known/openai-apps-challenge";
+export const PROTECTED_RESOURCE_WELL_KNOWN =
+	"/.well-known/oauth-protected-resource";
+export const SSE_ROUTE = "/sse";
+
+export const CORS_HEADERS = {
+	"Access-Control-Allow-Origin": "*",
+	"Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+	"Access-Control-Allow-Headers":
+		"Content-Type, Accept, Authorization, mcp-session-id, MCP-Protocol-Version",
+	"Access-Control-Expose-Headers": "WWW-Authenticate, mcp-session-id",
+	"Access-Control-Max-Age": "86400",
+};
+
+export const SCOPES_SUPPORTED = ["offline_access", "email"];
+export const SERVICE_DOCUMENTATION_URL = new URL(
+	"https://developer.sumup.com/tools/llms",
+);
+
+===== src/worker.ts =====
+import {
+	InsufficientScopeError,
+	InvalidTokenError,
+	ServerError,
+} from "@modelcontextprotocol/sdk/server/auth/errors.js";
+
+export { SumUpMcpAgent } from "./sumup-agent";
+
+import { protectedResourceMetadata, verifyAccessToken } from "./auth";
+import {
+	CORS_HEADERS,
+	MCP_ROUTE,
+	OPENAI_APPS_CHALLENGE_ROUTE,
+	PROTECTED_RESOURCE_WELL_KNOWN,
+	SCOPES_SUPPORTED,
+	SSE_ROUTE,
+} from "./config";
+import { protocolErrorResponse, withCorsHeaders } from "./protocol";
+import { type SumUpAgentProps, SumUpMcpAgent } from "./sumup-agent";
+
+type ContextWithProps = ExecutionContext & { props?: SumUpAgentProps };
+
+const mcpHandler = SumUpMcpAgent.serve(MCP_ROUTE, {
+	binding: "SUMUP_MCP_AGENT",
+});
+
+const sseHandler = SumUpMcpAgent.serveSSE(SSE_ROUTE, {
+	binding: "SUMUP_MCP_AGENT",
+});
+
+const PROTECTED_RESOURCE_METADATA_URL = `${PROTECTED_RESOURCE_WELL_KNOWN}${MCP_ROUTE}`;
+
+export default {
+	async fetch(
+		request: Request,
+		env: Env,
+		ctx: ExecutionContext,
+	): Promise<Response> {
+		const corsResponse = handleCors(request);
+		if (corsResponse) {
+			return corsResponse;
+		}
+
+		const url = new URL(request.url);
+
+		if (request.method === "GET" && url.pathname === "/") {
+			return jsonResponse({
+				name: "SumUp MCP",
+				transports: {
+					streamableHttp: MCP_ROUTE,
+					sse: SSE_ROUTE,
+				},
+				resource_metadata: PROTECTED_RESOURCE_WELL_KNOWN,
+			});
+		}
+
+		if (
+			request.method === "GET" &&
+			url.pathname === PROTECTED_RESOURCE_WELL_KNOWN
+		) {
+			return jsonResponse(protectedResourceMetadata(env));
+		}
+
+		if (
+			request.method === "GET" &&
+			url.pathname === `${PROTECTED_RESOURCE_WELL_KNOWN}${MCP_ROUTE}`
+		) {
+			return jsonResponse(protectedResourceMetadata(env));
+		}
+
+		if (
+			request.method === "GET" &&
+			url.pathname === `${PROTECTED_RESOURCE_WELL_KNOWN}${SSE_ROUTE}`
+		) {
+			return jsonResponse(protectedResourceMetadata(env));
+		}
+
+		if (
+			request.method === "GET" &&
+			url.pathname === OPENAI_APPS_CHALLENGE_ROUTE
+		) {
+			if (!env.OPENAI_APPS_CHALLENGE) {
+				return new Response(null, {
+					status: 404,
+					headers: CORS_HEADERS,
+				});
+			}
+
+			return new Response(env.OPENAI_APPS_CHALLENGE, {
+				headers: withCorsHeaders({
+					"content-type": "text/plain",
+				}),
+			});
+		}
+
+		if (url.pathname === MCP_ROUTE) {
+			return authenticateAndHandle(request, env, ctx, mcpHandler.fetch);
+		}
+
+		if (url.pathname === SSE_ROUTE) {
+			return authenticateAndHandle(request, env, ctx, sseHandler.fetch);
+		}
+
+		return protocolErrorResponse(404, "Not Found");
+	},
+};
+
+async function authenticateAndHandle(
+	request: Request,
+	env: Env,
+	ctx: ExecutionContext,
+	handler: (
+		request: Request,
+		env: Env,
+		ctx: ExecutionContext,
+	) => Promise<Response>,
+): Promise<Response> {
+	try {
+		const token = bearerToken(request);
+		const authInfo = await verifyAccessToken(env, token);
+
+		const hasAllScopes = SCOPES_SUPPORTED.every((scope) =>
+			authInfo.scopes.includes(scope),
+		);
+		if (!hasAllScopes) {
+			throw new InsufficientScopeError("Insufficient scope");
+		}
+
+		if (
+			typeof authInfo.expiresAt !== "number" ||
+			Number.isNaN(authInfo.expiresAt)
+		) {
+			throw new InvalidTokenError("Token has no expiration time");
+		}
+
+		if (authInfo.expiresAt < Date.now() / 1000) {
+			throw new InvalidTokenError("Token has expired");
+		}
+
+		return await handler(request, env, withProps(ctx, token));
+	} catch (error) {
+		return authErrorResponse(error, env);
+	}
+}
+
+function bearerToken(request: Request): string {
+	const authHeader = request.headers.get("authorization");
+	if (!authHeader) {
+		throw new InvalidTokenError("Missing Authorization header");
+	}
+
+	const [type, token] = authHeader.split(" ");
+	if (type.toLowerCase() !== "bearer" || !token) {
+		throw new InvalidTokenError(
+			"Invalid Authorization header format, expected 'Bearer TOKEN'",
+		);
+	}
+
+	return token;
+}
+
+function authErrorResponse(error: unknown, env: Env): Response {
+	const resourceMetadataUrl = new URL(
+		PROTECTED_RESOURCE_METADATA_URL,
+		env.HOST,
+	).toString();
+
+	if (error instanceof InvalidTokenError) {
+		return jsonResponse(error.toResponseObject(), {
+			status: 401,
+			headers: {
+				"WWW-Authenticate": wwwAuthenticateHeader(
+					error.errorCode,
+					error.message,
+					resourceMetadataUrl,
+				),
+			},
+		});
+	}
+
+	if (error instanceof InsufficientScopeError) {
+		return jsonResponse(error.toResponseObject(), {
+			status: 403,
+			headers: {
+				"WWW-Authenticate": wwwAuthenticateHeader(
+					error.errorCode,
+					error.message,
+					resourceMetadataUrl,
+				),
+			},
+		});
+	}
+
+	// Verification failures are auth failures even if they do not come from the SDK
+	// middleware's error classes.
+	if (error instanceof Error) {
+		console.error("Authentication failed", error);
+		const authError = new InvalidTokenError(error.message);
+		return jsonResponse(authError.toResponseObject(), {
+			status: 401,
+			headers: {
+				"WWW-Authenticate": wwwAuthenticateHeader(
+					authError.errorCode,
+					authError.message,
+					resourceMetadataUrl,
+				),
+			},
+		});
+	}
+
+	console.error("Unhandled auth error", error);
+	const serverError = new ServerError("Internal Server Error");
+	return jsonResponse(serverError.toResponseObject(), {
+		status: 500,
+	});
+}
+
+function wwwAuthenticateHeader(
+	errorCode: string,
+	message: string,
+	resourceMetadataUrl: string,
+): string {
+	return `Bearer error="${errorCode}", error_description="${message}", scope="${SCOPES_SUPPORTED.join(" ")}", resource_metadata="${resourceMetadataUrl}"`;
+}
+
+function withProps(
+	executionCtx: ExecutionContext,
+	token?: string,
+): ContextWithProps {
+	const contextWithProps = executionCtx as ContextWithProps;
+	contextWithProps.props = token ? { token } : {};
+	return contextWithProps;
+}
+
+function handleCors(request: Request): Response | null {
+	if (request.method !== "OPTIONS") {
+		return null;
+	}
+
+	return new Response(null, {
+		status: 204,
+		headers: CORS_HEADERS,
+	});
+}
+
+function jsonResponse(
+	body: unknown,
+	init?: {
+		headers?: Record<string, string>;
+		status?: number;
+	},
+): Response {
+	return new Response(JSON.stringify(body), {
+		status: init?.status,
+		headers: withCorsHeaders({
+			"content-type": "application/json",
+			...init?.headers,
+		}),
+	});
+}
+[0m
+[0m$ [0msleep 1; for p in "/" "/.well-known/openai-apps-challenge" "/.well-known/oauth-protected-resource/mcp" "/.well-known/oauth-protected-resource/sse" "/mcp" "/sse"; do code=$(curl -s --max-time 15 -o /tmp/mcp_body.txt -w "%{http_code}" "https://mcp.sumup.com$p"); echo "== GET $p => $code"; head -c 300 /tmp/mcp_body.txt; echo; sleep 1.5; done
+== GET / => 200
+{"name":"SumUp MCP","transports":{"streamableHttp":"/mcp","sse":"/sse"},"resource_metadata":"/.well-known/oauth-protected-resource"}
+== GET /.well-known/openai-apps-challenge => 404
+
+== GET /.well-known/oauth-protected-resource/mcp => 200
+{"resource":"https://mcp.sumup.com/mcp","authorization_servers":["https://auth.sumup.com"],"bearer_methods_supported":["header"],"scopes_supported":["offline_access","email"],"resource_name":"SumUp MCP","resource_documentation":"https://developer.sumup.com/tools/llms"}
+== GET /.well-known/oauth-protected-resource/sse => 200
+{"resource":"https://mcp.sumup.com/mcp","authorization_servers":["https://auth.sumup.com"],"bearer_methods_supported":["header"],"scopes_supported":["offline_access","email"],"resource_name":"SumUp MCP","resource_documentation":"https://developer.sumup.com/tools/llms"}
+== GET /mcp => 401
+{"error":"invalid_token","error_description":"Missing Authorization header"}
+== GET /sse => 401
+{"error":"invalid_token","error_description":"Missing Authorization header"}
+[0m
+[0m$ [0mcurl -s --max-time 20 "https://raw.githubusercontent.com/sumup/sumup-mcp/main/src/sumup-agent.ts"; echo "=====protocol====="; curl -s --max-time 20 "https://raw.githubusercontent.com/sumup/sumup-mcp/main/src/protocol.ts" | head -c 1500
+import { SumUpAgentToolkit } from "@sumup/agent-toolkit/mcp";
+import { McpAgent } from "agents/mcp";
+
+import { MCP_ROUTE, PROTECTED_RESOURCE_WELL_KNOWN } from "./config";
+
+export interface SumUpAgentProps extends Record<string, unknown> {
+	token?: string;
+}
+
+type AgentServer = McpAgent<Env, never, SumUpAgentProps>["server"];
+
+export class SumUpMcpAgent extends McpAgent<Env, never, SumUpAgentProps> {
+	server!: AgentServer;
+
+	async init() {
+		const props = this.props;
+		if (!props?.token) {
+			throw new Error("Authentication required");
+		}
+
+		this.server = new SumUpAgentToolkit({
+			apiKey: props.token,
+			host: this.env.SUMUP_API_HOST,
+			resource: new URL(MCP_ROUTE, this.env.HOST).toString(),
+			resourceMetadata: new URL(
+				`${PROTECTED_RESOURCE_WELL_KNOWN}${MCP_ROUTE}`,
+				this.env.HOST,
+			).toString(),
+			configuration: {
+				capabilities: {
+					resources: {},
+					tools: {},
+				},
+			},
+		}) as unknown as AgentServer;
+	}
+}
+=====protocol=====
+import { CORS_HEADERS } from "./config";
+
+export function protocolErrorResponse(
+	status: number,
+	message: string,
+	headers?: HeadersInit,
+): Response {
+	return new Response(
+		JSON.stringify({
+			jsonrpc: "2.0",
+			error: {
+				code: -32010,
+				message,
+			},
+			id: null,
+		}),
+		{
+			status,
+			headers: withCorsHeaders({
+				"content-type": "application/json",
+				...headers,
+			}),
+		},
+	);
+}
+
+export function withCorsHeaders(
+	headers: Record<string, string>,
+): Record<string, string> {
+	return {
+		...CORS_HEADERS,
+		...headers,
+	};
+}
+[0m
+[0m$ [0mcurl -s --max-time 20 "https://api.github.com/repos/sumup/sumup-agent-toolkit/git/trees/main?recursive=1" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+for t in d.get('tree',[]):
+    p=t['path']
+    if p.endswith(('.ts','.tsx','.js','.json','.md','.yaml','.env','.toml')) and t['type']=='blob':
+        print(p, t['size'])
+" 2>&1 | head -60
+(no output)
+[0m
+[0m$ [0mcurl -s --max-time 20 "https://api.github.com/repos/sumup/sumup-agent-toolkit" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('default_branch'), d.get('message'))" 2>&1; echo "---"; curl -s --max-time 20 "https://api.github.com/repos/sumup/sumup-agent-toolkit/contents/mcp" | python3 -c "import sys,json; d=json.load(sys.stdin); [print(x['name'], x.get('size','dir')) for x in d]" 2>&1 | head -30
+None Moved Permanently
+---
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+TypeError: string indices must be integers, not 'str'
+[0m
+[0m$ [0mcurl -sL --max-time 20 "https://api.github.com/repos/sumup/sumup-agent-toolkit" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('full_name'), d.get('default_branch'), d.get('html_url'), d.get('message'))" 2>&1
+sumup/sumup-ai main https://github.com/sumup/sumup-ai None
+[0m
+[0m$ [0mcurl -s --max-time 25 "https://api.github.com/repos/sumup/sumup-ai/git/trees/main?recursive=1" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+if 'tree' not in d: print('ERR', d.get('message')); sys.exit()
+for t in d['tree']:
+    p=t['path']
+    if t['type']=='blob' and p.endswith(('.ts','.mts','.cts','.json')):
+        print(p, t['size'])
+" 2>&1 | grep -iE "mcp|auth|config|token|resource|client" | head -40
+codegen/tsconfig.json 547
+mcp/package-lock.json 101732
+mcp/package.json 1536
+mcp/rslib.config.ts 382
+mcp/src/constants.ts 67
+mcp/src/index.ts 911
+mcp/tsconfig.json 513
+release-please-config.json 1417
+typescript/examples/ai/tsconfig.json 590
+typescript/examples/openai/tsconfig.json 324
+typescript/rslib.config.ts 880
+typescript/rstest.config.ts 157
+typescript/src/common/auth/index.test.ts 3961
+typescript/src/common/auth/index.ts 5328
+typescript/src/mcp/catalog.test.ts 896
+typescript/src/mcp/index.ts 133
+typescript/src/mcp/toolkit.test.ts 6245
+typescript/src/mcp/toolkit.ts 6836
+typescript/src/mcp/transport.test.ts 2191
+typescript/tsconfig.build.json 196
+typescript/tsconfig.json 757
+typescript/tsup.config.ts 624
+[0m
+[0m$ [0mecho "===== common/auth/index.ts ====="; curl -s --max-time 20 "https://raw.githubusercontent.com/sumup/sumup-ai/main/typescript/src/common/auth/index.ts"; echo; echo "===== mcp/toolkit.ts ====="; curl -s --max-time 20 "https://raw.githubusercontent.com/sumup/sumup-ai/main/typescript/src/mcp/toolkit.ts" | head -c 5000
+===== common/auth/index.ts =====
+/**
+ * Portions of the `parseWWWAuthenticateChallenges` implementation are adapted from:
+ * https://raw.githubusercontent.com/panva/oauth4webapi/refs/heads/main/src/index.ts
+ *
+ * oauth4webapi license: MIT License
+ * Copyright (c) 2022 Filip Skokan
+ */
+
+export interface WWWAuthenticateChallengeParameters {
+  readonly realm?: string;
+  readonly error?: string;
+  readonly error_description?: string;
+  readonly error_uri?: string;
+  readonly algs?: string;
+  readonly scope?: string;
+  readonly resource_metadata?: string;
+  readonly [parameter: Lowercase<string>]: string | undefined;
+}
+
+export interface WWWAuthenticateChallenge {
+  readonly scheme: Lowercase<string>;
+  readonly parameters: WWWAuthenticateChallengeParameters;
+  readonly token68?: string;
+}
+
+type MutableWWWAuthenticateChallengeParameters = Record<
+  Lowercase<string>,
+  string | undefined
+>;
+
+const tokenMatch = "[a-zA-Z0-9!#$%&\\'\\*\\+\\-\\.\\^_`\\|~]+";
+const token68Match = "[a-zA-Z0-9\\-\\._\\~\\+\\/]+={0,2}";
+const quotedMatch = '"((?:[^"\\\\]|\\\\[\\s\\S])*)"';
+
+const quotedParamMatcher = `(${tokenMatch})\\s*=\\s*${quotedMatch}`;
+const paramMatcher = `(${tokenMatch})\\s*=\\s*(${tokenMatch})`;
+
+const schemeRE = new RegExp(`^[,\\s]*(${tokenMatch})`);
+const quotedParamRE = new RegExp(`^[,\\s]*${quotedParamMatcher}[,\\s]*(.*)`);
+const unquotedParamRE = new RegExp(`^[,\\s]*${paramMatcher}[,\\s]*(.*)`);
+const token68ParamRE = new RegExp(`^(${token68Match})(?:$|[,\\s])(.*)`);
+
+/**
+ * Parses a raw WWW-Authenticate header value into challenge objects.
+ * Returns undefined for invalid headers.
+ */
+export function parseWWWAuthenticateChallenges(
+  header: string,
+): WWWAuthenticateChallenge[] | undefined {
+  const challenges: WWWAuthenticateChallenge[] = [];
+
+  let rest: string | undefined = header;
+  while (rest) {
+    const match: RegExpMatchArray | null = rest.match(schemeRE);
+    if (!match) {
+      return undefined;
+    }
+    const scheme = match[1].toLowerCase() as Lowercase<string>;
+
+    const afterScheme = rest.slice(match[0].length);
+    if (afterScheme && !/^[\s,]/.test(afterScheme)) {
+      return undefined;
+    }
+
+    const spaceMatch = afterScheme.match(/^\s+(.*)$/);
+    const hasParameters = !!spaceMatch;
+    rest = spaceMatch ? spaceMatch[1] : undefined;
+
+    const parameters: MutableWWWAuthenticateChallengeParameters = {};
+    let token68: string | undefined;
+
+    if (hasParameters) {
+      while (rest) {
+        let key: string;
+        let value: string;
+        const quotedMatchResult = rest.match(quotedParamRE);
+
+        if (quotedMatchResult) {
+          [, key, value, rest] = quotedMatchResult;
+
+          if (value.includes("\\")) {
+            try {
+              value = JSON.parse(`"${value}"`);
+            } catch {
+              // Keep original parsed value when unescaping fails.
+            }
+          }
+
+          parameters[key.toLowerCase() as Lowercase<string>] = value;
+          continue;
+        }
+
+        const unquotedMatchResult = rest.match(unquotedParamRE);
+        if (unquotedMatchResult) {
+          [, key, value, rest] = unquotedMatchResult;
+          parameters[key.toLowerCase() as Lowercase<string>] = value;
+          continue;
+        }
+
+        const token68MatchResult = rest.match(token68ParamRE);
+        if (token68MatchResult) {
+          if (Object.keys(parameters).length) {
+            break;
+          }
+          [, token68, rest] = token68MatchResult;
+          break;
+        }
+
+        return undefined;
+      }
+    } else {
+      rest = afterScheme || undefined;
+    }
+
+    const challenge: WWWAuthenticateChallenge = {
+      scheme,
+      parameters,
+      token68,
+    };
+
+    challenges.push(challenge);
+  }
+
+  return challenges.length ? challenges : undefined;
+}
+
+/**
+ * Returns true if the header contains a Bearer challenge.
+ */
+export function parseWWWAuthenticate(header: string): boolean {
+  const challenges = parseWWWAuthenticateChallenges(header);
+  return (
+    challenges?.some((challenge) => challenge.scheme === "bearer") ?? false
+  );
+}
+
+function quoteHeaderValue(value: string): string {
+  return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+}
+
+function stringifyChallenge(challenge: WWWAuthenticateChallenge): string {
+  const parameterEntries = Object.entries(challenge.parameters);
+  const parameters = parameterEntries
+    .map(([key, value]) => `${key}=${quoteHeaderValue(value ?? "")}`)
+    .join(", ");
+
+  if (challenge.token68) {
+    return `${challenge.scheme} ${challenge.token68}`;
+  }
+
+  if (parameters.length > 0) {
+    return `${challenge.scheme} ${parameters}`;
+  }
+
+  return challenge.scheme;
+}
+
+export function stringifyWWWAuthenticateChallenges(
+  challenges: WWWAuthenticateChallenge[],
+): string {
+  return challenges.map(stringifyChallenge).join(", ");
+}
+
+/**
+ * Build MCP `resource_metadata` URL from an OAuth resource URL.
+ * Per MCP protected-resource metadata discovery, this resolves
+ * "/.well-known/oauth-protected-resource" at the resource origin.
+ */
+export function constructResourceMetadata(
+  resource?: string,
+): string | undefined {
+  if (!resource) {
+    return undefined;
+  }
+
+  try {
+    return new URL(
+      "/.well-known/oauth-protected-resource",
+      resource,
+    ).toString();
+  } catch {
+    return `${resource.replace(/\/+$/, "")}/.well-known/oauth-protected-resource`;
+  }
+}
+
+===== mcp/toolkit.ts =====
+import type { ServerOptions } from "@modelcontextprotocol/sdk/server/index.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
+import SumUp, { APIError } from "@sumup/sdk";
+import { z } from "zod";
+import {
+  constructResourceMetadata,
+  executeTool,
+  parseWWWAuthenticateChallenges,
+  registerTools,
+  stringifyWWWAuthenticateChallenges,
+  TOOL_OAUTH_SCOPES_META_KEY,
+  type ToolObservability,
+  VERSION,
+} from "../common";
+
+export type SumUpAgentToolkitOptions = {
+  apiKey?: string;
+  host?: string;
+  resource?: string;
+  resourceMetadata?: string;
+  observability?: ToolObservability;
+  includeTools?: string[];
+  excludeTools?: string[];
+  readOnly?: boolean;
+  includeOutputSchemas?: boolean;
+  configuration: ServerOptions;
+};
+
+class SumUpAgentToolkit extends McpServer {
+  private _apiKey?: string;
+  private _host?: string;
+  private _resourceMetadata?: string;
+
+  /**
+   * Builds a SumUp MCP server.
+   *
+   * Direct toolkit users can provide a default `apiKey`. Remote MCP servers can
+   * leave it unset and rely on the validated bearer token propagated through
+   * the MCP request's auth context.
+   */
+  constructor({
+    apiKey,
+    host,
+    resource,
+    resourceMetadata,
+    observability,
+    includeTools,
+    excludeTools = [],
+    readOnly = false,
+    includeOutputSchemas = false,
+  }: SumUpAgentToolkitOptions) {
+    super(
+      {
+        name: "SumUp",
+        version: VERSION,
+      },
+      {
+        capabilities: {
+          resources: {},
+          tools: {},
+          logging: {},
+        },
+      },
+    );
+
+    this._resourceMetadata =
+      resourceMetadata ?? constructResourceMetadata(resource);
+    this._apiKey = apiKey;
+    this._host = host;
+
+    this.registerResource(
+      "SumUp developer documentation",
+      "https://developer.sumup.com/llms.txt",
+      {
+        mimeType: "text/plain",
+      },
+      async (uri) => {
+        const content = await fetch(uri.toString());
+        return {
+          contents: [
+            {
+              uri: uri.toString(),
+              mimeType: "text/plain",
+              text: await content.text(),
+            },
+          ],
+        };
+      },
+    );
+
+    this.registerResource(
+      "SumUp API OpenAPI specification",
+      "https://developer.sumup.com/openapi.json",
+      {
+        mimeType: "text/plain",
+      },
+      async (uri) => {
+        const content = await fetch(uri.toString());
+        return {
+          contents: [
+            {
+              uri: uri.toString(),
+              mimeType: "application/json",
+              text: await content.text(),
+            },
+          ],
+        };
+      },
+    );
+
+    const includedToolNames = includeTools ? new Set(includeTools) : undefined;
+    const excludedToolNames = new Set(excludeTools);
+
+    registerTools((tool) => {
+      if (
+        (includedToolNames && !includedToolNames.has(tool.name)) ||
+        excludedToolNames.has(tool.name) ||
+        (readOnly && !tool.annotations?.readOnly)
+      ) {
+        return;
+      }
+
+      this.registerTool(
+        tool.name,
+        {
+          title: tool.title,
+          description: tool.description,
+          inputSchema: tool.parameters.shape,
+          outputSchema:
+            includeOutputSchemas && tool.result instanceof z.ZodObject
+              ? tool.result.shape
+              : undefined,
+          annotations: {
+            title: tool.annotations?.title,
+            readOnlyHint: tool.annotations?.readOnly,
+            destructiveHint: tool.annotations?.destructive,
+            idempotentHint: tool.annotations?.idempotent,
+          },
+          _meta: tool.annotations?.oauthScopes?.length
+            ? {
+                [TOOL_OAUTH_SCOPES_META_KEY]: tool.annotations.oauthScopes,
+              }
+            : undefined,
+        },
+        async (
+          args: z.infer<typeof tool.parameters>,
+          extra,
+        ): Promise<CallToolResult> => {
+          try {
+            const sumup = this.createClient(extra?.authInfo?.token);
+            const result = await executeTool(tool, sumup, args, observability);
+            const structuredContent =
+              typeof result === "object" && result !== null
+                ? (result as Record<string, unknown>)
+                : undefined;
+
+            return {
+              structuredContent,
+              content: [
+                {
+                  type: "text" as const,
+                  text: JSON.stringify(structuredContent),
+                },
+              ],
+            };
+          } catch (error) {
+            // Handle OAuth authorization errors
+            if (error instanceof APIError && error.status === 401) {
+              const wwwAuthenticate =
+                error.response.headers.get("www-authenticate");
+
+              if (wwwAuthenticate && this._resourceMetadata) {
+                const ch
+[0m
+[0m$ [0mcurl -s --max-time 20 "https://raw.githubusercontent.com/sumup/sumup-ai/main/typescript/src/mcp/toolkit.ts" | sed -n '150,260p'
+): Promise<CallToolResult> => {
+          try {
+            const sumup = this.createClient(extra?.authInfo?.token);
+            const result = await executeTool(tool, sumup, args, observability);
+            const structuredContent =
+              typeof result === "object" && result !== null
+                ? (result as Record<string, unknown>)
+                : undefined;
+
+            return {
+              structuredContent,
+              content: [
+                {
+                  type: "text" as const,
+                  text: JSON.stringify(structuredContent),
+                },
+              ],
+            };
+          } catch (error) {
+            // Handle OAuth authorization errors
+            if (error instanceof APIError && error.status === 401) {
+              const wwwAuthenticate =
+                error.response.headers.get("www-authenticate");
+
+              if (wwwAuthenticate && this._resourceMetadata) {
+                const challenges =
+                  parseWWWAuthenticateChallenges(wwwAuthenticate);
+                if (
+                  challenges?.some((challenge) => challenge.scheme === "bearer")
+                ) {
+                  const enhancedHeader = stringifyWWWAuthenticateChallenges(
+                    challenges.map((challenge) => {
+                      if (challenge.scheme !== "bearer" || challenge.token68) {
+                        return challenge;
+                      }
+
+                      return {
+                        ...challenge,
+                        parameters: {
+                          ...challenge.parameters,
+                          resource_metadata: this._resourceMetadata,
+                        },
+                      };
+                    }),
+                  );
+
+                  // Throw McpError with www-authenticate header in data
+                  // This follows the MCP error protocol for authorization errors
+                  throw new McpError(
+                    ErrorCode.InternalError,
+                    "Authentication required",
+                    {
+                      wwwAuthenticate: enhancedHeader,
+                    },
+                  );
+                }
+              }
+            }
+
+            // For any other errors, re-throw to let MCP SDK handle them
+            if (error instanceof Error) {
+              throw error;
+            }
+
+            throw new Error(String(error));
+          }
+        },
+      );
+    });
+  }
+
+  private createClient(accessToken?: string): SumUp {
+    return new SumUp({
+      apiKey: this._apiKey,
+      host: this._host,
+      ...(accessToken
+        ? {
+            baseParams: {
+              authorization: `Bearer ${accessToken}`,
+            },
+          }
+        : {}),
+    });
+  }
+}
+
+export default SumUpAgentToolkit;
+[0m
+[0m$ [0mfor p in "/llms.txt" "/openapi.json"; do code=$(curl -s --max-time 20 -o /tmp/ddl_$(basename $p).txt -w "%{http_code} %{content_type} %{size_download}B" "https://developer.sumup.com$p"); echo "developer.sumup.com$p => $code"; head -c 400 /tmp/ddl_$(basename $p).txt; echo; done
+developer.sumup.com/llms.txt => 200 text/plain; charset=utf-8 508B
+# SumUp Developer
+
+## Documentation Sets
+
+- [Abridged documentation](https://developer.sumup.com/llms-small.txt): a compact version of the documentation for SumUp Developer, with non-essential content removed
+- [Complete documentation](https://developer.sumup.com/llms-full.txt): the full documentation for SumUp Developer
+
+## Notes
+
+- The complete documentation includes all content from the officia
+developer.sumup.com/openapi.json => 404 text/html 23364B
+<!DOCTYPE html><html lang="en" dir="ltr" data-theme="dark" class="astro-vdxcvpsm"><head><script>
+  (function () {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        const element = mutation.target;
+        element.dataset.colorScheme = element.dataset.theme;
+      });
+    });
+    observer.observe(document.documentElement, {
+      attributes:
+[0m
+[0m$ [0mcurl -s --max-time 20 "https://api.github.com/repos/sumup/sumup-ai/git/trees/main?recursive=1" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+for t in d['tree']:
+    p=t['path']
+    if t['type']=='blob' and 'typescript/src/common' in p:
+        print(p, t['size'])
+"
+typescript/src/common/auth/index.test.ts 3961
+typescript/src/common/auth/index.ts 5328
+typescript/src/common/checkouts/index.ts 401
+typescript/src/common/checkouts/parameters.ts 50608
+typescript/src/common/checkouts/tools.ts 5909
+typescript/src/common/const.ts 129
+typescript/src/common/customers/index.ts 325
+typescript/src/common/customers/parameters.ts 14156
+typescript/src/common/customers/tools.ts 4166
+typescript/src/common/execute.test.ts 2250
+typescript/src/common/execute.ts 1623
+typescript/src/common/index.ts 349
+typescript/src/common/members/index.ts 341
+typescript/src/common/members/parameters.ts 18323
+typescript/src/common/members/tools.ts 3703
+typescript/src/common/memberships/index.ts 101
+typescript/src/common/memberships/parameters.ts 5579
+typescript/src/common/memberships/tools.ts 762
+typescript/src/common/merchants/index.ts 168
+typescript/src/common/merchants/parameters.ts 45460
+typescript/src/common/merchants/tools.ts 2097
+typescript/src/common/payouts/index.ts 97
+typescript/src/common/payouts/parameters.ts 2728
+typescript/src/common/payouts/tools.ts 1077
+typescript/src/common/readers/index.ts 541
+typescript/src/common/readers/parameters.ts 22391
+typescript/src/common/readers/tools.ts 9318
+typescript/src/common/receipts/index.ts 91
+typescript/src/common/receipts/parameters.ts 12981
+typescript/src/common/receipts/tools.ts 784
+typescript/src/common/registry.test.ts 1616
+typescript/src/common/registry.ts 2404
+typescript/src/common/roles/index.ts 321
+typescript/src/common/roles/parameters.ts 6757
+typescript/src/common/roles/tools.ts 3684
+typescript/src/common/transactions/index.ts 223
+typescript/src/common/transactions/parameters.ts 32665
+typescript/src/common/transactions/tools.ts 2607
+typescript/src/common/types.ts 1566
+[0m
+[0m$ [0mecho "===== execute.ts ====="; curl -s --max-time 20 "https://raw.githubusercontent.com/sumup/sumup-ai/main/typescript/src/common/execute.ts"; echo; echo "===== registry.ts ====="; curl -s --max-time 20 "https://raw.githubusercontent.com/sumup/sumup-ai/main/typescript/src/common/registry.ts" | head -c 1800
+===== execute.ts =====
+import type SumUp from "@sumup/sdk";
+import type { z } from "zod";
+import type { Tool } from "./types";
+
+export type ToolExecutionStarted = {
+  toolName: string;
+  startedAt: number;
+};
+
+export type ToolExecutionCompleted = ToolExecutionStarted & {
+  durationMs: number;
+};
+
+export type ToolExecutionFailed = ToolExecutionCompleted & {
+  error: unknown;
+};
+
+export type ToolObservability = {
+  onToolStart?: (event: ToolExecutionStarted) => void | Promise<void>;
+  onToolEnd?: (event: ToolExecutionCompleted) => void | Promise<void>;
+  onToolError?: (event: ToolExecutionFailed) => void | Promise<void>;
+};
+
+const notify = async <Event>(
+  callback: ((event: Event) => void | Promise<void>) | undefined,
+  event: Event,
+) => {
+  try {
+    await callback?.(event);
+  } catch {
+    // Observability must never change tool execution behavior.
+  }
+};
+
+export const executeTool = async <
+  Args extends z.ZodObject<z.ZodRawShape>,
+  Result extends z.ZodTypeAny,
+>(
+  tool: Tool<Args, Result>,
+  sumup: SumUp,
+  input: z.infer<Args>,
+  observability?: ToolObservability,
+): Promise<z.infer<Result>> => {
+  const startedAt = Date.now();
+  const started = { toolName: tool.name, startedAt };
+  await notify(observability?.onToolStart, started);
+
+  try {
+    const result = tool.result.parse(await tool.callback(sumup, input));
+    await notify(observability?.onToolEnd, {
+      ...started,
+      durationMs: Date.now() - startedAt,
+    });
+    return result;
+  } catch (error) {
+    await notify(observability?.onToolError, {
+      ...started,
+      durationMs: Date.now() - startedAt,
+      error,
+    });
+    throw error;
+  }
+};
+
+===== registry.ts =====
+// Generated by @sumup/agent-toolkit-codegen. Do not edit manually.
+
+import {
+  createCheckout,
+  deactivateCheckout,
+  getCheckout,
+  getPaymentMethods,
+  listCheckouts,
+  updateCheckout,
+} from "./checkouts";
+import {
+  createCustomer,
+  deactivatePaymentInstrument,
+  getCustomer,
+  listPaymentInstruments,
+  updateCustomer,
+} from "./customers";
+import {
+  createMerchantMember,
+  deleteMerchantMember,
+  getMerchantMember,
+  listMerchantMembers,
+  updateMerchantMember,
+} from "./members";
+import { listMemberships } from "./memberships";
+import { getMerchant, getPerson, listPersons } from "./merchants";
+import { listPayoutsV1 } from "./payouts";
+import {
+  createGoReaderCheckout,
+  createReader,
+  createReaderCheckout,
+  createReaderTerminate,
+  deleteReader,
+  getReader,
+  getReaderCheckout,
+  getReaderStatus,
+  listReaders,
+  updateReader,
+} from "./readers";
+import { getReceipt } from "./receipts";
+import {
+  createMerchantRole,
+  deleteMerchantRole,
+  getMerchantRole,
+  listMerchantRoles,
+  updateMerchantRole,
+} from "./roles";
+import {
+  getTransactionV2_1,
+  listTransactionsV2_1,
+  refundTransaction,
+} from "./transactions";
+import type { Tool } from "./types";
+
+export const TOOL_REGISTRY_EXCLUSIONS = {
+  create_apple_pay_session:
+    "The current @sumup/sdk version does not expose createApplePaySession.",
+} as const;
+
+export const registerTools = (reg: (tool: Tool) => void) => {
+  reg(createCheckout);
+  reg(createCustomer);
+  reg(createGoReaderCheckout);
+  reg(createMerchantMember);
+  reg(createMerchantRole);
+  reg(createReader);
+  reg(createReaderCheckout);
+  reg(createReaderTerminate);
+  reg(deactivateCheckout);
+  reg(deactivatePaymentInstrument);
+  reg(deleteMerchantMember);
+  reg(deleteMerchantRole);
+  reg(deleteReader);
+  reg(getCheckout);
+  reg(getCustomer)
+[0m
+## STEP 1 — DELTA
+- [NEW] `mcp.sumup.com/.well-known/oauth-protected-resource` (+ `/mcp`, `/sse` aliases) live 200 with `resource=https://mcp.sumup.com/mcp`, `scopes_supported=["offline_access","email"]` — the `scopes_supported` field absent in api.sumup.com's RFC 9728 metadata (shape divergence).
+- [NEW] `mcp.sumup.com/` 200 JSON manifest (transports streamable-http+sse + resource_metadata), `/mcp` & `/sse` 401 `invalid_token`, `/.well-known/openai-apps-challenge` 404 — all reproduce `sumup/sumup-mcp@main` byte-for-byte (wrangler live env `SUMUP_AUTH_HOST=https://auth.sumup.com`).
+- [NEW] MCP worker source (`src/auth.ts`): `jwtVerify` enforces `issuer=auth.sumup.com` + `audience=["https://mcp.sumup.com/mcp"]` against auth.sumup.com JWKS, plus requires **both** `offline_access` AND `email` and numeric unexpired `exp` — strict aud/iss/scope binding in first-party code.
+- [NEW] CHAIN (critical): `sumup-agent.ts` + `sumup-ai/typescript/src/mcp/toolkit.ts::createClient` forward the caller's **mcp-aud bearer verbatim as `Authorization: Bearer` to `api.sumup.com`** via `@sumup/sdk`. MCP is a live marketed product → api.sumup.com demonstrably accepts tokens whose `aud` is a *non-api* resource.
+- [NEW] MCP tool registry (sumup-ai `registry.ts`/`execute.ts`): includes destructive tools `refundTransaction`, `createReaderTerminate`, `createGoReaderCheckout`, `deleteReader/deactivatePaymentInstrument`; `executeTool` performs **no per-tool scope check** (oauthScopes only carried in `_meta`); `create_apple_pay_session` is excluded (`TOOL_REGISTRY_EXCLUSIONS`).
+- [NEW] `auth.sumup.com/.well-known/openid-configuration` re-fetched: `scopes_supported=["offline_access","offline","openid","email","classic"]`.
+- [NEW] `developer.sumup.com/llms.txt` 200 (AI docs index, llms-small/full variants); `/openapi.json` 404 (astro shell).
+
+## STEP 2 — PRIORITIZE
+- [PRIO] api.sumup.com,7.1,priority (surface8/value10/tech8/gate2/cloud6/fresh5)
+- [PRIO] auth.sumup.com,6.3,priority (surface5/value9/tech9/gate3/cloud4/fresh6)
+- [PRIO] mcp.sumup.com,5.6,priority (surface4/value5/tech9/gate2/cloud7/fresh10)
+
+## STEP 3 — HYPOTHESES
+[HYP] api.sumup.com gateway does not bind `aud` to `https://api.sumup.com` — RFC 9728 claim confusion
+class: AUTH
+asset: api.sumup.com/v1/merchants/{merchant_code}
+confidence: 68
+reasoning: Live MCP product forwards caller mcp-aud (`https://mcp.sumup.com/mcp`) bearer verbatim to api.sumup.com (mcp worker auth.ts enforces that aud; toolkit createClient sets `Authorization: Bearer <token>` to SUMUP_API_HOST). For MCP tools to function, api.sumup.com must accept an off-origin-aud JWT → `aud`**cannot** be strictly equal to the resource origin; residual unknown is whether it's a bounded multi-resource allowlist or no audience check at all. Staging twinning (api.sam-app.ro) already showed gateway differentiates structurally by token presence, never by scope/claims.
+evidence_needed: a single token minted for aud=https://mcp.sumup.com/mcp (or any non-api aud) accepted on api.sumup.com with structured problem+json (scope-block) vs plain 404 sans token vs 401 (rejected).
+verify_steps: AUTH_HELPED: GET /v1/merchants/{own} with mcp-aud token → 404-structured(accepted, scope-block) vs 401(aud-bound); control same token with aud=https://api.sumup.com.
+impact: Token bound to another scoped surface grants prod merchant-API access — CRITICAL if the allowlist is unbounded; MEDIUM if bounded to first-party (MCP) resources.
+testability: AUTH_HELPED
+[HYP] MCP destructive tools gated only by {offline_access, email} transport scopes — no per-tool authorization
+class: AUTH
+asset: mcp.sumup.com/mcp
+confidence: 50
+reasoning: worker.ts gates all /mcp tool calls on SCOPES_SUPPORTED={offline_access,email} only; execute.ts/registry.ts apply no per-tool oauthScopes check; registered tools include refundTransaction, createReaderTerminate, createGoReaderCheckout, deleteReader, deactivatePaymentInstrument (write/money ops). Sole downstream control would be api.sumup.com per-op `scp` — which is itself one of the unobserved claims.
+evidence_needed: token with aud=mcp+scopes {offline_access,email} invoking refundTransaction succeeds (200) on a test merchant vs 403 scope-block.
+verify_steps: AUTH_HELPED: mint MCP-flow token for own merchant; MCP call tools/createReaderTerminate and tools/refundTransaction (test-only amounts). Partial: source-level confirmed enforcement absence (done).
+impact: Authorization to destructive financial/device actions without merchant-action scoping — CRITICAL if api layer also lax, MEDIUM if api per-op scp binds.
+testability: AUTH_HELPED
+[HYP] Staging RFC 7591 dynamic-client registry syncs to prod auth.sumup.com trust store
+class: OATH
+asset: auth.sumup.com/oauth2/auth
+confidence: 45
+reasoning: staging registration unauthenticated (201); cross-env JWKS isolation (ZERO kid overlap) proven but client-registry sync is a separate control never exercised against prod client_id oracle (unknown→invalid_client, known→302/303).
+evidence_needed: fresh staging-registered client_id returning non-invalid_client on prod /oauth2/auth.
+verify_steps: BLOCKED — needs POST /oauth2/register; if unblocked GET auth.sumup.com/oauth2/auth?client_id={fresh}&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid.
+impact: Attacker-controlled prod-registered client → token minting for victim merchants — latent-high.
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+- [DROP] openai-apps-challenge route lead: prod 404 (env unset, matches .dev.vars) — dead, no claim.
+- [DROP] MCP-sdk `checkResourceAllowed` prefix-leniency: jose `audience` option already enforces strict equality — subsumed.
+- [PARKED] MCP aud relay: refuted for mcp itself (worker strict aud/iss/scope + prod JWKS rejects staging sig); the value of the evidence now accrues to the api.sumup.com gateway hypothesis.
+- [FINAL] 1) api.sumup.com aud-binding (68); 2) MCP tool-authz (50); 3) staging-registry sync (45).
+
+## STEP 5 — NEXT ACTION
+[NEXT] HUMAN: Obtain ONE merchant token scoped to the MCP resource and ONE to a REST client (dashboard flow or me.sumup.com OAuth app, `transactions.history`) then in one session: (1) replay the mcp-aud token on `GET https://api.sumup.com/v1/merchants/{own_code}` → structured 404 = aud-loose accepted / 401 = bound; (2) if accepted, same token → MCP `tools/call refundTransaction` on test merchant → per-op scope test; (3) baseline REST token on same GET for control. Single dependency for the top-2 survivors; nothing passive can substitute.
+
+## STEP 6 — LEARNING
+- [LEARN] ACCEPTED AUTH @ mcp.sumup.com: worker enforces issuer+aud(`https://mcp.sumup.com/mcp`, jose)+{offline_access,email}+exp — staging tokens triple-rejected (JWKS sig, aud, scope); aud-relay against the MCP resource itself refuted in source.
+- [LEARN] ACCEPTED OATH @ api.sumup.com: MCP live product forwards mcp-aud bearer to api.sumup.com (sumup-agent.ts + toolkit createClient `Authorization: Bearer`) — `aud` is NOT bound to the api origin; narrows the open question to allowlist-vs-no-check (confidence 75→68).
+- [LEARN] ACCEPTED AUTH @ sumup-ai/sumup-mcp: `executeTool` performs zero per-tool oauthScopes enforcement; destructive money/device tools (refund, reader-terminate, go-checkout) gated only by email+offline_access at transport — new authorization-surface hypothesis, test blocked on token.
+- [LEARN] ACCEPTED OTHER @ mcp.sumup.com: all 6 probed routes reproduce public source exactly (manifest/metadata/401/404) — deployment↔code correspondence confirmed; no drift observed.
+- [LEARN] ACCEPTED OTHER @ developer.sumup.com: `/llms.txt` + llms-small/full public AI-doc index live 200 (authorized informational surface); `/openapi.json` 404, spec canonical host remains the repo.
+
+## STEP 7 — RISK
+[RISK] sumup: 42 — Yield: two hypotheses materially sharpened via first-party source (api aud-binding prior up at 68 with an architectural proof-path; MCP tool-authz surfaced as a new AUTH class with an absence-of-enforcement finding in code — both still token-blocked). Countervailing: mcp-sumup.com surface is now fully source-mapped and shows a *tight* transport gate, trimming its standalone value; no reportable finding added this cycle (valid-bugs remains empty, contentful file still absent, no re-assertions). Program stays flat until HUMAN supplies a merchant or MCP-resource token; all three survivors unchanged in testability.

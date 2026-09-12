@@ -3636,3 +3636,33 @@ evidence_needed: fresh staging-registered client_id non-invalid_client on prod /
 verify_steps: BLOCKED — needs POST /oauth2/register (not passive); if unblocked, GET auth.sumup.com/oauth2/auth?client_id={fresh}&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid.
 impact: Attacker-controlled prod-registered client → latent-high, low now.
 testability: AUTH_HELPED
+## 2026-09-12 21:24:53 UTC [target] (model bigpickle)
+[HYP] api.sumup.com gateway does not bind `aud` to `https://api.sumup.com` — RFC 9728 claim confusion
+class: AUTH
+asset: api.sumup.com/v1/merchants/{merchant_code}
+confidence: 68
+reasoning: Live MCP product forwards caller mcp-aud (`https://mcp.sumup.com/mcp`) bearer verbatim to api.sumup.com (mcp worker auth.ts enforces that aud; toolkit createClient sets `Authorization: Bearer <token>` to SUMUP_API_HOST). For MCP tools to function, api.sumup.com must accept an off-origin-aud JWT → `aud`**cannot** be strictly equal to the resource origin; residual unknown is whether it's a bounded multi-resource allowlist or no audience check at all. Staging twinning (api.sam-app.ro) already showed gateway differentiates structurally by token presence, never by scope/claims.
+evidence_needed: a single token minted for aud=https://mcp.sumup.com/mcp (or any non-api aud) accepted on api.sumup.com with structured problem+json (scope-block) vs plain 404 sans token vs 401 (rejected).
+verify_steps: AUTH_HELPED: GET /v1/merchants/{own} with mcp-aud token → 404-structured(accepted, scope-block) vs 401(aud-bound); control same token with aud=https://api.sumup.com.
+impact: Token bound to another scoped surface grants prod merchant-API access — CRITICAL if the allowlist is unbounded; MEDIUM if bounded to first-party (MCP) resources.
+testability: AUTH_HELPED
+[HYP] MCP destructive tools gated only by {offline_access, email} transport scopes — no per-tool authorization
+class: AUTH
+asset: mcp.sumup.com/mcp
+confidence: 50
+reasoning: worker.ts gates all /mcp tool calls on SCOPES_SUPPORTED={offline_access,email} only; execute.ts/registry.ts apply no per-tool oauthScopes check; registered tools include refundTransaction, createReaderTerminate, createGoReaderCheckout, deleteReader, deactivatePaymentInstrument (write/money ops). Sole downstream control would be api.sumup.com per-op `scp` — which is itself one of the unobserved claims.
+evidence_needed: token with aud=mcp+scopes {offline_access,email} invoking refundTransaction succeeds (200) on a test merchant vs 403 scope-block.
+verify_steps: AUTH_HELPED: mint MCP-flow token for own merchant; MCP call tools/createReaderTerminate and tools/refundTransaction (test-only amounts). Partial: source-level confirmed enforcement absence (done).
+impact: Authorization to destructive financial/device actions without merchant-action scoping — CRITICAL if api layer also lax, MEDIUM if api per-op scp binds.
+testability: AUTH_HELPED
+[HYP] Staging RFC 7591 dynamic-client registry syncs to prod auth.sumup.com trust store
+class: OATH
+asset: auth.sumup.com/oauth2/auth
+confidence: 45
+reasoning: staging registration unauthenticated (201); cross-env JWKS isolation (ZERO kid overlap) proven but client-registry sync is a separate control never exercised against prod client_id oracle (unknown→invalid_client, known→302/303).
+evidence_needed: fresh staging-registered client_id returning non-invalid_client on prod /oauth2/auth.
+verify_steps: BLOCKED — needs POST /oauth2/register; if unblocked GET auth.sumup.com/oauth2/auth?client_id={fresh}&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid.
+impact: Attacker-controlled prod-registered client → token minting for victim merchants — latent-high.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Obtain ONE merchant token scoped to the MCP resource and ONE to a REST client (dashboard flow or me.sumup.com OAuth app, `transactions.history`) then in one session: (1) replay the mcp-aud token on `GET https://api.sumup.com/v1/merchants/{own_code}` → structured 404 = aud-loose accepted / 401 = bound; (2) if accepted, same token → MCP `tools/call refundTransaction` on test merchant → per-op scope test; (3) baseline REST token on same GET for control. Single dependency for the top-2 survivors; nothing passive can substitute.
+[RISK] sumup: 42 — Yield: two hypotheses materially sharpened via first-party source (api aud-binding prior up at 68 with an architectural proof-path; MCP tool-authz surfaced as a new AUTH class with an absence-of-enforcement finding in code — both still token-blocked). Countervailing: mcp-sumup.com surface is now fully source-mapped and shows a *tight* transport gate, trimming its standalone value; no reportable finding added this cycle (valid-bugs remains empty, contentful file still absent, no re-assertions). Program stays flat until HUMAN supplies a merchant or MCP-resource token; all three survivors unchanged in testability.

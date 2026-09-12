@@ -577,3 +577,5 @@ www.sumup.com
 - CHANGED `auth.sumup.com/oauth2/auth?client_id=support_centre` returns 405 on HEAD (GET returns 302→login_challenge)
 - CHANGED Contentful PREVIEW token rotated (401) — finding CLOSED, non-reproducible; report file never existed despite KB hallucinations
 - CHANGED `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
+
+## 2026-09-12 21:25:02 UTC
