@@ -34,3 +34,7 @@
   - | 3 | `mcp.sumup.com` wildcard CORS (`*`) on Bearer-protected MCP endpoint | MCP server | MISCONFIG | 5.3 | VALID |
   - | 4 | `help.sumup.com` Contentful Preview API token leak → 1,082 draft entries readable | help center | MISCONFIG | 5.3 | VALID |
   - | 9 | API BOLA via dashboard-client scopes | Requires valid merchant OAuth token |
+
+- 2 lead(s) marked VALID at 2026-09-12 00:39:58 UTC
+  - **Verdict: VALID** (finding now closed — token rotated 2026-09-11)
+  - | 1 | Contentful Preview Token Leak (help.sumup.com) | **VALID** (closed) | Report if still live at time of submission; token rotated |
