@@ -352,3 +352,5 @@ reasoning: Test files reference internal hostnames: `mcp-theta.sam-app.ro`, `mcp
 impact: Very Low (informational only; hostnames are not credentials)
 verify_steps: Confirm these hostnames resolve to internal/private IPs; verify they are not accessible from the public internet.
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-12 13:16:47 UTC
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
