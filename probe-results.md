@@ -683,3 +683,17 @@ https://api.sumup.com` -> ERR <urlopen error [Errno -2] Name or service not know
 https://mcp.sumup.com/mcp` -> HTTP 404
 https://mcp.sumup.com/mcp -> HTTP 401
 https://me.sumup.com/api/sso/callback&response_type=code&scope=openid -> HTTP 404
+
+## 2026-09-13 01:14:16 UTC
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://api.sumup.com/v1/merchants/self -> HTTP 404
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://api.sumup.com/token -> HTTP 404
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com` -> ERR <urlopen error [Errno -2] Name or service not know
+https://mcp.sumup.com/mcp` -> HTTP 404
+https://mcp.sumup.com/mcp -> HTTP 401
+https://me.sumup.com/api/sso/callback&response_type=code&scope=openid -> HTTP 404

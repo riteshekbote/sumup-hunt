@@ -1,4 +1,4 @@
-## 2026-09-12 23:09:37 UTC [target] (model bigpickle)
+## 2026-09-13 01:11:52 UTC [target] (model bigpickle)
 [HYP] api.sumup.com gateway does not bind `aud` to `https://api.sumup.com` — RFC 9728 claim confusion
 class: AUTH
 asset: api.sumup.com/v1/merchants/{merchant_code}
@@ -55,3 +55,32 @@ evidence_needed: PUT with own token on foreign checkout_id proceeding past 401 (
 verify_steps: AUTH_HELPED: PUT own then foreign checkout_id with target=https://attacker.tld, then metadata IP — compare gated vs non-gated.
 impact: Cross-tenant checkout interference + internal/metadata fetch in a payment-critical path — HIGH.
 testability: AUTH_HELPED
+[HYP] api.sumup.com gateway ignores JWT `aud` mismatch vs RFC 9728 declared resource
+class: AUTH
+asset: api.sumup.com/v1/merchants/{merchant_code}
+confidence: 70
+reasoning: This cycle proved both resources declare distinct RFC 9728 identities — api surface `resource=https://api.sumup.com` (len 286, re-verified 200) vs MCP `resource=https://mcp.sumup.com/mcp` (new 200, 269 B). SumUp's own MCP product forwards caller mcp-aud JWTs verbatim to api.sumup.com (source-confirmed), so prod must accept an off-api aud. Additionally the apiKey scheme (`sup_sk_` static, `Authorization: Bearer`) shares the same header slot and carries no aud/exp/iss at all — the Bearer parser therefore tolerates claim-less tokens, so strict aud-equality-to-origin is architecturally excluded; residual unknown is bounded allowlist vs none.
+evidence_needed: one mcp-aud JWT on `GET /v1/merchants/{own}` → structured problem+json (accepted/scope-block) vs 401 (aud-bound). Control: same token re-minted aud=api.sumup.com.
+verify_steps: AUTH_HELPED — replay mcp-aud bearer on `GET https://api.sumup.com/v1/merchants/{own}`; do not follow redirects, compare JSON body shape vs no-token plain 404.
+impact: Token minted for a narrower surface unlocks merchant-API resources — CRITICAL if unbounded, MEDIUM if allowlisted to first-party MCP.
+testability: AUTH_HELPED
+[HYP] MCP destructive tools gated only by transport scopes {offline_access,email}; apiKey path has no per-tool gate
+class: AUTH
+asset: mcp.sumup.com/mcp
+confidence: 55
+reasoning: New RFC 9728 metadata confirms the only OAuth gate at the MCP transport is `scopes_supported=[offline_access,email]`; source shows worker gates all tool calls on that set with no per-tool oauthScopes check. New doc evidence: the same tool registry (refundTransaction, createReaderTerminate, createGoReaderCheckout, deleteReader, deactivatePaymentInstrument) also runs on a bare `sup_sk_` API key with zero scope machinery — layered confirmation that authorization for money/device ops lives only downstream at api.sumup.com per-op `scp`, itself one of the unobserved claims.
+evidence_needed: invocation of a write tool (e.g. tools/call refundTransaction test amount) with an `{offline_access,email}`+mcp-aud token succeeding vs 403 scope-block.
+verify_steps: AUTH_HELPED — mint MCP-flow token on own test merchant; tools/call createReaderTerminate and refundTransaction (test-only amounts).
+impact: Authorization to destructive financial/device actions without merchant-action scoping — CRITICAL if api layer lax, MEDIUM if per-op scp binds downstream.
+testability: AUTH_HELPED
+[HYP] api.sumup.com/token clientCredentials grant enforces weaker client auth (spec-declared, staging-verified pattern)
+class: AUTH
+asset: api.sumup.com/token
+confidence: 50
+reasoning: Spec (verified live this cycle) declares clientCredentials at api.sumup.com/token with attacker-relevant scopes map (refunds.write, transactions.history, receipts.read, payouts.read). Route live (OPTIONS 204, wildcard CORS, identity.svc op). Staging twin proved this gateway family stores token_endpoint_auth_method without enforcing it. Prod enforcement of the legacy /token grant never exercised.
+evidence_needed: client_credentials POST with own-app credentials succeeding beyond declared auth_method OR minted token accepted on GET /v1/merchants/{own}.
+verify_steps: AUTH_HELPED — POST grant_type=client_credentials&client_id={own_app}&scope=transactions.history with client_secret variants; replay token.
+impact: Minting tokens with refunds.write/transactions.history for a controlled client — CRITICAL if weaker-than-modern auth.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Obtain (1) ONE `sup_sk_` API key from `https://me.sumup.com/settings/api-keys` (easiest, unlocks 30+ apiKey ops incl. refunds + transactions/history) and (2) ONE MCP-flow token (aud `https://mcp.sumup.com/mcp`, scopes `offline_access email`), then in one session: (a) replay the mcp-aud JWT on `GET https://api.sumup.com/v1/merchants/{own_code}` → structured 404 vs 401 (aud test); (b) same mcp-aud token → `tools/call refundTransaction` test amount → per-op scope test; (c) control: apiKey and REST OAuth token on same GET; (d) if aud-loose, BOLA-sweep apiKey:[]-only ops (`GET /v2.1/merchants/{other_code}/transactions/history`, `GET /v1/merchants/{code}/persons`) and the `PUT /v0.2/checkouts/{id}/apple-pay-session` SSRF body (`context`+`target`).
+[RISK] sumup: 42 — One genuinely new passive surface opened (MCP RFC 9728 metadata + API-key design facts), two top hypotheses sharpened with first-party declared aud values and an apiKey no-claims bearer class; drift-check confirms all live oracles stable (no rotation, no new registrations). No reportable finding added (valid-bugs remains 0; contentful finding closed by rotation). Program flat until HUMAN provides either a `sup_sk_` API key or an MCP-flow token — the API key path is now the lowest-friction unblock (self-serve in me.sumup.com, no OAuth dance, unlocks 30+ ops).

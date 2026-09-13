@@ -1,5 +1,5 @@
-## 2026-09-12 23:10:11 UTC [target] (model nemotron3)
-[NEW] developer.sumup.com/api: Official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public — 42 operations, exact paths, per-op scopes, apiKey scheme, legacy OAuth pair (authorize+token on api.sumup.com)
+## 2026-09-13 01:13:48 UTC [target] (model nemotron3)
+[NEW] Official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public — 42 operations, exact paths, per-op scopes, apiKey scheme, legacy OAuth pair (authorize+token on api.sumup.com) — highest-value passive recon this cycle
 [NEW] api.sumup.com/token: Legacy token endpoint ROUTED (OPTIONS 204 + structured 404 on GET, wildcard CORS, identity.svc operation) — documented in spec, live on gateway
 [NEW] auth.sumup.com/oauth2/auth: Scope-acceptance oracle disambiguated (302 login_challenge=allowed vs 303 invalid_scope); dashboard allows readers.read/terminals.read, rejects all 13 REST spec scopes
 [NEW] auth.sumup.com: support_centre allowlist exactly {openid, classic, offline}; classic+any scope → invalid_scope; scope oracle exhausted
@@ -18,7 +18,7 @@
 class: AUTH
 asset: api.sumup.com/.well-known/oauth-protected-resource → api.sumup.com/v1/*
 confidence: 75
-reasoning: RFC 9728 metadata declares sole auth_server=https://auth.sumup.com, bearer_methods_supported=["header"], jwks_uri=https://auth.sumup.com/.well-known/jwks.json. Gateway returns structured problem+json vs plain 404 with/without JWT — validates JWT structure but aud claim, scope enforcement, and key selection logic untested without valid merchant token. Cross-resource-server token relay (staging→prod) blocked by JWKS kid isolation (ZERO overlap), but aud validation on same auth server unproven.
+reasoning: RFC 9728 metadata declares sole auth_server=https://auth.sumup.com, bearer_methods_supported=["header"], jwks_uri=https://auth.sumup.com/.well-known/jwks.json. Gateway returns structured problem+json vs plain 404 with/without JWT — validates JWT structure but aud claim, scope enforcement, and key selection logic untested without valid merchant token. Cross-resource-server token relay (staging→prod) blocked by JWKS kid isolation (ZERO overlap), but aud validation on same auth server unproven. MCP product forwards mcp-aud JWT verbatim to api.sumup.com and functions (source-confirmed), proving an off-origin aud is accepted in production.
 evidence_needed: Valid merchant JWT (AUTH_HELPED) replayed against v1/merchants/self with manipulated aud claim; token issued for one resource accepted by another; key confusion via JWKS kid mismatch
 verify_steps: PASSIVE: GET https://api.sumup.com/.well-known/oauth-protected-resource (confirmed 200 static metadata). AUTH_HELPED: Obtain merchant OAuth token via dashboard.sumup.com flow (client_id=dashboard). GET https://api.sumup.com/v1/merchants/self with valid token → baseline 200. Replay same token with aud claim modified to "https://api.sam-app.ro" → observe 401/403. Test staging token (from auth.sam-app.ro client_credentials) against prod api.sumup.com → expect 401 "no applicable key". Test empty-scope token vs required scope → observe 403 vs 200.
 impact: Token relay / audience confusion → cross-environment or cross-resource-server access to merchant payment APIs (transactions, payouts, readers, api_keys) — CRITICAL

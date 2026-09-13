@@ -23108,3 +23108,918 @@ STEP 6 — LEARNING
 - [LEARN] REJECTED MISCONFIG @ developer.sumup.com: Reposcan "Wildcard CORS on Developer Portal" live-confirmed but REJECTED — public docs site, no authenticated/readable over-reach; mirrors earlier MCP CORS rejection.
 STEP 7 — RISK
 - [RISK] sumup: 40 — Cycle yielded spec-resolution only: opaque-bearer (apiKey) + full clientCredentials scope map + empty-scope op set now exactly enumerated; developer.sumup.com CORS rejected (hardening-only); aud-binding prior nudged to 70 on architectural grounds but STILL token-blocked. No reportable finding added (valid-bugs=0; contentful report file verified absent via `ls`, no re-assertions). The HUMAN path is now precisely specified (spec-declared client_credentials at /token is the single highest-leverage unblock). Program flat until a merchant/API-key credential exists.
+===== ANALYST bigpickle 2026-09-13 01:13:59 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la && echo "---" && ls -R reports 2>/dev/null | head -50 && echo "---" && ls art 2>/dev/null; ls artifacts 2>/dev/null
+total 480
+drwxr-xr-x 12 runner runner   4096 Sep 13 01:09 .
+drwxr-xr-x  3 runner runner   4096 Sep 13 01:09 ..
+drwxr-xr-x  7 runner runner   4096 Sep 13 01:09 .git
+drwxr-xr-x  3 runner runner   4096 Sep 13 01:09 .github
+-rw-r--r--  1 runner runner   1885 Sep 13 01:09 README.md
+-rw-r--r--  1 runner runner     32 Sep 13 01:09 analyst-out.txt
+-rw-r--r--  1 runner runner 183146 Sep 13 01:09 analyst-prompt.txt
+-rw-r--r--  1 runner runner 179260 Sep 13 01:09 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 leads
+-rw-r--r--  1 runner runner  40706 Sep 13 01:09 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 reports
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Sep 13 01:09 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 scripts
+-rw-r--r--  1 runner runner     33 Sep 13 01:09 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 13 01:09 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 13 01:09 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 13 01:09 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 13 01:09 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 13 01:09 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 triage
+---
+reports:
+analyst-bigpickle.log
+analyst-laguna.log
+analyst-ling3.log
+analyst-longcat.log
+analyst-nemotron3.log
+hypotheses-bigpickle.txt
+hypotheses-laguna.txt
+hypotheses-ling3.txt
+hypotheses-longcat.txt
+hypotheses-nemotron3.txt
+hypotheses.md
+reposcan-findings.md
+valid-bugs.md
+---
+[0m
+[0m$ [0mcat state_bigpickle.json; echo "---"; ls leads knowledge inventory recon-notes triage scripts reposcan-raw; echo "---"; cat analyst-out.txt
+{"phase": "POC", "target": "api"}---
+inventory:
+sumup.md
+
+knowledge:
+index.md
+
+leads:
+lead-bigpickle.md
+lead-laguna.md
+lead-ling3.md
+lead-longcat.md
+lead-mimo.md
+lead-nemotron3.md
+reposcan-sumup.md
+
+recon-notes:
+DEDICATED-DEEP.md
+
+reposcan-raw:
+summary.txt
+
+scripts:
+sync-issues.py
+
+triage:
+run-2026-09-02-22-14.md
+run-2026-09-03-00-06.md
+run-2026-09-03-04-42.md
+run-2026-09-03-09-36.md
+run-2026-09-03-13-56.md
+run-2026-09-03-17-46.md
+run-2026-09-03-20-54.md
+run-2026-09-03-23-11.md
+run-2026-09-04-01-05.md
+run-2026-09-04-06-02.md
+run-2026-09-04-11-29.md
+run-2026-09-04-15-06.md
+run-2026-09-04-18-29.md
+run-2026-09-04-21-02.md
+run-2026-09-04-23-05.md
+run-2026-09-05-01-06.md
+run-2026-09-05-05-52.md
+run-2026-09-05-10-26.md
+run-2026-09-05-13-32.md
+run-2026-09-05-16-16.md
+run-2026-09-05-18-26.md
+run-2026-09-05-20-43.md
+run-2026-09-05-22-45.md
+run-2026-09-06-00-48.md
+run-2026-09-06-05-45.md
+run-2026-09-06-10-45.md
+run-2026-09-06-14-06.md
+run-2026-09-06-17-10.md
+run-2026-09-06-19-18.md
+run-2026-09-06-21-30.md
+run-2026-09-06-23-09.md
+run-2026-09-07-01-08.md
+run-2026-09-07-06-12.md
+run-2026-09-07-12-47.md
+run-2026-09-07-18-13.md
+run-2026-09-07-21-37.md
+run-2026-09-07-23-48.md
+run-2026-09-08-04-16.md
+run-2026-09-08-08-56.md
+run-2026-09-08-13-29.md
+run-2026-09-08-17-30.md
+run-2026-09-08-20-19.md
+run-2026-09-08-22-47.md
+run-2026-09-09-01-09.md
+run-2026-09-09-06-06.md
+run-2026-09-09-11-38.md
+run-2026-09-09-15-21.md
+run-2026-09-09-18-45.md
+run-2026-09-09-21-37.md
+run-2026-09-09-23-31.md
+run-2026-09-10-01-29.md
+run-2026-09-10-06-39.md
+run-2026-09-10-11-52.md
+run-2026-09-10-16-19.md
+run-2026-09-10-19-11.md
+run-2026-09-10-21-43.md
+run-2026-09-10-23-57.md
+run-2026-09-11-04-25.md
+run-2026-09-11-09-09.md
+run-2026-09-11-13-40.md
+run-2026-09-11-17-17.md
+run-2026-09-11-19-58.md
+run-2026-09-11-22-25.md
+run-2026-09-12-00-39.md
+run-2026-09-12-05-08.md
+run-2026-09-12-09-29.md
+run-2026-09-12-13-11.md
+run-2026-09-12-16-23.md
+run-2026-09-12-18-48.md
+run-2026-09-12-21-21.md
+run-2026-09-12-23-22.md
+---
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la && echo "---" && ls -R reports 2>/dev/null | head -50 && echo "---" && ls art 2>/dev/null; ls artifacts 2>/dev/null
+total 480
+drwxr-xr-x 12 runner runner   4096 Sep 13 01:09 .
+drwxr-xr-x  3 runner runner   4096 Sep 13 01:09 ..
+drwxr-xr-x  7 runner runner   4096 Sep 13 01:09 .git
+drwxr-xr-x  3 runner runner   4096 Sep 13 01:09 .github
+-rw-r--r--  1 runner runner   1885 Sep 13 01:09 README.md
+-rw-r--r--  1 runner runner     32 Sep 13 01:09 analyst-out.txt
+-rw-r--r--  1 runner runner 183146 Sep 13 01:09 analyst-prompt.txt
+-rw-r--r--  1 runner runner 179260 Sep 13 01:09 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 leads
+-rw-r--r--  1 runner runner  40706 Sep 13 01:09 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 reports
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Sep 13 01:09 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 scripts
+-rw-r--r--  1 runner runner     33 Sep 13 01:09 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 13 01:09 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 13 01:09 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 13 01:09 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 13 01:09 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 13 01:09 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 13 01:09 triage
+---
+reports:
+analyst-bigpickle.log
+analyst-laguna.log
+analyst-ling3.log
+analyst-longcat.log
+analyst-nemotron3.log
+hypotheses-bigpickle.txt
+hypotheses-laguna.txt
+hypotheses-ling3.txt
+hypotheses-longcat.txt
+hypotheses-nemotron3.txt
+hypotheses.md
+reposcan-findings.md
+valid-bugs.md
+---
+[0m
+[0m
+[0m$ [0mcat valid-bugs.md 2>/dev/null | head -30; echo "=== hypotheses.md"; head -40 reports/hypotheses.md 2>/dev/null
+=== hypotheses.md
+# Hypotheses (ranked)
+
+## RANKED HYPOTHESES 2026-09-02 21:55:21 UTC
+
+## RANKED HYPOTHESES 2026-09-03 00:07:18 UTC
+
+## RANKED HYPOTHESES 2026-09-03 04:11:41 UTC
+
+## RANKED HYPOTHESES 2026-09-03 09:02:20 UTC
+
+## RANKED HYPOTHESES 2026-09-03 13:32:16 UTC
+
+## RANKED HYPOTHESES 2026-09-03 17:25:51 UTC
+- [65] api.sumup.com: api.sumup.com open API surface exploration (from art/lead_bigpickle.txt)
+- [65] api.sumup.com: API versioned endpoint IDOR/BOLA on merchant resources (from art/lead_nemotron3.txt)
+- NEXT(hypotheses-bigpickle.txt): PROBE: GET https://api.sumup.com/swagger.json && GET https://api.sumup.com/openapi.json && GET https://api.sumup.com/v1/merchants && GET https://api.sumup.com/h
+- NEXT(hypotheses-nemotron3.txt): PROBE: GET https://api.sumup.com/v1/ (HEAD) → observe status, Server header, WWW-Authenticate, rate-limit headers. If 404, repeat for /v2/, /beta/, /internal/, 
+- LEARN: ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
+- LEARN: ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling.
+- LEARN: ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+- LEARN: ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+- LEARN: REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-
+
+## RANKED HYPOTHESES 2026-09-03 19:59:04 UTC
+- [65] api.sumup.com: api.sumup.com open API surface exploration (from art/lead_bigpickle.txt)
+- [65] api.sumup.com: API versioned endpoint IDOR/BOLA on merchant resources (from art/lead_nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): PROBE: HEAD https://api.sumup.com/v1/ → observe status, Server header, WWW-Authenticate, rate-limit headers. If 404, repeat for /v2/, /beta/, /internal/, /swagg
+- NEXT(hypotheses-bigpickle.txt): PROBE: GET https://api.sumup.com/swagger.json && GET https://api.sumup.com/openapi.json && GET https://api.sumup.com/v1/merchants && GET https://api.sumup.com/h
+- LEARN: ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+- LEARN: ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+- LEARN: REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-
+- LEARN: ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passive
+- LEARN: ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
+- LEARN: ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling.
+- LEARN: ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+- LEARN: ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+- LEARN: REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-
+
+## RANKED HYPOTHESES 2026-09-03 22:32:22 UTC
+- [65] api.sumup.com: API versioned endpoint IDOR/BOLA on merchant resources (from art/lead_nemotron3.txt)
+[0m
+[0m$ [0mtail -60 probe-results.md
+## 2026-09-12 13:18:50 UTC
+https://auth.sumup.com` -> ERR <urlopen error [Errno -2] Name or service not know
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://api.sumup.com/v1/merchants/self -> HTTP 404
+https://auth.sumup.com/oauth2/auth?client_id={staging_client_id -> HTTP 405
+https://me.sumup.com/api/sso/callback&response_type=code&scope=openid -> HTTP 404
+https://auth.sumup.com/oauth2/auth?client_id=support_centre&redirect_uri=https://help.sumup.com/api/auth/callback&response_type=code&scope=openid+classic+offline -> HTTP 405
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com/authorize -> HTTP 404
+https://mcp.sumup.com -> HTTP 404
+
+## 2026-09-12 16:36:42 UTC
+https://auth.sumup.com` -> ERR <urlopen error [Errno -2] Name or service not know
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://api.sumup.com/v1/merchants/self -> HTTP 404
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com -> HTTP 404
+https://me.sumup.com/api/sso/callback&response_type=code&scope=openid -> HTTP 404
+
+## 2026-09-12 18:52:02 UTC
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://api.sumup.com/v1/merchants/self -> HTTP 404
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com -> HTTP 404
+https://me.sumup.com/api/sso/callback&response_type=code&scope=openid -> HTTP 404
+
+## 2026-09-12 21:25:20 UTC
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://api.sumup.com/v1/merchants/self -> HTTP 404
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://api.sumup.com/token -> HTTP 404
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com` -> ERR <urlopen error [Errno -2] Name or service not know
+https://mcp.sumup.com/mcp` -> HTTP 404
+https://mcp.sumup.com/mcp -> HTTP 401
+https://me.sumup.com/api/sso/callback&response_type=code&scope=openid -> HTTP 404
+
+## 2026-09-12 23:10:41 UTC
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://api.sumup.com/v1/merchants/self -> HTTP 404
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://api.sumup.com/token -> HTTP 404
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com` -> ERR <urlopen error [Errno -2] Name or service not know
+https://mcp.sumup.com/mcp` -> HTTP 404
+https://mcp.sumup.com/mcp -> HTTP 401
+https://me.sumup.com/api/sso/callback&response_type=code&scope=openid -> HTTP 404
+[0m
+[0m$ [0mcat valid-bugs.md; echo "=== reposcan-findings"; cat reports/reposcan-findings.md 2>/dev/null | head -40; echo "=== summary"; cat reposcan-raw/summary.txt 2>/dev/null | head -30
+cat: valid-bugs.md: No such file or directory
+=== reposcan-findings
+# REPOSCAN FINDINGS — SumUp Public Repositories
+**Scan date:** 2026-09-07
+**Org:** github.com/sumup
+**Repos scanned:** sumup-mcp, sumup-developer, sumup-plugin-medusa, sumup-plugin-vendure, sumup-postman, sumup-openapi, sumup-ai, sumup-android-tap-to-pay, sumup-rs, sumup-cli, sumup-checkout-examples
+
+---
+
+## [HYP] Cloudflare Account ID Hardcoded in wrangler.jsonc
+- **class:** SECRET
+- **asset:** sumup-mcp/wrangler.jsonc (lines 24, 49, 74)
+- **confidence:** 85
+- **reasoning:** Cloudflare account ID `2037fc18a2fb8175c20d20776cac65c5` is hardcoded in all three environment blocks (dev/stage/live). This 32-char hex value is the Cloudflare account identifier used in API calls and dashboard URLs. Not a full credential but enables targeted enumeration of Cloudflare resources (Workers, KV, D1, etc.).
+- **impact:** Low-Medium — enables Cloudflare account enumeration; combined with other info could assist targeted attacks
+- **verify_steps:** 1) Navigate to `https://dash.cloudflare.com/2037fc18a2fb8175c20d20776cac65c5` to confirm account exists. 2) Cloudflare API `GET /client/v4/accounts/2037fc18a2fb8175c20d20776cac65c5` (requires API token — passive verification only).
+
+---
+
+## [HYP] Internal Staging/Development Infrastructure Naming Exposed
+- **class:** MISCONFIG
+- **asset:** sumup-mcp/wrangler.jsonc, sumup-mcp/src/auth.test.ts, sumup-mcp/src/worker.test.ts, sumup-mcp/src/sumup-agent.test.ts, sumup-mcp/.github/workflows/deploy.yaml
+- **confidence:** 90
+- **reasoning:** Full internal infrastructure naming scheme exposed in public repo: `sam-app.ro` domain with subdomains `mcp-theta.sam-app.ro` (dev), `mcp.sam-app.ro` (stage), `api-theta.sam-app.ro` (dev API), `api.sam-app.ro` (stage API), `auth-theta.sam-app.ro` (dev auth), `auth.sam-app.ro` (stage auth), `mcp-beta.sam-app.ro` (beta). Reveals environment topology, naming convention, and staging API hosts. These are live, reachable domains confirmed by prior recon.
+- **impact:** Medium — exposes internal attack surface; attackers can probe staging environments for weaker security controls
+- **verify_steps:** 1) DNS lookup on `sam-app.ro`, `api.sam-app.ro`, `auth.sam-app.ro`, `mcp-theta.sam-app.ro` to confirm resolution. 2) HTTP HEAD/GET to identify running services and software versions. 3) Check if staging environments have weaker auth/debug modes enabled.
+
+---
+
+## [HYP] Wildcard CORS on Production MCP Server
+- **class:** MISCONFIG
+- **asset:** sumup-mcp/src/config.ts:8
+- **confidence:** 80
+- **reasoning:** `Access-Control-Allow-Origin: *` configured on the production MCP server (`mcp.sumup.com`) which handles OAuth-authenticated requests with merchant payment data. The wildcard CORS header allows any website to make credentialed cross-origin requests. Combined with Bearer token authentication, this could enable CSRF-style token exfiltration if a user visits a malicious site while authenticated.
+- **impact:** Medium — any origin can interact with the MCP endpoint; could facilitate token theft via malicious page if browser sends credentials
+- **verify_steps:** 1) `curl -I -X OPTIONS https://mcp.sumup.com/mcp -H "Origin: https://evil.com" -H "Access-Control-Request-Method: POST"` to confirm wildcard CORS active. 2) Verify credentials (cookies/Authorization headers) are actually sent cross-origin in browser context. 3) Test if MCP server respects Origin header for state-changing operations.
+
+---
+
+## [HYP] Wildcard CORS on Developer Portal
+- **class:** MISCONFIG
+- **asset:** sumup-developer/public/_headers:2
+=== summary
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
+[0m
+[0m$ [0mcat leads/lead-bigpickle.md; echo "=== KB index"; cat knowledge/index.md | head -40
+...output truncated...
+
+Full output saved to: /home/runner/.local/share/opencode/tool-output/tool_098509b3f001Btxnp0rzsn1cMy
+
+=== KB index
+# Knowledge Base (seed)
+- 2026-09-03 ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
+- 2026-09-03 ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling.
+- 2026-09-03 ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+- 2026-09-03 ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+- 2026-09-03 REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-scope verified.
+- 2026-09-03 ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
+- 2026-09-03 ACCEPTED OATH @ auth.sumup.com: OIDC/OAuth discovery documents are public and enumerate live endpoints + full scope/resource model; /oauth2/auth is a live interactive flow. High-value deep-hunt surface.
+- 2026-09-03 ACCEPTED IDOR @ api.sumup.com: scope catalog names the API resource model, but all unauthenticated paths 404 — BOLA test requires a merchant OAuth token (AUTH_HELPED), not passive.
+- 2026-09-03 REJECTED MISCONFIG @ auth.sumup.com: x-envoy-decorator-operation leaks k8s service name identity.svc.cluster.local — header/banner leak is explicit out-of-scope class.
+- 2026-09-04 ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+- 2026-09-04 ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+- 2026-09-04 REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-scope verified.
+- 2026-09-04 ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
+- 2026-09-04 ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+- 2026-09-04 ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+- 2026-09-04 REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-scope verified.
+- 2026-09-04 ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
+- 2026-09-04 ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
+- 2026-09-04 ACCEPTED OATH @ auth.sumup.com: redirect_uri is strictly allowlisted per client (client_id=dashboard confirmed) — naive redirect_uri/subdomain/path-traversal bypass refuted; errors surfaced on server flow page.
+- 2026-09-04 ACCEPTED AUTH @ me.sumup.com: me.sumup.com is a distinct Vercel-served merchant self-service asset behind dashboard OAuth (client_id=dashboard) — new non-Cloudflare attack surface.
+- 2026-09-04 ACCEPTED MISCONFIG @ auth.sumup.com: /oauth2/par & /oauth2/device documented but return 404 on OPTIONS (unrouted) while /oauth2/token & /oauth2/revoke return 200 — PAR/device grants likely not deployed at routing level.
+- 2026-09-04 ACCEPTED OATH @ auth.sumup.com: dashboard-client scope catalog (accounting/invoices/api_keys/lending/receivables/unified_customer_directory/readers) maps a broader hidden api.sumup.com resource model than OIDC discovery.
+- 2026-09-04 ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" — public client impersonation vector; requires live PAR+token flow test.
+- 2026-09-04 ACCEPTED OAUTH @ auth.sumup.com: Full discovery docs expose PAR, device flow, request_object alg "none", scope catalog mapping 1:1 to merchant API resources.
+- 2026-09-04 REJECTED MISCONFIG @ api.sumup.com: x-envoy-decorator-operation leaks apigateway2-headless.identity.svc.cluster.local — header/banner leak is explicit out-of-scope class.
+- 2026-09-04 ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths 404 unauthenticated; scope catalog from auth.sumup.com defines resource model but requires merchant token.
+- 2026-09-04 REJECTED AUTH @ admin.sumup.com: Header spoofing (Host, X-Forwarded-For, X-Original-URL) yields identical 403 — no auth bypass via passive header manipulation.
+- 2026-09-04 ACCEPTED OATH @ api.sumup.com/authorize: Legacy OAuth authorize endpoint exists on API gateway (distinct from auth.sumup.com) with legacy SDK client_ids and potentially relaxed redirect_uri validation — new attack surface
+- 2026-09-04 ACCEPTED OATH @ auth.sumup.com: dashboard-client scope catalog maps broader hidden api.sumup.com resource model than OIDC discovery
+- 2026-09-04 ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths 404 unauthenticated; scope catalog defines resource model but requires merchant token
+- 2026-09-04 REJECTED AUTH @ admin.sumup.com: Header spoofing yields identical 403 — no auth bypass via passive header manipulation
+- 2026-09-04 REJECTED MISCONFIG @ api.sumup.com: x-envoy-decorator-operation leaks k8s service name — header/banner leak explicit out-of-scope class
+- 2026-09-05 REJECTED OATH @ api.sumup.com/authorize: Legacy OAuth authorize endpoint returns 404 for all known legacy SDK client_ids (sumup-ios-sdk, sumup.pos, reader, sales, virtual-terminal) — no client_id oracle, no loose redirect_uri
+- 2026-09-05 ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" but dashboard client rejects unauthenticated token requests — "none" likely restricted to specific client configs not publicly registrable
+- 2026-09-05 ACCEPTED OAUTH @ auth.sumup.com: PAR (/oauth2/par) and device flow (/oauth2/device) endpoints ARE routed and respond to POST (not 404) but require client authentication
+- 2026-09-05 ACCEPTED OATH @ auth.sumup.com: request_object_signing_alg_values_supported includes "none" + request_parameter_supported=true — algorithm confusion vector documented but untestable without valid client flow
+- 2026-09-05 ACCEPTED AUTH @ me.sumup.com: Vercel-served asset confirmed; all anonymous /api/* routes return 307 to OAuth flow — no debug endpoints or permissive CORS found passively
+- 2026-09-05 REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (307 redirect, no CORS headers)
+- 2026-09-05 ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
+[0m
+[0m$ [0mcat reports/valid-bugs.md; echo "=== bigpickle hyps tail"; tail -70 reports/hypotheses-bigpickle.txt
+# Validated findings (running count 0)
+
+- 1 lead(s) marked VALID at 2026-09-04 06:02:58 UTC
+  - | Q4 Provable non-invasively? | **NO** — all unauthenticated paths return 404; requires valid merchant OAuth token to test. Probe results confirm 404 on every enumerated path (v0/v0.1/v1/v2/merchants/
+
+- 7 lead(s) marked VALID at 2026-09-06 21:30:02 UTC
+  - **Verdict: VALID**
+  - | Impact | Attacker-controlled OAuth clients on staging; mintable JWTs (empty scope blocks resources but token is valid at gateway). Staging environments often lack prod hardening. |
+  - **Verdict: VALID**
+  - **Verdict: VALID**
+  - | 1 | `auth.sam-app.ro` unauthenticated dynamic client registration | **VALID** | 7.5 |
+  - | 2 | `api.sumup.com/authorize` client-ID oracle + wildcard CORS | **VALID** | 5.3 |
+  - | 3 | `mcp.sumup.com` wildcard CORS on Bearer-protected endpoint | **VALID** | 5.3 |
+
+- 3 lead(s) marked VALID at 2026-09-09 15:21:03 UTC
+  - **Verdict: VALID**
+  - | Q3 | Real security impact? | Low — error taxonomy (`invalid_client` vs `invalid_request`) is a standard OAuth error pattern; wildcard CORS on an authorize endpoint that only redirects to error pages
+  - | 1 | help.sumup.com Contentful Preview Token Leak | **VALID** | 5.3 (Medium) | **FILE REPORT** |
+
+- 3 lead(s) marked VALID at 2026-09-10 16:19:46 UTC
+  - **VERDICT: VALID**
+  - **VERDICT: HOLD** — Missing webhook HMAC verification in Vendure plugin is a valid code issue, but responsibility may lie with integrators who deploy the plugin. Needs clarification on whether this is
+  - | 1 | Contentful Preview API Token Leak (help.sumup.com) | **VALID** | 5.3 |
+
+- 4 lead(s) marked VALID at 2026-09-10 19:11:04 UTC
+  - | Q7 Reasonable triager | YES — client_id enumeration via error differentiation is a valid finding |
+  - **Verdict: VALID** — Client ID oracle on legacy OAuth endpoint. Read-only proof: GET requests to `/authorize` with different client_ids show error differentiation. Impact: Medium (information disclosu
+  - | Q4 Provable | NO — requires valid merchant OAuth token (AUTH_HELPED) |
+  - | VALID | 1 | #6: Legacy OAuth client_id oracle on api.sumup.com/authorize |
+
+- 5 lead(s) marked VALID at 2026-09-10 21:43:51 UTC
+  - | 1 | `auth.sam-app.ro` unauthenticated RFC 7591 dynamic client registration → mintable JWTs | staging auth | AUTH | 7.5 | VALID |
+  - | 2 | `api.sumup.com/authorize` client_id oracle (invalid_client vs invalid_request) | api gateway | INFO | 5.3 | VALID |
+  - | 3 | `mcp.sumup.com` wildcard CORS (`*`) on Bearer-protected MCP endpoint | MCP server | MISCONFIG | 5.3 | VALID |
+  - | 4 | `help.sumup.com` Contentful Preview API token leak → 1,082 draft entries readable | help center | MISCONFIG | 5.3 | VALID |
+  - | 9 | API BOLA via dashboard-client scopes | Requires valid merchant OAuth token |
+
+- 2 lead(s) marked VALID at 2026-09-12 00:39:58 UTC
+  - **Verdict: VALID** (finding now closed — token rotated 2026-09-11)
+  - | 1 | Contentful Preview Token Leak (help.sumup.com) | **VALID** (closed) | Report if still live at time of submission; token rotated |
+=== bigpickle hyps tail
+## 2026-09-12 23:09:37 UTC [target] (model bigpickle)
+[HYP] api.sumup.com gateway does not bind `aud` to `https://api.sumup.com` — RFC 9728 claim confusion
+class: AUTH
+asset: api.sumup.com/v1/merchants/{merchant_code}
+confidence: 68
+reasoning: Live MCP product forwards caller mcp-aud (`https://mcp.sumup.com/mcp`) bearer verbatim to api.sumup.com (mcp worker auth.ts enforces that aud; toolkit createClient sets `Authorization: Bearer <token>` to SUMUP_API_HOST). For MCP tools to function, api.sumup.com must accept an off-origin-aud JWT → `aud`**cannot** be strictly equal to the resource origin; residual unknown is whether it's a bounded multi-resource allowlist or no audience check at all. Staging twinning (api.sam-app.ro) already showed gateway differentiates structurally by token presence, never by scope/claims.
+evidence_needed: a single token minted for aud=https://mcp.sumup.com/mcp (or any non-api aud) accepted on api.sumup.com with structured problem+json (scope-block) vs plain 404 sans token vs 401 (rejected).
+verify_steps: AUTH_HELPED: GET /v1/merchants/{own} with mcp-aud token → 404-structured(accepted, scope-block) vs 401(aud-bound); control same token with aud=https://api.sumup.com.
+impact: Token bound to another scoped surface grants prod merchant-API access — CRITICAL if the allowlist is unbounded; MEDIUM if bounded to first-party (MCP) resources.
+testability: AUTH_HELPED
+[HYP] MCP destructive tools gated only by {offline_access, email} transport scopes — no per-tool authorization
+class: AUTH
+asset: mcp.sumup.com/mcp
+confidence: 50
+reasoning: worker.ts gates all /mcp tool calls on SCOPES_SUPPORTED={offline_access,email} only; execute.ts/registry.ts apply no per-tool oauthScopes check; registered tools include refundTransaction, createReaderTerminate, createGoReaderCheckout, deleteReader, deactivatePaymentInstrument (write/money ops). Sole downstream control would be api.sumup.com per-op `scp` — which is itself one of the unobserved claims.
+evidence_needed: token with aud=mcp+scopes {offline_access,email} invoking refundTransaction succeeds (200) on a test merchant vs 403 scope-block.
+verify_steps: AUTH_HELPED: mint MCP-flow token for own merchant; MCP call tools/createReaderTerminate and tools/refundTransaction (test-only amounts). Partial: source-level confirmed enforcement absence (done).
+impact: Authorization to destructive financial/device actions without merchant-action scoping — CRITICAL if api layer also lax, MEDIUM if api per-op scp binds.
+testability: AUTH_HELPED
+[HYP] Staging RFC 7591 dynamic-client registry syncs to prod auth.sumup.com trust store
+class: OATH
+asset: auth.sumup.com/oauth2/auth
+confidence: 45
+reasoning: staging registration unauthenticated (201); cross-env JWKS isolation (ZERO kid overlap) proven but client-registry sync is a separate control never exercised against prod client_id oracle (unknown→invalid_client, known→302/303).
+evidence_needed: fresh staging-registered client_id returning non-invalid_client on prod /oauth2/auth.
+verify_steps: BLOCKED — needs POST /oauth2/register; if unblocked GET auth.sumup.com/oauth2/auth?client_id={fresh}&redirect_uri=https://me.sumup.com/api/sso/callback&response_type=code&scope=openid.
+impact: Attacker-controlled prod-registered client → token minting for victim merchants — latent-high.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Obtain ONE merchant token scoped to the MCP resource and ONE to a REST client (dashboard flow or me.sumup.com OAuth app, `transactions.history`) then in one session: (1) replay the mcp-aud token on `GET https://api.sumup.com/v1/merchants/{own_code}` → structured 404 = aud-loose accepted / 401 = bound; (2) if accepted, same token → MCP `tools/call refundTransaction` on test merchant → per-op scope test; (3) baseline REST token on same GET for control. Single dependency for the top-2 survivors; nothing passive can substitute.
+[RISK] sumup: 42 — Yield: two hypotheses materially sharpened via first-party source (api aud-binding prior up at 68 with an architectural proof-path; MCP tool-authz surfaced as a new AUTH class with an absence-of-enforcement finding in code — both still token-blocked). Countervailing: mcp-sumup.com surface is now fully source-mapped and shows a *tight* transport gate, trimming its standalone value; no reportable finding added this cycle (valid-bugs remains empty, contentful file still absent, no re-assertions). Program stays flat until HUMAN supplies a merchant or MCP-resource token; all three survivors unchanged in testability.
+[HYP] api.sumup.com gateway does not bind JWT `aud` to resource origin — RFC 9728 claim confusion, widened by opaque apiKey bearer
+class: AUTH
+asset: api.sumup.com/v1/merchants/{merchant_code}
+confidence: 70
+reasoning: Spec confirms TWO bearer classes hit the same gateway: static opaque API keys (no aud/exp/iss claims) and OAuth JWTs. Gateway therefore must accept claim-less/origin-mismatched bearers at least for the key path, so aud-equality-to-origin is architecturally impossible; residual unknown is only whether JWT aud is checked against a bounded allowlist. MCP product forwards mcp-aud JWT verbatim to api.sumup.com and functions (source-confirmed), proving an off-origin aud is accepted in production.
+evidence_needed: mcp-aud JWT (or any non-api aud) on `GET /v1/merchants/{own}` → structured problem+json = accepted/scope-block vs 401 = aud-bound.
+verify_steps: AUTH_HELPED: GET /v1/merchants/{own} with mcp-aud token (control: same token re-minted with aud=https://api.sumup.com).
+impact: Token minted for a narrower surface unlocks merchant-API scope — CRITICAL unbounded, MEDIUM if allowlisted to first-party.
+testability: AUTH_HELPED
+[HYP] Legacy api.sumup.com/token clientCredentials flow enforces weaker client auth — spec-declared grant, staging-verified pattern
+class: AUTH
+asset: api.sumup.com/token
+confidence: 50
+reasoning: Spec explicitly declares clientCredentials at api.sumup.com/token with attacker-relevant 16-scope map (refunds.write, transactions.history, receipts.read); route live (OPTIONS 204, identity.svc, wildcard CORS). Staging twin (auth.sam-app.ro) already proved this gateway family stores token_endpoint_auth_method but does NOT enforce it (client_secret_basic declared/failed, client_secret_post accepted). Prod enforcement of the legacy /token grant has never been exercised.
+evidence_needed: client_credentials POST at api.sumup.com/token with dashboard/own app credentials succeeding beyond declared auth_method, or returning an accepted token without the expected secret rigor.
+verify_steps: AUTH_HELPED: POST grant_type=client_credentials&client_id={own_app}&scope=transactions.history with client_secret variants → compare token vs invalid_client; replay token on GET /v1/merchants/{own}.
+impact: Minting tokens with refunds.write/transactions.history for a controlled client — CRITICAL if weaker-than-modern auth.
+testability: AUTH_HELPED
+[HYP] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session — server-side fetch of attacker `target` + no per-op scope binding
+class: BUSLOGIC
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 45
+reasoning: Spec declares this op `apiKey:[]+oauth2:[]` (no per-op scope gate — any valid bearer); `target` is arbitrary URI fed to merchant-session creation (spec example = Apple endpoint); checkout_id not inbound-scoped. Both empty-scope (BOLA) and arbitrary-target (SSRF→169.254.169.254) classes live in one PUT.
+evidence_needed: PUT with own token on foreign checkout_id proceeding past 401 (BOLA) or 200 echoing target=http://169.254.169.254/… (SSRF).
+verify_steps: AUTH_HELPED: PUT own then foreign checkout_id with target=https://attacker.tld, then metadata IP — compare gated vs non-gated.
+impact: Cross-tenant checkout interference + internal/metadata fetch in a payment-critical path — HIGH.
+testability: AUTH_HELPED
+[0m
+[0m$ [0mls scripts; echo ---; cat scripts/*.py 2>/dev/null | head -60
+sync-issues.py
+---
+import os, re, hashlib
+from difflib import SequenceMatcher
+from pathlib import Path
+from github import Github
+
+REPO = os.environ["GITHUB_REPOSITORY"]
+TOKEN = os.environ["GITHUB_TOKEN"]
+GLOB = os.environ.get("LEAD_GLOB", "leads/lead-*.md")
+TARGET = os.environ.get("TARGET_NAME", "hunt")
+MODEL_FROM_FILENAME = os.environ.get("MODEL_FROM_FILENAME", "0") == "1"
+
+STOP = re.compile(r'^\[(HYP|PARKED|FINAL|NEXT|LEARN|RISK|NEW|CHANGED|PRIO)\]')
+KV = re.compile(r'^([a-z_]+):\s*(.*)$', re.I)
+
+TITLE_SIM_THRESHOLD = float(os.environ.get("TITLE_SIM_THRESHOLD", "0.82"))
+COARSE_SIM_THRESHOLD = float(os.environ.get("COARSE_SIM_THRESHOLD", "0.55"))
+
+
+def split_inline(title):
+    """Extract inline attributes from a single-line lead of the form:
+    [HYP] Title: confidence 96, class MISCONFIG, verify_steps ..., asset https://...
+    Attribute matches are removed; the title is cut at the first attribute."""
+    attrs = {}
+    pats = [
+        (r'confidence\s*(?:=|:|\s+)\s*(\d{1,3})', 'confidence', None),
+        (r'conf\s*(?:=|:|\s+)\s*(\d{1,3})', 'confidence', None),
+        (r'\((\d{2,3})\)\s*[:;]', 'confidence', None),
+        (r'class\s*(?:=|:|\s+)\s*([A-Za-z_]+)', 'class', str.upper),
+        (r'asset\s*(?:=|:|\s+)\s*(https?://[^\s,;]+|/[^\s,;]+)', 'asset', None),
+        (r'severity\s*(?:=|:|\s+)\s*([A-Za-z]+)', 'severity', None),
+        (r'testability\s*(?:=|:|\s+)\s*([A-Za-z_]+)', 'testability', str.upper),
+        (r'verify[_\s]steps\s*(?:=|:|\s+)\s*([^\n|]+)', 'verify_steps', None),
+        (r'impact\s*(?:=|:|\s+)\s*([^\n|]+)', 'impact', None),
+        (r'reasoning\s*(?:=|:|\s+)\s*([^\n|]+)', 'reasoning', None),
+    ]
+    cut = None
+    for pat, key, transform in pats:
+        m = re.search(pat, title, re.I)
+        if m:
+            v = m.group(1).strip()
+            if transform:
+                v = transform(v)
+            if key not in attrs:
+                attrs[key] = v
+            cut = m.start() if cut is None else min(cut, m.start())
+    if cut is not None:
+        t = title[:cut]
+    else:
+        t = title
+    t = re.sub(r'^\s*[:,\s-]+\s*', '', t)
+    t = re.sub(r'\s+', ' ', t).strip()
+    return t, attrs
+
+
+def parse_blocks(text, model):
+    blocks, lines, i = [], text.splitlines(), 0
+    while i < len(lines):
+        m = re.match(r'^\[HYP\]\s*(.*)$', lines[i].strip())
+        if not m:
+            i += 1
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code} %{time_total}s\n" --max-time 8 https://api.sumup.com/.well-known/oauth-protected-resource 2>&1; curl -s --max-time 8 https://auth.sumup.com/.well-known/jwks.json 2>/dev/null | head -c 200; echo
+200 0.186176s
+{"keys":[{"alg":"RS256","e":"AQAB","kid":"public:38618372-f016-4e5d-97b2-d043a975d243","kty":"RSA","n":"sLwnKrTWt5tNIZ-iXjDyO9nbSdE6zxXteb5HZeSq7HQ-Ard-osjsKUPDJSrph5W2c23RmrIr0qASoYsCZoNhidB9Fh0DF1rf
+[0m
+Network is available. Running a bounded passive drift-check on the key live endpoints, then a deeper spec pass.
+[0m$ [0mfor u in \
+ "https://auth.sumup.com/.well-known/jwks.json" \
+ "https://api.sumup.com/.well-known/oauth-protected-resource" \
+ "https://mcp.sumup.com/mcp" ; do
+  echo "=== $u"
+  curl -s --max-time 10 -D - -o /dev/null "$u" 2>/dev/null | head -6
+done
+=== https://auth.sumup.com/.well-known/jwks.json
+HTTP/2 200 
+date: Sun, 13 Sep 2026 01:10:33 GMT
+content-type: application/json
+content-length: 15316
+server: cloudflare
+x-request-id: cca89eec-d65d-91a0-8f62-bdb7612af262
+=== https://api.sumup.com/.well-known/oauth-protected-resource
+HTTP/2 200 
+date: Sun, 13 Sep 2026 01:10:33 GMT
+content-type: application/json
+content-length: 286
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+=== https://mcp.sumup.com/mcp
+HTTP/2 401 
+date: Sun, 13 Sep 2026 01:10:33 GMT
+content-type: application/json
+content-length: 76
+access-control-allow-origin: *
+www-authenticate: Bearer error="invalid_token", error_description="Missing Authorization header", scope="offline_access email", resource_metadata="https://mcp.sumup.com/.well-known/oauth-protected-resource/mcp"
+[0m
+[0m$ [0mcurl -s --max-time 10 https://auth.sumup.com/.well-known/jwks.json | python3 -c "import sys,json; d=json.load(sys.stdin); print('keys:',len(d['keys'])); print('kids:',[k['kid'] for k in d['keys']])"
+keys: 8
+kids: ['public:38618372-f016-4e5d-97b2-d043a975d243', 'public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9', 'public:8c332d17-2b35-4cba-a61e-6843b4375a71', 'public:a4627362-0900-4bfa-8b68-3a740165dbcf', 'public:32ad4b15-8641-4aaa-9a2e-427bb1848321', 'public:8e43ec38-e8f1-47e4-aa6c-9990c3ae20b3', '1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM', '-tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4']
+[0m
+[0m$ [0mecho "=== dashboard+modern-redirect (expect invalid_request)"; curl -s --max-time 10 -o /dev/null -w "%{http_code}\n" "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&scope=openid"; sleep 1.2; echo "=== unknown client (expect invalid_client)"; curl -s --max-time 10 -o /dev/null -w "%{http_code}\n" "https://api.sumup.com/authorize?client_id=definitely-not-a-client&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&scope=openid"
+=== dashboard+modern-redirect (expect invalid_request)
+302
+=== unknown client (expect invalid_client)
+302
+[0m
+[0m$ [0mecho "=== dashboard+modern-redirect"; curl -s --max-time 10 -D - -o /dev/null "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&scope=openid" 2>/dev/null | grep -i "^location"; sleep 1.2; echo "=== unknown client"; curl -s --max-time 10 -D - -o /dev/null "https://api.sumup.com/authorize?client_id=zzznope-12345&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&scope=openid" 2>/dev/null | grep -i "^location"
+=== dashboard+modern-redirect
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+=== unknown client
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_client&error_description=The+requested+OAuth+2.0+Client+does+not+exist.
+[0m
+Oracle confirmed live, no drift. Now the deeper spec pass — enumerating empty-scope ops and SSRF-ish params for token-ready targeting.
+[0m$ [0mfor u in "https://developer.sumup.com/api/resources/openapi.json" "https://raw.githubusercontent.com/sumup/sumup-openapi/main/openapi.yaml" "https://raw.githubusercontent.com/sumup/sumup-openapi/main/openapi.json"; do echo "=== $u"; curl -s --max-time 12 -o /tmp/spec.tmp -w "%{http_code} %{size_download}\n" "$u"; head -c 80 /tmp/spec.tmp | tr '\n' ' '; echo; done
+=== https://developer.sumup.com/api/resources/openapi.json
+404 23364
+<!DOCTYPE html><html lang="en" dir="ltr" data-theme="dark" class="astro-vdxcvpsm
+=== https://raw.githubusercontent.com/sumup/sumup-openapi/main/openapi.yaml
+200 319585
+openapi: 3.0.3 info:   title: SumUp REST API   version: 1.0.0   description: |- 
+=== https://raw.githubusercontent.com/sumup/sumup-openapi/main/openapi.json
+200 410059
+{   "openapi": "3.0.3",   "info": {     "title": "SumUp REST API",     "version"
+[0m
+[0m$ [0mcurl -s --max-time 15 -o /tmp/openapi.json "https://raw.githubusercontent.com/sumup/sumup-openapi/main/openapi.json"
+python3 - <<'EOF'
+import json
+d=json.load(open('/tmp/openapi.json'))
+# security schemes
+print("== securitySchemes ==")
+for k,v in d.get('components',{}).get('securitySchemes',{}).items():
+    print(" ",k, v.get('type'), v.get('in'), v.get('flows',{}).keys())
+paths=d['paths']
+empty=[]; ssf=[]; allops=[]
+for p,item in paths.items():
+    for m,op in item.items():
+        if m not in ('get','post','put','patch','delete','head','options'): continue
+        allops.append((m.upper(),p,op.get('summary','')[:60]))
+        sec=op.get('security',[])
+        for s in sec:
+            for scheme,scopes in s.items():
+                if isinstance(scopes,list) and scopes==[]:
+                    empty.append((m.upper(),p,scheme,op.get('summary','')[:70]))
+EOF
+echo DONE
+== securitySchemes ==
+  apiKey http None dict_keys([])
+  oauth2 oauth2 None dict_keys(['authorizationCode', 'clientCredentials'])
+DONE
+[0m
+[0m$ [0mpython3 - <<'EOF'
+import json
+d=json.load(open('/tmp/openapi.json'))
+paths=d['paths']
+print("TOTAL ops:", sum(1 for p,it in paths.items() for m in it if m in ('get','post','put','patch','delete')))
+print("\n== ops with oauth2:[] (empty scope) or apiKey:[] ==")
+for p,item in sorted(paths.items()):
+    for m,op in sorted(item.items()):
+        if m not in ('get','post','put','patch','delete'): continue
+        for s in op.get('security',[]):
+            for scheme,scopes in s.items():
+                if scopes==[]:
+                    print(f"  {m.upper():6} {p}  [{scheme}]  {op.get('summary','')[:70]}")
+EOF
+TOTAL ops: 42
+
+== ops with oauth2:[] (empty scope) or apiKey:[] ==
+  GET    /v0.1/checkouts  [apiKey]  List checkouts
+  POST   /v0.1/checkouts  [apiKey]  Create a checkout
+  DELETE /v0.1/checkouts/{checkout_id}  [apiKey]  Deactivate a checkout
+  GET    /v0.1/checkouts/{checkout_id}  [apiKey]  Retrieve a checkout
+  PATCH  /v0.1/checkouts/{checkout_id}  [apiKey]  Update a checkout
+  PUT    /v0.1/checkouts/{checkout_id}  [apiKey]  Process a checkout
+  POST   /v0.1/customers  [apiKey]  Create a customer
+  GET    /v0.1/customers/{customer_id}  [apiKey]  Retrieve a customer
+  PUT    /v0.1/customers/{customer_id}  [apiKey]  Update a customer
+  GET    /v0.1/customers/{customer_id}/payment-instruments  [apiKey]  List payment instruments
+  DELETE /v0.1/customers/{customer_id}/payment-instruments/{token}  [apiKey]  Deactivate a payment instrument
+  GET    /v0.1/memberships  [apiKey]  List memberships
+  GET    /v0.1/merchants/{merchant_code}/members  [apiKey]  List members
+  POST   /v0.1/merchants/{merchant_code}/members  [apiKey]  Create a member
+  DELETE /v0.1/merchants/{merchant_code}/members/{member_id}  [apiKey]  Delete a member
+  GET    /v0.1/merchants/{merchant_code}/members/{member_id}  [apiKey]  Retrieve a member
+  PUT    /v0.1/merchants/{merchant_code}/members/{member_id}  [apiKey]  Update a member
+  GET    /v0.1/merchants/{merchant_code}/payment-methods  [apiKey]  Get available payment methods
+  GET    /v0.1/merchants/{merchant_code}/payment-methods  [oauth2]  Get available payment methods
+  GET    /v0.1/merchants/{merchant_code}/readers  [apiKey]  List Readers
+  POST   /v0.1/merchants/{merchant_code}/readers  [apiKey]  Create a Reader
+  DELETE /v0.1/merchants/{merchant_code}/readers/{reader_id}  [apiKey]  Delete a reader
+  GET    /v0.1/merchants/{merchant_code}/readers/{reader_id}  [apiKey]  Retrieve a Reader
+  PATCH  /v0.1/merchants/{merchant_code}/readers/{reader_id}  [apiKey]  Update a Reader
+  POST   /v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout  [apiKey]  Create a Reader Checkout
+  GET    /v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout/{checkout_id}  [apiKey]  Get a Reader Checkout
+  GET    /v0.1/merchants/{merchant_code}/readers/{reader_id}/status  [apiKey]  Get a Reader Status
+  POST   /v0.1/merchants/{merchant_code}/readers/{reader_id}/terminate  [apiKey]  Terminate a Reader Checkout
+  GET    /v0.1/merchants/{merchant_code}/roles  [apiKey]  List roles
+  POST   /v0.1/merchants/{merchant_code}/roles  [apiKey]  Create a role
+  DELETE /v0.1/merchants/{merchant_code}/roles/{role_id}  [apiKey]  Delete a role
+  GET    /v0.1/merchants/{merchant_code}/roles/{role_id}  [apiKey]  Retrieve a role
+  PATCH  /v0.1/merchants/{merchant_code}/roles/{role_id}  [apiKey]  Update a role
+  PUT    /v0.2/checkouts/{checkout_id}/apple-pay-session  [apiKey]  Create an Apple Pay session
+  PUT    /v0.2/checkouts/{checkout_id}/apple-pay-session  [oauth2]  Create an Apple Pay session
+  POST   /v0/merchants/{merchant_code}/readers/{reader_id}/go-checkout  [apiKey]  Create a Go Reader Payment
+  POST   /v1.0/merchants/{merchant_code}/payments/{transaction_id}/refunds  [apiKey]  Refund a transaction
+  GET    /v1.0/merchants/{merchant_code}/payouts  [apiKey]  List payouts
+  GET    /v1.1/receipts/{transaction_id}  [apiKey]  Retrieve receipt details
+  GET    /v1/merchants/{merchant_code}  [apiKey]  Get Merchant
+  GET    /v1/merchants/{merchant_code}/persons  [apiKey]  List Persons
+  GET    /v1/merchants/{merchant_code}/persons/{person_id}  [apiKey]  Get Person
+  GET    /v2.1/merchants/{merchant_code}/transactions  [apiKey]  Retrieve a transaction
+  GET    /v2.1/merchants/{merchant_code}/transactions/history  [apiKey]  List transactions
+[0m
+[0m$ [0mpython3 - <<'EOF'
+import json
+d=json.load(open('/tmp/openapi.json'))
+schemes=d['components']['securitySchemes']
+for k,v in schemes.items():
+    print(k, json.dumps(v))
+print("\n== referenced oauth2 scopes ==")
+sc={}
+for p,item in d['paths'].items():
+    for m,op in item.items():
+        if m not in ('get','post','put','patch','delete'): continue
+        for s in op.get('security',[]):
+            for scheme,scopes in s.items():
+                if scheme=='oauth2' and scopes:
+                    for scp in scopes: sc[scp]=sc.get(scp,0)+1
+print(json.dumps(sc, indent=1))
+print("\n== server =="); print(d.get('servers'))
+EOF
+apiKey {"description": "API keys allow you easily interact with SumUp APIs. API keys are static tokens. You can create API keys from the [Dashboard](https://me.sumup.com/settings/api-keys)", "type": "http", "scheme": "Bearer"}
+oauth2 {"type": "oauth2", "description": "SumUp supports [OAuth 2.0](https://tools.ietf.org/html/rfc6749) authentication for platforms that want to offer their services to SumUp users.\n\nTo integrate via OAuth 2.0 you will need a client credentials that you can create in the [SumUp Dashboard](https://me.sumup.com/settings/oauth2-applications).\n\nTo maintain security of our users, we highly recommend that you use one of the [recommended OAuth 2.0 libraries](https://oauth.net/code/) for authentication.", "flows": {"authorizationCode": {"authorizationUrl": "https://api.sumup.com/authorize", "tokenUrl": "https://api.sumup.com/token", "refreshUrl": "https://api.sumup.com/token", "scopes": {"payments": "Make payments by creating and processing checkouts.", "checkouts.read": "View checkouts.", "checkouts.write": "Create, process, and deactivate checkouts.", "transactions.history": "View transactions and transaction history.", "transactions.read": "View transactions and transaction history.", "refunds.write": "Refund transactions.", "receipts.read": "View receipts.", "user.profile_readonly": "View user profile details.", "user.profile": "View and manage your user profile.", "user.app-settings": "View and manage the SumUp mobile application settings.", "payment_instruments": "Manage customers and their payment instruments.", "customers.read": "View customers and their payment instruments.", "customers.write": "Create and manage customers and their payment instruments.", "user.payout-settings": "View and manage your payout settings.", "payouts.read": "View payouts.", "user.subaccounts": "View and manage the user profile details of your employees."}}, "clientCredentials": {"tokenUrl": "https://api.sumup.com/token", "scopes": {"payments": "Make payments by creating and processing checkouts.", "checkouts.read": "View checkouts.", "checkouts.write": "Create, process, and deactivate checkouts.", "transactions.history": "View transactions and transaction history.", "transactions.read": "View transactions and transaction history.", "refunds.write": "Refund transactions.", "receipts.read": "View receipts.", "user.profile_readonly": "View user profile details.", "user.profile": "View and manage your user profile.", "user.app-settings": "View and manage the SumUp mobile application settings.", "payment_instruments": "Manage customers and their payment instruments.", "customers.read": "View customers and their payment instruments.", "customers.write": "Create and manage customers and their payment instruments.", "user.payout-settings": "View and manage your payout settings.", "payouts.read": "View payouts.", "user.subaccounts": "View and manage the user profile details of your employee."}}}}
+
+== referenced oauth2 scopes ==
+{
+ "payments": 8,
+ "checkouts.write": 4,
+ "checkouts.read": 2,
+ "payment_instruments": 5,
+ "customers.write": 3,
+ "customers.read": 2,
+ "refunds.write": 1,
+ "transactions.history": 3,
+ "transactions.read": 2,
+ "user.profile": 5,
+ "user.profile_readonly": 5,
+ "payouts.read": 1,
+ "receipts.read": 1,
+ "readers.write": 6,
+ "user.subaccounts": 10,
+ "members.read": 2,
+ "members.write": 3,
+ "roles.read": 2,
+ "roles.write": 3,
+ "readers.read": 4,
+ "terminals.read": 2,
+ "terminals.write": 3
+}
+
+== server ==
+[{'url': 'https://api.sumup.com', 'description': 'Production server'}]
+[0m
+Spec pass done — exposes 18 referenced scopes, apiKey as `Authorization: Bearer` static tokens on `me.sumup.com/settings/api-keys`. Now probing whether the legacy gateway validates scope before redirect (would unlock a scope oracle without a known accepted redirect).
+[0m$ [0mecho "=== baseline: invalid redirect, no scope"; curl -s --max-time 10 -D - -o /dev/null "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code" 2>/dev/null | grep -i "^location"; sleep 1.2
+echo "=== invalid redirect + big scope"; curl -s --max-time 10 -D - -o /dev/null "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&scope=transactions.history+refunds.write+payments" 2>/dev/null | grep -i "^location"; sleep 1.2
+echo "=== invalid redirect + garbage scope"; curl -s --max-time 10 -D - -o /dev/null "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&scope=zzz.nope" 2>/dev/null | grep -i "^location"
+=== baseline: invalid redirect, no scope
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+=== invalid redirect + big scope
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+=== invalid redirect + garbage scope
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+[0m
+Redirect is validated before scope on legacy too — scope oracle remains blocked. One more fresh lead: the MCP 401 header advertises `resource_metadata="https://mcp.sumup.com/.well-known/oauth-protected-resource/mcp"`. Fetching that server-advertised RFC 9728 doc.
+[0m$ [0mecho "=== mcp resource metadata"; curl -s --max-time 10 -D - "https://mcp.sumup.com/.well-known/oauth-protected-resource/mcp" 2>/dev/null | head -40
+=== mcp resource metadata
+HTTP/2 200 
+date: Sun, 13 Sep 2026 01:11:17 GMT
+content-type: application/json
+content-length: 269
+access-control-allow-origin: *
+access-control-allow-headers: Content-Type, Accept, Authorization, mcp-session-id, MCP-Protocol-Version
+access-control-allow-methods: GET, POST, DELETE, OPTIONS
+access-control-expose-headers: WWW-Authenticate, mcp-session-id
+access-control-max-age: 86400
+set-cookie: __cf_bm=kQb23XKXB9F9qRMuI6K6wQOo9CifjUHJGQOYsOsc23s-1789261877.2316844-1.0.1.1-uAH6w.dlAzx9_JdgjD5lh0wCxXi_HrWx7lNbDDskjXjUyQw2NDHoX9Ww_hi1NGf4.QNpL048zqrVIPbdRUTG6lmtgdgxCgUMN0j05PVfcSIqbu1G0I6WG4lD8sHqRzmgatSv7gcn8dSDTDlfkUzXBw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sun, 13 Sep 2026 01:41:17 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=qGdRLivZtrtqDWVPMHV8ivtltOB6uPFoW4xTjyvnKblb5bib%2F7R7ZvPpChAdbzP6QuHtlVkfdr55HASNJEnzX4PmJnlr2HnAYmK%2Bspr%2F1HRfqpn8pdJxiRXjv4KSq70%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+server: cloudflare
+cf-ray: a3a346ecb8052978-IAD
+
+{"resource":"https://mcp.sumup.com/mcp","authorization_servers":["https://auth.sumup.com"],"bearer_methods_supported":["header"],"scopes_supported":["offline_access","email"],"resource_name":"SumUp MCP","resource_documentation":"https://developer.sumup.com/tools/llms"}
+[0m
+Found a genuinely new first-party RFC 9728 doc for the MCP resource. Quick passive RAG on the referenced docs page, then I'll compile the cycle.
+[0m$ [0mcurl -s --max-time 12 "https://developer.sumup.com/tools/llms" 2>/dev/null | python3 -c "import sys,re,html; t=sys.stdin.read(); t=re.sub(r'<script.*?</script>','',t,flags=re.S); t=re.sub(r'<style.*?</style>','',t,flags=re.S); t=re.sub(r'<[^>]+>',' ',t); t=html.unescape(t); t=re.sub(r'\s+',' ',t); print(t[:2500])"
+Overview | SumUp Developer Skip to content SumUp SumUp Developer Search Ctrl K Cancel Docs API Changelog Dashboard Select theme Dark Light Auto Loading Open Docs API Changelog Dashboard Get Started Home In-person Payments Overview Quickstart Cloud API SDKs Overview Android SDK Android Tap-to-Pay SDK iOS SDK Offline Transactions Payment Switch Overview Android iOS Readers Overview Solo Solo Lite Tap to Pay Air 3G PIN+ Go Online Payments Quickstart Testing Payment Methods 3D Secure authentication Webhooks Checkout Tools Overview Payment Widget Swift Checkout SDK Hosted Checkout Plugins Overview WooCommerce PrestaShop Wix Medusa Vendure Alternative Payment Methods Overview Integration Guide Apple Pay Google Pay Custom Integrations Overview Refunds Response Handling Save Customer Cards Developer Resources Authorization Overview API Keys OAuth 2.0 Affiliate Keys Glossary Merchant Address Countries and Currencies Build with AI Overview Agent Skills Plugins MCP Server Agent Toolkit SDKs Overview JavaScript SDK Python SDK .NET SDK Java SDK PHP SDK Go SDK Rust SDK CLI Resources Open Banking GitHub Select theme Dark Light Auto Help Status On this page Overview Plain Text Docs Agent Skills Plugins SumUp Model Context Protocol (MCP) Server SumUp Agent Toolkit SDK Copy Markdown Open in ChatGPT Open in Claude View in Markdown Overview Use LLMs to guide you through developing with SumUp SDKs. You can use large language models (LLMs) to assist in the building of SumUp integrations. We provide a set of tools and best practices if you use LLMs during development. Plain Text Docs Section titled “Plain Text Docs” You can access all of our documentation as plain text Markdown files by adding index.md to the end of any URL. For example, you can find the plaintext version of this page itself at https://developer.sumup.com/tools/llms/index.md . This helps AI tools and agents consume our content and allows you to copy and paste the entire contents of a doc into an LLM. This format is preferable to scraping or copying from our HTML and JavaScript-rendered pages because: Plain text contains fewer formatting tokens. Content that isn’t rendered in the default view (for example, it’s hidden in a tab) of a given page is rendered in the plaintext version. LLMs can parse and understand Markdown hierarchy. We also host an /llms.txt file which instructs AI tools and agents how to retrieve the plaintext versions of our pages. The /llms.txt file is an emerging standard (Opens in a new tab) f
+[0m
+[0m$ [0mcurl -s --max-time 12 "https://developer.sumup.com/tools/llms/index.md" -o /tmp/mcp-docs.md 2>/dev/null; wc -c /tmp/mcp-docs.md; grep -n -i -A6 -B2 "mcp" /tmp/mcp-docs.md | head -80
+2634 /tmp/mcp-docs.md
+23-SumUp also publishes [plugins, extensions, and powers](/tools/llms/plugins/) for Claude Code, Cursor, Gemini CLI, OpenAI Codex, and Kiro. Use these packaged integrations when you want the assistant-specific setup from the `sumup/sumup-skills` repository.
+24-
+25:## SumUp Model Context Protocol (MCP) Server
+26-
+27:Use the [SumUp MCP server](/tools/llms/mcp-server/) to connect MCP-compatible clients and AI assistants to SumUp APIs and documentation tools.
+28-
+29:Hosted MCP URL: [https://mcp.sumup.com/mcp](https://mcp.sumup.com/mcp)
+30-
+31:The hosted server uses OAuth. Connect with an OAuth-capable MCP client and authorize access when prompted.
+32-
+33:You can also run MCP locally with Node.js 22 or later and a SumUp API key:
+34-
+35-```sh
+36:SUMUP_API_KEY='sup_sk_...' npx -y @sumup/mcp
+37-```
+38-
+39:For full setup instructions and client examples, see [MCP Server](/tools/llms/mcp-server/).
+40-
+41-## SumUp Agent Toolkit SDK
+42-
+43-If you’re building agentic software, we provide an SDK for adding SumUp functionality to your agent’s capabilities. Learn more in our [agents documentation](/tools/llms/agent-toolkit/).
+[0m
+[0m$ [0mpython3 - <<'EOF'
+import json
+d=json.load(open('/tmp/openapi.json'))
+op=d['paths']['/v0.2/checkouts/{checkout_id}/apple-pay-session']['put']
+print("security:", op.get('security'))
+print("requestBody:", json.dumps(op.get('requestBody'), indent=1)[:800])
+EOF
+security: [{'apiKey': []}, {'oauth2': []}]
+requestBody: {
+ "description": "The data needed to create an apple pay session for a checkout.",
+ "content": {
+  "application/json": {
+   "schema": {
+    "type": "object",
+    "required": [
+     "context",
+     "target"
+    ],
+    "properties": {
+     "context": {
+      "type": "string",
+      "description": "the context to create this apple pay session.",
+      "format": "hostname",
+      "example": "example.com"
+     },
+     "target": {
+      "type": "string",
+      "description": "The target url to create this apple pay session.",
+      "format": "uri",
+      "example": "https://apple-pay-gateway-cert.apple.com/paymentservices/startSession"
+     }
+    }
+   }
+  }
+ }
+}
+[0m
+Cycle complete. All findings grounded in fresh live probes this cycle (2026-09-13 01:10–01:12 UTC).
+
+---
+
+STEP 1 — DELTA:
+- [NEW] mcp.sumup.com/.well-known/oauth-protected-resource/mcp → 200 JSON (RFC 9728, server self-advertised via 401 `WWW-Authenticate` header): `resource=https://mcp.sumup.com/mcp`, `scopes_supported=[offline_access,email]`, auth server auth.sumup.com, docs developer.sumup.com/tools/llms — first-party declared `aud` for MCP tokens, distinct from api surface `resource=https://api.sumup.com`.
+- [NEW] Spec RAG (sumup-openapi, mirrored/verified live): apiKey securityScheme is `http`/`Bearer` with **no** aud/scope claims (static `sup_sk_`-prefixed tokens minted at me.sumup.com/settings/api-keys); clientCredentials flow on `api.sumup.com/token` declares full 16-scope map incl. `refunds.write`, `transactions.history`, `payouts.read`; 21 distinct scopes referenced by 42 ops; ops reference undeclared scopes `readers.*/terminals.*/members.*/roles.*` absent from flow scope maps (spec-hygiene, informational).
+- [NEW] developer.sumup.com MCP docs confirm local mode runs with a bare SumUp API key (`SUMUP_API_KEY=sup_sk_… npx @sumup/mcp`) — same tool registry, no per-tool scope gate distinct from OAuth.
+- [CHANGED] Negative probe: legacy gateway checks redirect_uri **before** scope (`invalid_request` persists with valid+valid/garbage scope on invalid redirect) — scope-acceptance oracle on legacy remains unreachable without a valid legacy redirect; idea closed.
+- [CHANGED] Drift-check clean: prod JWKS still 8 kids (unchanged IDs), RFC 9728 len 286, MCP `/mcp` 401 same scope hint, legacy authorize oracle same taxonomy (dashboard→`invalid_request`, unknown→`invalid_client`).
+
+STEP 2 — PRIORITIZE:
+- [PRIO] api.sumup.com/v1/merchants/{merchant_code},7.7,business_value+attack_surface
+- [PRIO] mcp.sumup.com/mcp,7.0,tech_exposure+cloud_surface
+- [PRIO] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session,6.4,business_value
+
+STEP 3 — HYPOTHESES:
+[HYP] api.sumup.com gateway ignores JWT `aud` mismatch vs RFC 9728 declared resource
+class: AUTH
+asset: api.sumup.com/v1/merchants/{merchant_code}
+confidence: 70
+reasoning: This cycle proved both resources declare distinct RFC 9728 identities — api surface `resource=https://api.sumup.com` (len 286, re-verified 200) vs MCP `resource=https://mcp.sumup.com/mcp` (new 200, 269 B). SumUp's own MCP product forwards caller mcp-aud JWTs verbatim to api.sumup.com (source-confirmed), so prod must accept an off-api aud. Additionally the apiKey scheme (`sup_sk_` static, `Authorization: Bearer`) shares the same header slot and carries no aud/exp/iss at all — the Bearer parser therefore tolerates claim-less tokens, so strict aud-equality-to-origin is architecturally excluded; residual unknown is bounded allowlist vs none.
+evidence_needed: one mcp-aud JWT on `GET /v1/merchants/{own}` → structured problem+json (accepted/scope-block) vs 401 (aud-bound). Control: same token re-minted aud=api.sumup.com.
+verify_steps: AUTH_HELPED — replay mcp-aud bearer on `GET https://api.sumup.com/v1/merchants/{own}`; do not follow redirects, compare JSON body shape vs no-token plain 404.
+impact: Token minted for a narrower surface unlocks merchant-API resources — CRITICAL if unbounded, MEDIUM if allowlisted to first-party MCP.
+testability: AUTH_HELPED
+
+[HYP] MCP destructive tools gated only by transport scopes {offline_access,email}; apiKey path has no per-tool gate
+class: AUTH
+asset: mcp.sumup.com/mcp
+confidence: 55
+reasoning: New RFC 9728 metadata confirms the only OAuth gate at the MCP transport is `scopes_supported=[offline_access,email]`; source shows worker gates all tool calls on that set with no per-tool oauthScopes check. New doc evidence: the same tool registry (refundTransaction, createReaderTerminate, createGoReaderCheckout, deleteReader, deactivatePaymentInstrument) also runs on a bare `sup_sk_` API key with zero scope machinery — layered confirmation that authorization for money/device ops lives only downstream at api.sumup.com per-op `scp`, itself one of the unobserved claims.
+evidence_needed: invocation of a write tool (e.g. tools/call refundTransaction test amount) with an `{offline_access,email}`+mcp-aud token succeeding vs 403 scope-block.
+verify_steps: AUTH_HELPED — mint MCP-flow token on own test merchant; tools/call createReaderTerminate and refundTransaction (test-only amounts).
+impact: Authorization to destructive financial/device actions without merchant-action scoping — CRITICAL if api layer lax, MEDIUM if per-op scp binds downstream.
+testability: AUTH_HELPED
+
+[HYP] api.sumup.com/token clientCredentials grant enforces weaker client auth (spec-declared, staging-verified pattern)
+class: AUTH
+asset: api.sumup.com/token
+confidence: 50
+reasoning: Spec (verified live this cycle) declares clientCredentials at api.sumup.com/token with attacker-relevant scopes map (refunds.write, transactions.history, receipts.read, payouts.read). Route live (OPTIONS 204, wildcard CORS, identity.svc op). Staging twin proved this gateway family stores token_endpoint_auth_method without enforcing it. Prod enforcement of the legacy /token grant never exercised.
+evidence_needed: client_credentials POST with own-app credentials succeeding beyond declared auth_method OR minted token accepted on GET /v1/merchants/{own}.
+verify_steps: AUTH_HELPED — POST grant_type=client_credentials&client_id={own_app}&scope=transactions.history with client_secret variants; replay token.
+impact: Minting tokens with refunds.write/transactions.history for a controlled client — CRITICAL if weaker-than-modern auth.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE:
+- [PARKED] Staging RFC 7591 client-registry synced to prod trust store: confidence 45, needs POST /oauth2/register — verify path stays BLOCKED, no new evidence this cycle.
+- [PARKED] Legacy callback-host enumeration: fully exhausted (~200 combos + ccTLD + schemes), 0 HITs — do not reopen without a new naming source.
+- [FINAL] 1) aud-binding 70, 2) MCP tool-authz 55, 3) legacy token grant 50. All AUTH_HELPED; unchanged from prior cycle except MCP tool-authz +5 on new apiKey/no-gate doc evidence and disclosed MCP RFC 9728 identity.
+
+STEP 5 — NEXT ACTION:
+[NEXT] HUMAN: Obtain (1) ONE `sup_sk_` API key from `https://me.sumup.com/settings/api-keys` (easiest, unlocks 30+ apiKey ops incl. refunds + transactions/history) and (2) ONE MCP-flow token (aud `https://mcp.sumup.com/mcp`, scopes `offline_access email`), then in one session: (a) replay the mcp-aud JWT on `GET https://api.sumup.com/v1/merchants/{own_code}` → structured 404 vs 401 (aud test); (b) same mcp-aud token → `tools/call refundTransaction` test amount → per-op scope test; (c) control: apiKey and REST OAuth token on same GET; (d) if aud-loose, BOLA-sweep apiKey:[]-only ops (`GET /v2.1/merchants/{other_code}/transactions/history`, `GET /v1/merchants/{code}/persons`) and the `PUT /v0.2/checkouts/{id}/apple-pay-session` SSRF body (`context`+`target`).
+
+STEP 6 — LEARNING:
+- [LEARN] ACCEPTED OTHER @ mcp.sumup.com/.well-known/oauth-protected-resource/mcp: RFC 9728 MCP resource metadata LIVE (200, 269B) declared `resource=https://mcp.sumup.com/mcp`, `scopes_supported=[offline_access,email]` — the canonical MCP aud; first-party aud value now known for both api and mcp surfaces.
+- [LEARN] ACCEPTED AUTH @ developer.sumup.com spec: apiKey scheme is `http: Bearer`, static `sup_sk_` tokens with no aud/scope claims, minted at me.sumup.com/settings/api-keys; any Bearer parser tolerating them cannot strictly require claim equality — strengthens aud-binding hypothesis architecture.
+- [LEARN] ACCEPTED AUTH @ api.sumup.com/authorize: legacy gateway validates redirect_uri before scope (invalid redirect + any scope → `invalid_request`) — legacy scope-oracle unreachable; closed.
+- [LEARN] ACCEPTED OTHER @ mcp docs: hosted MCP uses OAuth but local mode runs the same tool registry on a bare `sup_sk_` key — no per-tool authorization distinct from OAuth scope gate in either path.
+- [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com spec: `PUT /v0.2/checkouts/{id}/apple-pay-session` requestBody `{context: hostname, target: uri}` both arbitrary and required under `apiKey:[]`|`oauth2:[]` — confirmed dual-class BOLA/SSRF body for token-ready testing.
+
+STEP 7 — RISK:
+[RISK] sumup: 42 — One genuinely new passive surface opened (MCP RFC 9728 metadata + API-key design facts), two top hypotheses sharpened with first-party declared aud values and an apiKey no-claims bearer class; drift-check confirms all live oracles stable (no rotation, no new registrations). No reportable finding added (valid-bugs remains 0; contentful finding closed by rotation). Program flat until HUMAN provides either a `sup_sk_` API key or an MCP-flow token — the API key path is now the lowest-friction unblock (self-serve in me.sumup.com, no OAuth dance, unlocks 30+ ops).
