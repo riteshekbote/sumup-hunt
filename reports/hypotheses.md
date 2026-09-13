@@ -1641,3 +1641,18 @@
 - LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combo
 - LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks re
 - LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+
+## RANKED HYPOTHESES 2026-09-13 19:04:26 UTC
+- [70] api.sumup.com/token: Legacy token endpoint client_credentials grant with public client_id dashboard (from art/lead_nemotron3.txt)
+- [55] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session: CreateApplePaySession reflects attacker-chosen target URI fetch on SumUp infra (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: obtain ONE `sup_sk_` key (https://me.sumup.com/settings/api-keys; Bearer header) — then in one session: (1) POST `/token` grant_type=client_credentials&c
+- NEXT(hypotheses-nemotron3.txt): PROBE: POST https://api.sumup.com/token -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials&client_id=dashboard" — verify leg
+- LEARN: ACCEPTED OTHER @ developer.sumup.com/api: official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public — full 42-op production model incl. exact paths, p
+- LEARN: ACCEPTED OATH @ api.sumup.com/token: legacy token endpoint ROUTED (OPTIONS 204 + structured 404 on GET, wildcard CORS, identity.svc operation) — documented in o
+- LEARN: ACCEPTED OATH @ auth.sumup.com/oauth2/auth: scope-acceptance oracle disambiguated (302 login_challenge=allowed vs 303 invalid_scope); dashboard allows readers.r
+- LEARN: ACCEPTED OATH @ auth.sumup.com: support_centre allowlist is exactly {openid, classic, offline}; classic+any scope → invalid_scope; scope oracle for support_cent
+- LEARN: ACCEPTED BUSLOGIC @ api.sumup.com spec: GET /v0.1/merchants/{merchant_code}/payment-methods and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session declared oau
+- LEARN: REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token rotated (401) — finding non-reproducible; report file never existed despite KB hallucinations
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combo
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks re
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,

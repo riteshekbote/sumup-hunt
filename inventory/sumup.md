@@ -634,3 +634,12 @@ www.sumup.com
 - CHANGED auth.sumup.com/oauth2/auth?client_id=support_centre returns 405 on HEAD (GET returns 302→login_challenge)
 - CHANGED Contentful PREVIEW token rotated (401) — finding CLOSED, non-reproducible; report file never existed despite KB hallucinations
 - CHANGED api.sumup.com/authorize client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
+
+## 2026-09-13 19:04:26 UTC
+- NEW api.sumup.com/token legacy token endpoint confirmed ROUTED (OPTIONS 204, wildcard CORS, identity.svc header) per official OpenAPI spec
+- NEW Two spec-documented empty-scope operations: GET /v0.1/merchants/{merchant_code}/payment-methods (BOLA) and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session (SSRF)
+- NEW auth.sumup.com/oauth2/auth scope oracle fully mapped: dashboard={readers.read,terminals.read}, support_centre={openid,classic,offline}, all 13 REST spec scopes rejected
+- CHANGED Contentful PREVIEW token rotated (401) — P4 finding closed, non-reproducible; report file never existed despite KB claims
+- CHANGED api.sumup.com/authorize client_id oracle + wildcard CORS + SameSite=None cookies confirmed LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
+- CHANGED auth.sam-app.ro RFC 7591 dynamic registration LIVE → mintable JWTs (empty scp, attacker-controlled aud) but cross-env JWKS isolation (ZERO kid overlap) blocks prod relay
+- CHANGED api.sumup.com/.well-known/oauth-protected-resource RFC 9728 metadata static — sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; recon surface exhausted

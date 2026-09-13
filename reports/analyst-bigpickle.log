@@ -26760,3 +26760,765 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 - [RISK] sumup: 72 — No new reportable bug (payment-methods 200 is a static default; contentful closed). Genuine progress: the full 42-op scope×security matrix is now mapped first-party, one spec op is proven to bypass the gateway auth gate (BOLA precondition), and the legacy /token clientCredentials grant is spec-confirmed — but every material path (payment-methods BOLA, apple-pay SSRF, /token mint, RFC 9728 aud test) still requires one `sup_sk_` key or merchant token (AUTH_HELPED). Program flat until HUMAN provides the key; oracle drift all green.
+===== ANALYST bigpickle 2026-09-13 19:04:26 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null | head -40; echo "---"; ls *.md 2>/dev/null; echo "---"; git log --oneline -5 2>/dev/null
+total 3816
+drwxr-xr-x  2 runner runner    4096 Sep 13 18:58 .
+drwxr-xr-x 12 runner runner    4096 Sep 13 18:58 ..
+-rw-r--r--  1 runner runner 2158217 Sep 13 18:58 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   15190 Sep 13 18:58 analyst-laguna.log
+-rw-r--r--  1 runner runner   15120 Sep 13 18:58 analyst-ling3.log
+-rw-r--r--  1 runner runner   15260 Sep 13 18:58 analyst-longcat.log
+-rw-r--r--  1 runner runner 1364617 Sep 13 18:58 analyst-nemotron3.log
+-rw-r--r--  1 runner runner   22265 Sep 13 18:58 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 13 18:58 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 13 18:58 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 13 18:58 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   10389 Sep 13 18:58 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  254861 Sep 13 18:58 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 13 18:58 reposcan-findings.md
+-rw-r--r--  1 runner runner    3079 Sep 13 18:58 valid-bugs.md
+---
+README.md
+probe-results.md
+---
+668ccb9 reposcan 2026-09-13-18-19
+[0m
+[0m$ [0mcat scope.yml 2>/dev/null; echo "==="; cat inventory/sumup.md 2>/dev/null | head -30
+programs:
+  sumup:
+    name: SumUp Payments Limited / SumUp Group Bug Bounty
+    disclosure_policy: via bugs.olivermaicher.eu (Oliver Maicher private program) - report + PoC + contact + payment
+    assets:
+      - name: "All company-owned infrastructure, payment platforms, merchant portals, APIs, mobile and web applications, point-of-sale systems, cloud services, websites, and domains operated by SumUp Group and its subsidiaries"
+        priority: In
+    out_of_scope:
+- "Network level Denial of Service attacks"
+      - "Application Denial of Service by locking user accounts"
+      - "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)"
+      - "Disclosure of known public files or directories (e.g. robots.txt)"
+      - "Outdated software / library versions"
+      - "OPTIONS / TRACE HTTP method enabled"
+      - "CSRF on logout"
+      - "CSRF on forms that are available to anonymous users"
+      - "Cookies that lack HTTP Only or Secure settings for non-sensitive data"
+      - "Self-XSS and issues exploitable only through Self-XSS"
+      - "Reports resulting from automated scanning utilities without additional details or a POC demonstrating a specific exploit"
+      - "Attacks requiring physical access to a user's device"
+      - "Attacks dependent upon social engineering of employees or vendors"
+      - "Username enumeration based on login or forgot password pages"
+      - "Enforcement policies for brute force, rate limiting, or account lockout"
+      - "SSL/TLS best practices"
+      - "SSL attacks such as BEAST, BREACH, Renegotiation attack"
+      - "Clickjacking, without additional details demonstrating a specific exploit"
+      - "Mail configuration issues including SPF, DKIM, DMARC settings"
+      - "Use of a known-vulnerable library without a description of an exploit specific to our implementation"
+      - "Password and account recovery policies"
+      - "Presence of autocomplete functionality in form fields"
+      - "Publicly accessible login panels"
+      - "Lack of email address verification during account registration or account invitation"
+      - "Lack of email address verification password restore"
+      - "Session control during email/password changes"
+      - "Social engineering, physical attacks, and DoS/DDoS testing (per program notes)"
+      - "Exposure of customer/employee/financial/authentication data during testing (per program notes)"
+    github_orgs:
+      - none-configured
+
+rules:
+  passive_first: false          # deep-hunt agent: active probes allowed when scoped
+  max_requests_per_second: 1    # never hammer live infra
+  no_doom: true                 # no DoS/DDoS, no account-lockout attacks
+  account_creation: restricted  # only on test/sandbox assets, never live customer data
+  no_data_modification: true    # no writes/deletes on live customer data
+  no_pre_disclosure: true       # never disclose before program response
+  poc_required: true            # scanner output alone is REJECTED
+  redact_secrets_in_commits: true
+
+models:
+  - { id: opencode/big-pickle, name: bigpickle }
+  - { id: opencode/nemotron-3-ultra-free, name: nemotron3 }
+  - { id: opencode/longcat-2.0-free, name: longcat }
+  - { id: opencode/ling-3.0-flash-free, name: ling3 }
+  - { id: opencode/laguna-s-2.1-free, name: laguna }
+===
+# SumUp Payments Limited / SumUp Group inventory (discovery seed 2026-09-02)
+# NOTE: hosts below are discovery candidates from passive DNS/CT; confirm in-scope vs program scope before active testing.
+admin.sumup.com
+api.sumup.com
+auth.sumup.com
+dashboard.sumup.com
+portal.sumup.com
+sumup.com
+support.sumup.com
+web.sumup.com
+www.sumup.com
+
+## PASSIVE RECON 2026-09-02 (read-only, non-intrusive)
+
+> Recon observations only. These are NOT confirmed vulnerabilities; ownership/in-scope of each host must be confirmed against the program scope before any active testing. Hosts resolve + serve HTTP — investigation requires scoped authorization.
+
+**Probed:** 9 hosts | **Live HTTP:** 5
+
+| Host | Status | Server/Tech |
+|---|---|---|
+| `auth.sumup.com` | 301 | Server: cloudflare -> https://auth.sumup.com/flows/login |
+| `api.sumup.com` | 404 | Server: cloudflare |
+| `portal.sumup.com` | 302 | Server: nginx; Via: 1.1 varnish -> /login |
+| `www.sumup.com` | 200 | Server: cloudflare |
+| `admin.sumup.com` | 403 | Server: nginx/1.26.1 |
+
+**CNAME review signals (5):**
+- `auth.sumup.com` -> `auth.sumup.com.cdn.cloudflare.net`
+- `api.sumup.com` -> `api.sumup.com.cdn.cloudflare.net`
+- `portal.sumup.com` -> `sumup.iriscrm.com`
+[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m
+[0m$ [0mls reports/contentful* 2>/dev/null; echo "EXIT:$?"; echo "---"; ls hypotheses-bigpickle.txt hypotheses-nemotron3.txt 2>/dev/null | xargs -I{} wc -l {}
+EXIT:2
+---
+[0m
+[0m→ [0mRead reports/reposcan-findings.md
+[0m→ [0mRead probe-results.md
+Local artifacts read. `reports/contentful-preview-token-leak.md` confirmed absent (exit 2), `valid-bugs.md` shows 0 filed bugs. Let me ground the OpenAPI claims with the actual spec — the one passive surface left with fresh material.
+[0m
+[0m$ [0mcd /tmp/opencode && for f in "sumup-openapi/main/openapi.yaml" "sumup-openapi/master/openapi.yaml" "sumup-openapi/main/openapi.json" "sumup-openapi/main/swagger.yaml"; do echo "== $f =="; curl -s -o /dev/null -w "%{http_code} %{size_download}\n" --max-time 20 "https://raw.githubusercontent.com/sumup/$f"; done
+== sumup-openapi/main/openapi.yaml ==
+200 319585
+== sumup-openapi/master/openapi.yaml ==
+200 319585
+== sumup-openapi/main/openapi.json ==
+200 410059
+== sumup-openapi/main/swagger.yaml ==
+404 14
+[0m
+[0m$ [0mcd /tmp/opencode && curl -s --max-time 30 -o sumup-openapi.yaml "https://raw.githubusercontent.com/sumup/sumup-openapi/main/openapi.yaml" && wc -l sumup-openapi.yaml && ls -la
+8789 sumup-openapi.yaml
+total 324
+drwxr-xr-x  2 runner runner   4096 Sep 13 19:00 .
+drwxrwxrwt 15 root   root     4096 Sep 13 18:58 ..
+-rw-r--r--  1 runner runner 319585 Sep 13 19:00 sumup-openapi.yaml
+[0m
+[0m$ [0mcd /tmp/opencode && grep -n "apple-pay-session\|payment-methods\|x-scopes\|oauth2:\|securitySchemes\|grant_types\|token:" sumup-openapi.yaml | head -60
+103:  /v0.1/merchants/{merchant_code}/payment-methods:
+113:      x-scopes: []
+185:        - oauth2: []
+201:        - oauth2:
+206:      x-scopes:
+439:        - oauth2:
+444:      x-scopes:
+506:        - oauth2:
+511:      x-scopes:
+568:        - oauth2:
+573:      x-scopes:
+652:        - oauth2:
+657:      x-scopes:
+691:                  token: ba85dfee-c3cf-48a6-84f5-d7d761fbba50
+767:                          token:
+823:                      token: e76d7e5c-9375-4fac-a7e7-b19dc5302fbc
+983:        - oauth2:
+988:      x-scopes:
+1050:  /v0.2/checkouts/{checkout_id}/apple-pay-session:
+1073:      x-scopes: []
+1144:        - oauth2: []
+1155:        - oauth2:
+1160:      x-scopes:
+1268:        - oauth2:
+1273:      x-scopes:
+1334:        - oauth2:
+1339:      x-scopes:
+1417:        - oauth2:
+1422:      x-scopes:
+1500:        - oauth2:
+1505:      x-scopes:
+1587:        - oauth2:
+1592:      x-scopes:
+1709:        - oauth2:
+1714:      x-scopes:
+1810:        - oauth2:
+1815:      x-scopes:
+2055:        - oauth2:
+2061:      x-scopes:
+2193:        - oauth2:
+2198:      x-scopes:
+2357:      x-scopes: [payments, readers.write]
+2379:        - oauth2:
+2391:      x-scopes: ["user.profile", "user.profile_readonly"]
+2394:        - oauth2:
+2592:      x-scopes: [user.subaccounts, members.read]
+2595:        - oauth2:
+2634:        - oauth2:
+2643:      x-scopes: [user.subaccounts, members.write]
+2762:      x-scopes: [user.subaccounts, members.read]
+2765:        - oauth2:
+2813:      x-scopes: [user.subaccounts, members.write]
+2816:        - oauth2:
+2935:      x-scopes: [user.subaccounts, members.write]
+2938:        - oauth2:
+2994:      x-scopes: [user.subaccounts, roles.read]
+2997:        - oauth2:
+3042:        - oauth2:
+3051:      x-scopes: [user.subaccounts, roles.write]
+3134:      x-scopes: [user.subaccounts, roles.read]
+[0m
+[0m→ [0mRead /tmp/opencode/sumup-openapi.yaml[90m [offset=103, limit=220][0m
+[0m→ [0mRead /tmp/opencode/sumup-openapi.yaml[90m [limit=120, offset=1050][0m
+[0m
+[0m$ [0mcd /tmp/opencode && grep -n "x-scopes: \[\]" sumup-openapi.yaml
+113:      x-scopes: []
+1073:      x-scopes: []
+[0m
+[0m$ [0mcd /tmp/opencode && grep -n "^  /" sumup-openapi.yaml | awk -F: '{print $2}' | sed 's/^ *//;s/:$//' > paths.txt && wc -l paths.txt && grep -n "securitySchemes\|apiKey:\|oauth2:\|authorization_code\|client_credentials\|refresh_token\|grant_types\|tokenUrl\|authorizationUrl\|OpenAPI 3\|openapi:" sumup-openapi.yaml | head -40
+28 paths.txt
+1:openapi: 3.0.3
+184:        - apiKey: []
+185:        - oauth2: []
+200:        - apiKey: []
+201:        - oauth2:
+438:        - apiKey: []
+439:        - oauth2:
+505:        - apiKey: []
+506:        - oauth2:
+567:        - apiKey: []
+568:        - oauth2:
+651:        - apiKey: []
+652:        - oauth2:
+982:        - apiKey: []
+983:        - oauth2:
+1143:        - apiKey: []
+1144:        - oauth2: []
+1154:        - apiKey: []
+1155:        - oauth2:
+1267:        - apiKey: []
+1268:        - oauth2:
+1333:        - apiKey: []
+1334:        - oauth2:
+1416:        - apiKey: []
+1417:        - oauth2:
+1499:        - apiKey: []
+1500:        - oauth2:
+1586:        - apiKey: []
+1587:        - oauth2:
+1708:        - apiKey: []
+1709:        - oauth2:
+1809:        - apiKey: []
+1810:        - oauth2:
+2054:        - apiKey: []
+2055:        - oauth2:
+2192:        - apiKey: []
+2193:        - oauth2:
+2249:                  authorization_code: '053201'
+2378:        - apiKey: []
+2379:        - oauth2:
+[0m
+[0m$ [0mcd /tmp/opencode && grep -n "tokenUrl\|authorizationUrl\|in: header\|name: Authorization\|type: apiKey\|description: OAuth\|flows:\|clientCredentials\|authorizationCode\|refreshToken\|type: oauth2" sumup-openapi.yaml | head -30; echo "=== securitySchemes block ==="; grep -n "securitySchemes:" sumup-openapi.yaml
+3635:        - in: header
+8561:      type: oauth2
+8568:      flows:
+8569:        authorizationCode:
+8570:          authorizationUrl: https://api.sumup.com/authorize
+8571:          tokenUrl: https://api.sumup.com/token
+8590:        clientCredentials:
+8591:          tokenUrl: https://api.sumup.com/token
+=== securitySchemes block ===
+8554:  securitySchemes:
+[0m
+[0m→ [0mRead /tmp/opencode/sumup-openapi.yaml[90m [limit=50, offset=8554][0m
+[0m
+[0m$ [0mcd /tmp/opencode && grep -nE "^  /v0|^  /v1|^  /v2" sumup-openapi.yaml | sed 's/:.*//' | while read ln; do sed -n "${ln}p" sumup-openapi.yaml; done | tr -d ' /' | sort | nl | head -40
+1	v0.1checkouts:
+     2	v0.1checkouts{checkout_id}:
+     3	v0.1customers:
+     4	v0.1customers{customer_id}:
+     5	v0.1customers{customer_id}payment-instruments:
+     6	v0.1customers{customer_id}payment-instruments{token}:
+     7	v0.1memberships:
+     8	v0.1merchants{merchant_code}members:
+     9	v0.1merchants{merchant_code}members{member_id}:
+    10	v0.1merchants{merchant_code}payment-methods:
+    11	v0.1merchants{merchant_code}readers:
+    12	v0.1merchants{merchant_code}readers{reader_id}:
+    13	v0.1merchants{merchant_code}readers{reader_id}checkout:
+    14	v0.1merchants{merchant_code}readers{reader_id}checkout{checkout_id}:
+    15	v0.1merchants{merchant_code}readers{reader_id}status:
+    16	v0.1merchants{merchant_code}readers{reader_id}terminate:
+    17	v0.1merchants{merchant_code}roles:
+    18	v0.1merchants{merchant_code}roles{role_id}:
+    19	v0.2checkouts{checkout_id}apple-pay-session:
+    20	v0merchants{merchant_code}readers{reader_id}go-checkout:
+    21	v1.0merchants{merchant_code}payments{transaction_id}refunds:
+    22	v1.0merchants{merchant_code}payouts:
+    23	v1.1receipts{transaction_id}:
+    24	v1merchants{merchant_code}:
+    25	v1merchants{merchant_code}persons:
+    26	v1merchants{merchant_code}persons{person_id}:
+    27	v2.1merchants{merchant_code}transactions:
+    28	v2.1merchants{merchant_code}transactionshistory:
+[0m
+[0m$ [0mcd /tmp/opencode && grep -cE "^  /" sumup-openapi.yaml; echo "--- scope values (x-scopes) present ---"; grep -n "x-scopes:" sumup-openapi.yaml | wc -l
+28
+--- scope values (x-scopes) present ---
+42
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import re
+text = open('sumup-openapi.yaml').read()
+ops = re.findall(r'^  (/\S+):\n(?:.*\n)*?(?=^  /|\Z)', text, re.M)
+for m in re.finditer(r'^  (/\S+):\n((?:.*\n)*?)(?=^  /\S,:|\Z)', text, re.M):
+    pass
+# simpler: iterate over path blocks
+for pm in re.finditer(r'^  (/\S+):\n((?:^        .*|^      .*|^  [a-z].*)*?)(?=^  /\S|^components:)', text, re.M):
+    path = pm.group(1)
+    block = pm.group(2)
+    for om in re.finditer(r'^    (\w+):\n((?:.*\n)*?)(?=^    \w|\Z)', block, re.M):
+        method = om.group(1)
+        ob = om.group(2)
+        sc = re.search(r'x-scopes:\s*(\[[^\]]*\])', ob)
+        scopes = sc.group(1) if sc else '?'
+        print(f"{method.upper():6} {path:65} {scopes}")
+EOF
+(no output)
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import re
+text = open('sumup-openapi.yaml').read()
+lines = text.split('\n')
+in_op = None
+path = None
+method = None
+for i, ln in enumerate(lines):
+    pm = re.match(r'^  (/\S+):$', ln)
+    if pm:
+        path = pm.group(1); method=None; continue
+    mm = re.match(r'^    (get|post|put|patch|delete):$', ln)
+    if mm:
+        method = mm.group(1).upper()
+        xsc = '?'
+        # look ahead for x-scopes within this op
+        continue
+    if path and method:
+        sm = re.match(r'^      x-scopes: (\[.*\]|.*)$', ln)
+        if sm:
+            print(f"{method:6} {path}")
+            print(f"       scopes = {sm.group(1)}")
+            method = None
+EOF
+GET    /v0.1/merchants/{merchant_code}/payment-methods
+       scopes = []
+PUT    /v0.2/checkouts/{checkout_id}/apple-pay-session
+       scopes = []
+POST   /v0/merchants/{merchant_code}/readers/{reader_id}/go-checkout
+       scopes = [payments, readers.write]
+GET    /v0.1/memberships
+       scopes = ["user.profile", "user.profile_readonly"]
+GET    /v0.1/merchants/{merchant_code}/members
+       scopes = [user.subaccounts, members.read]
+POST   /v0.1/merchants/{merchant_code}/members
+       scopes = [user.subaccounts, members.write]
+GET    /v0.1/merchants/{merchant_code}/members/{member_id}
+       scopes = [user.subaccounts, members.read]
+PUT    /v0.1/merchants/{merchant_code}/members/{member_id}
+       scopes = [user.subaccounts, members.write]
+DELETE /v0.1/merchants/{merchant_code}/members/{member_id}
+       scopes = [user.subaccounts, members.write]
+GET    /v0.1/merchants/{merchant_code}/roles
+       scopes = [user.subaccounts, roles.read]
+POST   /v0.1/merchants/{merchant_code}/roles
+       scopes = [user.subaccounts, roles.write]
+GET    /v0.1/merchants/{merchant_code}/roles/{role_id}
+       scopes = [user.subaccounts, roles.read]
+DELETE /v0.1/merchants/{merchant_code}/roles/{role_id}
+       scopes = [user.subaccounts, roles.write]
+PATCH  /v0.1/merchants/{merchant_code}/roles/{role_id}
+       scopes = [user.subaccounts, roles.write]
+GET    /v1/merchants/{merchant_code}
+       scopes = ["user.profile", "user.profile_readonly"]
+GET    /v1/merchants/{merchant_code}/persons
+       scopes = ["user.profile", "user.profile_readonly"]
+GET    /v1/merchants/{merchant_code}/persons/{person_id}
+       scopes = ["user.profile", "user.profile_readonly"]
+GET    /v0.1/merchants/{merchant_code}/readers
+       scopes = [readers.read, terminals.read]
+POST   /v0.1/merchants/{merchant_code}/readers
+       scopes = [readers.write, terminals.write]
+GET    /v0.1/merchants/{merchant_code}/readers/{reader_id}
+       scopes = [readers.read, terminals.read]
+DELETE /v0.1/merchants/{merchant_code}/readers/{reader_id}
+       scopes = [readers.write, terminals.write]
+PATCH  /v0.1/merchants/{merchant_code}/readers/{reader_id}
+       scopes = [readers.write, terminals.write]
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import re
+text = open('sumup-openapi.yaml').read()
+path = None; pending = None
+out = {}
+for ln in text.split('\n'):
+    pm = re.match(r'^  (/\S+):$', ln)
+    if pm:
+        path = pm.group(1); pending = None; continue
+    mm = re.match(r'^    (\w+):$', ln)
+    if mm and path:
+        pending = mm.group(1).upper(); continue
+    if path and pending and 'x-scopes' in ln:
+        out[(path,pending)] = ln.strip()
+        path=None
+for (p,m),s in out.items():
+    print(f"{m:6} {p}\n       {s}")
+EOF
+GET    /v0.1/merchants/{merchant_code}/payment-methods
+       x-scopes: []
+POST   /v0.1/checkouts
+       x-scopes:
+GET    /v0.1/checkouts/{checkout_id}
+       x-scopes:
+PUT    /v0.2/checkouts/{checkout_id}/apple-pay-session
+       x-scopes: []
+POST   /v0.1/customers
+       x-scopes:
+GET    /v0.1/customers/{customer_id}
+       x-scopes:
+GET    /v0.1/customers/{customer_id}/payment-instruments
+       x-scopes:
+DELETE /v0.1/customers/{customer_id}/payment-instruments/{token}
+       x-scopes:
+POST   /v1.0/merchants/{merchant_code}/payments/{transaction_id}/refunds
+       x-scopes:
+GET    /v2.1/merchants/{merchant_code}/transactions
+       x-scopes:
+GET    /v2.1/merchants/{merchant_code}/transactions/history
+       x-scopes:
+GET    /v1.0/merchants/{merchant_code}/payouts
+       x-scopes:
+GET    /v1.1/receipts/{transaction_id}
+       x-scopes:
+POST   /v0/merchants/{merchant_code}/readers/{reader_id}/go-checkout
+       x-scopes: [payments, readers.write]
+GET    /v0.1/memberships
+       x-scopes: ["user.profile", "user.profile_readonly"]
+GET    /v0.1/merchants/{merchant_code}/members
+       x-scopes: [user.subaccounts, members.read]
+GET    /v0.1/merchants/{merchant_code}/members/{member_id}
+       x-scopes: [user.subaccounts, members.read]
+GET    /v0.1/merchants/{merchant_code}/roles
+       x-scopes: [user.subaccounts, roles.read]
+GET    /v0.1/merchants/{merchant_code}/roles/{role_id}
+       x-scopes: [user.subaccounts, roles.read]
+GET    /v1/merchants/{merchant_code}
+       x-scopes: ["user.profile", "user.profile_readonly"]
+GET    /v1/merchants/{merchant_code}/persons
+       x-scopes: ["user.profile", "user.profile_readonly"]
+GET    /v1/merchants/{merchant_code}/persons/{person_id}
+       x-scopes: ["user.profile", "user.profile_readonly"]
+GET    /v0.1/merchants/{merchant_code}/readers
+       x-scopes: [readers.read, terminals.read]
+GET    /v0.1/merchants/{merchant_code}/readers/{reader_id}
+       x-scopes: [readers.read, terminals.read]
+POST   /v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout
+       x-scopes:
+GET    /v0.1/merchants/{merchant_code}/readers/{reader_id}/status
+       x-scopes:
+POST   /v0.1/merchants/{merchant_code}/readers/{reader_id}/terminate
+       x-scopes:
+GET    /v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout/{checkout_id}
+       x-scopes:
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import re, json
+text = open('sumup-openapi.yaml').read()
+path=None; pending=None
+for ln in text.split('\n'):
+    pm = re.match(r'^  (/\S+):$', ln)
+    if pm: path=pm.group(1); pending=None; continue
+    mm = re.match(r'^    (\w+):$', ln)
+    if mm and path: pending=mm.group(1).upper(); continue
+    sm = re.match(r'^      x-scopes: (.*)$', ln)
+    if path and pending and sm:
+        val = sm.group(1)
+        print(f"{pending:6} {path:72} {val}")
+        path=None
+EOF
+GET    /v0.1/merchants/{merchant_code}/payment-methods                          []
+PUT    /v0.2/checkouts/{checkout_id}/apple-pay-session                          []
+POST   /v0/merchants/{merchant_code}/readers/{reader_id}/go-checkout            [payments, readers.write]
+GET    /v0.1/memberships                                                        ["user.profile", "user.profile_readonly"]
+GET    /v0.1/merchants/{merchant_code}/members                                  [user.subaccounts, members.read]
+GET    /v0.1/merchants/{merchant_code}/members/{member_id}                      [user.subaccounts, members.read]
+GET    /v0.1/merchants/{merchant_code}/roles                                    [user.subaccounts, roles.read]
+GET    /v0.1/merchants/{merchant_code}/roles/{role_id}                          [user.subaccounts, roles.read]
+GET    /v1/merchants/{merchant_code}                                            ["user.profile", "user.profile_readonly"]
+GET    /v1/merchants/{merchant_code}/persons                                    ["user.profile", "user.profile_readonly"]
+GET    /v1/merchants/{merchant_code}/persons/{person_id}                        ["user.profile", "user.profile_readonly"]
+GET    /v0.1/merchants/{merchant_code}/readers                                  [readers.read, terminals.read]
+GET    /v0.1/merchants/{merchant_code}/readers/{reader_id}                      [readers.read, terminals.read]
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import re
+text = open('sumup-openapi.yaml').read()
+# find ops with "x-scopes:" followed by list items on following lines
+for m in re.finditer(r'^  (/\S+):\n(    \w+:\n(?:(?!^  /)[^\n]*\n)*)', text, re.M):
+    block = m.group(0)
+    if 'x-scopes' in block and block.strip().split('x-scopes')[-1].strip().startswith('-'):
+        sc = re.search(r'x-scopes:\n((?:[ \t]*-[^\n]*\n[ \t]*)+)', block)
+        if sc:
+            scopes = ','.join(re.findall(r'-\s*(\S+)', sc.group(1)))
+            opm = re.search(r'^    (\w+):', block, re.M)
+            print(f"{opm.group(1).upper():6} {m.group(1):72} {scopes}")
+EOF
+(no output)
+[0m
+[0m$ [0mcd /tmp/opencode && grep -n -A6 "x-scopes:" sumup-openapi.yaml | grep -B1 -A6 "\- " | head -80
+113:      x-scopes: []
+114-      parameters:
+115-        - in: path
+116-          name: merchant_code
+117-          required: true
+118-          description: Short unique identifier for the merchant.
+119-          schema:
+--
+206:      x-scopes:
+207-        - payments
+208-        - checkouts.write
+209-      requestBody:
+210-        required: true
+211-        description: Details for creating a checkout resource.
+212-        content:
+--
+444:      x-scopes:
+445-        - payments
+446-        - checkouts.read
+447-      parameters:
+448-        - name: checkout_reference
+449-          in: query
+450-          description: Filters the list of checkout resources by the unique reference of the checkout.
+--
+511:      x-scopes:
+512-        - payments
+513-        - checkouts.read
+514-      responses:
+515-        '200':
+516-          description: Returns the requested checkout resource.
+517-          content:
+--
+573:      x-scopes:
+574-        - payments
+575-        - checkouts.write
+576-      requestBody:
+577-        required: true
+578-        description: Details for updating a checkout resource.
+579-        content:
+--
+657:      x-scopes:
+658-        - payments
+659-        - checkouts.write
+660-      requestBody:
+661-        required: true
+662-        description: Details of the payment instrument for processing the checkout.
+663-        content:
+--
+988:      x-scopes:
+989-        - payments
+990-        - checkouts.write
+991-      responses:
+992-        '200':
+993-          description: Returns the checkout object after successful deactivation.
+994-          content:
+--
+1073:      x-scopes: []
+1074-      requestBody:
+1075-        description: The data needed to create an apple pay session for a checkout.
+1076-        content:
+1077-          application/json:
+1078-            schema:
+1079-              type: object
+--
+1160:      x-scopes:
+1161-        - payment_instruments
+1162-        - customers.write
+1163-      requestBody:
+1164-        required: true
+1165-        description: Details of the customer.
+1166-        content:
+--
+1273:      x-scopes:
+1274-        - payment_instruments
+1275-        - customers.read
+1276-      responses:
+1277-        '200':
+1278-          description: Returns the customer resource.
+1279-          content:
+--
+[0m
+[0m$ [0mcd /tmp/opencode && for kw in "refunds" "transactions" "payouts" "receipts" "status" "terminate"; do echo "### $kw"; grep -n -B18 "x-scopes:" sumup-openapi.yaml | grep -iE "x-scopes|$kw" | grep -iE "x-scopes|path|/|:" | head -6; done 2>/dev/null; echo "=== direct full extraction ==="; grep -n "x-scopes:" sumup-openapi.yaml | while read -r l; do ln=${l%%:*}; sed -n "${ln},$((ln+3))p" sumup-openapi.yaml | tr '\n' ' '; echo "  <op @ line $ln>"; done | grep -E "op @|transactions|refunds|payouts|receipts|status|terminate|checkout" | head -40
+### refunds
+113:      x-scopes: []
+206:      x-scopes:
+444:      x-scopes:
+511:      x-scopes:
+573:      x-scopes:
+657:      x-scopes:
+### transactions
+113:      x-scopes: []
+206:      x-scopes:
+444:      x-scopes:
+511:      x-scopes:
+573:      x-scopes:
+657:      x-scopes:
+### payouts
+113:      x-scopes: []
+206:      x-scopes:
+444:      x-scopes:
+511:      x-scopes:
+573:      x-scopes:
+657:      x-scopes:
+### receipts
+113:      x-scopes: []
+206:      x-scopes:
+444:      x-scopes:
+511:      x-scopes:
+573:      x-scopes:
+657:      x-scopes:
+### status
+113:      x-scopes: []
+206:      x-scopes:
+444:      x-scopes:
+511:      x-scopes:
+573:      x-scopes:
+657:      x-scopes:
+### terminate
+113:      x-scopes: []
+206:      x-scopes:
+444:      x-scopes:
+511:      x-scopes:
+573:      x-scopes:
+657:      x-scopes:
+=== direct full extraction ===
+      x-scopes: []       parameters:         - in: path           name: merchant_code   <op @ line 113>
+      x-scopes:         - payments         - checkouts.write       requestBody:   <op @ line 206>
+      x-scopes:         - payments         - checkouts.read       parameters:   <op @ line 444>
+      x-scopes:         - payments         - checkouts.read       responses:   <op @ line 511>
+      x-scopes:         - payments         - checkouts.write       requestBody:   <op @ line 573>
+      x-scopes:         - payments         - checkouts.write       requestBody:   <op @ line 657>
+      x-scopes:         - payments         - checkouts.write       responses:   <op @ line 988>
+      x-scopes: []       requestBody:         description: The data needed to create an apple pay session for a checkout.         content:   <op @ line 1073>
+      x-scopes:         - payment_instruments         - customers.write       requestBody:   <op @ line 1160>
+      x-scopes:         - payment_instruments         - customers.read       responses:   <op @ line 1273>
+      x-scopes:         - payment_instruments         - customers.write       requestBody:   <op @ line 1339>
+      x-scopes:         - payment_instruments         - customers.read       responses:   <op @ line 1422>
+      x-scopes:         - payment_instruments         - customers.write       responses:   <op @ line 1505>
+      x-scopes:         - payments         - refunds.write       requestBody:   <op @ line 1592>
+      x-scopes:         - transactions.history         - transactions.read       parameters:   <op @ line 1714>
+      x-scopes:         - transactions.history         - transactions.read       parameters:   <op @ line 1815>
+      x-scopes:         - user.profile         - user.profile_readonly         - payouts.read   <op @ line 2061>
+      x-scopes:         - receipts.read         - transactions.history       parameters:   <op @ line 2198>
+      x-scopes: [payments, readers.write]       x-permissions:         - readers_checkout_create       x-codegen:   <op @ line 2357>
+      x-scopes: ["user.profile", "user.profile_readonly"]       security:         - apiKey: []         - oauth2:   <op @ line 2391>
+      x-scopes: [user.subaccounts, members.read]       security:         - apiKey: []         - oauth2:   <op @ line 2592>
+      x-scopes: [user.subaccounts, members.write]       requestBody:         required: true         content:   <op @ line 2643>
+      x-scopes: [user.subaccounts, members.read]       security:         - apiKey: []         - oauth2:   <op @ line 2762>
+      x-scopes: [user.subaccounts, members.write]       security:         - apiKey: []         - oauth2:   <op @ line 2813>
+      x-scopes: [user.subaccounts, members.write]       security:         - apiKey: []         - oauth2:   <op @ line 2935>
+      x-scopes: [user.subaccounts, roles.read]       security:         - apiKey: []         - oauth2:   <op @ line 2994>
+      x-scopes: [user.subaccounts, roles.write]       requestBody:         required: true         content:   <op @ line 3051>
+      x-scopes: [user.subaccounts, roles.read]       security:         - apiKey: []         - oauth2:   <op @ line 3134>
+      x-scopes: [user.subaccounts, roles.write]       responses:         "200":           description: Returns an empty response if the role deletion succeeded.   <op @ line 3190>
+      x-scopes: [user.subaccounts, roles.write]       requestBody:         required: true         content:   <op @ line 3248>
+      x-scopes: ["user.profile", "user.profile_readonly"]       x-permissions: [merchant_read]       security:         - apiKey: []   <op @ line 3339>
+      x-scopes: ["user.profile", "user.profile_readonly"]       x-permissions: [persons_read]       x-codegen:         method_name: list_persons   <op @ line 3378>
+      x-scopes: ["user.profile", "user.profile_readonly"]       x-permissions: [persons_read]       x-codegen:         method_name: get_person   <op @ line 3419>
+      x-scopes: [readers.read, terminals.read]       security:         - apiKey: []         - oauth2:   <op @ line 3469>
+      x-scopes: [readers.write, terminals.write]       security:         - apiKey: []         - oauth2:   <op @ line 3520>
+      x-scopes: [readers.read, terminals.read]       security:         - apiKey: []         - oauth2:   <op @ line 3628>
+      x-scopes: [readers.write, terminals.write]       security:         - apiKey: []         - oauth2:   <op @ line 3697>
+      x-scopes: [readers.write, terminals.write]       security:         - apiKey: []         - oauth2:   <op @ line 3743>
+      x-scopes:         - readers.write   /v0.1/merchants/{merchant_code}/readers/{reader_id}/status:     get:   <op @ line 3930>
+      x-scopes:         - readers.read   /v0.1/merchants/{merchant_code}/readers/{reader_id}/terminate:     post:   <op @ line 4031>
+[0m
+[0m$ [0mcd /tmp/opencode && for h in pay.sumup.com pay.sam-app.ro; do echo "== $h =="; curl -s -o /dev/null -w "%{http_code} | redirect:%{redirect_url} | ip:%{remote_ip} | server:%header{server} | ct:%header{content-type}\n" --max-time 15 "https://$h/" 2>&1; done
+== pay.sumup.com ==
+403 | redirect: | ip:66.33.60.66 | server:Vercel | ct:text/plain; charset=utf-8
+== pay.sam-app.ro ==
+403 | redirect: | ip:76.76.21.142 | server:Vercel | ct:text/plain; charset=utf-8
+[0m
+[0m$ [0mcd /tmp/opencode && grep -n "x-permissions\|x-beta\|x-internal\|x-reviewed:" sumup-openapi.yaml | head; echo "=== merchant binding hints ==="; grep -n "merchant_code\|merchantCode" sumup-openapi.yaml | grep -i "owner\|self\|claim\|token\|bound" | head
+84:    x-beta: true
+90:    x-beta: true
+96:    x-beta: true
+248:                x-beta: true
+2358:      x-permissions:
+2588:      x-permissions:
+2639:      x-permissions:
+2758:      x-permissions:
+2809:      x-permissions:
+2931:      x-permissions:
+=== merchant binding hints ===
+[0m
+Spec harvested (28 paths / 42 ops, full x-scopes map). New host candidate `pay.sumup.com` leaked in the apple-pay example response. Probe it passively.
+Analysis complete. Grounding verified: spec pulled to `/tmp/opencode/sumup-openapi.yaml` (8789 lines), `pay.sumup.com` probed live, report-file absence reconfirmed.
+
+## STEP 1 — DELTA
+- [NEW] `pay.sumup.com` — Apple Pay merchant-verification domain (leaked in spec as `domainName: pay.sumup.com`), live at 66.33.60.66, Vercel-served, uniform 403 text/plain (edge-gated like me/checkout.sumup.com); staging twin `pay.sam-app.ro` (76.76.21.142) matches.
+- [NEW] Spec re-harvested on disk: `apiKey` scheme is `http/Bearer` applied to **all 42 ops** (one `sup_sk_` key = full merchant, bypasses OAuth scope model); oauth2 `authorizationCode`+`clientCredentials` BOTH declare `tokenUrl`/`refreshUrl` = `https://api.sumup.com/token`; only 2 ops are `x-scopes: []` (payment-methods, apple-pay-session); 28 unique paths incl. `/v0.1/memberships`, reader `status`/`terminate`/`go-checkout`, `/v1.1/receipts/{transaction_id}`.
+- [CHANGED] payment-methods spec shows BOTH `apiKey:[]` AND `oauth2:[]` — no-scope op reachable via either auth; last remaining gate is per-merchant binding of `{merchant_code}`.
+- [CHANGED] apple-pay-session requestBody exact shape: `{context: hostname, target: uri}` (example target = `https://apple-pay-gateway-cert.apple.com/paymentservices/startSession`); 200 returns the fetched session object — reflected-response SSRF primitive if backend doesn't pin target host.
+
+## STEP 2 — PRIORITIZE
+- [PRIO] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session,7.6,SSRF/scope-less money-adjacent
+- [PRIO] api.sumup.com/token,7.1,AUTH/public-client client_credentials mint
+- [PRIO] api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods,6.3,BOLA/no-scope
+- [PRIO] pay.sumup.com,4.3,new gated Vercel asset
+
+## STEP 3 — HYPOTHESES
+[HYP] CreateApplePaySession reflects attacker-chosen target URI fetch on SumUp infra
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 55
+reasoning: Spec (github.com/sumup/sumup-openapi): PUT, x-scopes [] + oauth2 [], body required {context:hostname, target:uri}, example target=Apple startSession; 200 returns raw merchant-session object — server fetches `target` and returns body to caller. Host pinning of `target` (Apple-domain allowlist) is the sole unknown; `x-permissions` absent on this op, so no role-level gate either.
+evidence_needed: 200/4xx distinction or timing delta with target=http://169.254.169.254/latest/meta-data/ vs https://apple-pay-gateway-cert.apple.com; response body echoing non-Apple content proves reflected fetch.
+verify_steps: AUTH_HELPED — with own `sup_sk_` or merchant token: PUT own checkout_id `{"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` → compare body/timing vs `"target":"https://apple-pay-gateway-cert.apple.com/paymentservices/startSession"`; then foreign checkout_id (BOLA compound).
+impact: SSRF from payments stack → cloud metadata/IAM creds or internal services — CRITICAL if confirmed
+testability: AUTH_HELPED
+
+[HYP] Legacy /token marshals client_credentials for a public client, minting scoped bearer
+class: AUTH
+asset: api.sumup.com/token
+confidence: 52
+reasoning: Spec declares clientCredentials+authorizationCode at tokenUrl api.sumup.com/token (15-16 scopes incl. refunds.write, transactions.history); route LIVE (OPTIONS 204, wildcard CORS, identity.svc operation); staging twin auth.sam-app.ro proved this gateway family accepts client_secret_post despite declared basic and mints real JWTs; `token_endpoint_auth_methods_supported` incl "none". Whether prod /token honors a public client (`client_id=dashboard`) with no secret is untested.
+evidence_needed: POST grant_type=client_credentials&client_id=dashboard returning 200 + access_token (vs 400/401 error taxonomy).
+verify_steps: AUTH_HELPED — one POST (auth-flow test, no data touched): `POST https://api.sumup.com/token -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials&client_id=dashboard&scope=payments"`; then replay any minted token on GET /v1/merchants/{own_code} (structured 404 = valid sig).
+impact: Money-scoped token for an unattested client — CRITICAL if mint succeeds; MEDIUM if only error taxonomy
+testability: AUTH_HELPED
+
+[HYP] payment-methods returns real per-merchant APM config for any merchant_code under any valid bearer
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 60
+reasoning: Spec: GET, x-scopes [] + apiKey [] + oauth2 []; prior live probe returned 200+static body for bogus codes AND fake bearers while sibling spec ops 404 — route wired outside the standard token gate, so per-merchant lookup is the only remaining check; response schema = available_payment_methods[] (apple_pay/blik/qr_code_pix).
+evidence_needed: valid bearer of merchant A + foreign merchant_code returning a body differing from the unauth static default (real APM/acquirer set).
+verify_steps: AUTH_HELPED — (1) unauth baseline GET (static default); (2) `Authorization: Bearer sup_sk_...` same code; (3) foreign merchant_code sweep (format e.g. MH4H92C7); leak = foreign response ≠ static default.
+impact: Cross-tenant read of merchant payment-method/APM enablement — MEDIUM/HIGH
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+- [PARKED] pay.sumup.com: uniform 403 edge gate, same class as me/checkout — no anonymous surface; add to inventory only.
+- [PARKED] sam-app.ro → prod token sync: cross-env JWKS isolation (ZERO kid overlap) already closes relay; skip.
+- [FINAL] apple-pay-session SSRF via reflected `target` fetch — conf 55, AUTH_HELPED, highest impact if confirmed.
+- [FINAL] RFC 9728 request-level aud/claim validation on api.sumup.com — conf 75, AUTH_HELPED (from prior).
+- [FINAL] payment-methods empty-scope BOLA — conf 60, AUTH_HELPED.
+- [FINAL] Legacy /token client_credentials public-client mint — conf 52, AUTH_HELPED; cheapest probe (1 POST, no secret).
+
+## STEP 5 — NEXT ACTION
+[NEXT] HUMAN: obtain ONE `sup_sk_` key (https://me.sumup.com/settings/api-keys; Bearer header) — then in one session: (1) POST `/token` grant_type=client_credentials&client_id=dashboard (public-client mint, cheapest); (2) PUT own checkout `{"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` on /v0.2/checkouts/{own}/apple-pay-session vs Apple-gateway control (SSRF, top value); (3) GET /v0.1/merchants/{foreign}/payment-methods vs own (BOLA); (4) baseline GET /v1/merchants/{own}. Key unlocks all 42 ops per spec (apiKey:[] everywhere).
+
+## STEP 6 — LEARNING
+- [LEARN] ACCEPTED OTHER @ pay.sumup.com: Apple Pay merchant-domain asset live (66.33.60.66 Vercel, uniform 403); staging twin pay.sam-app.ro — inventory addition, no surface.
+- [LEARN] ACCEPTED OATH @ developer.sumup.com/api: spec confirms apiKey = Bearer on all 42 ops; only payment-methods + apple-pay-session are x-scopes []; clientCredentials+authorizationCode both at api.sumup.com/token with refreshUrl.
+- [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com spec: apple-pay-session body shape ({context, target}) + raw-session reflection confirms SSRF primitive geometry; host pinning is the only unknown.
+- [LEARN] REJECTED MISCONFIG @ pay.sumup.com: 403-text/plain uniformity = Vercel edge gate (me/checkout class), not a finding.
+- [LEARN] REJECTED OTHER @ reports/: contentful-preview-token-leak.md still absent (ls exit 2); token rotated — do not re-assert file claims.
+
+## STEP 7 — RISK
+[RISK] sumup: 82 — 0 filed bugs (Contentful P4 closed, token rotated). Highest risk: apple-pay-session reflected-target SSRF (conf 55 → CRITICAL if target unpinned) and RFC 9728 aud-confusion block (conf 75), both one key away; /token public-client mint (conf 52) is a 1-POST test that has not been fired. Spec has now resolved every parameter uncertainty for the top 3 survivors — the program is gated 100% on the HUMAN-supplied merchant token/`sup_sk_` key, not on analyst effort.

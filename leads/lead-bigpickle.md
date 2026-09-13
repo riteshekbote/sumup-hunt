@@ -4026,3 +4026,33 @@ evidence_needed: controlled app credentials succeeding under a weaker-than-decla
 verify_steps: AUTH_HELPED — POST `grant_type=client_credentials&client_id={own_app}&scope=refunds.write` with secret as basic header vs body vs omitted; replay any minted token on `GET /v1/merchants/{own}` (structured 404 = valid).
 impact: Money-scoped token minting for a controlled client deviating from declared auth — CRITICAL if deviant, MEDIUM otherwise.
 testability: AUTH_HELPED
+## 2026-09-13 19:03:31 UTC [target] (model bigpickle)
+[HYP] CreateApplePaySession reflects attacker-chosen target URI fetch on SumUp infra
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 55
+reasoning: Spec (github.com/sumup/sumup-openapi): PUT, x-scopes [] + oauth2 [], body required {context:hostname, target:uri}, example target=Apple startSession; 200 returns raw merchant-session object — server fetches `target` and returns body to caller. Host pinning of `target` (Apple-domain allowlist) is the sole unknown; `x-permissions` absent on this op, so no role-level gate either.
+evidence_needed: 200/4xx distinction or timing delta with target=http://169.254.169.254/latest/meta-data/ vs https://apple-pay-gateway-cert.apple.com; response body echoing non-Apple content proves reflected fetch.
+verify_steps: AUTH_HELPED — with own `sup_sk_` or merchant token: PUT own checkout_id `{"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` → compare body/timing vs `"target":"https://apple-pay-gateway-cert.apple.com/paymentservices/startSession"`; then foreign checkout_id (BOLA compound).
+impact: SSRF from payments stack → cloud metadata/IAM creds or internal services — CRITICAL if confirmed
+testability: AUTH_HELPED
+[HYP] Legacy /token marshals client_credentials for a public client, minting scoped bearer
+class: AUTH
+asset: api.sumup.com/token
+confidence: 52
+reasoning: Spec declares clientCredentials+authorizationCode at tokenUrl api.sumup.com/token (15-16 scopes incl. refunds.write, transactions.history); route LIVE (OPTIONS 204, wildcard CORS, identity.svc operation); staging twin auth.sam-app.ro proved this gateway family accepts client_secret_post despite declared basic and mints real JWTs; `token_endpoint_auth_methods_supported` incl "none". Whether prod /token honors a public client (`client_id=dashboard`) with no secret is untested.
+evidence_needed: POST grant_type=client_credentials&client_id=dashboard returning 200 + access_token (vs 400/401 error taxonomy).
+verify_steps: AUTH_HELPED — one POST (auth-flow test, no data touched): `POST https://api.sumup.com/token -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials&client_id=dashboard&scope=payments"`; then replay any minted token on GET /v1/merchants/{own_code} (structured 404 = valid sig).
+impact: Money-scoped token for an unattested client — CRITICAL if mint succeeds; MEDIUM if only error taxonomy
+testability: AUTH_HELPED
+[HYP] payment-methods returns real per-merchant APM config for any merchant_code under any valid bearer
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 60
+reasoning: Spec: GET, x-scopes [] + apiKey [] + oauth2 []; prior live probe returned 200+static body for bogus codes AND fake bearers while sibling spec ops 404 — route wired outside the standard token gate, so per-merchant lookup is the only remaining check; response schema = available_payment_methods[] (apple_pay/blik/qr_code_pix).
+evidence_needed: valid bearer of merchant A + foreign merchant_code returning a body differing from the unauth static default (real APM/acquirer set).
+verify_steps: AUTH_HELPED — (1) unauth baseline GET (static default); (2) `Authorization: Bearer sup_sk_...` same code; (3) foreign merchant_code sweep (format e.g. MH4H92C7); leak = foreign response ≠ static default.
+impact: Cross-tenant read of merchant payment-method/APM enablement — MEDIUM/HIGH
+testability: AUTH_HELPED
+[NEXT] HUMAN: obtain ONE `sup_sk_` key (https://me.sumup.com/settings/api-keys; Bearer header) — then in one session: (1) POST `/token` grant_type=client_credentials&client_id=dashboard (public-client mint, cheapest); (2) PUT own checkout `{"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` on /v0.2/checkouts/{own}/apple-pay-session vs Apple-gateway control (SSRF, top value); (3) GET /v0.1/merchants/{foreign}/payment-methods vs own (BOLA); (4) baseline GET /v1/merchants/{own}. Key unlocks all 42 ops per spec (apiKey:[] everywhere).
+[RISK] sumup: 82 — 0 filed bugs (Contentful P4 closed, token rotated). Highest risk: apple-pay-session reflected-target SSRF (conf 55 → CRITICAL if target unpinned) and RFC 9728 aud-confusion block (conf 75), both one key away; /token public-client mint (conf 52) is a 1-POST test that has not been fired. Spec has now resolved every parameter uncertainty for the top 3 survivors — the program is gated 100% on the HUMAN-supplied merchant token/`sup_sk_` key, not on analyst effort.
