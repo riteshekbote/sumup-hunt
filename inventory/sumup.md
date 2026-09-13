@@ -601,3 +601,14 @@ www.sumup.com
 - CHANGED auth.sumup.com/oauth2/auth?client_id=support_centre returns 405 on HEAD (GET returns 302→login_challenge)
 - CHANGED Contentful PREVIEW token rotated (401) — finding CLOSED, non-reproducible; report file never existed despite KB hallucinations
 - CHANGED api.sumup.com/authorize client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
+
+## 2026-09-13 06:24:11 UTC
+- NEW Official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public — 42 operations, exact paths, per-op scopes, apiKey scheme, legacy OAuth authorize+token on api.sumup.com
+- NEW api.sumup.com/token legacy token endpoint ROUTED (OPTIONS 204 + structured 404 on GET, wildcard CORS, identity.svc operation)
+- NEW auth.sumup.com/oauth2/auth scope-acceptance oracle: 302 login_challenge=allowed vs 303 invalid_scope; dashboard allows readers.read/terminals.read only
+- NEW auth.sumup.com support_centre scope allowlist exactly {openid, classic, offline}; classic+any scope → invalid_scope
+- NEW api.sumup.com spec: GET /v0.1/merchants/{merchant_code}/payment-methods and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session declared oauth2:[] (empty-scope)
+- CHANGED auth.sumup.com/.well-known/openid-configuration returns 405 on HEAD (GET works)
+- CHANGED auth.sumup.com/oauth2/auth?client_id=support_centre returns 405 on HEAD (GET returns 302→login_challenge)
+- CHANGED Contentful PREVIEW token rotated (401) — finding CLOSED, non-reproducible
+- CHANGED api.sumup.com/authorize client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
