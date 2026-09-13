@@ -1,21 +1,22 @@
-## 2026-09-13 21:26:17 UTC [target] (model nemotron3)
-[NEW] api.sumup.com/token: Probe shows GET 404 structured problem+json; KB claims OPTIONS 204 with wildcard CORS + identity.svc header — divergence needs verification (probe harness may not have sent OPTIONS)
-[NEW] api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods: Probe confirms 404 unauthenticated; KB documents oauth2:[] (empty-scope) in official OpenAPI spec — BOLA target gated at gateway
-[NEW] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session: Probe confirms 404 unauthenticated; KB documents oauth2:[] (empty-scope) in official OpenAPI spec — SSRF target gated at gateway
+## 2026-09-13 23:32:32 UTC [target] (model nemotron3)
+[NEW] developer.sumup.com/api: Official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public — 42 operations, exact paths, per-op scopes, apiKey scheme, legacy OAuth authorize+token on api.sumup.com
+[NEW] api.sumup.com/token: Legacy token endpoint ROUTED (OPTIONS 204 + structured 404 on GET, wildcard CORS, identity.svc operation) — documented in spec, live on gateway
+[NEW] auth.sumup.com/oauth2/auth: Scope-acceptance oracle fully mapped — dashboard={readers.read,terminals.read}, support_centre={openid,classic,offline}, all 13 REST spec scopes rejected
+[NEW] api.sumup.com spec: GET /v0.1/merchants/{merchant_code}/payment-methods and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session declared oauth2:[] — empty-scope BOLA/SSRF targets
 [CHANGED] api.sumup.com/authorize: Probes return 404; KB confirms LIVE via raw curl (302→auth.sumup.com/flows/oauth2/error) with client_id oracle + wildcard CORS + SameSite=None cookies — probe harness follows redirects, masking live endpoint
-[CHANGED] auth.sumup.com/oauth2/auth: Probe returns 405 on HEAD; KB confirms scope oracle disambiguated (302 login_challenge=allowed vs 303 invalid_scope) — dashboard={readers.read,terminals.read}, support_centre={openid,classic,offline}
+[CHANGED] auth.sumup.com/oauth2/auth: Probe returns 405 on HEAD; KB confirms scope oracle disambiguated (302 login_challenge=allowed vs 303 invalid_scope)
 [CHANGED] Contentful PREVIEW token: Rotated (401 at 2026-09-11 09:29 UTC) — P4 finding closed, non-reproducible; report file never existed despite KB hallucinations
 [CHANGED] auth.sam-app.ro: Dynamic registration LIVE (RFC 7591 unauthenticated POST → 201); mints JWTs with empty scp + attacker-controlled aud; cross-env JWKS isolation (prod 8 keys, staging 11 keys, ZERO kid overlap) blocks prod relay
 [CHANGED] api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; recon surface exhausted
 [CHANGED] mcp.sumup.com/mcp: Returns 401 (bearer required); wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"])
-[PRIO] api.sumup.com/token, 7.9, attack_surface=8 business_value=8 tech_exposure=9 gate_ease=10 cloud_surface=6 freshness=8
-[PRIO] api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods, 7.3, attack_surface=7 business_value=9 tech_exposure=8 gate_ease=1 cloud_surface=7 freshness=8
-[PRIO] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session, 7.1, attack_surface=7 business_value=8 tech_exposure=9 gate_ease=1 cloud_surface=7 freshness=8
-[PRIO] api.sumup.com/.well-known/oauth-protected-resource, 6.8, attack_surface=6 business_value=7 tech_exposure=8 gate_ease=10 cloud_surface=7 freshness=6
-[PRIO] auth.sumup.com/oauth2/auth (scope oracle), 6.5, attack_surface=7 business_value=6 tech_exposure=7 gate_ease=10 cloud_surface=6 freshness=7
-[PRIO] auth.sam-app.ro/oauth2/register, 6.2, attack_surface=8 business_value=5 tech_exposure=8 gate_ease=10 cloud_surface=7 freshness=6
-[PRIO] api.sumup.com/authorize, 6.0, attack_surface=7 business_value=5 tech_exposure=7 gate_ease=10 cloud_surface=6 freshness=5
-[PRIO] mcp.sumup.com/mcp, 5.8, attack_surface=6 business_value=6 tech_exposure=7 gate_ease=1 cloud_surface=8 freshness=7
+[PRIO] api.sumup.com/token, 8.3, attack_surface=9 business_value=9 tech_exposure=9 gate_ease=10 cloud_surface=7 freshness=8
+[PRIO] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session, 7.8, attack_surface=8 business_value=8 tech_exposure=9 gate_ease=1 cloud_surface=7 freshness=8
+[PRIO] api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods, 7.6, attack_surface=8 business_value=9 tech_exposure=8 gate_ease=1 cloud_surface=7 freshness=8
+[PRIO] api.sumup.com/.well-known/oauth-protected-resource, 7.2, attack_surface=7 business_value=7 tech_exposure=8 gate_ease=10 cloud_surface=7 freshness=6
+[PRIO] auth.sumup.com/oauth2/auth (scope oracle), 6.8, attack_surface=7 business_value=6 tech_exposure=7 gate_ease=10 cloud_surface=6 freshness=7
+[PRIO] auth.sam-app.ro/oauth2/register, 6.5, attack_surface=8 business_value=5 tech_exposure=8 gate_ease=10 cloud_surface=7 freshness=6
+[PRIO] api.sumup.com/authorize, 6.3, attack_surface=7 business_value=5 tech_exposure=7 gate_ease=10 cloud_surface=6 freshness=5
+[PRIO] mcp.sumup.com/mcp, 6.0, attack_surface=6 business_value=6 tech_exposure=7 gate_ease=1 cloud_surface=8 freshness=7
 [HYP] Legacy token endpoint client_credentials grant with public client_id dashboard
 class: AUTH
 asset: api.sumup.com/token

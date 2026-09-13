@@ -754,3 +754,10 @@ https://me.sumup.com/settings/api-keys -> HTTP 403
 https://api.sumup.com/v1/merchants/MH4H92C7` -> HTTP 404
 https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods?amount=9.99&currency=EUR` -> HTTP 404
 https://api.sumup.com/v0.2/checkouts/{own -> HTTP 404
+
+## 2026-09-13 23:34:00 UTC
+https://auth.sumup.com -> HTTP 403
+https://api.sumup.com/token -> HTTP 404
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://api.sumup.com -> HTTP 404
