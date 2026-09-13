@@ -643,3 +643,14 @@ www.sumup.com
 - CHANGED api.sumup.com/authorize client_id oracle + wildcard CORS + SameSite=None cookies confirmed LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
 - CHANGED auth.sam-app.ro RFC 7591 dynamic registration LIVE → mintable JWTs (empty scp, attacker-controlled aud) but cross-env JWKS isolation (ZERO kid overlap) blocks prod relay
 - CHANGED api.sumup.com/.well-known/oauth-protected-resource RFC 9728 metadata static — sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; recon surface exhausted
+
+## 2026-09-13 21:26:26 UTC
+- NEW api.sumup.com/token: Probe shows GET 404 structured problem+json; KB claims OPTIONS 204 with wildcard CORS + identity.svc header — divergence needs verification (probe harness may not have sent OPTION
+- NEW api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods: Probe confirms 404 unauthenticated; KB documents oauth2:[] (empty-scope) in official OpenAPI spec — BOLA target gated at gateway
+- NEW api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session: Probe confirms 404 unauthenticated; KB documents oauth2:[] (empty-scope) in official OpenAPI spec — SSRF target gated at gateway
+- CHANGED api.sumup.com/authorize: Probes return 404; KB confirms LIVE via raw curl (302→auth.sumup.com/flows/oauth2/error) with client_id oracle + wildcard CORS + SameSite=None cookies — probe harness follows 
+- CHANGED auth.sumup.com/oauth2/auth: Probe returns 405 on HEAD; KB confirms scope oracle disambiguated (302 login_challenge=allowed vs 303 invalid_scope) — dashboard={readers.read,terminals.read}, support_cent
+- CHANGED Contentful PREVIEW token: Rotated (401 at 2026-09-11 09:29 UTC) — P4 finding closed, non-reproducible; report file never existed despite KB hallucinations
+- CHANGED auth.sam-app.ro: Dynamic registration LIVE (RFC 7591 unauthenticated POST → 201); mints JWTs with empty scp + attacker-controlled aud; cross-env JWKS isolation (prod 8 keys, staging 11 keys, ZERO kid 
+- CHANGED api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; recon surface exhausted
+- CHANGED mcp.sumup.com/mcp: Returns 401 (bearer required); wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"])
