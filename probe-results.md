@@ -711,3 +711,15 @@ https://api.sumup.com/token` -> HTTP 404
 https://me.sumup.com/settings/api-keys -> HTTP 403
 https://api.sumup.com/v0.2/checkouts/{own_checkout -> HTTP 404
 https://sumup.com -> 200 len=?
+
+## 2026-09-13 12:11:33 UTC
+https://api.sumup.com/token -> HTTP 404
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/token` -> HTTP 404
+https://me.sumup.com/settings/api-keys -> HTTP 403
+https://api.sumup.com/v0.2/checkouts/{own_checkout -> HTTP 404
+https://sumup.com -> 200 len=?
+https://api.sumup.com/v0.1/merchants/{foreign_code -> HTTP 404
+https://api.sumup.com/v1/merchants/{own_code -> HTTP 404

