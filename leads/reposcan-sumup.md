@@ -364,3 +364,29 @@ TARGET_ORG not configured for sumup; skipping public-org deep scan.
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
 ## REPOSCAN 2026-09-13 01:03:13 UTC
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-13 06:21:24 UTC
+class: SECRET
+asset: sumup/terraform-provider-kafka-connect/connect/provider.go:88
+confidence: 85
+reasoning: Line 88 does `log.Printf("[INFO]Cert : %s\nKey: %s", crt, key)` which prints the
+impact: medium – private key material visible in Terraform logs/CI output; exploitation requires
+verify_steps: |
+class: MISCONFIG
+asset: sumup/sumup-plugin-vendure/examples/docker/example.env &
+confidence: 60
+reasoning: Both example.env files contain weak placeholder secrets: POSTGRES_PASSWORD=vendure/medusa,
+impact: low – these are example/template files explicitly labelled for local dev only; however,
+verify_steps: |
+class: MISCONFIG
+asset: sumup/terraform-provider-kafka-connect/connect/provider.go:59-63,91-92
+confidence: 70
+reasoning: The provider exposes a `tls_auth_is_insecure` boolean attribute (env var
+impact: low – documented as dev-only, but no enforcement mechanism; a terraform config with
+verify_steps: |
+class: MISCONFIG
+asset: sumup/terraform-provider-kafka-connect/examples/main.tf &
+confidence: 30
+reasoning: The example main.tf contains `basic_auth_username = "testuser"` and
+impact: negligible – test/example values only; no production impact.
+verify_steps: |
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
