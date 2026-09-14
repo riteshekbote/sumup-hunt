@@ -4180,3 +4180,43 @@ testability: AUTH_HELPED
 [FINAL] GetPaymentMethods IDOR (68) — static default implies per-merchant lookup exists; doc-codes are real-format targets; MEDIUM/HIGH impact.
 [NEXT] HUMAN: provide ONE merchant credential from me.sumup.com — either a `sup_sk_` API key (settings/api-keys) OR an OAuth2 application client_id+client_secret (settings/oauth2-applications) — then in ONE session: (1) POST `https://api.sumup.com/token -d "grant_type=client_credentials&client_id={app}&client_secret={secret}"` and replay any token on `GET https://api.sumup.com/v1/merchants/self`; (2) GET baseline `https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods?amount=9.99&currency=EUR` (Bearer sup_sk_) then foreign codes {MK01A8C2,MK10CL2A,MCXXXXXX} × {EUR,BRL,PLN}; (3) PUT `https://api.sumup.com/v0.2/checkouts/{own}/apple-pay-session` body `{"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` vs Apple-gateway control.
 [RISK] sumup: 82 — 0 filed bugs (Contentful P4 closed, token rotated). Live progress this cycle: public-client /token mint refuted (one untested vector eliminated); payment-methods/SSRF still ONE merchant credential away; origin-echo CORS on /token is hardening-only. Program value is 100% gated on HUMAN-supplied merchant credential — provide `sup_sk_` or an OAuth2-app client secret to unblock the top 3.
+## 2026-09-14 19:34:19 UTC [target] (model bigpickle)
+[PRIO] api.sumup.com/token,6.8,attack=7 biz=8 tech=7 gate=4 cloud=6 fresh=8
+[PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,6.8,attack=7 biz=8 tech=7 gate=4 cloud=7 fresh=7
+[PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,6.1,attack=6 biz=7 tech=6 gate=5 cloud=5 fresh=7
+[HYP] Legacy /token mints scoped merchant bearer via client_credentials (merchant-app secret)
+class: AUTH
+asset: api.sumup.com/token
+confidence: 70
+reasoning: OPTIONS 204 re-verified (identity.svc op, origin-echo CORS); official spec declares clientCredentials+authorizationCode with scopes incl refunds.write/transactions.history; staging twin auth.sam-app.ro proved this gateway family mints real JWTs via body-secret post (client_secret_post) with auth_method stored-not-enforced; no-secret public `dashboard` variant previously refuted, so credentialed merchant-app is the only viable mint path.
+evidence_needed: POST grant_type=client_credentials&client_id={app}&client_secret={secret} → 200 access_token; replay token on GET /v1/merchants/self → structured 404/401 ≠ bare 404 (signature accepted).
+verify_steps: AUTH_HELPED — (1) HUMAN creates OAuth2 app in me.sumup.com/settings/oauth2-applications; (2) POST https://api.sumup.com/token -d "grant_type=client_credentials&client_id={app}&client_secret={secret}&scope=payments"; (3) replay on GET /v1/merchants/self.
+impact: Scoped merchant-level token from a weakly-enforced legacy endpoint — HIGH/CRITICAL if mint succeeds.
+testability: AUTH_HELPED
+[HYP] CreateApplePaySession SSRF via attacker-chosen target (checkout-existence-gated)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 60
+reasoning: Spec: PUT, security apiKey:[]+oauth2:[]+x-scopes:[] (zero-scope credential gate); body required{context:hostname,target:uri}, example target apple-pay-gateway-cert.apple.com, no target pinning visible; 200 returns raw merchant-session (server fetch + reflect); unauth GET 404.
+evidence_needed: 200 body echoing non-Apple content or timing delta vs Apple-gateway control.
+verify_steps: AUTH_HELPED — with own bearer+own checkout_id: PUT {"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"} vs Apple control; repeat foreign checkout_id (BOLA compound).
+impact: Non-blind SSRF from payments stack → metadata/IAM creds — CRITICAL if confirmed.
+testability: AUTH_HELPED
+[HYP] GetPaymentMethods returns per-merchant APM config under any bearer (cross-tenant IDOR)
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 68
+reasoning: Unauth 200 static {"card"} re-probed identical for 4 codes × 2 currencies (incl nonsense MCXXXXXX) — handler only resolves per-merchant APM rules when a credential is present; spec oauth2:[]+apiKey:[]+x-scopes:[] (zero-scope); doc-example codes are real-format targets.
+evidence_needed: valid sup_sk_ bearer + foreign code → body ≠ {card} (qr_code_pix BRL / blik PLN) or varies by currency/amount cross-tenant.
+verify_steps: AUTH_HELPED — (1) baseline GET /v0.1/merchants/MH4H92C7/payment-methods?amount=9.99&currency=EUR with Bearer sup_sk_; (2) foreign {MK01A8C2,MK10CL2A,MCXXXXXX} × {BRL,PLN,PHP}.
+impact: Cross-tenant read of merchant APM/acquirer enablement feeding checkout-eligibility — MEDIUM/HIGH.
+testability: AUTH_HELPED
+[PARKED] Public no-secret dashboard client_credentials at /token: prior-cycle state explicitly refuted this vector; only credentialed merchant-app variant survives — dropped to merged hypothesis above.
+[PARKED] /token origin-echo CORS: origin-reflection on a bearer-header-only endpoint (RFC 9728 bearer_methods_supported=["header"], no ambient cookies) — token-theft impossible, hardening-only; do not report.
+[FINAL] Legacy /token client_credentials (70) — routed+spec+staging precedent align; only unknown is prod registry sync of merchant-created apps.
+[FINAL] CreateApplePaySession SSRF (60) — required target URI, no pinning, checkout-gated route; CRITICAL if reachable.
+[FINAL] GetPaymentMethods IDOR (68) — static default implies per-merchant lookup exists under auth; MEDIUM/HIGH.
+[NEXT] HUMAN: provide ONE merchant credential from me.sumup.com — either a `sup_sk_` API key (settings/api-keys) OR an OAuth2 app client_id+client_secret (settings/oauth2-applications) — then in ONE session: (1) POST `https://api.sumup.com/token -d "grant_type=client_credentials&client_id={app}&client_secret={secret}"` and replay any token on `GET https://api.sumup.com/v1/merchants/self`; (2) GET `https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods?amount=9.99&currency=EUR` (Bearer sup_sk_) then foreign {MK01A8C2,MK10CL2A,MCXXXXXX} × {BRL,PLN,PHP}; (3) PUT `https://api.sumup.com/v0.2/checkouts/{own}/apple-pay-session` body `{"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` vs Apple-gateway control.
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/v0.1/merchants/{code}/payment-methods: unauth 200 static {"card"} re-verified for {MH4H92C7,MK01A8C2,MK10CL2A,MCXXXXXX} × {EUR,BRL} — per-merchant resolution requires a bearer; AUTH_HELPED gate confirmed and valid/invalid merchant codes indistinguishable unauth.
+[LEARN] ACCEPTED OTHER @ api.sumup.com/token: OPTIONS 204 re-verified 2026-09-14; `access-control-allow-origin` echoes Origin/Host (`api.sumup.com`), not literal `*` — KB "wildcard CORS" claim corrected to origin-echo; bearer-header-only scheme makes it hardening-only.
+[RISK] sumup: 82 — 0 filed bugs (Contentful P4 closed, token rotated). Live progress this cycle: /token origin-echo CORS corrected (hardening-only); payment-methods static-default + no-valid-code-oracle confirmed, tightening the IDOR evidence bar. All three top hypotheses remain exactly ONE merchant credential from testability — program value is 100% gated on HUMAN-supplied `sup_sk_` or OAuth2-app secret.

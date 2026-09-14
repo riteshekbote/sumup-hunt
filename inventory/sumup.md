@@ -691,3 +691,12 @@ www.sumup.com
 - CHANGED Contentful PREVIEW token: Rotated (401 at 2026-09-11 09:29 UTC) — P4 finding closed, non-reproducible; report file never existed despite KB hallucinations
 - CHANGED `auth.sam-app.ro`: Dynamic registration LIVE (RFC 7591 unauthenticated POST → 201); mints JWTs with empty scp + attacker-controlled aud; cross-env JWKS isolation (prod 8 keys, staging 11 keys, ZERO ki
 - CHANGED `api.sumup.com/.well-known/oauth-protected-resource`: RFC 9728 metadata static — sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; recon surface exhausted
+
+## 2026-09-14 19:39:05 UTC
+- NEW `api.sumup.com/token` OPTIONS confirmed: 204, wildcard CORS (reflects Origin), broad allow-methods, max-age=300, `x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*`, 
+- NEW `api.sumup.com/token` POST client_credentials with `client_id=dashboard` → 400 `invalid_client` (both legacy and modern auth server)
+- NEW `api.sumup.com/.well-known/oauth-protected-resource` RFC 9728 metadata static: sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI, no resource_scopes/audiences field
+- NEW JWKS prod: 8 keys (6 public:* RSA + 1 unnamed RSA + 1 EdDSA), staging 11 keys, ZERO kid overlap confirmed
+- CHANGED Contentful PREVIEW token rotated (401) — P4 finding closed, non-reproducible
+- CHANGED `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
+- CHANGED `auth.sam-app.ro` dynamic registration LIVE (RFC 7591) → mints JWTs (empty scp, attacker-controlled aud) but cross-env JWKS isolation blocks prod relay
