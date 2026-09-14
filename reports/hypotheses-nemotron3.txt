@@ -1,24 +1,24 @@
-## 2026-09-14 19:38:56 UTC [target] (model nemotron3)
-[NEW] `api.sumup.com/token` OPTIONS confirmed: 204, wildcard CORS (reflects Origin), broad allow-methods, max-age=300, `x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*`, SameSite=None cookies on Domain=sumup.com
-[NEW] `api.sumup.com/token` POST client_credentials with `client_id=dashboard` → 400 `invalid_client` (both legacy and modern auth server)
-[NEW] `api.sumup.com/.well-known/oauth-protected-resource` RFC 9728 metadata static: sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI, no resource_scopes/audiences field
-[NEW] JWKS prod: 8 keys (6 public:* RSA + 1 unnamed RSA + 1 EdDSA), staging 11 keys, ZERO kid overlap confirmed
+## 2026-09-14 22:46:46 UTC [target] (model nemotron3)
+[NEW] `api.sumup.com/token` OPTIONS 204 confirmed: `access-control-allow-origin` echoes Origin (`api.sumup.com`), `access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE`, `access-control-max-age: 300`, `x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*`, `Set-Cookie: optimizely_experiment_user=...; Domain=sumup.com; SameSite=None`, `__cf_bm=...; Domain=sumup.com; SameSite=None`
+[NEW] `api.sumup.com/token` POST `grant_type=client_credentials&client_id=dashboard` → 400 `invalid_client` (both legacy gateway and modern auth.sumup.com)
+[NEW] `api.sumup.com/.well-known/oauth-protected-resource` RFC 9728 metadata static: `authorization_servers=["https://auth.sumup.com"]`, `bearer_methods_supported=["header"]`, `jwks_uri="https://auth.sumup.com/.well-known/jwks.json"`, no `resource_scopes`/`audiences` field
+[NEW] JWKS prod: 8 keys (6 `public:*` RSA + 1 unnamed RSA + 1 EdDSA); staging: 11 keys; ZERO `kid` overlap confirmed
 [CHANGED] Contentful PREVIEW token rotated (401) — P4 finding closed, non-reproducible
-[CHANGED] `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
-[CHANGED] `auth.sam-app.ro` dynamic registration LIVE (RFC 7591) → mints JWTs (empty scp, attacker-controlled aud) but cross-env JWKS isolation blocks prod relay
+[CHANGED] `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos: crt.sh 52 + ccTLD 96 + custom schemes + bare paths = 0 HITs)
+[CHANGED] `auth.sam-app.ro` dynamic registration LIVE (RFC 7591) → mints JWTs (empty `scp`, attacker-controlled `aud`) but cross-env JWKS isolation (ZERO kid overlap) blocks prod relay
 [PRIO] api.sumup.com/token, 7.5, attack_surface=9 business_value=9 tech_exposure=8 gate_ease=8 cloud_surface=7 freshness=9
 [PRIO] api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods, 7.2, attack_surface=8 business_value=9 tech_exposure=7 gate_ease=6 cloud_surface=8 freshness=9
 [PRIO] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session, 6.8, attack_surface=7 business_value=9 tech_exposure=8 gate_ease=6 cloud_surface=8 freshness=9
 [PRIO] api.sumup.com/.well-known/oauth-protected-resource, 6.5, attack_surface=7 business_value=8 tech_exposure=7 gate_ease=7 cloud_surface=7 freshness=8
 [PRIO] auth.sam-app.ro/oauth2/register, 5.8, attack_surface=8 business_value=5 tech_exposure=8 gate_ease=9 cloud_surface=6 freshness=8
-[HYP] Legacy token endpoint mints scoped bearer for unattested public client_id=dashboard via client_credentials
+[HYP] RFC 9728 token validation on api.sumup.com permits audience/claim confusion
 class: AUTH
-asset: api.sumup.com/token
-confidence: 45
-reasoning: Official OpenAPI spec documents legacy OAuth pair (authorize+token) on api.sumup.com; /token returns OPTIONS 204 with wildcard CORS and identity.svc header; token_endpoint_auth_methods_supported on auth.sumup.com includes "none" but dashboard client rejects unauthenticated token requests on modern auth server; legacy gateway may have different client configuration
-evidence_needed: POST /token with grant_type=client_credentials&client_id=dashboard returns access_token (not invalid_client)
-verify_steps: PASSIVE: OPTIONS https://api.sumup.com/token (confirmed 204 wildcard CORS + identity.svc header). AUTH_HELPED: POST https://api.sumup.com/token -H "Content-Type: application/x-www-form-urlencoded" -d "grant_type=client_credentials&client_id=dashboard" → 400 invalid_client (confirmed); search public SDKs/repos for hardcoded dashboard client_secret
-impact: Public client credential grant → token minting without merchant consent → access to legacy API surface if scopes granted
+asset: api.sumup.com (payment API gateway)
+confidence: 75
+reasoning: RFC 9728 metadata declares sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; no resource_scopes/audiences field published. Gateway validates JWT structure (structured problem+json vs plain 404) but per-operation scope enforcement untested. Staging mints JWTs with empty scp + attacker-controlled aud; cross-env JWKS isolation (ZERO kid overlap) currently blocks relay but client-level sync to prod provenance DB untested.
+evidence_needed: Valid merchant token (any scope) accepted on api.sumup.com for a resource the token was not issued for (aud mismatch) or with empty scp reaching oauth2:[] operations
+verify_steps: AUTH_HELPED: Obtain merchant OAuth token via dashboard; replay against GET /v0.1/merchants/{other_merchant}/payment-methods (oauth2:[]) and PUT /v0.2/checkouts/{owned}/apple-pay-session (oauth2:[]) with crafted aud/claims; observe 200 vs 403/404
+impact: Cross-tenant read of merchant payment-method metadata (BOLA) or SSRF via Apple Pay session endpoint — CRITICAL
 testability: AUTH_HELPED
 [HYP] Empty-scope OAuth token reaches GET /v0.1/merchants/{merchant_code}/payment-methods of any merchant (documented oauth2:[])
 class: IDOR
@@ -43,7 +43,7 @@ testability: AUTH_HELPED
 [PARKED] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session SSRF: confidence 50 but requires valid checkout_id oracle + merchant token (AUTH_HELPED); parameter schema unknown (target field speculative from Apple Pay pattern); speculative without token.
 [FINAL] api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 token validation on api.sumup.com permits audience/claim confusion: confidence 75, survives, AUTH_HELPED — highest-value testable surface once merchant token obtained
 [FINAL] auth.sumup.com/oauth2/auth scope oracle: dashboard scope set closed (readers.read/terminals.read only), support_centre allowlist {openid,classic,offline} — modern registry diverges from legacy and from REST spec scopes; passive enumeration complete
-[NEXT] PROBE: OPTIONS https://api.sumup.com/token — verified legacy token endpoint CORS + identity.svc header (204 with wildcard CORS, identity.svc.cluster.local); next: POST https://api.sumup.com/token with grant_type=password&client_id=dashboard&username=...&password=... to test resource-owner password grant (if enabled) — but requires merchant credentials (HUMAN_ONLY)
+[NEXT] HUMAN: provide ONE merchant credential from me.sumup.com — either a `sup_sk_` API key (settings/api-keys) OR an OAuth2 application client_id+client_secret (settings/oauth2-applications) to unblock AUTH_HELPED verification of the three FINAL hypotheses
 [LEARN] ACCEPTED OTHER @ developer.sumup.com/api: official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public — full 42-op production model incl. exact paths, per-op scopes, apiKey scheme, and legacy OAuth endpoint pair (authorize+token on api.sumup.com); highest-value passive recon of this cycle
 [LEARN] ACCEPTED OATH @ api.sumup.com/token: legacy token endpoint ROUTED (OPTIONS 204 + structured 404 on GET, wildcard CORS, identity.svc operation) — documented in official spec, live on gateway; not previously probed
 [LEARN] ACCEPTED OATH @ auth.sumup.com/oauth2/auth: scope-acceptance oracle disambiguated (302 login_challenge=allowed vs 303 invalid_scope); dashboard allows readers.read/terminals.read, rejects all 13 REST spec scopes — modern dashboard scope set is closed

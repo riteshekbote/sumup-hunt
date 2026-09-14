@@ -1,4 +1,4 @@
-## 2026-09-14 19:34:19 UTC [target] (model bigpickle)
+## 2026-09-14 22:48:21 UTC [target] (model bigpickle)
 [PRIO] api.sumup.com/token,6.8,attack=7 biz=8 tech=7 gate=4 cloud=6 fresh=8
 [PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,6.8,attack=7 biz=8 tech=7 gate=4 cloud=7 fresh=7
 [PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,6.1,attack=6 biz=7 tech=6 gate=5 cloud=5 fresh=7
@@ -38,3 +38,48 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/v0.1/merchants/{code}/payment-methods: unauth 200 static {"card"} re-verified for {MH4H92C7,MK01A8C2,MK10CL2A,MCXXXXXX} × {EUR,BRL} — per-merchant resolution requires a bearer; AUTH_HELPED gate confirmed and valid/invalid merchant codes indistinguishable unauth.
 [LEARN] ACCEPTED OTHER @ api.sumup.com/token: OPTIONS 204 re-verified 2026-09-14; `access-control-allow-origin` echoes Origin/Host (`api.sumup.com`), not literal `*` — KB "wildcard CORS" claim corrected to origin-echo; bearer-header-only scheme makes it hardening-only.
 [RISK] sumup: 82 — 0 filed bugs (Contentful P4 closed, token rotated). Live progress this cycle: /token origin-echo CORS corrected (hardening-only); payment-methods static-default + no-valid-code-oracle confirmed, tightening the IDOR evidence bar. All three top hypotheses remain exactly ONE merchant credential from testability — program value is 100% gated on HUMAN-supplied `sup_sk_` or OAuth2-app secret.
+class: SECRET
+asset: sumup/terraform-provider-kafka-connect/connect/provider.go:88
+confidence: 85
+reasoning: Line 88 does `log.Printf("[INFO]Cert : %s\nKey: %s", crt, key)` which prints the
+impact: medium – private key material visible in Terraform logs/CI output; exploitation requires
+verify_steps: |
+class: MISCONFIG
+asset: sumup/sumup-plugin-vendure/examples/docker/example.env &
+confidence: 60
+reasoning: Both example.env files contain weak placeholder secrets: POSTGRES_PASSWORD=vendure/medusa,
+impact: low – these are example/template files explicitly labelled for local dev only; however,
+verify_steps: |
+class: MISCONFIG
+asset: sumup/terraform-provider-kafka-connect/connect/provider.go:59-63,91-92
+confidence: 70
+reasoning: The provider exposes a `tls_auth_is_insecure` boolean attribute (env var
+impact: low – documented as dev-only, but no enforcement mechanism; a terraform config with
+verify_steps: |
+class: MISCONFIG
+asset: sumup/terraform-provider-kafka-connect/examples/main.tf &
+confidence: 30
+reasoning: The example main.tf contains `basic_auth_username = "testuser"` and
+impact: negligible – test/example values only; no production impact.
+verify_steps: |
+[HYP] Hardcoded fallback secrets in Vendure/Medusa Docker example configs
+class: OTHER
+asset: sumup-plugin-vendure/examples/docker/vendure/vendure-config.ts:26-38
+confidence: 15
+reasoning: COOKIE_SECRET, SESSION_SECRET, JWT_SECRET, SUPERADMIN_PASSWORD,
+impact: low
+verify_steps: Confirm these Docker examples are never deployed to staging/prod;
+[HYP] Forked Terraform provider exposes explicit TLS-verification bypass
+class: MISCONFIG
+asset: terraform-provider-kafka-connect/connect/provider.go:59-92
+confidence: 25
+reasoning: SumUp maintains a fork of Mongey/terraform-provider-kafka-connect
+impact: low
+verify_steps: Confirm this provider is only used for internal dev/test Kafka
+[HYP] Stale webhook.site URL embedded in OpenAPI specs and code samples
+class: OTHER
+asset: sumup-openapi/openapi31.yaml:7717 (+ all openapi.json copies across
+confidence: 10
+reasoning: The hardcoded return_url "https://webhook.site/e21ddbb0-42c4-4358-
+impact: informational
+verify_steps: Confirm the webhook.site UUID was never used as a real return_url

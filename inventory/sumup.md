@@ -700,3 +700,12 @@ www.sumup.com
 - CHANGED Contentful PREVIEW token rotated (401) — P4 finding closed, non-reproducible
 - CHANGED `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos, 0 HITs)
 - CHANGED `auth.sam-app.ro` dynamic registration LIVE (RFC 7591) → mints JWTs (empty scp, attacker-controlled aud) but cross-env JWKS isolation blocks prod relay
+
+## 2026-09-14 22:48:32 UTC
+- NEW `api.sumup.com/token` OPTIONS 204 confirmed: `access-control-allow-origin` echoes Origin (`api.sumup.com`), `access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE`, `access-control-max-age: 300
+- NEW `api.sumup.com/token` POST `grant_type=client_credentials&client_id=dashboard` → 400 `invalid_client` (both legacy gateway and modern auth.sumup.com)
+- NEW `api.sumup.com/.well-known/oauth-protected-resource` RFC 9728 metadata static: `authorization_servers=["https://auth.sumup.com"]`, `bearer_methods_supported=["header"]`, `jwks_uri="https://auth.sumup.
+- NEW JWKS prod: 8 keys (6 `public:*` RSA + 1 unnamed RSA + 1 EdDSA); staging: 11 keys; ZERO `kid` overlap confirmed
+- CHANGED Contentful PREVIEW token rotated (401) — P4 finding closed, non-reproducible
+- CHANGED `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos: crt.sh 52 + ccTLD 96 + custom schemes + bare paths = 0 HITs)
+- CHANGED `auth.sam-app.ro` dynamic registration LIVE (RFC 7591) → mints JWTs (empty `scp`, attacker-controlled `aud`) but cross-env JWKS isolation (ZERO kid overlap) blocks prod relay
