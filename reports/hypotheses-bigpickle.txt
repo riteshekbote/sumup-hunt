@@ -1,1 +1,28 @@
-## 2026-09-13 23:33:42 UTC [target] (model bigpickle)
+## 2026-09-14 01:45:50 UTC [target] (model bigpickle)
+[HYP] GetPaymentMethods returns real per-merchant APM config for any merchant_code under any valid bearer (unauth static default confirmed)
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 68
+reasoning: Live probes this cycle: 200 unauth, identical static `{"available_payment_methods":[{"id":"card"}]}` for MH4H92C7 (bare and ?amount=9.99&currency=EUR) and MCXXXXXX; spec documents `security: apiKey: [] + oauth2: []` and `x-scopes: []` — credential required but zero scopes, so any valid bearer passes if gateway only checks signature/scope-emptiness; static default implies handler falls back until authorized lookup resolves merchant_code → foreign-code differentiation only visible with bearer.
+evidence_needed: valid sup_sk_ bearer + foreign merchant_code → body ≠ static default (e.g. qr_code_pix for BRL, blik for PLN) or varies by currency/amount cross-tenant.
+verify_steps: AUTH_HELPED — (1) replay `GET /v0.1/merchants/MH4H92C7/payment-methods?amount=9.99&currency=EUR` with `Authorization: Bearer sup_sk_...` (baseline w/ bearer); (2) same bearer, foreign codes {MK01A8C2, MK10CL2A, MCXXXXXX} × {EUR, BRL, PLN, PHP}; leak = any body ≠ {card} or ≠ own-body.
+impact: Cross-tenant read of merchant APM/acquirer enablement feeding checkout-eligibility decisions — MEDIUM/HIGH.
+testability: AUTH_HELPED
+[HYP] Legacy /token mints scoped bearer for unattested public client_id=dashboard via client_credentials
+class: AUTH
+asset: api.sumup.com/token
+confidence: 70
+reasoning: Confirmed routed (OPTIONS 204, x-envoy identity.svc op); spec declares clientCredentials+authorizationCode grants (scopes incl refunds.write, transactions.history); staging twin auth.sam-app.ro proved this gateway family stores token_endpoint_auth_method without enforcing and accepts body-secret post; prod discovery lists token_endpoint_auth_methods_supported incl "none"; dashboard is a public (no-secret) registered client on the same gateways.
+evidence_needed: POST grant_type=client_credentials&client_id=dashboard → 200 access_token; replay on GET /v1/merchants/MK10CL2A → structured 404/401 ≠ bare 404 (signature accepted).
+verify_steps: AUTH_HELPED — single POST `-d "grant_type=client_credentials&client_id=dashboard&scope=payments"` (no secret); then replay token on a spec GET path.
+impact: Money-scoped token for an unattested client — CRITICAL if mint succeeds; MEDIUM if only error taxonomy.
+testability: AUTH_HELPED
+[HYP] CreateApplePaySession reflects attacker-chosen target fetch, filterable by body/timing
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 60
+reasoning: Spec: PUT, `security: apiKey: [] + oauth2: []`, x-scopes:[] — same no-scope pattern as the confirmed out-gate route; body `required{context:hostname, target:uri}`, example target `https://apple-pay-gateway-cert.apple.com/paymentservices/startSession`; 200 returns raw merchant-session object (server-side fetch + reflect to caller); GET on the path → 404 (route gated to PUT + valid checkout).
+evidence_needed: 200 body echoing non-Apple content (meta-data/IAM doc) or timing delta vs Apple-gateway control.
+verify_steps: AUTH_HELPED — with own bearer+own checkout_id: PUT `{"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` vs Apple control; compare body+timing, repeat foreign checkout_id (BOLA compound).
+impact: Non-blind SSRF from payments stack → cloud metadata/IAM creds or internal services — CRITICAL if confirmed.
+testability: AUTH_HELPED
