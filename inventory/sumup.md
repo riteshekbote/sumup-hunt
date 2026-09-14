@@ -677,3 +677,5 @@ www.sumup.com
 - CHANGED auth.sam-app.ro: Dynamic registration LIVE (RFC 7591 unauthenticated POST → 201); mints JWTs with empty scp + attacker-controlled aud; cross-env JWKS isolation (prod 8 keys, staging 11 keys, ZERO kid 
 - CHANGED api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; recon surface exhausted
 - CHANGED mcp.sumup.com/mcp: Returns 401 (bearer required); wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"])
+
+## 2026-09-14 07:16:52 UTC

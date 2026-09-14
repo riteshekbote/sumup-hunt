@@ -27735,3 +27735,143 @@ STEP 6 — LEARNING
 STEP 7 — RISK
 
 - [RISK] sumup: 82 — 0 filed. Passive recon surface now effectively exhausted (payment-methods out-gate + static-default confirmed; /token preflight refuted the `*` CORS log; all other spec GET paths gated). All three top survivors are one merchant token away: payment-methods cross-tenant APM read (conf 68), /token public-client mint (conf 70, single active POST), apple-pay reflected-fetch SSRF → CRITICAL (conf 60). Program gating is 100% HUMAN-supplied credential, not analyst effort.
+===== ANALYST bigpickle 2026-09-14 07:16:52 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" -X OPTIONS "https://api.sumup.com/token" -H "Origin: https://evil.com" -H "Access-Control-Request-Method: POST" && echo "" && curl -s -D- -X OPTIONS "https://api.sumup.com/token" -H "Origin: https://evil.com" -H "Access-Control-Request-Method: POST" 2>&1 | head -30
+204
+HTTP/2 204 
+date: Mon, 14 Sep 2026 07:11:06 GMT
+access-control-allow-origin: https://evil.com
+access-control-allow-headers: *
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-max-age: 300
+server: cloudflare
+x-request-id: ddabad04-a405-9205-a0ca-ff21e42c8293
+x-envoy-upstream-service-time: 1
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=VaSHti3JFvppAeA5PbxHVvNrV0f76JV3Gt0XBuw.rsg-1789369866.6448662-1.0.1.1-tE3DOqUtmxkTNnh1HaPW6LarV2Qb.IiIp2.ZFyR4p2FR22o3Iugphef54WZUlp_6bEY7KcV8LI9a7ojLQnoEGlsF_y9s5IW6TYQTkS.puJ06oPZ04tIw8Up5mKC6P_RzLXiopPXFiCQFDppSkELhAw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Mon, 14 Sep 2026 07:41:06 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=mnEMY93nXWiwCrnIFqz%2FOugXouc7Fq0PIX1uftp4eeRd1W4xd46uw28Zi5sMJGjgh0HDrdxhKIFany6VZwyCMpkbGM07yM7K2hAVyyMII3FMPJ95rFHmC7IXMqAPm5I%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a3ad93628c20c9a1-IAD
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}\n" -X POST "https://api.sumup.com/token" -d "grant_type=client_credentials&client_id=dashboard" -H "Content-Type: application/x-www-form-urlencoded" && echo "---" && curl -s -D- -X POST "https://api.sumup.com/token" -d "grant_type=client_credentials&client_id=dashboard" -H "Content-Type: application/x-www-form-urlencoded" 2>&1 | head -40
+400
+---
+HTTP/2 400 
+date: Mon, 14 Sep 2026 07:11:08 GMT
+content-type: application/json
+content-length: 78
+x-envoy-upstream-service-time: 7
+server: cloudflare
+x-request-id: d58847e2-a5f2-9cfe-a8e0-38e1236ad045
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+set-cookie: __cf_bm=pfEjiOr3SNQiVCtsBDA.3swe4T2pegNfJ3oAAKh5KqM-1789369868.1972952-1.0.1.1-WKQT2HS4NKwbwcFVowlKynwsxya7xjFsv_ju16UDdoG3RBcTA3Sguv.0an206OhjnzAiWKzTop0EY7NtF8hq_OnH5cE2fQJUtkKmXl2oklfhR0Jvsxgek5tNfWKYDo_ePTl47j_YF.kkV9ctI00hFQ; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Mon, 14 Sep 2026 07:41:08 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=w7Q49Q6lilDjMUvFF6J73aUDDQWfi1afLD0D%2BWDpExr5uR%2F0uQq9010KUBIVL9NI8jLGkAo7QLkl4Z8GVK6UStTsnWnOh8xXA7w%2BqyGbf%2B1A4tNjsHipF8C7tBh6xMU%3D"}]}
+cf-ray: a3ad936c393099c1-IAD
+
+{"error":"invalid_client","error_description":"Client authorization failed."}
+[0m
+[0m$ [0mcurl -s -D- "https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods" 2>&1 | head -20 && echo "---" && curl -s -D- "https://api.sumup.com/v0.2/checkouts/test123/apple-pay-session" -X PUT -H "Content-Type: application/json" -d '{"context":"sumup.com","target":"https://apple-pay-gateway-cert.apple.com/paymentservices/startSession"}' 2>&1 | head -20
+HTTP/2 200 
+date: Mon, 14 Sep 2026 07:11:10 GMT
+content-type: application/json
+content-length: 46
+x-fong-id: 069b7199-fca3-4e54-9f8c-9851c2411ebd
+x-envoy-upstream-service-time: 26
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 401988b7-b7d8-9b59-92b4-cef23ff6661e
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+set-cookie: __cf_bm=jinBhVWeCBOUHxq1p2gaUD5.mVyBbAG.XajG04u9pNw-1789369870.0000563-1.0.1.1-eAOwmte8RLXqgN4aN.ehZd9dwH9pXXYxHBPFC_bZnPZxiV1aMZKGu5nRDr_3krPBCeZri_XwCXe3cU2bQASAvoWYKTHAYN0Xw4o4O73qfy0pO1OuU2PGU3i6.wwea0XIC.XhJsrUwjI537vpSAc8iw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Mon, 14 Sep 2026 07:41:10 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=udCDdGxk8cTHxMHSFm0U90rJM5o9KFLEMLfHkbNbcRnxzw%2F%2BMXnnERisUZ6HkbXxDB46av4qA2ui6sFv%2FTQinh4mnU73zrvg05QHq%2Bg6UwTWE9g0xpY0lMQBEyEBSaA%3D"}]}
+cf-ray: a3ad93777c7d56cd-IAD
+
+{"available_payment_methods":[{"id":"card"}]}
+---
+HTTP/2 404 
+date: Mon, 14 Sep 2026 07:11:10 GMT
+content-type: application/json
+content-length: 58
+x-fong-id: 75a290ff-1fb2-4bab-9c70-69505e8b4377
+x-envoy-upstream-service-time: 7
+server: cloudflare
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+x-request-id: d8ddfa6b-d4b8-9813-93a8-b71e2e49088b
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+set-cookie: __cf_bm=lT4ty6Y0CbBvvYRFX9yk4U_7rA5BK3dLddmG37jqVSo-1789369870.1674573-1.0.1.1-cdCUaIFDiV3enzCvTiteK8sCyT7v9bWUVIls20exTCjBfgDzcrwQda6K1KclZQ3W3EA6x56ydJLKUTs8zlSc2x8bF5YkdR.3b7KUL.i.4LElMIHYk3oL1tA_nonXIX4ed7kQZr9.BCm_OUyN.f5y6A; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Mon, 14 Sep 2026 07:41:10 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=rRUBxKtrhof7fo64qGYRYMbi3OUSTPX9l%2BTrIVNfSJQhoHID1NUzbhY5tLxJwPZxyimuNTt2zk6s7b6cw%2BE0DE2jSTWycL7ygRJpwrCNOOAJgWfo%2BQbmGLLj3C2FhmY%3D"}]}
+cf-ray: a3ad9378883b74e8-IAD
+
+{"error_code":"NOT_FOUND","message":"checkout not found"}
+[0m
+STEP 1 — DELTA:
+- [NEW] api.sumup.com/token: live `POST grant_type=client_credentials&client_id=dashboard` (no secret) → **400 `invalid_client` "Client authorization failed"** — public-client no-secret mint REFUTED; endpoint is routed and validates OAuth POSTs (grant_type was parsed).
+- [NEW] api.sumup.com/token OPTIONS: echoes attacker-supplied Origin into `access-control-allow-origin:{origin}` (dynamic reflection) + `access-control-allow-headers:*` + broad methods; SameSite=None `Domain=sumup.com` cookie.
+- [NEW] api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods: **200 unauth** `{"available_payment_methods":[{"id":"card"}]}` re-confirmed — out-of-gate static default, even for doc-example merchant code.
+- [NEW] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session PUT bogus id → **404 structured** `{"error_code":"NOT_FOUND","message":"checkout not found"}` — checkout existence validated before handler; SSRF test needs own checkout_id.
+
+STEP 2 — PRIORITIZE:
+- [PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,5.95,gate(unauth 200)+freshness
+- [PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,5.50,business_value+cloud_surface
+- [PRIO] api.sumup.com/token,4.80,tech_exposure (live OAuth endpoint; public mint dead, secret-gated variant open)
+
+STEP 3 — HYPOTHESES:
+[HYP] Merchant-created OAuth2 app secret mints scoped tokens at legacy /token (client_credentials)
+class: AUTH
+asset: api.sumup.com/token
+confidence: 50
+reasoning: Live POST proves endpoint parses client_credentials and rejects only the SPECIFIC credential (dashboard w/o secret → 400 invalid_client "Client authorization failed"); me.sumup.com/settings/oauth2-applications lets merchants self-create OAuth2 apps (client_id+secret); staging twin auth.sam-app.ro proved this gateway family stores auth_method without enforcing it and accepts body-secret post; if merchant-registry creds are synced to legacy identity service, they mint real scoped tokens at api.sumup.com/token.
+evidence_needed: POST grant_type=client_credentials&client_id={merchant_app}&client_secret={secret} → 200 access_token; replay token → gateway structured error (≠ plain 404) at a spec path.
+verify_steps: AUTH_HELPED — (1) HUMAN creates OAuth2 application in me.sumup.com settings (or supplies existing); (2) POST https://api.sumup.com/token -d "grant_type=client_credentials&client_id={app}&client_secret={secret}&scope=payments"; (3) replay minted token on GET /v1/merchants/self → structured 404/401 = signature accepted.
+impact: Scoped merchant-level token from a legacy endpoint with weaker-configured auth enforcement — HIGH/CRITICAL if mint succeeds with a self-created app.
+testability: AUTH_HELPED
+[HYP] payment-methods differentiates per-merchant APM config only under bearer (cross-tenant leak)
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 68
+reasoning: Live 200 unauth static {"card"} re-confirmed for MH4H92C7; spec declares oauth2:[]+apiKey:[]+x-scopes:[] (credential optional, zero scopes); handler falls back to static default until it can resolve per-merchant APM rules; doc-example codes MH4H92C7/MK01A8C2/MK10CL2A are real-format targets.
+evidence_needed: valid sup_sk_ bearer + foreign merchant_code → body ≠ {card} (e.g. qr_code_pix for BRL, blik for PLN) or varies by currency/amount cross-tenant.
+verify_steps: AUTH_HELPED — (1) GET /v0.1/merchants/MH4H92C7/payment-methods?amount=9.99&currency=EUR with Bearer sup_sk_ (baseline); (2) foreign codes {MK01A8C2,MK10CL2A,MCXXXXXX} × {EUR,BRL,PLN,PHP} — leak = any body ≠ {card} or ≠ own-body.
+impact: Cross-tenant read of merchant APM/acquirer enablement feeding checkout-eligibility — MEDIUM/HIGH.
+testability: AUTH_HELPED
+[HYP] CreateApplePaySession SSRF via attacker-chosen target (checkout-existence-gated)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 60
+reasoning: PUT now confirmed gated ONLY on checkout existence (404 structured NOT_FOUND), not on target validation; spec body required{context:hostname,target:uri} with no target pinning visible; 200 returns raw merchant-session object (server-side fetch + reflect); oauth2:[]/apiKey:[]/x-scopes:[] — zero-scope credential gate.
+evidence_needed: 200 body echoing non-Apple content (meta-data/IAM doc) or timing delta vs Apple-gateway control.
+verify_steps: AUTH_HELPED — with own bearer+own checkout_id: PUT {"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"} vs Apple-gateway control; compare body+timing; repeat foreign checkout_id (BOLA compound).
+impact: Non-blind SSRF from payments stack → cloud metadata/IAM creds or internal services — CRITICAL if confirmed.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE:
+- [PARKED] /token public-client no-secret mint: REFUTED live (400 invalid_client) — folded into secret-gated variant above (conf 50).
+- [FINAL] payment-methods (68), apple-pay-session (60), token-client_credentials (50).
+
+STEP 5 — NEXT ACTION:
+[NEXT] HUMAN: provide ONE merchant credential from me.sumup.com — either a `sup_sk_` API key (settings/api-keys) OR an OAuth2 application client_id+client_secret (settings/oauth2-applications) — then in ONE session: (1) POST `https://api.sumup.com/token -d "grant_type=client_credentials&client_id={app}&client_secret={secret}"` and replay any token on `GET https://api.sumup.com/v1/merchants/self`; (2) GET baseline `https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods?amount=9.99&currency=EUR` (Bearer sup_sk_) then foreign codes {MK01A8C2,MK10CL2A,MCXXXXXX} × {EUR,BRL,PLN}; (3) PUT `https://api.sumup.com/v0.2/checkouts/{own}/apple-pay-session` body `{"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` vs Apple-gateway control.
+
+STEP 6 — LEARNING:
+- [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/token: POST client_credentials&client_id=dashboard (no secret) → 400 invalid_client — public-client mint REFUTED; endpoint routes and parses OAuth grants (live, not dead).
+- [LEARN] ACCEPTED MISCONFIG @ api.sumup.com/token: OPTIONS dynamically reflects attacker Origin into ACAO + allow-headers:* — origin-echo CORS on token endpoint; hardening-only (header bearer, no ambient creds) but distinct from static `*` on sibling endpoints.
+- [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/v0.1/merchants/.../payment-methods: 200 static `{card}` unauth re-confirmed (doc-example code included) — out-of-gate route; cross-tenant differentiation requires bearer.
+- [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/v0.2/checkouts/{id}/apple-pay-session: PUT bogus checkout → structured NOT_FOUND — checkout-existence gate before handler; SSRF test needs own checkout_id.
+
+STEP 7 — RISK:
+[RISK] sumup: 82 — 0 filed bugs (Contentful P4 closed, token rotated). Live progress this cycle: public-client /token mint refuted (one untested vector eliminated); payment-methods/SSRF still ONE merchant credential away; origin-echo CORS on /token is hardening-only. Program value is 100% gated on HUMAN-supplied merchant credential — provide `sup_sk_` or an OAuth2-app client secret to unblock the top 3.
