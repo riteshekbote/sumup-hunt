@@ -679,3 +679,15 @@ www.sumup.com
 - CHANGED mcp.sumup.com/mcp: Returns 401 (bearer required); wildcard CORS + Authorization allow-header is hardening-only (bearer_methods_supported=["header"])
 
 ## 2026-09-14 07:16:52 UTC
+
+## 2026-09-14 14:33:09 UTC
+- NEW `developer.sumup.com/api`: Official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public — 42 operations, exact paths, per-op scopes, apiKey scheme, legacy OAuth authorize+token on api.sumup.com
+- NEW `api.sumup.com/token`: Legacy token endpoint confirmed ROUTED (OPTIONS 204 + structured 404 on GET, wildcard CORS, identity.svc operation) — documented in official spec, live on gateway; not previousl
+- NEW `auth.sumup.com/oauth2/auth`: Scope-acceptance oracle fully mapped — dashboard={readers.read,terminals.read}, support_centre={openid,classic,offline}, all 13 REST spec scopes rejected; modern dashboar
+- NEW `api.sumup.com` spec: GET /v0.1/merchants/{merchant_code}/payment-methods and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session declared oauth2:[] — empty-scope BOLA/SSRF targets for AUTH_HELPED gat
+- NEW `api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods`: Probe confirms 404 unauthenticated; KB documents oauth2:[] (empty-scope) in official OpenAPI spec — BOLA target gated at gateway
+- NEW `api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session`: Probe confirms 404 unauthenticated; KB documents oauth2:[] (empty-scope) in official OpenAPI spec — SSRF target gated at gateway
+- CHANGED `api.sumup.com/authorize`: Probes return 404; KB confirms LIVE via raw curl (302→auth.sumup.com/flows/oauth2/error) with client_id oracle + wildcard CORS + SameSite=None cookies — probe harness follow
+- CHANGED Contentful PREVIEW token: Rotated (401 at 2026-09-11 09:29 UTC) — P4 finding closed, non-reproducible; report file never existed despite KB hallucinations
+- CHANGED `auth.sam-app.ro`: Dynamic registration LIVE (RFC 7591 unauthenticated POST → 201); mints JWTs with empty scp + attacker-controlled aud; cross-env JWKS isolation (prod 8 keys, staging 11 keys, ZERO ki
+- CHANGED `api.sumup.com/.well-known/oauth-protected-resource`: RFC 9728 metadata static — sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; recon surface exhausted
