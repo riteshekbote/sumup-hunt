@@ -404,3 +404,26 @@ TARGET_ORG not configured for sumup; skipping public-org deep scan.
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
 ## REPOSCAN 2026-09-14 05:25:28 UTC
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-14 11:03:33 UTC
+[HYP] Hardcoded fallback secrets in Vendure/Medusa Docker example configs
+class: OTHER
+asset: sumup-plugin-vendure/examples/docker/vendure/vendure-config.ts:26-38
+confidence: 15
+reasoning: COOKIE_SECRET, SESSION_SECRET, JWT_SECRET, SUPERADMIN_PASSWORD,
+impact: low
+verify_steps: Confirm these Docker examples are never deployed to staging/prod;
+[HYP] Forked Terraform provider exposes explicit TLS-verification bypass
+class: MISCONFIG
+asset: terraform-provider-kafka-connect/connect/provider.go:59-92
+confidence: 25
+reasoning: SumUp maintains a fork of Mongey/terraform-provider-kafka-connect
+impact: low
+verify_steps: Confirm this provider is only used for internal dev/test Kafka
+[HYP] Stale webhook.site URL embedded in OpenAPI specs and code samples
+class: OTHER
+asset: sumup-openapi/openapi31.yaml:7717 (+ all openapi.json copies across
+confidence: 10
+reasoning: The hardcoded return_url "https://webhook.site/e21ddbb0-42c4-4358-
+impact: informational
+verify_steps: Confirm the webhook.site UUID was never used as a real return_url
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
