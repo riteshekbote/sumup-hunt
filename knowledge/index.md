@@ -423,3 +423,6 @@
 - 2026-09-15 ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks resource access; prod sync untestable passively.
 - 2026-09-15 ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, JWKS URI; no resource_scopes/audience-oracle field; recon surface exhausted.
 - 2026-09-15 REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token rotated (401) — finding non-reproducible; report file never existed despite KB hallucinations.
+- 2026-09-15 ACCEPTED OTHER @ api.sumup.com/v0.1/merchants/{code}/payment-methods: static body extends to PLN (MH4H92C7+MCXXXXXX both {"card"}) — per-currency resolution confirmed entirely bearer-gated; handler-level BOLA remains viable but requires bearer to disambiguate.
+- 2026-09-15 ACCEPTED OATH @ api.sumup.com/v0.2/checkouts/{id}/apple-pay-session: OPTIONS 204 re-verified 2026-09-15 — route ROUTED at gateway while method-level unauth 404; scope-free claim in spec consistent with payment-methods pre-auth behavior.
+- 2026-09-15 ACCEPTED OTHER @ api.sumup.com/token: OPTIONS 204 re-verified; access-control-allow-origin remains origin-echo (not literal *), bearer-header-only → hardening-only.

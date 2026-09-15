@@ -729,3 +729,21 @@ www.sumup.com
 - CHANGED `auth.sam-app.ro` dynamic registration LIVE (RFC 7591) → mints JWTs (empty `scp`, attacker-controlled `aud`) but cross-env JWKS isolation (ZERO kid overlap) blocks prod relay (KB 2026-09-15)
 - CHANGED `api.sumup.com/.well-known/oauth-protected-resource` RFC 9728 metadata static — `authorization_servers=["https://auth.sumup.com"]`, `bearer_methods_supported=["header"]`, `jwks_uri="https://auth.sumup
 - CHANGED `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauth 200 static `{"card"}` re-verified for {MH4H92C7,MK01A8C2,MK10CL2A,MCXXXXXX} × {EUR,BRL} — per-merchant resolution requires a bearer; AUTH_H
+
+## 2026-09-15 16:58:00 UTC
+- NEW `api.sumup.com/token` OPTIONS 204 confirmed via probe: `access-control-allow-origin` echoes Origin (`api.sumup.com`), `access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE`, `access-control-ma
+- NEW `api.sumup.com/token` POST `grant_type=client_credentials&client_id=dashboard` → 400 `invalid_client` on both legacy gateway and modern auth.sumup.com (KB 2026-09-15)
+- NEW JWKS prod: 8 keys (6 `public:*` RSA + 1 unnamed RSA + 1 EdDSA); staging: 11 keys; ZERO `kid` overlap confirmed (KB 2026-09-15)
+- CHANGED Contentful PREVIEW token rotated (401) — P4 finding closed, non-reproducible (KB 2026-09-15)
+- CHANGED `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos: crt.sh 52 + ccTLD 96 + custom schemes + bare paths = 0 HITs) (KB 2
+- CHANGED `auth.sam-app.ro` dynamic registration LIVE (RFC 7591) → mints JWTs (empty `scp`, attacker-controlled `aud`) but cross-env JWKS isolation (ZERO kid overlap) blocks prod relay (KB 2026-09-15)
+- CHANGED `api.sumup.com/.well-known/oauth-protected-resource` RFC 9728 metadata static — `authorization_servers=["https://auth.sumup.com"]`, `bearer_methods_supported=["header"]`, `jwks_uri="https://auth.sumup
+- CHANGED `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauth 200 static `{"card"}` re-verified for {MH4H92C7,MK01A8C2,MK10CL2A,MCXXXXXX} × {EUR,BRL} — per-merchant resolution requires a bearer; AUTH_H
+- NEW `api.sumup.com/token` OPTIONS 204 confirmed via probe: `access-control-allow-origin` echoes Origin (`api.sumup.com`), `access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE`, `access-control-ma
+- NEW `api.sumup.com/token` POST `grant_type=client_credentials&client_id=dashboard` → 400 `invalid_client` on both legacy gateway and modern auth.sumup.com
+- NEW JWKS prod: 8 keys (6 `public:*` RSA + 1 unnamed RSA + 1 EdDSA); staging: 11 keys; ZERO `kid` overlap confirmed
+- CHANGED Contentful PREVIEW token rotated (401) — P4 finding closed, non-reproducible
+- CHANGED `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos: crt.sh 52 + ccTLD 96 + custom schemes + bare paths = 0 HITs)
+- CHANGED `auth.sam-app.ro` dynamic registration LIVE (RFC 7591) → mints JWTs (empty `scp`, attacker-controlled `aud`) but cross-env JWKS isolation (ZERO kid overlap) blocks prod relay
+- CHANGED `api.sumup.com/.well-known/oauth-protected-resource` RFC 9728 metadata static — `authorization_servers=["https://auth.sumup.com"]`, `bearer_methods_supported=["header"]`, `jwks_uri="https://auth.sumup
+- CHANGED `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauth 200 static `{"card"}` re-verified for {MH4H92C7,MK01A8C2,MK10CL2A,MCXXXXXX} × {EUR,BRL} — per-merchant resolution requires a bearer; AUTH_H
