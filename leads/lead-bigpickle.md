@@ -4441,3 +4441,33 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OATH @ api.sumup.com/v0.2/checkouts/{id}/apple-pay-session: OPTIONS 204 re-verified 2026-09-15 — route ROUTED at gateway while method-level unauth 404; scope-free claim in spec consistent with payment-methods pre-auth behavior.
 [LEARN] ACCEPTED OTHER @ api.sumup.com/token: OPTIONS 204 re-verified; access-control-allow-origin remains origin-echo (not literal *), bearer-header-only → hardening-only.
 [RISK] sumup: 82 — 0 filed bugs. Three reportable-candidate classes (apple-pay SSRF CRITICAL, payment-methods BOLA MEDIUM/HIGH, legacy-token AUTH HIGH) are 100% gated behind ONE human-supplied merchant credential; this cycle produced zero new attacker-reachable passive surface and all probes confirmed byte-stable facts. Program value is monotone-declining with fatigue while the sole unlock action remains pending.
+## 2026-09-15 20:07:49 UTC [target] (model bigpickle)
+[HYP] apple-pay-session server-side fetch of attacker-chosen target (no gateway scope gate)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 60
+reasoning: Route is oauth2:[]/apiKey:[] (scope-free, same class as payment-methods which already serves 200 with no token); OPTIONS 204 re-verified 2026-09-15; service schema (openapi31.json) now confirms `target` and `context` are required string fields, `target` format uri for Apple startSession proxying, `context` hostname; server must fetch `target` to obtain the session — validation allowlist unknown in spec.
+evidence_needed: merchant Bearer (any scope) + PUT body target=http://169.254.169.254/latest/meta-data/ vs control https://apple-pay-gateway-cert.apple.com/... — differing status/body between metadata and control proves unfiltered server-side fetch.
+verify_steps: AUTH_HELPED — PUT /v0.2/checkouts/{own_checkout}/apple-pay-session {"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"} (single shot) vs same with control apple.com target; compare 200/400/302 shapes.
+impact: metadata → IAM/instance creds → lateral movement; CRITICAL.
+testability: AUTH_HELPED
+[HYP] Cross-tenant receipt BOLA via tx_event_id enumeration decoupled from token ownership
+class: IDOR
+asset: api.sumup.com/v1.1/receipts/{transaction_id}
+confidence: 55
+reasoning: Spec places owner merchant code in `mid` QUERY param with integer `tx_event_id` (example 9567461191) — receipt lookup keyed on guessable integer + path tx id, no spec statement that handler binds mid↔token; receipts carry customer PII (name/address/card last4); high-value cross-tenant pull if handler trusts mid query.
+evidence_needed: valid merchant Bearer + own tx_event_id/MID control returns own receipt; foreign UK/UUID tx id or neighboring tx_event_id returns a foreign receipt body.
+verify_steps: AUTH_HELPED — GET /v1.1/receipts/{own_tx_id}?mid={own}&tx_event_id={own_event} 200 control; then own tx_id + {foreign mid, foreign tx_event_id} at 0.5rps.
+impact: cross-tenant e-receipt PII disclosure (financial data); HIGH.
+testability: AUTH_HELPED
+[HYP] Cross-tenant payment-methods BOLA resolves handler-level with no ownership check
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 68
+reasoning: oauth2:[] route serves 200 unauth (static {"card"} for {MH4H92C7,MK01A8C2,MK10CL2A,MCXXXXXX}×{EUR,BRL,PLN}) — gateway skips auth; spec 200 schema shows real per-country output (apple_pay/blik); per-merchant resolution thus handler-side and the only missing discriminator is a bearer to make bodies diverge.
+evidence_needed: own-code bearer control vs foreign codes → different available_payment_methods; own stable.
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/payment-methods?amount=9.99&currency={EUR,BRL,PLN} Bearer, then same on {MK01A8C2,MK10CL2A,MCXXXXXX}; own control 0.5rps.
+impact: cross-tenant APM/acquirer enablement read feeding checkout eligibility; MEDIUM/HIGH.
+testability: AUTH_HELPED
+[NEXT] HUMAN: provide ONE merchant credential from me.sumup.com — `sup_sk_` API key (settings/api-keys) OR OAuth2 app client_id+client_secret (settings/oauth2-applications) — to execute in one session: (1) payment-methods GET own-vs-foreign {EUR,BRL,PLN}; (2) receipts GET with foreign `mid`/`tx_event_id`; (3) apple-pay PUT body `{"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` vs `https://apple-pay-gateway-cert.apple.com/paymentservices/startSession` control; (4) replay minted token on legacy /token + /v1/merchants/{code}.
+[RISK] sumup: 84 — 0 filed bugs. Three distinct high-value handler-level classes (apple-pay SSRF→metadata CRITICAL, payments/receipts cross-tenant PII BOLA HIGH, legacy-token AUTH HIGH) are 100% gated behind ONE human-supplied merchant credential; this cycle added spec-proven SSRF field names and a new integer-keyed receipt surface but zero new live passive exposure. Program value continues monotone decline while the sole unlock action remains pending.

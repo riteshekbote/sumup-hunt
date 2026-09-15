@@ -747,3 +747,5 @@ www.sumup.com
 - CHANGED `auth.sam-app.ro` dynamic registration LIVE (RFC 7591) → mints JWTs (empty `scp`, attacker-controlled `aud`) but cross-env JWKS isolation (ZERO kid overlap) blocks prod relay
 - CHANGED `api.sumup.com/.well-known/oauth-protected-resource` RFC 9728 metadata static — `authorization_servers=["https://auth.sumup.com"]`, `bearer_methods_supported=["header"]`, `jwks_uri="https://auth.sumup
 - CHANGED `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauth 200 static `{"card"}` re-verified for {MH4H92C7,MK01A8C2,MK10CL2A,MCXXXXXX} × {EUR,BRL} — per-merchant resolution requires a bearer; AUTH_H
+
+## 2026-09-15 20:12:57 UTC

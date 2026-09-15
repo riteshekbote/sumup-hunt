@@ -29850,3 +29850,826 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] sumup: 82 — 0 filed bugs. Three reportable-candidate classes (apple-pay SSRF CRITICAL, payment-methods BOLA MEDIUM/HIGH, legacy-token AUTH HIGH) are 100% gated behind ONE human-supplied merchant credential; this cycle produced zero new attacker-reachable passive surface and all probes confirmed byte-stable facts. Program value is monotone-declining with fatigue while the sole unlock action remains pending.
+===== ANALYST bigpickle 2026-09-15 20:12:57 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la && echo "---REPORTS---" && ls -la reports/ 2>/dev/null && echo "---ART---" && ls -la art/ 2>/dev/null
+total 544
+drwxr-xr-x 12 runner runner   4096 Sep 15 20:05 .
+drwxr-xr-x  3 runner runner   4096 Sep 15 20:05 ..
+drwxr-xr-x  7 runner runner   4096 Sep 15 20:05 .git
+drwxr-xr-x  3 runner runner   4096 Sep 15 20:05 .github
+-rw-r--r--  1 runner runner   1885 Sep 15 20:05 README.md
+-rw-r--r--  1 runner runner     32 Sep 15 20:05 analyst-out.txt
+-rw-r--r--  1 runner runner 212271 Sep 15 20:05 analyst-prompt.txt
+-rw-r--r--  1 runner runner 208385 Sep 15 20:05 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 15 20:05 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 15 20:05 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 15 20:05 leads
+-rw-r--r--  1 runner runner  47569 Sep 15 20:05 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 15 20:05 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 15 20:05 reports
+drwxr-xr-x  2 runner runner   4096 Sep 15 20:05 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Sep 15 20:05 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 15 20:05 scripts
+-rw-r--r--  1 runner runner     33 Sep 15 20:05 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 15 20:05 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 15 20:05 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 15 20:05 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 15 20:05 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 15 20:05 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 15 20:05 triage
+---REPORTS---
+total 4232
+drwxr-xr-x  2 runner runner    4096 Sep 15 20:05 .
+drwxr-xr-x 12 runner runner    4096 Sep 15 20:05 ..
+-rw-r--r--  1 runner runner 2356469 Sep 15 20:05 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   17794 Sep 15 20:05 analyst-laguna.log
+-rw-r--r--  1 runner runner   17712 Sep 15 20:05 analyst-ling3.log
+-rw-r--r--  1 runner runner   17876 Sep 15 20:05 analyst-longcat.log
+-rw-r--r--  1 runner runner 1553873 Sep 15 20:05 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    5363 Sep 15 20:05 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 15 20:05 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 15 20:05 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 15 20:05 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   21218 Sep 15 20:05 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  283115 Sep 15 20:05 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 15 20:05 reposcan-findings.md
+-rw-r--r--  1 runner runner    3079 Sep 15 20:05 valid-bugs.md
+---ART---
+[0m
+[0m✱ [0mGlob "**/sumup-openapi/**"[90m 0 matches[0m
+[0m✱ [0mGlob "**/*.openapi*"[90m 0 matches[0m
+[0m→ [0mRead reports/reposcan-findings.md
+[0m→ [0mRead reports/valid-bugs.md
+[0m→ [0mRead reports/hypotheses-bigpickle.txt
+[0m
+[0m$ [0mls -la leads/ inventory/ knowledge/ recon-notes/ reposcan-raw/ scripts/ triage/ 2>/dev/null
+inventory/:
+total 104
+drwxr-xr-x  2 runner runner  4096 Sep 15 20:05 .
+drwxr-xr-x 12 runner runner  4096 Sep 15 20:05 ..
+-rw-r--r--  1 runner runner 95608 Sep 15 20:05 sumup.md
+
+knowledge/:
+total 108
+drwxr-xr-x  2 runner runner  4096 Sep 15 20:05 .
+drwxr-xr-x 12 runner runner  4096 Sep 15 20:05 ..
+-rw-r--r--  1 runner runner 98574 Sep 15 20:05 index.md
+
+leads/:
+total 1544
+drwxr-xr-x  2 runner runner   4096 Sep 15 20:05 .
+drwxr-xr-x 12 runner runner   4096 Sep 15 20:05 ..
+-rw-r--r--  1 runner runner 656181 Sep 15 20:05 lead-bigpickle.md
+-rw-r--r--  1 runner runner   4182 Sep 15 20:05 lead-laguna.md
+-rw-r--r--  1 runner runner   4100 Sep 15 20:05 lead-ling3.md
+-rw-r--r--  1 runner runner   4264 Sep 15 20:05 lead-longcat.md
+-rw-r--r--  1 runner runner     18 Sep 15 20:05 lead-mimo.md
+-rw-r--r--  1 runner runner 846826 Sep 15 20:05 lead-nemotron3.md
+-rw-r--r--  1 runner runner  33939 Sep 15 20:05 reposcan-sumup.md
+
+recon-notes/:
+total 12
+drwxr-xr-x  2 runner runner 4096 Sep 15 20:05 .
+drwxr-xr-x 12 runner runner 4096 Sep 15 20:05 ..
+-rw-r--r--  1 runner runner  813 Sep 15 20:05 DEDICATED-DEEP.md
+
+reposcan-raw/:
+total 12
+drwxr-xr-x  2 runner runner 4096 Sep 15 20:05 .
+drwxr-xr-x 12 runner runner 4096 Sep 15 20:05 ..
+-rw-r--r--  1 runner runner   68 Sep 15 20:05 summary.txt
+
+scripts/:
+total 28
+drwxr-xr-x  2 runner runner  4096 Sep 15 20:05 .
+drwxr-xr-x 12 runner runner  4096 Sep 15 20:05 ..
+-rw-r--r--  1 runner runner 16987 Sep 15 20:05 sync-issues.py
+
+triage/:
+total 408
+drwxr-xr-x  2 runner runner  4096 Sep 15 20:05 .
+drwxr-xr-x 12 runner runner  4096 Sep 15 20:05 ..
+-rw-r--r--  1 runner runner     0 Sep 15 20:05 .gitkeep
+-rw-r--r--  1 runner runner    80 Sep 15 20:05 run-2026-09-02-22-14.md
+-rw-r--r--  1 runner runner   192 Sep 15 20:05 run-2026-09-03-00-06.md
+-rw-r--r--  1 runner runner   172 Sep 15 20:05 run-2026-09-03-04-42.md
+-rw-r--r--  1 runner runner   291 Sep 15 20:05 run-2026-09-03-09-36.md
+-rw-r--r--  1 runner runner  1190 Sep 15 20:05 run-2026-09-03-13-56.md
+-rw-r--r--  1 runner runner   182 Sep 15 20:05 run-2026-09-03-17-46.md
+-rw-r--r--  1 runner runner   174 Sep 15 20:05 run-2026-09-03-20-54.md
+-rw-r--r--  1 runner runner   474 Sep 15 20:05 run-2026-09-03-23-11.md
+-rw-r--r--  1 runner runner   250 Sep 15 20:05 run-2026-09-04-01-05.md
+-rw-r--r--  1 runner runner  9924 Sep 15 20:05 run-2026-09-04-06-02.md
+-rw-r--r--  1 runner runner   266 Sep 15 20:05 run-2026-09-04-11-29.md
+-rw-r--r--  1 runner runner   576 Sep 15 20:05 run-2026-09-04-15-06.md
+-rw-r--r--  1 runner runner   143 Sep 15 20:05 run-2026-09-04-18-29.md
+-rw-r--r--  1 runner runner   327 Sep 15 20:05 run-2026-09-04-21-02.md
+-rw-r--r--  1 runner runner   224 Sep 15 20:05 run-2026-09-04-23-05.md
+-rw-r--r--  1 runner runner   261 Sep 15 20:05 run-2026-09-05-01-06.md
+-rw-r--r--  1 runner runner   209 Sep 15 20:05 run-2026-09-05-05-52.md
+-rw-r--r--  1 runner runner   250 Sep 15 20:05 run-2026-09-05-10-26.md
+-rw-r--r--  1 runner runner   211 Sep 15 20:05 run-2026-09-05-13-32.md
+-rw-r--r--  1 runner runner   186 Sep 15 20:05 run-2026-09-05-16-16.md
+-rw-r--r--  1 runner runner  1569 Sep 15 20:05 run-2026-09-05-18-26.md
+-rw-r--r--  1 runner runner   300 Sep 15 20:05 run-2026-09-05-20-43.md
+-rw-r--r--  1 runner runner   169 Sep 15 20:05 run-2026-09-05-22-45.md
+-rw-r--r--  1 runner runner  1909 Sep 15 20:05 run-2026-09-06-00-48.md
+-rw-r--r--  1 runner runner   156 Sep 15 20:05 run-2026-09-06-05-45.md
+-rw-r--r--  1 runner runner   180 Sep 15 20:05 run-2026-09-06-10-45.md
+-rw-r--r--  1 runner runner  1122 Sep 15 20:05 run-2026-09-06-14-06.md
+-rw-r--r--  1 runner runner   194 Sep 15 20:05 run-2026-09-06-17-10.md
+-rw-r--r--  1 runner runner   207 Sep 15 20:05 run-2026-09-06-19-18.md
+-rw-r--r--  1 runner runner  8839 Sep 15 20:05 run-2026-09-06-21-30.md
+-rw-r--r--  1 runner runner   200 Sep 15 20:05 run-2026-09-06-23-09.md
+-rw-r--r--  1 runner runner   214 Sep 15 20:05 run-2026-09-07-01-08.md
+-rw-r--r--  1 runner runner   171 Sep 15 20:05 run-2026-09-07-06-12.md
+-rw-r--r--  1 runner runner   199 Sep 15 20:05 run-2026-09-07-12-47.md
+-rw-r--r--  1 runner runner  1797 Sep 15 20:05 run-2026-09-07-18-13.md
+-rw-r--r--  1 runner runner   189 Sep 15 20:05 run-2026-09-07-21-37.md
+-rw-r--r--  1 runner runner  1298 Sep 15 20:05 run-2026-09-07-23-48.md
+-rw-r--r--  1 runner runner   237 Sep 15 20:05 run-2026-09-08-04-16.md
+-rw-r--r--  1 runner runner   241 Sep 15 20:05 run-2026-09-08-08-56.md
+-rw-r--r--  1 runner runner   290 Sep 15 20:05 run-2026-09-08-13-29.md
+-rw-r--r--  1 runner runner   211 Sep 15 20:05 run-2026-09-08-17-30.md
+-rw-r--r--  1 runner runner  2172 Sep 15 20:05 run-2026-09-08-20-19.md
+-rw-r--r--  1 runner runner   209 Sep 15 20:05 run-2026-09-08-22-47.md
+-rw-r--r--  1 runner runner   174 Sep 15 20:05 run-2026-09-09-01-09.md
+-rw-r--r--  1 runner runner   193 Sep 15 20:05 run-2026-09-09-06-06.md
+-rw-r--r--  1 runner runner   161 Sep 15 20:05 run-2026-09-09-11-38.md
+-rw-r--r--  1 runner runner  7125 Sep 15 20:05 run-2026-09-09-15-21.md
+-rw-r--r--  1 runner runner   180 Sep 15 20:05 run-2026-09-09-18-45.md
+-rw-r--r--  1 runner runner   843 Sep 15 20:05 run-2026-09-09-21-37.md
+-rw-r--r--  1 runner runner   157 Sep 15 20:05 run-2026-09-09-23-31.md
+-rw-r--r--  1 runner runner   202 Sep 15 20:05 run-2026-09-10-01-29.md
+-rw-r--r--  1 runner runner   233 Sep 15 20:05 run-2026-09-10-06-39.md
+-rw-r--r--  1 runner runner  1015 Sep 15 20:05 run-2026-09-10-11-52.md
+-rw-r--r--  1 runner runner 14240 Sep 15 20:05 run-2026-09-10-16-19.md
+-rw-r--r--  1 runner runner 13417 Sep 15 20:05 run-2026-09-10-19-11.md
+-rw-r--r--  1 runner runner  3533 Sep 15 20:05 run-2026-09-10-21-43.md
+-rw-r--r--  1 runner runner   164 Sep 15 20:05 run-2026-09-10-23-57.md
+-rw-r--r--  1 runner runner   240 Sep 15 20:05 run-2026-09-11-04-25.md
+-rw-r--r--  1 runner runner   238 Sep 15 20:05 run-2026-09-11-09-09.md
+-rw-r--r--  1 runner runner   310 Sep 15 20:05 run-2026-09-11-13-40.md
+-rw-r--r--  1 runner runner   186 Sep 15 20:05 run-2026-09-11-17-17.md
+-rw-r--r--  1 runner runner  1091 Sep 15 20:05 run-2026-09-11-19-58.md
+-rw-r--r--  1 runner runner   166 Sep 15 20:05 run-2026-09-11-22-25.md
+-rw-r--r--  1 runner runner  8697 Sep 15 20:05 run-2026-09-12-00-39.md
+-rw-r--r--  1 runner runner   590 Sep 15 20:05 run-2026-09-12-05-08.md
+-rw-r--r--  1 runner runner   729 Sep 15 20:05 run-2026-09-12-09-29.md
+-rw-r--r--  1 runner runner   213 Sep 15 20:05 run-2026-09-12-13-11.md
+-rw-r--r--  1 runner runner   224 Sep 15 20:05 run-2026-09-12-16-23.md
+-rw-r--r--  1 runner runner  1575 Sep 15 20:05 run-2026-09-12-18-48.md
+-rw-r--r--  1 runner runner   186 Sep 15 20:05 run-2026-09-12-21-21.md
+-rw-r--r--  1 runner runner   183 Sep 15 20:05 run-2026-09-12-23-22.md
+-rw-r--r--  1 runner runner   183 Sep 15 20:05 run-2026-09-13-01-25.md
+-rw-r--r--  1 runner runner   177 Sep 15 20:05 run-2026-09-13-06-47.md
+-rw-r--r--  1 runner runner   143 Sep 15 20:05 run-2026-09-13-12-40.md
+-rw-r--r--  1 runner runner   467 Sep 15 20:05 run-2026-09-13-16-40.md
+-rw-r--r--  1 runner runner  1044 Sep 15 20:05 run-2026-09-13-19-01.md
+-rw-r--r--  1 runner runner   189 Sep 15 20:05 run-2026-09-13-21-26.md
+-rw-r--r--  1 runner runner   272 Sep 15 20:05 run-2026-09-13-23-31.md
+-rw-r--r--  1 runner runner   246 Sep 15 20:05 run-2026-09-14-01-40.md
+-rw-r--r--  1 runner runner   232 Sep 15 20:05 run-2026-09-14-07-09.md
+-rw-r--r--  1 runner runner   183 Sep 15 20:05 run-2026-09-14-14-16.md
+-rw-r--r--  1 runner runner   191 Sep 15 20:05 run-2026-09-14-19-30.md
+-rw-r--r--  1 runner runner   667 Sep 15 20:05 run-2026-09-14-22-46.md
+-rw-r--r--  1 runner runner   194 Sep 15 20:05 run-2026-09-15-01-20.md
+-rw-r--r--  1 runner runner   244 Sep 15 20:05 run-2026-09-15-06-42.md
+-rw-r--r--  1 runner runner   225 Sep 15 20:05 run-2026-09-15-12-36.md
+-rw-r--r--  1 runner runner   221 Sep 15 20:05 run-2026-09-15-17-17.md
+[0m
+[0m→ [0mRead leads/lead-nemotron3.md[90m [offset=1, limit=120][0m
+[0m→ [0mRead reports/hypotheses-nemotron3.txt
+[0m
+[0m$ [0mtimeout 30 curl -s "https://api.github.com/repos/sumup/sumup-openapi/contents/" | head -c 2000
+[
+  {
+    "name": "CODE_OF_CONDUCT.md",
+    "path": "CODE_OF_CONDUCT.md",
+    "sha": "f6bdbc9845c24bce6f7c8b38c7ff754b1323677d",
+    "size": 5549,
+    "url": "https://api.github.com/repos/sumup/sumup-openapi/contents/CODE_OF_CONDUCT.md?ref=main",
+    "html_url": "https://github.com/sumup/sumup-openapi/blob/main/CODE_OF_CONDUCT.md",
+    "git_url": "https://api.github.com/repos/sumup/sumup-openapi/git/blobs/f6bdbc9845c24bce6f7c8b38c7ff754b1323677d",
+    "download_url": "https://raw.githubusercontent.com/sumup/sumup-openapi/main/CODE_OF_CONDUCT.md",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/sumup/sumup-openapi/contents/CODE_OF_CONDUCT.md?ref=main",
+      "git": "https://api.github.com/repos/sumup/sumup-openapi/git/blobs/f6bdbc9845c24bce6f7c8b38c7ff754b1323677d",
+      "html": "https://github.com/sumup/sumup-openapi/blob/main/CODE_OF_CONDUCT.md"
+    }
+  },
+  {
+    "name": "LICENSE",
+    "path": "LICENSE",
+    "sha": "f9bd2d0a5e4932f80c48f94ee7441bae527ad867",
+    "size": 10832,
+    "url": "https://api.github.com/repos/sumup/sumup-openapi/contents/LICENSE?ref=main",
+    "html_url": "https://github.com/sumup/sumup-openapi/blob/main/LICENSE",
+    "git_url": "https://api.github.com/repos/sumup/sumup-openapi/git/blobs/f9bd2d0a5e4932f80c48f94ee7441bae527ad867",
+    "download_url": "https://raw.githubusercontent.com/sumup/sumup-openapi/main/LICENSE",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/sumup/sumup-openapi/contents/LICENSE?ref=main",
+      "git": "https://api.github.com/repos/sumup/sumup-openapi/git/blobs/f9bd2d0a5e4932f80c48f94ee7441bae527ad867",
+      "html": "https://github.com/sumup/sumup-openapi/blob/main/LICENSE"
+    }
+  },
+  {
+    "name": "README.md",
+    "path": "README.md",
+    "sha": "e61a30b7437f7fc2e1206f0a7772d0c19f01a9cc",
+    "size": 1448,
+    "url": "https://api.github.com/repos/sumup/sumup-openapi/contents/README.md?ref=main",
+    "html_url": "https://github.com/sumup/sumup-openap
+[0m
+[0m$ [0mtimeout 30 curl -s "https://api.github.com/repos/sumup/sumup-openapi/git/trees/main?recursive=1" | grep -E '"path"' | head -50
+"path": "CODE_OF_CONDUCT.md",
+      "path": "LICENSE",
+      "path": "README.md",
+      "path": "SECURITY.md",
+      "path": "common.yaml",
+      "path": "openapi.json",
+      "path": "openapi.yaml",
+      "path": "openapi31.json",
+      "path": "openapi31.yaml",
+[0m
+[0m$ [0mcd /tmp/opencode && timeout 60 curl -s "https://raw.githubusercontent.com/sumup/sumup-openapi/main/openapi.yaml" -o sumup-openapi.yaml && wc -l sumup-openapi.yaml && grep -cE '^  /' sumup-openapi.yaml
+8789 sumup-openapi.yaml
+28
+[0m
+[0m$ [0mcd /tmp/opencode && grep -nE '^  /[a-zA-Z]' sumup-openapi.yaml
+103:  /v0.1/merchants/{merchant_code}/payment-methods:
+186:  /v0.1/checkouts:
+488:  /v0.1/checkouts/{checkout_id}:
+1050:  /v0.2/checkouts/{checkout_id}/apple-pay-session:
+1145:  /v0.1/customers:
+1250:  /v0.1/customers/{customer_id}:
+1399:  /v0.1/customers/{customer_id}/payment-instruments:
+1474:  /v0.1/customers/{customer_id}/payment-instruments/{token}:
+1563:  /v1.0/merchants/{merchant_code}/payments/{transaction_id}/refunds:
+1695:  /v2.1/merchants/{merchant_code}/transactions:
+1800:  /v2.1/merchants/{merchant_code}/transactions/history:
+2039:  /v1.0/merchants/{merchant_code}/payouts:
+2184:  /v1.1/receipts/{transaction_id}:
+2289:  /v0/merchants/{merchant_code}/readers/{reader_id}/go-checkout:
+2382:  /v0.1/memberships:
+2509:  /v0.1/merchants/{merchant_code}/members:
+2749:  /v0.1/merchants/{merchant_code}/members/{member_id}:
+2981:  /v0.1/merchants/{merchant_code}/roles:
+3121:  /v0.1/merchants/{merchant_code}/roles/{role_id}:
+3326:  /v1/merchants/{merchant_code}:
+3367:  /v1/merchants/{merchant_code}/persons:
+3408:  /v1/merchants/{merchant_code}/persons/{person_id}:
+3456:  /v0.1/merchants/{merchant_code}/readers:
+3615:  /v0.1/merchants/{merchant_code}/readers/{reader_id}:
+3803:  /v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout:
+3932:  /v0.1/merchants/{merchant_code}/readers/{reader_id}/status:
+4033:  /v0.1/merchants/{merchant_code}/readers/{reader_id}/terminate:
+4146:  /v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout/{checkout_id}:
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import re
+txt = open('sumup-openapi.yaml').read().splitlines()
+# find securitySchemes block
+inscheme=False
+for i,l in enumerate(txt):
+    if 'securitySchemes' in l:
+        inscheme=True
+    if inscheme and re.match(r'^    [a-zA-Z]', l) and ':' in l:
+        print(i+1, l)
+EOF
+8555     apiKey:
+8560     oauth2:
+8610     CreatedReader:
+8622     UpdateReaderByID:
+8628     DeleteReaderByID:
+8636     post:
+8667     post:
+8698     post:
+8729     post:
+8760     post:
+[0m
+[0m$ [0mcd /tmp/opencode && sed -n '8540,8610p' sumup-openapi.yaml
+Filters the results by the reference ID of transaction events and returns only transactions with events whose IDs are *smaller* than the specified value. This parameters supersedes the `newest_time` parameter (if both are provided in the request).
+      required: false
+      schema:
+        type: string
+        example: 090df9bf-93b7-40f1-8181-fbdb236568a1
+    TransactionID:
+      name: id
+      in: query
+      description: |-
+        Retrieves the transaction resource with the specified transaction ID (the `id` parameter in the transaction resource).
+      required: false
+      schema:
+        type: string
+        example: 410fc44a-5956-44e1-b5cc-19c6f8d727a4
+  securitySchemes:
+    apiKey:
+      description: |-
+        API keys allow you easily interact with SumUp APIs. API keys are static tokens. You can create API keys from the [Dashboard](https://me.sumup.com/settings/api-keys)
+      type: http
+      scheme: Bearer
+    oauth2:
+      type: oauth2
+      description: |-
+        SumUp supports [OAuth 2.0](https://tools.ietf.org/html/rfc6749) authentication for platforms that want to offer their services to SumUp users.
+
+        To integrate via OAuth 2.0 you will need a client credentials that you can create in the [SumUp Dashboard](https://me.sumup.com/settings/oauth2-applications).
+
+        To maintain security of our users, we highly recommend that you use one of the [recommended OAuth 2.0 libraries](https://oauth.net/code/) for authentication.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.sumup.com/authorize
+          tokenUrl: https://api.sumup.com/token
+          refreshUrl: https://api.sumup.com/token
+          scopes:
+            payments: Make payments by creating and processing checkouts.
+            checkouts.read: View checkouts.
+            checkouts.write: Create, process, and deactivate checkouts.
+            transactions.history: View transactions and transaction history.
+            transactions.read: View transactions and transaction history.
+            refunds.write: Refund transactions.
+            receipts.read: View receipts.
+            user.profile_readonly: View user profile details.
+            user.profile: View and manage your user profile.
+            user.app-settings: View and manage the SumUp mobile application settings.
+            payment_instruments: Manage customers and their payment instruments.
+            customers.read: View customers and their payment instruments.
+            customers.write: Create and manage customers and their payment instruments.
+            user.payout-settings: View and manage your payout settings.
+            payouts.read: View payouts.
+            user.subaccounts: View and manage the user profile details of your employees.
+        clientCredentials:
+          tokenUrl: https://api.sumup.com/token
+          scopes:
+            payments: Make payments by creating and processing checkouts.
+            checkouts.read: View checkouts.
+            checkouts.write: Create, process, and deactivate checkouts.
+            transactions.history: View transactions and transaction history.
+            transactions.read: View transactions and transaction history.
+            refunds.write: Refund transactions.
+            receipts.read: View receipts.
+            user.profile_readonly: View user profile details.
+            user.profile: View and manage your user profile.
+            user.app-settings: View and manage the SumUp mobile application settings.
+            payment_instruments: Manage customers and their payment instruments.
+            customers.read: View customers and their payment instruments.
+            customers.write: Create and manage customers and their payment instruments.
+            user.payout-settings: View and manage your payout settings.
+            payouts.read: View payouts.
+            user.subaccounts: View and manage the user profile details of your employee.
+  examples:
+    CreatedReader:
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import re
+txt = open('sumup-openapi.yaml').read().splitlines()
+path=None
+op=None
+secl=[]
+depth_stack=[]
+for i,l in enumerate(txt):
+    m=re.match(r'^  (/[a-zA-Z0-9/{}\.]+):', l)
+    if m:
+        path=m.group(1); continue
+    m=re.match(r'^    (get|post|put|patch|delete):', l)
+    if m:
+        op=m.group(1); secl=[]; continue
+    if op and re.match(r'^      security:', l) is not None:
+        # collect until dedent
+        j=i+1
+        body=[]
+        while j < len(txt) and (txt[j].startswith('        ') or txt[j].strip()==''):
+            if txt[j].strip(): body.append(txt[j].lstrip())
+            j+=1
+        secl.append(' '.join(body))
+    if op and l.startswith('      description') and secl:
+        pass
+    # detect end of operation block: line at exactly 4 spaces indent starting a new key
+    if op and re.match(r'^    [a-zA-Z]', l) and not re.match(r'^    (get|post|put|patch|delete):', l):
+        if secl:
+            print(f"{path}::{op}  SEC[{secl}]")
+        op=None
+# flush last
+if op and secl:
+    print(f"{path}::{op}  SEC[{secl}]")
+EOF
+/v0.1/checkouts::get  SEC[['- apiKey: [] - oauth2: - payments - checkouts.read']]
+/v0.1/customers::post  SEC[['- apiKey: [] - oauth2: - payment_instruments - customers.write']]
+/v0.1/customers::put  SEC[['- apiKey: [] - oauth2: - payment_instruments - customers.write']]
+/v0.1/customers::get  SEC[['- apiKey: [] - oauth2: - payment_instruments - customers.read']]
+/v0.1/customers::delete  SEC[['- apiKey: [] - oauth2: - payment_instruments - customers.write']]
+/v0.1/memberships::get  SEC[['- apiKey: [] - oauth2: - readers.read']]
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import re, json
+txt = open('sumup-openapi.yaml').read().splitlines()
+paths={}
+i=0
+# find all operation keys with line numbers
+ops=[]
+for i,l in enumerate(txt):
+    m=re.match(r'^  (/[a-zA-Z0-9/{}\.]+):\s*$', l)
+    if m: path=m.group(1)
+    m=re.match(r'^    (get|post|put|patch|delete):\s*$', l)
+    if m and path:
+        ops.append((path,m.group(1),i))
+# for each op, scan forward to next 4-space key at same indent
+def sub_block(body, key):
+    for n,l in enumerate(body):
+        if l.startswith('      '+key+':'):
+            return body[n+1:]
+    return []
+for path,op,idx in ops:
+    # collect operation indented content until a line with indent < 6 and not blank and not comment
+    j=idx+1
+    block=[]
+    while j < len(txt):
+        l=txt[j]
+        if not l.strip():
+            j+=1; continue
+        indent=len(l)-len(l.lstrip())
+        if l.lstrip().startswith('#'):
+            j+=1; continue
+        if indent < 6:
+            break
+        block.append(l); j+=1
+    # find security: line at indent 6
+    sec=None
+    for n,l in enumerate(block):
+        if l.strip().startswith('security:'):
+            depth=0
+            b=[]
+            k=n+1
+            while k < len(block):
+                ll=block[k]
+                if ll.strip().startswith('-') or ll.strip().startswith(' ') or ll.strip()=='':
+                    b.append(ll.strip()); k+=1
+                elif ll.strip().startswith('#'):
+                    b.append(ll.strip()); k+=1
+                else:
+                    break
+            sec=' '.join(b)
+            break
+    # find x-scopes
+    xsc=None
+    for n,l in enumerate(block):
+        if 'x-scopes' in l or 'x_scopes' in l:
+            xsc=l.strip()
+    print(f"{path}  {op.upper():6} sec={sec}  {xsc if xsc else ''}")
+EOF
+Traceback (most recent call last):
+  File "<stdin>", line 11, in <module>
+NameError: name 'path' is not defined. Did you mean: 'paths'?
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import re
+txt = open('sumup-openapi.yaml').read().splitlines()
+ops=[]
+path=None
+for i,l in enumerate(txt):
+    m=re.match(r'^  (/[a-zA-Z0-9/{}\.]+):\s*$', l)
+    if m: path=m.group(1)
+    m=re.match(r'^    (get|post|put|patch|delete):\s*$', l)
+    if m and path:
+        ops.append((path,m.group(1),i))
+for path,op,idx in ops:
+    j=idx+1
+    block=[]
+    while j < len(txt):
+        l=txt[j]
+        if not l.strip():
+            j+=1; continue
+        indent=len(l)-len(l.lstrip())
+        if l.lstrip().startswith('#'):
+            j+=1; continue
+        if indent < 6:
+            break
+        block.append(l); j+=1
+    sec=None
+    xsc=None
+    for n,l in enumerate(block):
+        ls=l.strip()
+        if ls.startswith('security:'):
+            k=n+1
+            b=[]
+            while k < len(block):
+                ll=block[k].strip()
+                if ll=='' or ll.startswith('-') or ll.startswith('apiKey') or ll.startswith('oauth2') or ll.startswith('{'):
+                    b.append(ll); k+=1
+                elif ll.startswith('#') or ll.startswith('['):
+                    b.append(ll); k+=1
+                else:
+                    break
+            sec=' '.join(b)
+        if 'scopes' in ls or 'x-scopes' in ls.replace('_','-'):
+            xsc=ls
+    print(f"{path}  {op.upper():6}  {sec}")
+EOF
+/v0.1/checkouts  POST    - apiKey: [] - oauth2: - payments - checkouts.write
+/v0.1/checkouts  GET     - apiKey: [] - oauth2: - payments - checkouts.read
+/v0.1/checkouts  GET     - apiKey: [] - oauth2: - payments - checkouts.read
+/v0.1/checkouts  PATCH   - apiKey: [] - oauth2: - payments - checkouts.write
+/v0.1/checkouts  PUT     - apiKey: [] - oauth2: - payments - checkouts.write
+/v0.1/checkouts  DELETE  - apiKey: [] - oauth2: - payments - checkouts.write
+/v0.1/checkouts  PUT     - apiKey: [] - oauth2: []
+/v0.1/customers  POST    - apiKey: [] - oauth2: - payment_instruments - customers.write
+/v0.1/customers  GET     - apiKey: [] - oauth2: - payment_instruments - customers.read
+/v0.1/customers  PUT     - apiKey: [] - oauth2: - payment_instruments - customers.write
+/v0.1/customers  GET     - apiKey: [] - oauth2: - payment_instruments - customers.read
+/v0.1/customers  DELETE  - apiKey: [] - oauth2: - payment_instruments - customers.write
+/v0.1/customers  POST    - apiKey: [] - oauth2: - payments - refunds.write
+/v0.1/customers  GET     - apiKey: [] - oauth2: - transactions.history - transactions.read
+/v0.1/customers  GET     - apiKey: [] - oauth2: - transactions.history - transactions.read
+/v0.1/customers  GET     - apiKey: [] - oauth2: - user.profile - user.profile_readonly - payouts.read
+/v0.1/customers  GET     - apiKey: [] - oauth2: - receipts.read - transactions.history
+/v0.1/customers  POST    - apiKey: [] - oauth2: - payments - readers.write
+/v0.1/memberships  GET     - apiKey: [] - oauth2: - user.profile - user.profile_readonly
+/v0.1/memberships  GET     - apiKey: [] - oauth2: - user.subaccounts - members.read
+/v0.1/memberships  POST    - apiKey: [] - oauth2: - user.subaccounts - members.write
+/v0.1/memberships  GET     - apiKey: [] - oauth2: - user.subaccounts - members.read
+/v0.1/memberships  PUT     - apiKey: [] - oauth2: - user.subaccounts - members.write
+/v0.1/memberships  DELETE  - apiKey: [] - oauth2: - user.subaccounts - members.write
+/v0.1/memberships  GET     - apiKey: [] - oauth2: - user.subaccounts - roles.read
+/v0.1/memberships  POST    - apiKey: [] - oauth2: - user.subaccounts - roles.write
+/v0.1/memberships  GET     - apiKey: [] - oauth2: - user.subaccounts - roles.read
+/v0.1/memberships  DELETE  - apiKey: [] - oauth2: - user.subaccounts - roles.write
+/v0.1/memberships  PATCH   - apiKey: [] - oauth2: - user.subaccounts - roles.write
+/v0.1/memberships  GET     - apiKey: [] - oauth2: - user.profile - user.profile_readonly
+/v0.1/memberships  GET     - apiKey: [] - oauth2: - user.profile - user.profile_readonly
+/v0.1/memberships  GET     - apiKey: [] - oauth2: - user.profile - user.profile_readonly
+/v0.1/memberships  GET     - apiKey: [] - oauth2: - readers.read - terminals.read
+/v0.1/memberships  POST    - apiKey: [] - oauth2: - readers.write - terminals.write
+/v0.1/memberships  GET     - apiKey: [] - oauth2: - readers.read - terminals.read
+/v0.1/memberships  DELETE  - apiKey: [] - oauth2: - readers.write - terminals.write
+/v0.1/memberships  PATCH   - apiKey: [] - oauth2: - readers.write - terminals.write
+/v0.1/memberships  POST    - apiKey: [] - oauth2: - readers.write
+/v0.1/memberships  GET     - apiKey: [] - oauth2: - readers.read
+/v0.1/memberships  POST    - apiKey: [] - oauth2: - readers.write
+/v0.1/memberships  GET     - apiKey: [] - oauth2: - readers.read
+/v0.1/memberships  POST    None
+/v0.1/memberships  POST    None
+/v0.1/memberships  POST    None
+/v0.1/memberships  POST    None
+/v0.1/memberships  POST    None
+[0m
+[0m$ [0mcd /tmp/opencode && python3 -c "import yaml; print('yaml ok')" 2>&1; timeout 60 curl -s "https://raw.githubusercontent.com/sumup/sumup-openapi/main/openapi31.json" -o sumup-openapi31.json && python3 -c "import json;d=json.load(open('sumup-openapi31.json'));print(len(d['paths']),'paths');[print(p) for p in d['paths']]"
+yaml ok
+28 paths
+/v0.1/merchants/{merchant_code}/payment-methods
+/v0.1/checkouts
+/v0.1/checkouts/{checkout_id}
+/v0.2/checkouts/{checkout_id}/apple-pay-session
+/v0.1/customers
+/v0.1/customers/{customer_id}
+/v0.1/customers/{customer_id}/payment-instruments
+/v0.1/customers/{customer_id}/payment-instruments/{token}
+/v1.0/merchants/{merchant_code}/payments/{transaction_id}/refunds
+/v2.1/merchants/{merchant_code}/transactions
+/v2.1/merchants/{merchant_code}/transactions/history
+/v1.0/merchants/{merchant_code}/payouts
+/v1.1/receipts/{transaction_id}
+/v0/merchants/{merchant_code}/readers/{reader_id}/go-checkout
+/v0.1/memberships
+/v0.1/merchants/{merchant_code}/members
+/v0.1/merchants/{merchant_code}/members/{member_id}
+/v0.1/merchants/{merchant_code}/roles
+/v0.1/merchants/{merchant_code}/roles/{role_id}
+/v1/merchants/{merchant_code}
+/v1/merchants/{merchant_code}/persons
+/v1/merchants/{merchant_code}/persons/{person_id}
+/v0.1/merchants/{merchant_code}/readers
+/v0.1/merchants/{merchant_code}/readers/{reader_id}
+/v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout
+/v0.1/merchants/{merchant_code}/readers/{reader_id}/status
+/v0.1/merchants/{merchant_code}/readers/{reader_id}/terminate
+/v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout/{checkout_id}
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import json
+d=json.load(open('sumup-openapi31.json'))
+for p,item in d['paths'].items():
+    for m,op in item.items():
+        if m.lower() not in ('get','post','put','patch','delete','head','options','trace'):
+            continue
+        sec=op.get('security')
+        xsc=op.get('x-scopes') or op.get('xScopes')
+        summary=op.get('summary','')
+        params=[]
+        for pr in op.get('parameters',[]):
+            nm=pr.get('name'); lo=pr.get('in')
+            sch=pr.get('schema')
+            typ=sch.get('type') if sch else None
+            if nm in ('Accept','Content-Type'): continue
+            params.append(f"{lo}:{nm}({typ or ''})")
+        params.append('body' if op.get('requestBody') else '')
+        print(f"{m.upper():6} {p}  sec={sec}  xsc={xsc}  par=[{','.join(x for x in params if x)}] | {summary}")
+EOF
+GET    /v0.1/merchants/{merchant_code}/payment-methods  sec=[{'apiKey': []}, {'oauth2': []}]  xsc=None  par=[path:merchant_code(string),query:amount(number),query:currency(string)] | Get available payment methods
+POST   /v0.1/checkouts  sec=[{'apiKey': []}, {'oauth2': ['payments', 'checkouts.write']}]  xsc=['payments', 'checkouts.write']  par=[body] | Create a checkout
+GET    /v0.1/checkouts  sec=[{'apiKey': []}, {'oauth2': ['payments', 'checkouts.read']}]  xsc=['payments', 'checkouts.read']  par=[query:checkout_reference(string)] | List checkouts
+GET    /v0.1/checkouts/{checkout_id}  sec=[{'apiKey': []}, {'oauth2': ['payments', 'checkouts.read']}]  xsc=['payments', 'checkouts.read']  par=[] | Retrieve a checkout
+PATCH  /v0.1/checkouts/{checkout_id}  sec=[{'apiKey': []}, {'oauth2': ['payments', 'checkouts.write']}]  xsc=['payments', 'checkouts.write']  par=[body] | Update a checkout
+PUT    /v0.1/checkouts/{checkout_id}  sec=[{'apiKey': []}, {'oauth2': ['payments', 'checkouts.write']}]  xsc=['payments', 'checkouts.write']  par=[body] | Process a checkout
+DELETE /v0.1/checkouts/{checkout_id}  sec=[{'apiKey': []}, {'oauth2': ['payments', 'checkouts.write']}]  xsc=['payments', 'checkouts.write']  par=[] | Deactivate a checkout
+PUT    /v0.2/checkouts/{checkout_id}/apple-pay-session  sec=[{'apiKey': []}, {'oauth2': []}]  xsc=None  par=[path:checkout_id(string),body] | Create an Apple Pay session
+POST   /v0.1/customers  sec=[{'apiKey': []}, {'oauth2': ['payment_instruments', 'customers.write']}]  xsc=['payment_instruments', 'customers.write']  par=[body] | Create a customer
+GET    /v0.1/customers/{customer_id}  sec=[{'apiKey': []}, {'oauth2': ['payment_instruments', 'customers.read']}]  xsc=['payment_instruments', 'customers.read']  par=[] | Retrieve a customer
+PUT    /v0.1/customers/{customer_id}  sec=[{'apiKey': []}, {'oauth2': ['payment_instruments', 'customers.write']}]  xsc=['payment_instruments', 'customers.write']  par=[body] | Update a customer
+GET    /v0.1/customers/{customer_id}/payment-instruments  sec=[{'apiKey': []}, {'oauth2': ['payment_instruments', 'customers.read']}]  xsc=['payment_instruments', 'customers.read']  par=[] | List payment instruments
+DELETE /v0.1/customers/{customer_id}/payment-instruments/{token}  sec=[{'apiKey': []}, {'oauth2': ['payment_instruments', 'customers.write']}]  xsc=['payment_instruments', 'customers.write']  par=[] | Deactivate a payment instrument
+POST   /v1.0/merchants/{merchant_code}/payments/{transaction_id}/refunds  sec=[{'apiKey': []}, {'oauth2': ['payments', 'refunds.write']}]  xsc=['payments', 'refunds.write']  par=[body] | Refund a transaction
+GET    /v2.1/merchants/{merchant_code}/transactions  sec=[{'apiKey': []}, {'oauth2': ['transactions.history', 'transactions.read']}]  xsc=['transactions.history', 'transactions.read']  par=[path:merchant_code(string),query:id(string),query:transaction_code(string),query:foreign_transaction_id(string),query:client_transaction_id(string)] | Retrieve a transaction
+GET    /v2.1/merchants/{merchant_code}/transactions/history  sec=[{'apiKey': []}, {'oauth2': ['transactions.history', 'transactions.read']}]  xsc=['transactions.history', 'transactions.read']  par=[path:merchant_code(string),query:transaction_code(string),query:order(string),query:limit(integer),query:users[](array),query:statuses[](array),query:payment_types[](array),query:entry_modes[](array),query:types[](array),query:changes_since(string),query:newest_time(string),query:newest_ref(string),query:oldest_time(string),query:oldest_ref(string)] | List transactions
+GET    /v1.0/merchants/{merchant_code}/payouts  sec=[{'apiKey': []}, {'oauth2': ['user.profile', 'user.profile_readonly', 'payouts.read']}]  xsc=['user.profile', 'user.profile_readonly', 'payouts.read']  par=[path:merchant_code(string),query:start_date(string),query:end_date(string),query:format(string),query:limit(integer),query:order(string)] | List payouts
+GET    /v1.1/receipts/{transaction_id}  sec=[{'apiKey': []}, {'oauth2': ['receipts.read', 'transactions.history']}]  xsc=['receipts.read', 'transactions.history']  par=[path:transaction_id(string),query:mid(string),query:tx_event_id(integer)] | Retrieve receipt details
+POST   /v0/merchants/{merchant_code}/readers/{reader_id}/go-checkout  sec=[{'apiKey': []}, {'oauth2': ['payments', 'readers.write']}]  xsc=['payments', 'readers.write']  par=[path:merchant_code(string),path:reader_id(),body] | Create a Go Reader Payment
+GET    /v0.1/memberships  sec=[{'apiKey': []}, {'oauth2': ['user.profile', 'user.profile_readonly']}]  xsc=['user.profile', 'user.profile_readonly']  par=[query:offset(integer),query:limit(integer),query:kind(),query:status(),query:resource.type(),query:resource.attributes.sandbox(boolean),query:resource.name(string),query:resource.parent.id(['string', 'null']),query:resource.parent.type(null),query:roles(array)] | List memberships
+GET    /v0.1/merchants/{merchant_code}/members  sec=[{'apiKey': []}, {'oauth2': ['user.subaccounts', 'members.read']}]  xsc=['user.subaccounts', 'members.read']  par=[query:offset(integer),query:limit(integer),query:scroll(boolean),query:email(string),query:user.id(string),query:user.type(array),query:status(),query:roles(array),path:merchant_code(string)] | List members
+POST   /v0.1/merchants/{merchant_code}/members  sec=[{'apiKey': []}, {'oauth2': ['user.subaccounts', 'members.write']}]  xsc=['user.subaccounts', 'members.write']  par=[path:merchant_code(string),body] | Create a member
+GET    /v0.1/merchants/{merchant_code}/members/{member_id}  sec=[{'apiKey': []}, {'oauth2': ['user.subaccounts', 'members.read']}]  xsc=['user.subaccounts', 'members.read']  par=[path:merchant_code(string),path:member_id(string)] | Retrieve a member
+PUT    /v0.1/merchants/{merchant_code}/members/{member_id}  sec=[{'apiKey': []}, {'oauth2': ['user.subaccounts', 'members.write']}]  xsc=['user.subaccounts', 'members.write']  par=[path:merchant_code(string),path:member_id(string),body] | Update a member
+DELETE /v0.1/merchants/{merchant_code}/members/{member_id}  sec=[{'apiKey': []}, {'oauth2': ['user.subaccounts', 'members.write']}]  xsc=['user.subaccounts', 'members.write']  par=[path:merchant_code(string),path:member_id(string)] | Delete a member
+GET    /v0.1/merchants/{merchant_code}/roles  sec=[{'apiKey': []}, {'oauth2': ['user.subaccounts', 'roles.read']}]  xsc=['user.subaccounts', 'roles.read']  par=[path:merchant_code(string)] | List roles
+POST   /v0.1/merchants/{merchant_code}/roles  sec=[{'apiKey': []}, {'oauth2': ['user.subaccounts', 'roles.write']}]  xsc=['user.subaccounts', 'roles.write']  par=[path:merchant_code(string),body] | Create a role
+GET    /v0.1/merchants/{merchant_code}/roles/{role_id}  sec=[{'apiKey': []}, {'oauth2': ['user.subaccounts', 'roles.read']}]  xsc=['user.subaccounts', 'roles.read']  par=[path:merchant_code(string),path:role_id(string)] | Retrieve a role
+DELETE /v0.1/merchants/{merchant_code}/roles/{role_id}  sec=[{'apiKey': []}, {'oauth2': ['user.subaccounts', 'roles.write']}]  xsc=['user.subaccounts', 'roles.write']  par=[path:merchant_code(string),path:role_id(string)] | Delete a role
+PATCH  /v0.1/merchants/{merchant_code}/roles/{role_id}  sec=[{'apiKey': []}, {'oauth2': ['user.subaccounts', 'roles.write']}]  xsc=['user.subaccounts', 'roles.write']  par=[path:merchant_code(string),path:role_id(string),body] | Update a role
+GET    /v1/merchants/{merchant_code}  sec=[{'apiKey': []}, {'oauth2': ['user.profile', 'user.profile_readonly']}]  xsc=['user.profile', 'user.profile_readonly']  par=[path:merchant_code(string)] | Get Merchant
+GET    /v1/merchants/{merchant_code}/persons  sec=[{'apiKey': []}, {'oauth2': ['user.profile', 'user.profile_readonly']}]  xsc=['user.profile', 'user.profile_readonly']  par=[path:merchant_code(string)] | List Persons
+GET    /v1/merchants/{merchant_code}/persons/{person_id}  sec=[{'apiKey': []}, {'oauth2': ['user.profile', 'user.profile_readonly']}]  xsc=['user.profile', 'user.profile_readonly']  par=[path:merchant_code(string),path:person_id(string)] | Get Person
+GET    /v0.1/merchants/{merchant_code}/readers  sec=[{'apiKey': []}, {'oauth2': ['readers.read', 'terminals.read']}]  xsc=['readers.read', 'terminals.read']  par=[path:merchant_code(string)] | List Readers
+POST   /v0.1/merchants/{merchant_code}/readers  sec=[{'apiKey': []}, {'oauth2': ['readers.write', 'terminals.write']}]  xsc=['readers.write', 'terminals.write']  par=[path:merchant_code(string),body] | Create a Reader
+GET    /v0.1/merchants/{merchant_code}/readers/{reader_id}  sec=[{'apiKey': []}, {'oauth2': ['readers.read', 'terminals.read']}]  xsc=['readers.read', 'terminals.read']  par=[header:If-Modified-Since(string),path:merchant_code(string),path:reader_id()] | Retrieve a Reader
+DELETE /v0.1/merchants/{merchant_code}/readers/{reader_id}  sec=[{'apiKey': []}, {'oauth2': ['readers.write', 'terminals.write']}]  xsc=['readers.write', 'terminals.write']  par=[path:merchant_code(string),path:reader_id()] | Delete a reader
+PATCH  /v0.1/merchants/{merchant_code}/readers/{reader_id}  sec=[{'apiKey': []}, {'oauth2': ['readers.write', 'terminals.write']}]  xsc=['readers.write', 'terminals.write']  par=[path:merchant_code(string),path:reader_id(),body] | Update a Reader
+POST   /v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout  sec=[{'apiKey': []}, {'oauth2': ['readers.write']}]  xsc=['readers.write']  par=[path:merchant_code(string),path:reader_id(string),body] | Create a Reader Checkout
+GET    /v0.1/merchants/{merchant_code}/readers/{reader_id}/status  sec=[{'apiKey': []}, {'oauth2': ['readers.read']}]  xsc=['readers.read']  par=[path:merchant_code(string),path:reader_id(string)] | Get a Reader Status
+POST   /v0.1/merchants/{merchant_code}/readers/{reader_id}/terminate  sec=[{'apiKey': []}, {'oauth2': ['readers.write']}]  xsc=['readers.write']  par=[path:merchant_code(string),path:reader_id(string),body] | Terminate a Reader Checkout
+GET    /v0.1/merchants/{merchant_code}/readers/{reader_id}/checkout/{checkout_id}  sec=[{'apiKey': []}, {'oauth2': ['readers.read']}]  xsc=['readers.read']  par=[path:merchant_code(string),path:reader_id(string),path:checkout_id(string)] | Get a Reader Checkout
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import json
+d=json.load(open('sumup-openapi31.json'))
+op=d['paths']['/v0.2/checkouts/{checkout_id}/apple-pay-session']['put']
+print(json.dumps(op.get('requestBody'), indent=1)[:1500])
+print("---RESPONSES---")
+for code,r in op.get('responses',{}).items():
+    c=r.get('content',{})
+    for ct,cv in c.items():
+        s=cv.get('schema',{})
+        print(code, ct, json.dumps(s)[:300])
+EOF
+{
+ "description": "The data needed to create an apple pay session for a checkout.",
+ "content": {
+  "application/json": {
+   "schema": {
+    "type": "object",
+    "required": [
+     "context",
+     "target"
+    ],
+    "properties": {
+     "context": {
+      "type": "string",
+      "description": "the context to create this apple pay session.",
+      "format": "hostname",
+      "example": "example.com"
+     },
+     "target": {
+      "type": "string",
+      "description": "The target url to create this apple pay session.",
+      "format": "uri",
+      "example": "https://apple-pay-gateway-cert.apple.com/paymentservices/startSession"
+     }
+    }
+   }
+  }
+ }
+}
+---RESPONSES---
+200 application/json {"type": "object"}
+400 application/json {"oneOf": [{"$ref": "#/components/schemas/Error"}, {"type": "array", "description": "List of error messages.", "items": {"$ref": "#/components/schemas/Error"}}]}
+404 application/json {"$ref": "#/components/schemas/Error"}
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import json
+d=json.load(open('sumup-openapi31.json'))
+# extract the payment-methods op param enum / response example
+pm=d['paths']['/v0.1/merchants/{merchant_code}/payment-methods']['get']
+print("PM PARAMS:", json.dumps(pm.get('parameters'),indent=0)[:900])
+print("PM RESP 200:", json.dumps(pm['responses'].get('200',{}))[:400])
+# receipts op params
+r=d['paths']['/v1.1/receipts/{transaction_id}']['get']
+for p in r.get('parameters',[]):
+    print("RECV",p.get('name'),p.get('in'),json.dumps(p.get('schema'))[:120])
+# merchants persons
+mp=d['paths']['/v1/merchants/{merchant_code}/persons']['get']
+print("PERSONS 200:", json.dumps(mp['responses'].get('200',{}))[:200])
+# go-checkout body fields
+gc=d['paths']['/v0/merchants/{merchant_code}/readers/{reader_id}/go-checkout']['post']
+print("GOCHECKOUT body:", json.dumps(gc.get('requestBody',{}).get('content',{}).get('application/json',{}).get('schema',{}))[:600])
+EOF
+PM PARAMS: [
+{
+"in": "path",
+"name": "merchant_code",
+"required": true,
+"description": "Short unique identifier for the merchant.",
+"schema": {
+"type": "string",
+"example": "MH4H92C7"
+}
+},
+{
+"in": "query",
+"name": "amount",
+"required": false,
+"description": "The amount for which the payment methods should be eligible, in major units.",
+"schema": {
+"type": "number",
+"example": 9.99
+}
+},
+{
+"in": "query",
+"name": "currency",
+"required": false,
+"description": "The currency for which the payment methods should be eligible.",
+"schema": {
+"type": "string",
+"example": "EUR"
+}
+}
+]
+PM RESP 200: {"description": "Available payment methods", "content": {"application/json": {"schema": {"type": "object", "properties": {"available_payment_methods": {"type": "array", "description": "Payment methods available to the merchant for the checkout.", "example": [{"id": "apple_pay"}, {"id": "blik"}], "items": {"type": "object", "required": ["id"], "properties": {"id": {"type": "string", "description": 
+RECV transaction_id path {"type": "string", "example": "410fc44a-5956-44e1-b5cc-19c6f8d727a4"}
+RECV mid query {"type": "string", "example": "MH4H92C7"}
+RECV tx_event_id query {"type": "integer", "example": 9567461191}
+PERSONS 200: {"description": "Returns a list of Persons for a valid Merchant identifier.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ListPersonsResponseBody"}}}}
+GOCHECKOUT body: {"$ref": "#/components/schemas/ReaderPaymentRequestParams"}
+[0m
+## STEP 1 — DELTA
+- [NEW] `PUT /v0.2/checkouts/{checkout_id}/apple-pay-session` — openapi31.json service schema confirms SSRF parameter names: body `required:[context,target]`, `target` = `format:uri` (server-side Apple session fetch), `context` = `format:hostname` (Host/tls-ServerName vector); example target `https://apple-pay-gateway-cert.apple.com/paymentservices/startSession`.
+- [NEW] `GET /v1.1/receipts/{transaction_id}` — spec shows an enumeration BOLA shape: `mid` (merchant code) is a **query param plus path `transaction_id`** and an integer `tx_event_id` (example `9567461191`) — guessable integer key decoupled from token ownership, not previously in top-3.
+- [NEW] `GET /v0.1/merchants/{merchant_code}/payment-methods` — 200 schema confirms per-merchant per-currency output `available_payment_methods:[{id:apple_pay},{id:blik}]` — a foreign-code read returns visibly different bodies, making the BOLA discriminator definitive once a bearer exists.
+- [NEW] Full 42-op spec map re-mined: exactly 2 ops are `oauth2:[]` (payment-methods GET, apple-pay PUT); `GET /v1/merchants/{code}/persons`, `GET /memberships` (JSON-API filter `resource.attributes.sandbox`), `GET /receipts/{tx}` are the PII-bearing handler-level BOLA candidates; all other 40 ops carry explicit scopes (payments/checkouts/customers/etc. — all rejected by modern dashboard client per KB).
+
+## STEP 2 — PRIORITIZE
+- [PRIO] api.sumup.com/token, 8.3, a=9 b=10 t=8 g=6 c=7 f=8
+- [PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods, 7.7, a=8 b=9 t=7 g=6 c=8 f=7
+- [PRIO] api.sumup.com/v1.1/receipts/{transaction_id}, 7.6, a=7 b=9 t=7 g=6 c=8 f=9
+- [PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session, 8.0, a=7 b=9 t=9 g=6 c=9 f=9
+
+## STEP 3 — HYPOTHESES
+[HYP] apple-pay-session server-side fetch of attacker-chosen target (no gateway scope gate)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 60
+reasoning: Route is oauth2:[]/apiKey:[] (scope-free, same class as payment-methods which already serves 200 with no token); OPTIONS 204 re-verified 2026-09-15; service schema (openapi31.json) now confirms `target` and `context` are required string fields, `target` format uri for Apple startSession proxying, `context` hostname; server must fetch `target` to obtain the session — validation allowlist unknown in spec.
+evidence_needed: merchant Bearer (any scope) + PUT body target=http://169.254.169.254/latest/meta-data/ vs control https://apple-pay-gateway-cert.apple.com/... — differing status/body between metadata and control proves unfiltered server-side fetch.
+verify_steps: AUTH_HELPED — PUT /v0.2/checkouts/{own_checkout}/apple-pay-session {"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"} (single shot) vs same with control apple.com target; compare 200/400/302 shapes.
+impact: metadata → IAM/instance creds → lateral movement; CRITICAL.
+testability: AUTH_HELPED
+
+[HYP] Cross-tenant receipt BOLA via tx_event_id enumeration decoupled from token ownership
+class: IDOR
+asset: api.sumup.com/v1.1/receipts/{transaction_id}
+confidence: 55
+reasoning: Spec places owner merchant code in `mid` QUERY param with integer `tx_event_id` (example 9567461191) — receipt lookup keyed on guessable integer + path tx id, no spec statement that handler binds mid↔token; receipts carry customer PII (name/address/card last4); high-value cross-tenant pull if handler trusts mid query.
+evidence_needed: valid merchant Bearer + own tx_event_id/MID control returns own receipt; foreign UK/UUID tx id or neighboring tx_event_id returns a foreign receipt body.
+verify_steps: AUTH_HELPED — GET /v1.1/receipts/{own_tx_id}?mid={own}&tx_event_id={own_event} 200 control; then own tx_id + {foreign mid, foreign tx_event_id} at 0.5rps.
+impact: cross-tenant e-receipt PII disclosure (financial data); HIGH.
+testability: AUTH_HELPED
+
+[HYP] Cross-tenant payment-methods BOLA resolves handler-level with no ownership check
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 68
+reasoning: oauth2:[] route serves 200 unauth (static {"card"} for {MH4H92C7,MK01A8C2,MK10CL2A,MCXXXXXX}×{EUR,BRL,PLN}) — gateway skips auth; spec 200 schema shows real per-country output (apple_pay/blik); per-merchant resolution thus handler-side and the only missing discriminator is a bearer to make bodies diverge.
+evidence_needed: own-code bearer control vs foreign codes → different available_payment_methods; own stable.
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/payment-methods?amount=9.99&currency={EUR,BRL,PLN} Bearer, then same on {MK01A8C2,MK10CL2A,MCXXXXXX}; own control 0.5rps.
+impact: cross-tenant APM/acquirer enablement read feeding checkout eligibility; MEDIUM/HIGH.
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+- [PARKED] legacy /token client_credentials: confidence 68 but fully blocked on an OAuth2-app secret (dashboard itself → 400 invalid_client); degrades to a replay step inside the HUMAN session rather than independent lead.
+- [PARKED] RFC 9728 aud/claim confusion: confidence 75 but requires a minted prod token to test claim validation; subsumed by the same HUMAN unlock.
+- [FINAL] payment-methods BOLA (68), apple-pay SSRF (60), receipts BOLA (55) — all require the single merchant Bearer; distinct handlers, distinct resources, verifiable in one credentialed session.
+
+## STEP 5 — NEXT ACTION
+[NEXT] HUMAN: provide ONE merchant credential from me.sumup.com — `sup_sk_` API key (settings/api-keys) OR OAuth2 app client_id+client_secret (settings/oauth2-applications) — to execute in one session: (1) payment-methods GET own-vs-foreign {EUR,BRL,PLN}; (2) receipts GET with foreign `mid`/`tx_event_id`; (3) apple-pay PUT body `{"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` vs `https://apple-pay-gateway-cert.apple.com/paymentservices/startSession` control; (4) replay minted token on legacy /token + /v1/merchants/{code}.
+
+## STEP 6 — LEARNING
+- [LEARN] ACCEPTED SSRF @ api.sumup.com/v0.2/checkouts/{id}/apple-pay-session: openapi31.json service-level schema confirms `target`(uri, required) + `context`(hostname, required) — SSRF parameter names now spec-proven, not speculative; e.g. target https://apple-pay-gateway-cert.apple.com/paymentservices/startSession.
+- [LEARN] ACCEPTED IDOR @ api.sumup.com/v1.1/receipts/{transaction_id}: spec places owner `mid` in query + integer `tx_event_id` (example 9567461191) — guessable receipt key decoupled from token; new top-tier BOLA candidate.
+- [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com spec: exactly 2 of 42 ops are oauth2:[] (payment-methods GET, apple-pay PUT); receipts/persons/memberships are scoped but handler-level ownership binding remains untested — bearer required.
+
+## STEP 7 — RISK
+[RISK] sumup: 84 — 0 filed bugs. Three distinct high-value handler-level classes (apple-pay SSRF→metadata CRITICAL, payments/receipts cross-tenant PII BOLA HIGH, legacy-token AUTH HIGH) are 100% gated behind ONE human-supplied merchant credential; this cycle added spec-proven SSRF field names and a new integer-keyed receipt surface but zero new live passive exposure. Program value continues monotone decline while the sole unlock action remains pending.
