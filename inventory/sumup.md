@@ -749,3 +749,6 @@ www.sumup.com
 - CHANGED `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauth 200 static `{"card"}` re-verified for {MH4H92C7,MK01A8C2,MK10CL2A,MCXXXXXX} × {EUR,BRL} — per-merchant resolution requires a bearer; AUTH_H
 
 ## 2026-09-15 20:12:57 UTC
+
+## 2026-09-15 23:00:54 UTC
+- NEW NO_DELTA — all passive surfaces byte-stable this cycle: `apple-pay-session` OPTIONS re-204 (origin-echo CORS, identity.svc op header), RFC 9728 metadata still 200 static.

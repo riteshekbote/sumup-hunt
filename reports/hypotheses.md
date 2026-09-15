@@ -1841,3 +1841,10 @@
 - LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combo
 - LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks re
 - LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+
+## RANKED HYPOTHESES 2026-09-15 23:00:54 UTC
+- [60] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session: apple-pay-session server-side fetch of attacker-chosen target (no gateway scope gate) (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: provide ONE merchant credential from me.sumup.com — `sup_sk_` API key (settings/api-keys) OR OAuth2 app client_id+client_secret (settings/oauth2-applicat
+- LEARN: ACCEPTED OTHER @ api.sumup.com/v0.2/checkouts/{id}/apple-pay-session: OPTIONS 204 re-verified 2026-09-15 22:58 UTC (origin-echo CORS, `__cf_bm` Domain=sumup.com
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata re-verified 200 2026-09-15 — byte-stable static; recon surface genuinely 
+- LEARN: REJECTED MISCONFIG @ reports/: `contentful-preview-token-leak.md` verified STILL ABSENT via `ls` 2026-09-15 — final archival close; no further file-claim assert
