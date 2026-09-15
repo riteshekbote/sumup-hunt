@@ -819,3 +819,11 @@ https://api.sumup.com/token -> HTTP 404
 ## 2026-09-15 06:35:58 UTC
 https://api.sumup.com/token -> HTTP 404
 https://api.sumup.com -> HTTP 404
+
+## 2026-09-15 12:02:40 UTC
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/token -> HTTP 404

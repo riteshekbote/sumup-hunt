@@ -29460,3 +29460,230 @@ All three hypotheses survive (>40 confidence, AUTH_HELPED class, concrete verify
 ## STEP 7 — RISK
 
 [RISK] sumup: 82 — 0 filed bugs. Three reportable-candidate classes (apple-pay SSRF CRITICAL, payment-methods BOLA MEDIUM/HIGH, legacy-token AUTH HIGH) remain permanently behind ONE merchant credential; passive surface is now fully mapped and fatigued (this cycle produced zero new attacker-reachable surface). Program value is 100% gated on HUMAN-supplied `sup_sk_` or OAuth2-app secret.
+===== ANALYST bigpickle 2026-09-15 12:02:32 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls /home/runner/work/sumup-hunt/sumup-hunt/reports/ 2>/dev/null && ls /home/runner/work/sumup-hunt/sumup-hunt/art/ 2>/dev/null | head -20
+analyst-bigpickle.log
+analyst-laguna.log
+analyst-ling3.log
+analyst-longcat.log
+analyst-nemotron3.log
+hypotheses-bigpickle.txt
+hypotheses-laguna.txt
+hypotheses-ling3.txt
+hypotheses-longcat.txt
+hypotheses-nemotron3.txt
+hypotheses.md
+reposcan-findings.md
+valid-bugs.md
+[0m
+[0m$ [0mcurl -sI https://api.sumup.com/token 2>/dev/null | head -20
+HTTP/2 404 
+date: Tue, 15 Sep 2026 11:54:16 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 1263c559-c16c-98fe-ba2a-05a73fe36ba6
+x-envoy-upstream-service-time: 1
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=6TtBu4_oE6iQkmU42eyjXqduFqf6E3Kqnkvi.EFPCXw-1789473256.53538-1.0.1.1-UnLRuxxgFuuucyyVdvZC6mq23BDu5.w71k25yPqewI_9ddzssi7zcZH0jZ6a5vdJ9I_52ZA8KOmtd1k2GvvIcj4YwNEXiEFfAQdbss2w4njlGPODafF_aW5i.UJSCTjn9CG12Ei6JU.zaPAgLK58DA; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Tue, 15 Sep 2026 12:24:16 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=g8SAJCtDokHttSfusy%2FWBVlXvKTh%2F%2BQ3R33ps9cYaTGgV0VYfx76yzRwGezg4WcjeBwqwktePpueinoXV1kcS%2BnTCQs8mGIc9zG9tSTpIGZjtqI2M0d2Lq6OCKkLUJw%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a3b76f8d5eabad0b-MSP
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code} %{content_type}" https://api.sumup.com/v0.1/merchants/MK01A8C2/payment-methods 2>/dev/null
+200 application/json
+[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m
+[0m$ [0mcurl -s https://api.sumup.com/v0.1/merchants/MK01A8C2/payment-methods 2>/dev/null
+{"available_payment_methods":[{"id":"card"}]}
+[0m
+[0m$ [0mcurl -s -X POST https://api.sumup.com/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=client_credentials&client_id=test' 2>/dev/null
+{"error":"invalid_client","error_description":"Client authorization failed."}
+[0m
+[0m$ [0mcurl -s -X POST https://api.sumup.com/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=authorization_code' 2>/dev/null
+{"error":"invalid_request","error_description":"Request is missing 'client_id'"}
+[0m
+[0m$ [0mcurl -s https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods 2>/dev/null && echo "---" && curl -s https://api.sumup.com/v0.1/merchants/MK10CL2A/payment-methods 2>/dev/null && echo "---" && curl -s https://api.sumup.com/v0.1/merchants/MCXXXXXX/payment-methods 2>/dev/null
+{"available_payment_methods":[{"id":"card"}]}
+---
+{"available_payment_methods":[{"id":"card"}]}
+---
+{"available_payment_methods":[{"id":"card"}]}
+[0m
+[0m$ [0mcurl -s https://api.sumup.com/v0.1/merchants/MK01A8C2/payment-methods?amount=9.99\&currency=EUR 2>/dev/null && echo "---" && curl -s https://api.sumup.com/v0.1/merchants/MK01A8C2/payment-methods?amount=9.99\&currency=BRL 2>/dev/null && echo "---" && curl -s https://api.sumup.com/v0.1/merchants/MK01A8C2/payment-methods?currency=PLN 2>/dev/null
+{"available_payment_methods":[{"id":"card"}]}
+---
+{"available_payment_methods":[{"id":"card"}]}
+---
+{"available_payment_methods":[{"id":"card"}]}
+[0m
+[0m$ [0mfor cid in dashboard support_centre sumup-ios-sdk read-api checkout pay; do
+  echo -n "$cid: "
+  curl -s -X POST https://api.sumup.com/token -H 'Content-Type: application/x-www-form-urlencoded' -d "grant_type=client_credentials&client_id=$cid" 2>/dev/null
+  echo
+done
+dashboard: {"error":"invalid_client","error_description":"Client authorization failed."}
+
+support_centre: {"error":"invalid_client","error_description":"Unknown client."}
+
+sumup-ios-sdk: {"error":"invalid_client","error_description":"Unknown client."}
+
+read-api: {"error":"invalid_client","error_description":"Unknown client."}
+
+checkout: {"error":"invalid_client","error_description":"Unknown client."}
+
+pay: {"error":"invalid_client","error_description":"Unknown client."}
+[0m
+[0m$ [0mecho "== client_credentials no client_secret ==" && curl -s -X POST https://api.sumup.com/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=client_credentials&client_id=dashboard&client_secret=test' 2>/dev/null && echo && echo "== refresh_token ==" && curl -s -X POST https://api.sumup.com/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=refresh_token&client_id=dashboard&refresh_token=test' 2>/dev/null && echo && echo "== password ==" && curl -s -X POST https://api.sumup.com/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=password&client_id=dashboard&username=test&password=test' 2>/dev/null && echo && echo "== authorization_code dashboard ==" && curl -s -X POST https://api.sumup.com/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=authorization_code&client_id=dashboard&code=test&redirect_uri=https://me.sumup.com/api/sso/callback' 2>/dev/null
+== client_credentials no client_secret ==
+{"error":"invalid_client","error_description":"Client authorization failed."}
+
+== refresh_token ==
+{"error":"invalid_client","error_description":"Client authorization failed."}
+
+== password ==
+{"error":"invalid_client","error_description":"Client authorization failed."}
+
+== authorization_code dashboard ==
+{"error":"invalid_client","error_description":"Client authorization failed."}
+[0m
+[0m$ [0mfor path in "v0.1/merchants/MK01A8C2/receipts" "v0.1/merchants/MK01A8C2/transactions" "v0.1/merchants/MK01A8C2/profile" "v0.1/merchants/MK01A8C2/terminals" "v0.2/checkouts/MK01A8C2" "v0.1/merchants/MK01A8C2/api-keys"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "https://api.sumup.com/$path" 2>/dev/null)
+  echo "$code $path"
+done
+404 v0.1/merchants/MK01A8C2/receipts
+404 v0.1/merchants/MK01A8C2/transactions
+404 v0.1/merchants/MK01A8C2/profile
+404 v0.1/merchants/MK01A8C2/terminals
+404 v0.2/checkouts/MK01A8C2
+404 v0.1/merchants/MK01A8C2/api-keys
+[0m
+[0m$ [0m# Test the authorize endpoint for support_centre on legacy gateway - check if error differs from dashboard
+for cid in dashboard support_centre; do
+  echo -n "$cid on /authorize: "
+  curl -s -o /dev/null -w "%{http_code}" "https://api.sumup.com/authorize?client_id=$cid&redirect_uri=https://evil.com&state=test&response_type=code" -L 2>/dev/null
+  echo
+done
+echo "---"
+# Test support_centre on /token with a secret
+echo "support_centre with secret:"
+curl -s -X POST https://api.sumup.com/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=client_credentials&client_id=support_centre&client_secret=secret' 2>/dev/null
+dashboard on /authorize: 400
+support_centre on /authorize: 401
+---
+support_centre with secret:
+{"error":"invalid_client","error_description":"Unknown client."}
+[0m
+[0m$ [0m# Raw probe without -L to see the true redirect/status
+for cid in dashboard support_centre nonexistent123; do
+  echo "== $cid =="
+  curl -s -o /dev/null -w "status=%{http_code} redirect=%{redirect_url}\n" "https://api.sumup.com/authorize?client_id=$cid&redirect_uri=https://evil.com&state=test&response_type=code" 2>/dev/null
+done
+== dashboard ==
+status=302 redirect=https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+== support_centre ==
+status=302 redirect=https://auth.sumup.com/flows/oauth2/error?error=invalid_client&error_description=The+requested+OAuth+2.0+Client+does+not+exist.
+== nonexistent123 ==
+status=302 redirect=https://auth.sumup.com/flows/oauth2/error?error=invalid_client&error_description=The+requested+OAuth+2.0+Client+does+not+exist.
+[0m
+[0m$ [0m# Confirm the token endpoint client oracle distinction is stable
+for cid in dashboard support_centre; do
+  echo -n "$cid: "
+  curl -s -X POST https://api.sumup.com/token -H 'Content-Type: application/x-www-form-urlencoded' -d "grant_type=client_credentials&client_id=$cid&client_secret=x" 2>/dev/null
+  echo
+done
+echo "--- also try basic auth header on /token ---"
+curl -s -X POST https://api.sumup.com/token -u 'dashboard:x' -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=client_credentials' 2>/dev/null
+dashboard: {"error":"invalid_client","error_description":"Client authorization failed."}
+
+support_centre: {"error":"invalid_client","error_description":"Unknown client."}
+
+--- also try basic auth header on /token ---
+{"error":"invalid_client","error_description":"Client authorization failed."}
+[0m
+[0m$ [0mecho "== OPTIONS /token ==" && curl -s -o /dev/null -w "status=%{http_code}\n" -X OPTIONS -H 'Origin: https://evil.example' -H 'Access-Control-Request-Method: POST' "https://api.sumup.com/token" 2>/dev/null
+echo "== OPTIONS /authorize ==" && curl -s -o /dev/null -w "status=%{http_code}\n" -X OPTIONS -H 'Origin: https://evil.example' "https://api.sumup.com/authorize" 2>/dev/null
+echo "== OPTIONS apple-pay-session ==" && curl -s -o /dev/null -w "status=%{http_code}\n" -X OPTIONS "https://api.sumup.com/v0.2/checkouts/test123/apple-pay-session" 2>/dev/null
+echo "== OPTIONS payment-methods ==" && curl -s -o /dev/null -w "status=%{http_code}\n" -X OPTIONS "https://api.sumup.com/v0.1/merchants/MK01A8C2/payment-methods" 2>/dev/null
+== OPTIONS /token ==
+status=204
+== OPTIONS /authorize ==
+status=204
+== OPTIONS apple-pay-session ==
+status=204
+== OPTIONS payment-methods ==
+status=204
+[0m
+[0m$ [0mecho "== CORS headers on /token OPTIONS ==" && curl -s -D - -o /dev/null -X OPTIONS -H 'Origin: https://evil.example' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: authorization,content-type' "https://api.sumup.com/token" 2>/dev/null | grep -i -E "access-control|status|vary|set-cookie"
+== CORS headers on /token OPTIONS ==
+access-control-allow-origin: https://evil.example
+access-control-allow-headers: *
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-max-age: 300
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=tcFmVJN_1Y1VKY_Ib..rQMSkpg05IUEiy5VbL0LOn1E-1789473350.213496-1.0.1.1-5gbDghdjJ5iwXErCZ.LmbBE.JcUxIsqCNYSXWZ6ttXSvboq5J_s6FCVdl16Rik_IPYPFUZdec23s2_X32NL_EpL6NfM7gwjDBPdxk5wz20Vb5ZdigX8KyO2UX0hWZTxIwNZL5fUe2uDU6R1Hg3Trzw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Tue, 15 Sep 2026 12:25:50 GMT
+[0m
+STEP 1 — DELTA
+- [NEW] `api.sumup.com/token` client_id oracle is 2-class: `dashboard` → `invalid_client` "Client authorization failed." (REGISTERED) vs `support_centre`/`sumup-ios-sdk`/`read-api`/`checkout`/`pay` → "Unknown client." (absent) — token-endpoint registry model reconfirmed, `dashboard` sole known client.
+- [NEW] Gateway-wide CORS template confirmed on ALL live routes (`/token`, `/authorize`, `payment-methods`, `apple-pay-session`): OPTIONS 204 with `access-control-allow-origin` **reflecting arbitrary Origin** + `access-control-allow-headers: *` + full allow-methods + max-age 300.
+- [CHANGED] `PUT /v0.2/checkouts/{id}/apple-pay-session` route confirmed ROUTED (OPTIONS 204, GET 404 gated) — matches OpenAPI spec declaration.
+
+STEP 2 — PRIORITIZE
+- [PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,7.2,a=8,b=9,t=7,g=6,c=8,f=9
+- [PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,6.8,a=7,b=9,t=8,g=6,c=8,f=9
+- [PRIO] api.sumup.com/token,6.5,a=9,b=9,t=8,g=7,c=7,f=9
+
+STEP 3 — HYPOTHESES
+[HYP] Cross-tenant payment-methods BOLA resolves handler-level with no gateway ownership check
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 68
+reasoning: Route is scope-free in official spec (oauth2:[]) and returns identical static `{"available_payment_methods":[{"id":"card"}]}` unauth for {MH4H92C7,MK01A8C2,MK10CL2A,MCXXXXXX}×{EUR,BRL,PLN}; protected-op controls 404 on same path shape — gateway auth skips this route entirely.
+evidence_needed: valid merchant Bearer + foreign code → body ≠ {"card"} (qr_code_pix for BRL, blik for PLN) while own code stable.
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/payment-methods?amount=9.99&currency={EUR,BRL,PLN} Bearer sup_sk_, then {MK01A8C2,MK10CL2A,MCXXXXXX}; own-code control at 0.5rps.
+impact: cross-tenant read of APM/acquirer enablement feeding checkout eligibility; MEDIUM/HIGH.
+testability: AUTH_HELPED
+[HYP] Legacy /token client_credentials mints scoped merchant bearer from OAuth2-app secret
+class: AUTH
+asset: api.sumup.com/token
+confidence: 68
+reasoning: Spec declares clientCredentials + 15 scopes at api.sumup.com/token; prod route live (POST via form/basic auth); this cycle confirmed dashboard is REGISTERED in legacy /token registry (distinct "Client authorization failed" vs "Unknown client"); staging same-stack auth.sam-app.ro mints real JWTs via client_secret_post.
+evidence_needed: POST /token grant_type=client_credentials&client_id={app}&client_secret={secret} → 200 access_token; replay on /v1/merchants/{code}.
+verify_steps: AUTH_HELPED — single POST to https://api.sumup.com/token with authorized app creds; then GET /v1.1/receipts with minted token.
+impact: scoped merchant bearer → full REST API (payments/refunds/readers/profile) → BOLA/ATO chain; HIGH.
+testability: AUTH_HELPED
+[HYP] apple-pay-session SSRF to cloud metadata via target URI
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 55
+reasoning: PUT declared apiKey:[]+oauth2:[]+x-scopes:[] (scope-free, same route class as payment-methods which bypasses gateway auth); body carries target URI for Apple Pay session validation; route confirmed ROUTED (OPTIONS 204) this cycle; no scheme/pin bound in public spec.
+evidence_needed: any valid merchant Bearer (even empty-scope) + target=http://169.254.169.254/latest/meta-data/ vs Apple-gateway control redirect.
+verify_steps: AUTH_HELPED — PUT /v0.2/checkouts/{own_id}/apple-pay-session body {"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"} vs control target; observe response body/redirect.
+impact: SSRF → cloud metadata → infra credentials; CRITICAL if reachable.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] Gateway-wide CORS (origin-reflect + allow-headers:*) — hardening-only: bearer scheme is header-based, no cookies/ambient creds → no token theft (precedent: mcp.sumup.com rejection).
+- [PARKED] /token 2-class client_id oracle — info-only: registry contains `dashboard` only; no new attacker surface.
+- [FINAL] 1. Cross-tenant payment-methods BOLA (conf 68) — MEDIUM/HIGH
+- [FINAL] 2. Legacy /token client_credentials (conf 68) — HIGH
+- [FINAL] 3. apple-pay-session SSRF (conf 55) — CRITICAL if reachable
+
+STEP 5 — NEXT ACTION
+- [NEXT] HUMAN: provide ONE merchant credential from me.sumup.com — `sup_sk_` API key (settings/api-keys) OR OAuth2 app client_id+client_secret (settings/oauth2-applications) — to unlock all three: (1) GET /v0.1/merchants/{own,MK01A8C2,MK10CL2A,MCXXXXXX}/payment-methods Bearer sup_sk_; (2) POST /token client_credentials; (3) PUT /v0.2/checkouts/{own}/apple-pay-session target=http://169.254.169.254/.
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED OATH @ api.sumup.com/token: client_id oracle 2-class — `dashboard` → "Client authorization failed." (registered) vs support_centre/sumup-ios-sdk/read-api/checkout/pay → "Unknown client." (absent); legacy token registry holds dashboard only.
+- [LEARN] REJECTED MISCONFIG @ api.sumup.com: gateway-wide CORS template (origin-reflect + allow-headers:* + full methods + max-age 300) on token/authorize/payment-methods/apple-pay-session — header-only bearer + no ambient creds = hardening-only.
+- [LEARN] ACCEPTED OTHER @ api.sumup.com/v0.2/checkouts/{id}/apple-pay-session: OPTIONS 204 confirms route ROUTED per spec (GET 404 unauth gated).
+
+STEP 7 — RISK
+- [RISK] sumup: 82 — 0 filed bugs. Three reportable-candidate classes (apple-pay SSRF CRITICAL, payment-methods BOLA MEDIUM/HIGH, legacy-token AUTH HIGH) remain permanently behind ONE merchant credential; this cycle produced only oracle/CORS confirmations — zero new attacker-reachable surface. Program value 100% gated on HUMAN-supplied `sup_sk_` or OAuth2-app secret.

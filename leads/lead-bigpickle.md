@@ -4375,3 +4375,31 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, JWKS URI; no resource_scopes/audience-oracle field; recon surface exhausted.
 [LEARN] REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token rotated (401) — finding non-reproducible; report file never existed despite KB hallucinations.
 [RISK] sumup: 82 — 0 filed bugs. Three reportable-candidate classes (apple-pay SSRF CRITICAL, payment-methods BOLA MEDIUM/HIGH, legacy-token AUTH HIGH) remain permanently behind ONE merchant credential; passive surface is now fully mapped and fatigued (this cycle produced zero new attacker-reachable surface). Program value is 100% gated on HUMAN-supplied `sup_sk_` or OAuth2-app secret.
+## 2026-09-15 11:56:40 UTC [target] (model bigpickle)
+[HYP] Cross-tenant payment-methods BOLA resolves handler-level with no gateway ownership check
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 68
+reasoning: Route is scope-free in official spec (oauth2:[]) and returns identical static `{"available_payment_methods":[{"id":"card"}]}` unauth for {MH4H92C7,MK01A8C2,MK10CL2A,MCXXXXXX}×{EUR,BRL,PLN}; protected-op controls 404 on same path shape — gateway auth skips this route entirely.
+evidence_needed: valid merchant Bearer + foreign code → body ≠ {"card"} (qr_code_pix for BRL, blik for PLN) while own code stable.
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/payment-methods?amount=9.99&currency={EUR,BRL,PLN} Bearer sup_sk_, then {MK01A8C2,MK10CL2A,MCXXXXXX}; own-code control at 0.5rps.
+impact: cross-tenant read of APM/acquirer enablement feeding checkout eligibility; MEDIUM/HIGH.
+testability: AUTH_HELPED
+[HYP] Legacy /token client_credentials mints scoped merchant bearer from OAuth2-app secret
+class: AUTH
+asset: api.sumup.com/token
+confidence: 68
+reasoning: Spec declares clientCredentials + 15 scopes at api.sumup.com/token; prod route live (POST via form/basic auth); this cycle confirmed dashboard is REGISTERED in legacy /token registry (distinct "Client authorization failed" vs "Unknown client"); staging same-stack auth.sam-app.ro mints real JWTs via client_secret_post.
+evidence_needed: POST /token grant_type=client_credentials&client_id={app}&client_secret={secret} → 200 access_token; replay on /v1/merchants/{code}.
+verify_steps: AUTH_HELPED — single POST to https://api.sumup.com/token with authorized app creds; then GET /v1.1/receipts with minted token.
+impact: scoped merchant bearer → full REST API (payments/refunds/readers/profile) → BOLA/ATO chain; HIGH.
+testability: AUTH_HELPED
+[HYP] apple-pay-session SSRF to cloud metadata via target URI
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 55
+reasoning: PUT declared apiKey:[]+oauth2:[]+x-scopes:[] (scope-free, same route class as payment-methods which bypasses gateway auth); body carries target URI for Apple Pay session validation; route confirmed ROUTED (OPTIONS 204) this cycle; no scheme/pin bound in public spec.
+evidence_needed: any valid merchant Bearer (even empty-scope) + target=http://169.254.169.254/latest/meta-data/ vs Apple-gateway control redirect.
+verify_steps: AUTH_HELPED — PUT /v0.2/checkouts/{own_id}/apple-pay-session body {"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"} vs control target; observe response body/redirect.
+impact: SSRF → cloud metadata → infra credentials; CRITICAL if reachable.
+testability: AUTH_HELPED
