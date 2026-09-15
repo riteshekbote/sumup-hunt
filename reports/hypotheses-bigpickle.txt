@@ -1,4 +1,7 @@
-## 2026-09-15 01:21:07 UTC [target] (model bigpickle)
+## 2026-09-15 06:18:27 UTC [target] (model bigpickle)
+[PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,7.2,a=8,b=9,t=7,g=6,c=8,f=9
+[PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,6.8,a=7,b=9,t=8,g=6,c=8,f=9
+[PRIO] api.sumup.com/token,6.5,a=9,b=9,t=8,g=7,c=7,f=9
 [HYP] Cross-tenant payment-methods BOLA resolves handler-level with no gateway ownership check
 class: IDOR
 asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
@@ -26,5 +29,12 @@ evidence_needed: any valid merchant Bearer (even empty-scope) + target=http://16
 verify_steps: AUTH_HELPED — PUT /v0.2/checkouts/{own_id}/apple-pay-session body {"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"} vs control target; observe response body/redirect of the fetched URI.
 impact: SSRF → cloud metadata → infra credentials; CRITICAL if reachable.
 testability: AUTH_HELPED
+[FINAL] 1. Cross-tenant payment-methods BOLA (conf 68) — MEDIUM/HIGH
+[FINAL] 2. Legacy /token client_credentials (conf 68) — HIGH
+[FINAL] 3. apple-pay-session SSRF (conf 55) — CRITICAL if reachable
 [NEXT] HUMAN: provide ONE merchant credential from me.sumup.com — `sup_sk_` API key (settings/api-keys) OR OAuth2 app client_id+client_secret (settings/oauth2-applications) — to unlock all three in one session: (1) GET /v0.1/merchants/{own,MK01A8C2,MK10CL2A,MCXXXXXX}/payment-methods?amount=9.99&currency={EUR,BRL,PLN} Bearer sup_sk_; (2) POST /token grant_type=client_credentials; (3) PUT /v0.2/checkouts/{own}/apple-pay-session target=http://169.254.169.254/latest/meta-data/ vs Apple control.
-[RISK] sumup: 82 — 0 filed bugs. Three reportable-candidate classes (apple-pay SSRF CRITICAL, payment-methods BOLA MEDIUM/HIGH, legacy-token AUTH HIGH) remain permanently behind ONE merchant credential; passive surface is now fully mapped and fatigued (this cycle produced two hardening/behavior datapoints but zero new attacker-reachable surface). Program value is 100% gated on HUMAN-supplied `sup_sk_` or OAuth2-app secret.
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combos, 0 HITs); legacy allowlist host not recoverable from any passive surface.
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks resource access; prod sync untestable passively.
+[LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, JWKS URI; no resource_scopes/audience-oracle field; recon surface exhausted.
+[LEARN] REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token rotated (401) — finding non-reproducible; report file never existed despite KB hallucinations.
+[RISK] sumup: 82 — 0 filed bugs. Three reportable-candidate classes (apple-pay SSRF CRITICAL, payment-methods BOLA MEDIUM/HIGH, legacy-token AUTH HIGH) remain permanently behind ONE merchant credential; passive surface is now fully mapped and fatigued (this cycle produced zero new attacker-reachable surface). Program value is 100% gated on HUMAN-supplied `sup_sk_` or OAuth2-app secret.

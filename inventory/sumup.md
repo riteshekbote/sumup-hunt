@@ -717,3 +717,5 @@ www.sumup.com
 - CHANGED Contentful PREVIEW token rotated (401) — P4 finding closed, non-reproducible
 - CHANGED `api.sumup.com/authorize` client_id oracle + wildcard CORS + SameSite=None cookies LIVE; callback enumeration exhausted (~200 combos: crt.sh 52 + ccTLD 96 + custom schemes + bare paths = 0 HITs)
 - CHANGED `auth.sam-app.ro` dynamic registration LIVE (RFC 7591) → mints JWTs (empty `scp`, attacker-controlled `aud`) but cross-env JWKS isolation (ZERO kid overlap) blocks prod relay
+
+## 2026-09-15 06:35:54 UTC

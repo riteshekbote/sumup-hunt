@@ -12619,3 +12619,346 @@ testability: AUTH_HELPED
 **STEP 7 — RISK**
 
 [RISK] sumup: 72 — Contentful P4 finding closed (token rotated). Highest remaining risk: RFC 9728 token validation surface on api.sumup.com (confidence 75, AUTH_HELPED) could yield cross-resource-server access to payment APIs if aud/claim validation is flawed. Staging dynamic registration (auth.sam-app.ro) is LIVE but cross-env JWKS isolation (ZERO kid overlap) currently blocks token relay; client-level sync to prod provenance DB untested. Legacy OAuth gateway (api.sumup.com/authorize) has client_id oracle + wildcard CORS but callback enumeration exhausted (0 HITs). support_centre client on modern auth server introduces new scope model ("classic") but unexplorable without auth. Two spec-documented empty-scope operations (payment-methods, apple-pay-session) are BOLA/SSRF targets blocked on merchant token. Legacy token endpoint (api.sumup.com/token) newly confirmed live — potential for client_credentials grant with public client_id. All critical paths require merchant OAuth token (AUTH_HELPED).
+===== ANALYST nemotron3 2026-09-15 06:35:54 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+[0m$ [0mcurl -sI https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods 2>&1 | head -20
+HTTP/2 404 
+date: Tue, 15 Sep 2026 06:18:51 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 80dcb13b-74aa-9e25-9377-021133bdac1d
+x-envoy-upstream-service-time: 1
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=XJAPguDMaG1Oo15m0EnUv.NjLmsiqQCy_LaW5QwKJt4-1789453130.4154203-1.0.1.1-ZOougN8s3CLpTc39rH8UUbdzRmhlu2ZdGo1nMSsbd4m6HctqHtM9lvA_cnzRZe7Hhl78RMccia4WYYmFxr2Y7ue2LmYnEkpM0A7bAOCi6FUgMVehU5pzlj.MUlA2os2CAGlPtYnHHqGinHeRjF_lRw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Tue, 15 Sep 2026 06:48:51 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=f3yOSjllMxHdpA2N0WRzWxucURL2Snj5GA5OD7sSWfbJ8rhTFAcdQVV%2FGNPQqy4EIM1gLZ37Zthc9fLmXTts6dP28oNdMJw%2BYLSX6SHzhJshXLYgsSoG5rgBdpe0PlQ%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a3b584311fcc1663-LAX
+[0m
+[0m$ [0mcurl -sI https://api.sumup.com/v0.2/checkouts/test/apple-pay-session 2>&1 | head -20
+HTTP/2 404 
+date: Tue, 15 Sep 2026 06:19:46 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 7627aa2f-c2a9-9766-a7bb-f30ec3fbd5d3
+x-envoy-upstream-service-time: 1
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=TfOatMdI_wC47VOWXmRsHx0ZSC5HdwoQgPq5gW2_1sY-1789453185.5604887-1.0.1.1-5EtOwxXqtD0Ebjz4qYHD1fZnmdY6wlpcnEXh.BUwaRXZGTkC5sZypGBaK.zm1jyPobY9QbX3Owz30HbqdN37hzq4x.bsgZ3zJ.Jk_HLYa34asmNTjo.Wf46SXr6AVqBswTjGfhTNcW3BC7haokloPw; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Tue, 15 Sep 2026 06:49:46 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=WE8YE6UItf%2B%2BIOng4zgO6ANENx2YZcnB3mEsprZTAGjeIMEo791SuIJ2pb%2FLhjZhSGM7GrFQAaHgL4kDEI1CQok5eggweUUrHMbiS2rKMadIxjL7sYNoGELUYRNdMBo%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a3b58589bd181476-LAX
+[0m
+[0m$ [0mcurl -sI https://api.sumup.com/token 2>&1 | head -25
+HTTP/2 404 
+date: Tue, 15 Sep 2026 06:20:28 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: a0ad30d4-952f-9197-87ed-798978917ad1
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=HTimi83Q7AARS8uBHvv9C3MVYNIrNMzh7TCkOXfRUfs-1789453227.8672588-1.0.1.1-doB5Do0N1V1f4q02X2QzDxUOq7zAvLXOuq4.bKTiEzvb8pOKdVVs6.3vqtvQgFcKYNPywwOzVDYmm0q.yvxdiZUUQ3PvWtVlsho7Lm4NGJGm6PRzOYABNj_CL1Tco72SqVjrPayv4211n8j2FxiD0Q; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Tue, 15 Sep 2026 06:50:28 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=RMpuzBGmnn%2Bp3hF0TbyqP3uHg8IoyjsbEM8HFZx7oHEJ9TwLxlzhCTm0u5k3NXYxcX%2BtZdW%2B5qiaXBe2ujR4QTKbr5R1Du4d7GKqAsk41OclAN7%2BXFJVtjL3ds8luWs%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a3b586922f254cbb-LAX
+[0m
+[0m$ [0mcurl -sIX OPTIONS https://api.sumup.com/token 2>&1 | head -25
+HTTP/2 204 
+date: Tue, 15 Sep 2026 06:21:17 GMT
+access-control-allow-origin: api.sumup.com
+access-control-allow-headers: *
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 9f1e755a-07d1-9aa4-b279-221ca8af7852
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=NneOBgH05vinYZ7r0lGKE9Tf1VQ7Auz.VocqwY0bKjw-1789453276.9060504-1.0.1.1-gvdKAmF.Lp4p3Tgs_ehOJVEv9kafljQi20zOf7HaGd1mWEx9myM7iDH8FePUAnq.SLRXOhiRNNjVyJrwNbfSVKswWDAXc7EFsky_PynFFRmTFHnaQf8fYN0PCtPMM6cnNbPFWpErLZvVICLtbaQRCg; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Tue, 15 Sep 2026 06:51:17 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=kxCOz65%2FdtbqxHqqiDqw%2BG9wLuB0ZYwedM28CWcXZ%2Br%2BXqGwUB%2BWDZmzZHW80bEo7acSbD2UrXxwHwY99qYmgi%2FGCENhF7KZyxhLEJnWU0mLqKKpndismK1KNo4HTRM%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a3b587c4acc94cbb-LAX
+[0m
+[0m$ [0mcurl -s https://api.sumup.com/.well-known/oauth-protected-resource 2>&1
+{
+	"resource_name": "SumUp API",
+	"resource": "https://api.sumup.com",
+	"authorization_servers": ["https://auth.sumup.com"],
+	"bearer_methods_supported": ["header"],
+	"jwks_uri": "https://auth.sumup.com/.well-known/jwks.json",
+	"resource_documentation": "https://developer.sumup.com"
+}
+[0m
+[0m$ [0mcurl -s https://auth.sumup.com/.well-known/openid-configuration 2>&1 | head -60
+{"issuer":"https://auth.sumup.com/","authorization_endpoint":"https://auth.sumup.com/oauth2/auth","token_endpoint":"https://auth.sumup.com/oauth2/token","jwks_uri":"https://auth.sumup.com/.well-known/jwks.json","subject_types_supported":["public"],"response_types_supported":["code","code id_token","id_token","token id_token","token","token id_token code"],"claims_supported":["sub","iss","exp","iat"],"grant_types_supported":["authorization_code","implicit","client_credentials","refresh_token"],"response_modes_supported":["query","fragment"],"userinfo_endpoint":"https://auth.sumup.com/userinfo","scopes_supported":["offline_access","offline","openid","email","classic"],"token_endpoint_auth_methods_supported":["client_secret_post","client_secret_basic","private_key_jwt","none"],"userinfo_signing_alg_values_supported":["none","RS256"],"id_token_signing_alg_values_supported":["RS256"],"request_parameter_supported":true,"request_uri_parameter_supported":true,"require_request_uri_registration":true,"claims_parameter_supported":false,"revocation_endpoint":"https://auth.sumup.com/oauth2/revoke","backchannel_logout_supported":true,"backchannel_logout_session_supported":true,"frontchannel_logout_supported":true,"frontchannel_logout_session_supported":true,"end_session_endpoint":"https://auth.sumup.com/oauth2/sessions/logout","request_object_signing_alg_values_supported":["RS256","none"],"code_challenge_methods_supported":["plain","S256"],"nonce_endpoint":"https://auth.sumup.com/oauth2/nonce"}
+[0m
+[0m$ [0mcurl -s https://auth.sam-app.ro/.well-known/openid-configuration 2>&1 | head -60
+{
+  "issuer": "https://auth.sam-app.ro",
+  "authorization_endpoint": "https://auth.sam-app.ro/oauth2/auth",
+  "token_endpoint": "https://auth.sam-app.ro/oauth2/token",
+  "jwks_uri": "https://auth.sam-app.ro/.well-known/jwks.json",
+  "registration_endpoint": "https://auth.sam-app.ro/oauth2/register",
+  "scopes_supported": [
+    "offline_access",
+    "members.read",
+    "members.write",
+    "merchants.read",
+    "merchants.write",
+    "roles.read",
+    "roles.write",
+    "checkouts.read",
+    "checkouts.write",
+    "customers.read",
+    "customers.write",
+    "api_keys.read",
+    "api_keys.write",
+    "receipts.read",
+    "refunds.write",
+    "transactions.read",
+    "payouts.read",
+    "readers.read",
+    "readers.write",
+    "sales.read"
+  ],
+  "response_types_supported": [
+    "code",
+    "code id_token",
+    "id_token",
+    "token id_token",
+    "token",
+    "token id_token code"
+  ],
+  "response_modes_supported": [
+    "query"
+  ],
+  "grant_types_supported": [
+    "authorization_code",
+    "client_credentials",
+    "refresh_token",
+    "urn:ietf:params:oauth:grant-type:device_code"
+  ],
+  "token_endpoint_auth_methods_supported": [
+    "client_secret_post",
+    "private_key_jwt",
+    "none"
+  ],
+  "token_endpoint_auth_signing_alg_values_supported": [
+    "RS256",
+    "EdDSA"
+  ],
+  "dpop_signing_alg_values_supported": [
+    "RS256",
+    "RS384",
+    "RS512",
+    "PS256",
+    "PS384",
+[0m
+[0m$ [0mcurl -s https://auth.sumup.com/.well-known/jwks.json 2>&1 | jq '.keys | length, .[].kid'
+8
+"public:38618372-f016-4e5d-97b2-d043a975d243"
+"public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9"
+"public:8c332d17-2b35-4cba-a61e-6843b4375a71"
+"public:a4627362-0900-4bfa-8b68-3a740165dbcf"
+"public:32ad4b15-8641-4aaa-9a2e-427bb1848321"
+"public:8e43ec38-e8f1-47e4-aa6c-9990c3ae20b3"
+"1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM"
+"-tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4"
+[0m
+[0m$ [0mcurl -s https://auth.sam-app.ro/.well-known/jwks.json 2>&1 | jq '.keys | length, .[].kid'
+11
+"2ca76842-2487-428f-a87f-603d1f6f6ef0"
+"ugK7GDfOf35HE5n2Pwsy9K3HSnYWNPGbRnWRscc83Lg"
+"public:73c59380-fbab-4a2f-8d0e-1884cf8ec724"
+"public:b2aafe4c-7d7f-4f32-90a7-66a0fc9cd097"
+"public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a"
+"public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9"
+"public:3862035e-6139-422f-b17d-cf67b950a74f"
+"public:e1d0f7e4-aab6-424e-8e2b-7549ac77f514"
+"public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a"
+"public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9"
+"loadtesting"
+[0m
+[0m$ [0mcurl -sI "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=test12345" 2>&1 | head -20
+HTTP/2 404 
+date: Tue, 15 Sep 2026 06:28:22 GMT
+content-type: application/json
+content-length: 150
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+server: cloudflare
+x-request-id: 76d371f7-d951-91c0-9253-4c042c9d1c50
+x-envoy-upstream-service-time: 0
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=a_jWBqIrC6rmDI_tp3B8sTkbndDLpbv08ZCskhiHA2w-1789453701.935312-1.0.1.1-PM4fsc1ZAxQmMVSPfnANbEoH01Z0im6lmt5fl4vgmz7wgHVrJRfNUwLigHSSNVmBg07MIWLsqstpR.OQruCa6g2.6kJPdi.9iB8EbyUUpjFAZ7jqmz49GCHDOkdTDTHj6BZ5Pvb4_4NdkTCMzPEzxA; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Tue, 15 Sep 2026 06:58:22 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=xNCPjOJGgKKIqdFBxgmcPyIsqRABQzBXnTHtS5IImhq8B5spqA9pB2u8XXJ55U4TR5kMMD8AKPcucr%2BW6fqkD6uKc6GP9omsWTOBuOOpZAVdeccE%2FzMkXkrR4zTm5ao%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+cf-ray: a3b592251fcb170b-LAX
+[0m
+[0m$ [0mcurl -s "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=test12345" 2>&1 | head -30
+(no output)
+[0m
+[0m$ [0mcurl -v "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=test12345" 2>&1 | head -40
+% Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Host api.sumup.com:443 was resolved.
+* IPv6: (none)
+* IPv4: 172.64.153.49, 104.18.34.207
+*   Trying 172.64.153.49:443...
+* Connected to api.sumup.com (172.64.153.49) port 443
+* ALPN: curl offers h2,http/1.1
+} [5 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+} [512 bytes data]
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+{ [122 bytes data]
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+{ [19 bytes data]
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+{ [3412 bytes data]
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+{ [79 bytes data]
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+{ [52 bytes data]
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+} [1 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+} [52 bytes data]
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519 / id-ecPublicKey
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: CN=api.sumup.com
+*  start date: Aug 12 12:46:34 2026 GMT
+*  expire date: Nov 10 12:46:33 2026 GMT
+*  subjectAltName: host "api.sumup.com" matched cert's "api.sumup.com"
+*  issuer: C=US; O=Let's Encrypt; CN=YE1
+*  SSL certificate verify ok.
+*   Certificate level 0: Public key type EC/prime256v1 (256/128 Bits/secBits), signed using ecdsa-with-SHA384
+*   Certificate level 1: Public key type EC/secp384r1 (384/192 Bits/secBits), signed using ecdsa-with-SHA384
+*   Certificate level 2: Public key type EC/secp384r1 (384/192 Bits/secBits), signed using ecdsa-with-SHA384
+[0m
+[0m$ [0mcurl -v "https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=test12345" 2>&1
+% Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Host api.sumup.com:443 was resolved.
+* IPv6: (none)
+* IPv4: 172.64.153.49, 104.18.34.207
+*   Trying 172.64.153.49:443...
+* Connected to api.sumup.com (172.64.153.49) port 443
+* ALPN: curl offers h2,http/1.1
+} [5 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+} [512 bytes data]
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+{ [122 bytes data]
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+{ [19 bytes data]
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+{ [3412 bytes data]
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+{ [78 bytes data]
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+{ [52 bytes data]
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+} [1 bytes data]
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+} [52 bytes data]
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519 / id-ecPublicKey
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: CN=api.sumup.com
+*  start date: Aug 12 12:46:34 2026 GMT
+*  expire date: Nov 10 12:46:33 2026 GMT
+*  subjectAltName: host "api.sumup.com" matched cert's "api.sumup.com"
+*  issuer: C=US; O=Let's Encrypt; CN=YE1
+*  SSL certificate verify ok.
+*   Certificate level 0: Public key type EC/prime256v1 (256/128 Bits/secBits), signed using ecdsa-with-SHA384
+*   Certificate level 1: Public key type EC/secp384r1 (384/192 Bits/secBits), signed using ecdsa-with-SHA384
+*   Certificate level 2: Public key type EC/secp384r1 (384/192 Bits/secBits), signed using ecdsa-with-SHA384
+*   Certificate level 3: Public key type EC/secp384r1 (384/192 Bits/secBits), signed using ecdsa-with-SHA384
+} [5 bytes data]
+* using HTTP/2
+* [HTTP/2] [1] OPENED stream for https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=test12345
+* [HTTP/2] [1] [:method: GET]
+* [HTTP/2] [1] [:scheme: https]
+* [HTTP/2] [1] [:authority: api.sumup.com]
+* [HTTP/2] [1] [:path: /authorize?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=test12345]
+* [HTTP/2] [1] [user-agent: curl/8.5.0]
+* [HTTP/2] [1] [accept: */*]
+} [5 bytes data]
+> GET /authorize?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=test12345 HTTP/2
+> Host: api.sumup.com
+> User-Agent: curl/8.5.0
+> Accept: */*
+> 
+{ [5 bytes data]
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+{ [230 bytes data]
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+{ [230 bytes data]
+* old SSL session ID is stale, removing
+{ [5 bytes data]
+< HTTP/2 302 
+< date: Tue, 15 Sep 2026 06:30:37 GMT
+< content-length: 0
+< location: https://auth.sumup.com/flows/oauth2/error?error=invalid_request&error_description=The+%27redirect_uri%27+parameter+does+not+match+any+of+the+OAuth+2.0+Client%27s+pre-registered+redirect+urls.
+< nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+< x-envoy-upstream-service-time: 7
+< server: cloudflare
+< x-request-id: 3033da04-1072-9dcf-94bc-96e1c216adbd
+< x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+< access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+< access-control-allow-origin: *
+< access-control-max-age: 300
+< cf-cache-status: DYNAMIC
+< set-cookie: optimizely_experiment_user=c9a2821a-d857-46ca-9518-fe55545bf2c9; Path=/; Domain=sumup.com; Expires=Tue, 22 Sep 2026 06:30:37 GMT; Secure; SameSite=None
+< set-cookie: __cf_bm=TmVtOcTDygtwL5MFvPqXuqHT7VdKtZXHQywCeyO26Ds-1789453836.9158366-1.0.1.1-65UZhN3l1reydvoXbHXJib4hvhbWYveOd5VJltL6nalbCgh0G9K6l26SIfT2WgxHU5g4RH5uzLJlzi2EuqFgmsP1bWMdvA2YKMoGloRAk_8zTalnYCqGDVyX5QdN8kYRr17.sQHDOMDV9jPX6BdNDg; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Tue, 15 Sep 2026 07:00:37 GMT
+< report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=8PLnXydxg%2Fv2l1K%2FMP4uwTDulsYQloisvaHTNLgN0HkHRpf9I3%2BhDHLBVUI0wD%2BiB%2BOgldJrwo4xoAbSEXoH5njGUaOvbyVKcrviyjW1F6z2Vb3PHTN5qyFexbfiPNk%3D"}]}
+< cf-ray: a3b59570bec0f7df-LAX
+< 
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+* Connection #0 to host api.sumup.com left intact
+[0m
+[0m$ [0mcurl -v "https://api.sumup.com/authorize?client_id=unknown_client_123&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=test12345" 2>&1 | grep -E "(< HTTP|< location|invalid_client|invalid_request)"
+< HTTP/2 302 
+< location: https://auth.sumup.com/flows/oauth2/error?error=invalid_client&error_description=The+requested+OAuth+2.0+Client+does+not+exist.
+[0m
+[0m$ [0mcurl -v "https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=test12345" 2>&1 | grep -E "(< HTTP|< location)"
+< HTTP/2 302 
+< location: https://auth.sumup.com/flows/auth-callback?login_challenge=18bbeb3518cd47f88241f7868c413e87
+[0m
+[0m$ [0mcurl -v "https://auth.sumup.com/oauth2/auth?client_id=support_centre&redirect_uri=https%3A%2F%2Fhelp.sumup.com%2Fapi%2Fauth%2Fcallback&response_type=code&state=test12345" 2>&1 | grep -E "(< HTTP|< location)"
+< HTTP/2 302 
+< location: https://auth.sumup.com/flows/auth-callback?login_challenge=713a3a915a0642f898c47047cb14b6ad
+[0m
+[0m$ [0mcurl -v "https://api.sumup.com/authorize?client_id=support_centre&redirect_uri=https%3A%2F%2Fhelp.sumup.com%2Fapi%2Fauth%2Fcallback&response_type=code&state=test12345" 2>&1 | grep -E "(< HTTP|< location)"
+< HTTP/2 302 
+< location: https://auth.sumup.com/flows/oauth2/error?error=invalid_client&error_description=The+requested+OAuth+2.0+Client+does+not+exist.
+[0m

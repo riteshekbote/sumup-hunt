@@ -1777,3 +1777,11 @@
 - LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combo
 - LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks re
 - LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+
+## RANKED HYPOTHESES 2026-09-15 06:35:54 UTC
+- [68] api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods: Cross-tenant payment-methods BOLA resolves handler-level with no gateway ownership check (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: provide ONE merchant credential from me.sumup.com — `sup_sk_` API key (settings/api-keys) OR OAuth2 app client_id+client_secret (settings/oauth2-applicat
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combo
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks re
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token rotated (401) — finding non-reproducible; report file never existed despite KB hallucinations.
