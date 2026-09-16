@@ -766,3 +766,9 @@ www.sumup.com
 - NEW `support_chat` confirmed on **modern** auth server (303→chat.sumup.com/api/sso/callback `login_required` w/ verified redirect, prompt=none) but **invalid_client** on legacy `api.sumup.com/authorize` —
 - NEW chat.sumup.com API surface mapped from chunks + read-only probes: `/api/conversations/[conversationId]` (dynamic route; GET of any id anonymous → **deterministic 500** JSON, 308 on bare path, `x-match
 - CHANGED chat.sumup.com root 200 (Vercel, 8.8KB, page chunk 1.06KB — logic lazy-loaded); robots.txt/sitemap.xml 404 (Next 404 shell).
+
+## 2026-09-16 22:49:50 UTC
+- NEW chat.sumup.com: all 12 build chunks (~1.63MB) now enumerated — API surface definitively closed to {`/api/conversations/[id]`, `/api/sso/get-token`, `/api/sso/login`, `/api/otel-*`}; no upload/multipar
+- NEW conversation fetch confirmed as `GET /api/conversations/{encodeURIComponent(id)}` → `.data.events`; `conversationId` server-assigned at open (`S.current=e.data.conversationId`), `clientSessionId` is c
+- NEW chat.sumup.com/api/otel-traces: unauthenticated POST `{}` → 200 — OTEL collector accepts arbitrary spans (shared marketing-widget template).
+- CHANGED api.sumup.com/v0.2/checkouts/{id}/apple-pay-session OPTIONS still 204; RFC 9728 metadata unchanged — money surface byte-stable.

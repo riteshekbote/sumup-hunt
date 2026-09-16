@@ -1929,3 +1929,10 @@
 - LEARN: ACCEPTED OATH @ auth.sumup.com: New first-party client `support_chat` — redirect `https://chat.sumup.com/api/sso/callback` verified on modern server (303 login_
 - LEARN: ACCEPTED OTHER @ chat.sumup.com: Anonymous surface mapped via GET-only probes: `/api/conversations/[conversationId]` dynamic route live (deterministic 500 all i
 - LEARN: REJECTED MISCONFIG @ chat.sumup.com: deterministic anonymous 500 on `/api/conversations/{id}` is id-independent and pre-auth (same missing-auth throw class as t
+
+## RANKED HYPOTHESES 2026-09-16 22:49:50 UTC
+- [65] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session: apple-pay-session accepts `target` URL and server-side fetches it (SSRF to cloud metadata) (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: supply ONE self-owned test credential from me.sumup.com (settings/api-keys `sup_sk_` OR OAuth2 client_id+client_secret) for own-data control tests only: 
+- LEARN: ACCEPTED OTHER @ chat.sumup.com: chunk enumeration COMPLETE (12/12 chunks, 1.63MB) — API surface closed to {/api/conversations/[id], /api/sso/get-token, /api/ss
+- LEARN: ACCEPTED OTHER @ chat.sumup.com/api/otel-traces: unauthenticated POST → 200; OTEL collector accepts arbitrary spans (shared widget template me/checkout/chat) — 
+- LEARN: ACCEPTED OATH @ chat.sumup.com: conversationId server-assigned at open (`S.current=e.data.conversationId`), not client-guessable; IDOR discriminator requires a 

@@ -32004,3 +32004,383 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] sumup: 72 — chat.sumup.com adds one genuinely fresh surface (new first-party OAuth client `support_chat`, dynamic conversations route, anonymous handler reach) but every exploit-grade probe (SSRF, aud-confusion, chat scoping) remains AUTH_HELPED behind a merchant session/PKCE session; all byte-stable prod surfaces unchanged for 20+ cycles; and 2 of the 4 long-standing "final" hypothesis classes (receipts/persons cross-tenant PII) are OOS per program note, so the realistic fileable ceiling is lower than the tracked score.
+===== ANALYST bigpickle 2026-09-16 22:49:50 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -m 15 -o /tmp/opencode/chat_root.html -w "%{http_code} %{size_download} %{url_effective}\n" https://chat.sumup.com/ ; echo "---"; curl -s -m 15 https://chat.sumup.com/ | grep -oE 'static/chunks/[a-zA-Z0-9._/-]+' | sort -u
+200 8785 https://chat.sumup.com/
+---
+static/chunks/1732-c2214c48784fafa8.js
+static/chunks/2117-868e9ecfbdeb7232.js
+static/chunks/2711-fb461c845a14d21b.js
+static/chunks/3915-c0084b36cba275d6.js
+static/chunks/8790-20beda9eb567d7b6.js
+static/chunks/8977-d3a23cbe88172038.js
+static/chunks/app/layout-928c906eecba2548.js
+static/chunks/app/page-5d748fa45de2bd4c.js
+static/chunks/dc112a36-7ca7a7d409b86d48.js
+static/chunks/fd9d1056-6e04b50902f703e2.js
+static/chunks/main-app-be3d940aef6bd3eb.js
+static/chunks/polyfills-42372ed130431b0a.js
+static/chunks/webpack-684217da73817c18.js
+[0m
+[0m$ [0mcd /tmp/opencode && for c in 8790-20beda9eb567d7b6 8977-d3a23cbe88172038 fd9d1056-6e04b50902f703e2; do curl -s -m 20 -o chunk_$c.js https://chat.sumup.com/_next/static/chunks/$c.js; echo "$c $(wc -c < chunk_$c.js)"; sleep 1; done
+8790-20beda9eb567d7b6 651340
+8977-d3a23cbe88172038 26493
+fd9d1056-6e04b50902f703e2 172837
+[0m
+[0m$ [0mcd /tmp/opencode && cat chunk_8790-20beda9eb567d7b6.js chunk_8977-d3a23cbe88172038.js chunk_fd9d1056-6e04b50902f703e2.js > combined.js && echo "=== /api/* paths ===" && grep -oE '"/(api|_next)/[a-zA-Z0-9/_-]+' combined.js | sort -u | head -60
+=== /api/* paths ===
+"/api/otel-
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== conversation/upload/attachment refs ===" && grep -oE '[a-zA-Z_]*conversation[a-zA-Z_]*|upload[a-zA-Z_]*|attachment[a-zA-Z_]*' combined.js | sort | uniq -c | sort -rn | head -30
+=== conversation/upload/attachment refs ===
+      8 conversation
+      7 conversation_id
+      5 upload
+      3 uploadPath
+      2 upload_unauthorized
+      2 upload_total
+      2 upload_path
+      2 upload_disallowed
+      2 resume_conversation
+      2 conversationSpan
+      2 conversationId
+      1 uploads
+      1 upload_failed
+      1 upload_enabled
+      1 upload_disallowed_total
+      1 upload_disabled
+      1 show_active_conversations
+      1 initialize_conversation
+      1 conversation_title
+      1 conversation_resolved
+      1 conversation_ready
+      1 conversation_inactive
+      1 conversation_ended
+      1 conversation_closed
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== fetch/urls ===" && grep -oE '"/[a-zA-Z0-9/_.-]{2,60}"' combined.js | sort -u | head -80
+=== fetch/urls ===
+"/api/otel-"
+"/v1/"
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== otel- refs ===" && grep -oE '.{60}api/otel-.{80}' combined.js | head -5
+=== otel- refs ===
+window.location.hostname?"".concat(window.location.origin,"/api/otel-").concat(t):"".concat(this.COLLECTOR_BASE_URL,"/v1/").concat(t)},getHeaders:()=
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== context around otel ===" && grep -oE '.{40}otel-.{20}' combined.js | head; echo "=== signal names ==="; grep -oE '"[a-zA-Z_]{2,40}"' combined.js | sort | uniq -c | sort -rn | head -40
+=== context around otel ===
+aces|onetrust|vercel-insights)/,/\/api\/otel-traces/,/\/api\/otel
+?"".concat(window.location.origin,"/api/otel-").concat(t):"".conc
+=== signal names ===
+    309 "function"
+    217 "string"
+    204 "object"
+     98 "none"
+     85 "symbol"
+     85 "number"
+     73 "path"
+     71 "svg"
+     61 "currentColor"
+     55 "div"
+     49 "undefined"
+     48 "default"
+     43 "size"
+     41 "auto"
+     35 "horizontal"
+     35 "EUR"
+     33 "link"
+     31 "xAxis"
+     30 "boolean"
+     27 "middle"
+     27 "left"
+     26 "value"
+     26 "span"
+     26 "__esModule"
+     25 "yAxis"
+     25 "end"
+     24 "top"
+     24 "bottom"
+     23 "right"
+     22 "text"
+     22 "start"
+     22 "input"
+     21 "style"
+     20 "vertical"
+     20 "unknown"
+     20 "true"
+     20 "script"
+     18 "hidden"
+     16 "stylesheet"
+     16 "px"
+[0m
+[0m$ [0mcd /tmp/opencode && grep -oE 'api/otel-[a-zA-Z]+' combined.js | sort -u; echo "=== serveraction/upload refs ==="; grep -oE '.{50}upload_path.{60}' combined.js | head -3; echo "=== server function ids ==="; grep -oE 'serverFunctions|__next_f|self.__next' combined.js | sort -u
+=== serveraction/upload refs ===
+i=n(69953);let c="web",a="sumup.interactions.chat.upload_path";function u(e){let{connection:t,applicationId:n}=e;return n
+by path. Labels: outcome, sumup.interactions.chat.upload_path, failure_reason. Aligned with Android sumup_interactions_fi
+=== server function ids ===
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== most-common quoted strings (API-ish) ==="; grep -oE '"[a-zA-Z][a-zA-Z0-9_-]{2,40}"' combined.js | sort | uniq -c | sort -rn | head -60
+=== most-common quoted strings (API-ish) ===
+    309 "function"
+    217 "string"
+    204 "object"
+     98 "none"
+     85 "symbol"
+     85 "number"
+     73 "path"
+     71 "svg"
+     61 "currentColor"
+     55 "div"
+     49 "undefined"
+     48 "default"
+     43 "size"
+     41 "auto"
+     35 "horizontal"
+     35 "EUR"
+     33 "link"
+     31 "xAxis"
+     30 "boolean"
+     27 "middle"
+     27 "left"
+     26 "value"
+     26 "span"
+     25 "yAxis"
+     25 "end"
+     24 "top"
+     24 "bottom"
+     23 "right"
+     22 "text"
+     22 "start"
+     22 "input"
+     21 "style"
+     20 "vertical"
+     20 "unknown"
+     20 "true"
+     20 "script"
+     20 "aria-hidden"
+     18 "hidden"
+     16 "stylesheet"
+     16 "keydown"
+     15 "dialog"
+     15 "children"
+     15 "USD"
+     14 "select"
+     14 "category"
+     14 "axis"
+     14 "NaN"
+     13 "width"
+     13 "textarea"
+     13 "button"
+     13 "angleAxis"
+     12 "title"
+     12 "html"
+     12 "fixed"
+     12 "click"
+     12 "className"
+     11 "open"
+     11 "name"
+     11 "dangerouslySetInnerHTML"
+     10 "type"
+[0m
+[0m$ [0mcd /tmp/opencode && for c in dc112a36-7ca7a7d409b86d48 1732-c2214c48784fafa8 2711-fb461c845a14d21b; do curl -s -m 20 -o chunk_$c.js https://chat.sumup.com/_next/static/chunks/$c.js; echo "$c $(wc -c < chunk_$c.js)"; sleep 1; done
+dc112a36-7ca7a7d409b86d48 305883
+1732-c2214c48784fafa8 243459
+2711-fb461c845a14d21b 218314
+[0m
+[0m$ [0mcd /tmp/opencode && cat chunk_dc112a36-7ca7a7d409b86d48.js chunk_1732-c2214c48784fafa8.js chunk_2711-fb461c845a14d21b.js > all_rest.js && echo "=== api fetch paths ===" && grep -oE '"/api/[a-zA-Z0-9/_.-]+"' all_rest.js | sort -u | head -40 && echo "=== conversation_id formats ===" && grep -oE '[a-zA-Z0-9_-]{6,40}' all_rest.js | grep -iE 'conv|merchant|session|channel' | sort | uniq -c | sort -rn | head -25
+=== api fetch paths ===
+"/api/conversations/"
+"/api/sso/get-token"
+"/api/sso/login"
+=== conversation_id formats ===
+    109 conversationId
+     65 channel
+     22 clientSessionId
+     22 _semconvStability
+     17 conversation_id
+     15 merchantCode
+     14 useMerchantOIDCTokenFlag
+     12 conversationTitleUpdate
+     10 onConversationChange
+     10 conversationChannelRef
+      9 merchantData
+      9 CONVERSATION_ENDED
+      8 conversations
+      8 channels
+      6 sessionStorage
+      6 isPriorityMerchant
+      5 showNewConversationButton
+      5 sessionQueue
+      5 SHOW_ACTIVE_CONVERSATIONS
+      5 ESCALATION_CHANNEL_OPENING
+      4 isCurrentChannelLoading
+      4 inactive_conversation
+      4 convertToPath
+      4 conversationStarter
+      4 call_channel
+[0m
+[0m$ [0mcd /tmp/opencode && grep -oE '.{80}/api/conversations/.{60}' all_rest.js | head -8
+932);let e_=n(83464).Z.create();async function ep(e){let{conversationId:t}=e,n="/api/conversations/".concat(encodeURIComponent(t));return(await e_.get(n)).data
+[0m
+[0m$ [0mcd /tmp/opencode && grep -oE '.{100}conversationId.{100}' all_rest.js | grep -iE 'encodeURIComponent|api/conversations' | head -5
+),el=n(61440),ec=n(2416),ed=n(9996),eu=n(89932);let e_=n(83464).Z.create();async function ep(e){let{conversationId:t}=e,n="/api/conversations/".concat(encodeURIComponent(t));return(await e_.get(n)).data.events}let
+[0m
+[0m$ [0mcd /tmp/opencode && grep -oE '.{60}(randomUUID|crypto\.random|createUUID|uuid|genId|generateId).{60}' all_rest.js | head -8
+(no output)
+[0m
+[0m$ [0mcd /tmp/opencode && grep -oE '.{60}conversationId[:=].[^,}]{0,80}' all_rest.js | head -12
+n e;let t={active:!1,minimized:!1,clientSessionId:(0,M.Z)(),conversationId:""
+lMessage:t=!1,origin:n=V.SH.DASHBOARD,intentId:a,metadata:s,conversationId:i
+age:t,origin:n,...a&&{intentId:a},...s&&{metadata:s},...i&&{conversationId:i
+(89932);let e_=n(83464).Z.create();async function ep(e){let{conversationId:t
+fetchHistory:async function(e){var t,n,a;let{parentOrigin:s,conversationId:i
+tionId:i});let o=await (0,eu.P)({type:ed.O.GET_CONVERSATION,conversationId:i
+,email:a,withContextualEntrypoint:s,contextualInformation:i,conversationId:r
+ile:K},dispatch:X}=(0,y.useContext)(ec.X),Q=function(e){let{conversationId:t
+:()=>null!==c.current,hasSocketSpan:()=>null!==l.current}}({conversationId:()=>S.current||r||"unknown"
+>(0,eo.dk)({merchantCode:o||(null==G?void 0:G.merchantCode),conversationId:S.current||r
+ationTitle:e=>{p({type:"CONVERSATION_TITLE_UPDATE",payload:{conversationId:S.current
+id 0===a?void 0:a.map(j.iP)}:void 0,o={...e,data:{...e.data,conversationId:S.current
+[0m
+[0m$ [0mcd /tmp/opencode && grep -oE '.{80}S\.current=.{60}' all_rest.js | head -8; echo "=== uuid-ish regexes ==="; grep -oE '/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}[a-zA-Z0-9/_-]{0,40}/' all_rest.js | sort -u | head; echo "=== id patterns ==="; grep -oE '"[A-Za-z0-9_-]{12,40}"' all_rest.js | sort -u | head -40
+,{onMFA:e=>{(0,H.K7)(j.cf.SSEChatToken,""),eC(e)},onConversationOpen:e=>{switch(S.current=e.data.conversationId,e.data.channel){case R.er.MIAW:eb(q({e
+oid 0:t.newConnection);if(n){var a;null===(a=ep.current)||void 0===a||a.close()}S.current=null!=e?e:"",N.current="",p({type:"RESET"}),e&&await ey(e),n
+=== uuid-ish regexes ===
+=== id patterns ===
+"--chat-container-bottom-offset"
+"--chat-container-height"
+"--chat-container-right-offset"
+"--chat-container-shadow-blur"
+"--chat-container-shadow-offset-x"
+"--chat-container-shadow-offset-y"
+"--chat-container-width"
+"-webkit-transform"
+"0000000000000000"
+"00000000000000000000000000000000"
+"0123456789abcdef"
+"AGGREGATION_TEMPORALITY_CUMULATIVE"
+"AGGREGATION_TEMPORALITY_DELTA"
+"AGGREGATION_TEMPORALITY_UNSPECIFIED"
+"AIAssistantAction_action__scQ6H"
+"AIAssistantChatModal_cardHeader__eCjEn"
+"AIAssistantChatModal_card__kXhMT"
+"AIAssistantChat_actions__Tqwnr"
+"AIAssistantChat_bodyWithQueue__fZf83"
+"AIAssistantChat_body__OJl6C"
+"AIAssistantChat_endSession__2Avtx"
+"AIAssistantChat_esclationCard__5xuDe"
+"AIAssistantChat_fade-in__X6I5q"
+"AIAssistantChat_fade-out__S8xf1"
+"AIAssistantChat_fadeOutFullScreen__dFx9a"
+"AIAssistantChat_fadeOut__BW2c1"
+"AIAssistantChat_footer__ngvNZ"
+"AIAssistantChat_fullPageLoader__Vgde6"
+"AIAssistantChat_loading__8pfjP"
+"AIAssistantChat_mediaHref__av7ew"
+"AIAssistantChat_mediaLink__TcRsR"
+"AIAssistantChat_mediaMessage__E8jaH"
+"AIAssistantChat_mediaThumbnail__loR5N"
+"AIAssistantChat_messageText__1VVNe"
+"AIAssistantChat_mfaBlur__kTdO_"
+"AIAssistantChat_modal__3xVPz"
+"AIAssistantChat_queueWrapper__YbPmj"
+"AIAssistantChat_scrollWrapper__GfGA3"
+"AIAssistantChat_spinnerWrapper__m4LVa"
+"AIAssistantChat_systemContainer__dR7Dt"
+[0m
+[0m$ [0mcd /tmp/opencode && cat *.js > ALL.js; grep -oE '(concat\("/api/[a-zA-Z0-9/_.-]+"|"/api/[a-zA-Z0-9/_.-]+"|"/api/[a-zA-Z0-9/_.-]+)' ALL.js | sort -u; echo "=== backend host refs ==="; grep -oE '"https?://[a-zA-Z0-9.-]+\.[a-z]{2,}/[a-zA-Z0-9/_-]*"' ALL.js | sort -u | head -20
+"/api/conversations/"
+"/api/otel-"
+"/api/sso/get-token
+"/api/sso/get-token"
+"/api/sso/login"
+=== backend host refs ===
+"http://www.w3.org/1998/Math/MathML"
+"http://www.w3.org/1999/xhtml"
+"http://www.w3.org/1999/xlink"
+"http://www.w3.org/2000/svg"
+"http://www.w3.org/XML/1998/namespace"
+"https://github.com/sumup/chat"
+"https://img.youtube.com/vi/"
+"https://react.dev/errors/"
+"https://sumup.slack.com/archives/CR33241ND"
+[0m
+[0m$ [0mcd /tmp/opencode && grep -oE '.{80}(postMessage|addEventListener\("message"|event\.origin|origin===).{100}' ALL.js | head -10
+of t})(t)}var dataManager=function(){var t,e,i=1,s=[],r={onmessage:function(){},postMessage:function(e){t({data:e})}},a={postMessage:function(t){r.onmessage({data:t})}};function n(e){if(windo
+er.load(t.data.path,t.data.fullPath,function(e){a.dataManager.completeData(e),a.postMessage({id:t.data.id,payload:e,status:"success"})},function(){a.postMessage({id:t.data.id,status:"error"})
+complete"===t.data.type){var i=t.data.animation;a.dataManager.completeData(i),a.postMessage({id:t.data.id,payload:i,status:"success"})}else"loadData"===t.data.type&&a.assetLoader.load(t.data.
+ction(e){a.postMessage({id:t.data.id,payload:e,status:"success"})},function(){a.postMessage({id:t.data.id,status:"error"})})})).onmessage=function(t){var e=t.data,i=e.id,r=s[i];s[i]=null,"suc
+Complete:t,onError:e},r}return{loadAnimation:function(t,i,s){o();var r=h(i,s);e.postMessage({type:"loadAnimation",path:t,fullPath:window.location.origin+window.location.pathname,id:r})},loadD
+.location.pathname,id:r})},completeAnimation:function(t,i,s){o();var r=h(i,s);e.postMessage({type:"complete",animation:t,id:r})}}}(),ImagePreloader=function(){var t=function(){var t=createTag
+e)=>{let r=t[i.S.FETCH_START],n=e[i.S.FETCH_START];return r>n?1:r<n?-1:0});if(u.origin===l()||!(h.length>1))return{mainRequest:c[0]};{let t=h[0],e=function(t,e,r){let n;let s=(0,o.PW)(r),a=
+(t,e){let r=e||[];return("string"==typeof r||r instanceof RegExp)&&(r=[r]),f(t).origin===l()||r.some(e=>(0,s.j)(t,e))}},5842:function(t,e,r){"use strict";r.d(e,{DZ:function(){return u},Mn:f
+roperties(t,n)},X=T("AsyncFunction"),J=(u="function"==typeof setImmediate,c=R(G.postMessage),u?setImmediate:c?(l=`axios@${Math.random()}`,h=[],G.addEventListener("message",({source:t,data:e})
+:1e4;return new Promise((i,r)=>{let o=(0,a.Z)(),l=e=>{let{id:n}=e.data;n===o&&e.origin===t&&(window.removeEventListener("message",l),clearTimeout(c),i(e.data))};window.addEventListener("mes
+[0m
+[0m$ [0mcurl -s -m 12 -o /dev/null -w "applepay OPTIONS: %{http_code}\n" -X OPTIONS https://api.sumup.com/v0.2/checkouts/sumup_id_123/apple-pay-session; sleep 1; curl -s -m 12 -o /dev/null -w "chat get-token GET: %{http_code}\n" https://chat.sumup.com/api/sso/get-token; sleep 1; curl -s -m 12 -o /dev/null -w "chat otel-traces POST-anon: %{http_code}\n" -X POST https://chat.sumup.com/api/otel-traces -H "Content-Type: application/json" -d '{}'
+applepay OPTIONS: 204
+chat get-token GET: 401
+chat otel-traces POST-anon: 200
+[0m
+STEP 1 — DELTA
+[NEW] chat.sumup.com: all 12 build chunks (~1.63MB) now enumerated — API surface definitively closed to {`/api/conversations/[id]`, `/api/sso/get-token`, `/api/sso/login`, `/api/otel-*`}; no upload/multipart route exists client-side (`upload_path` is an OTEL telemetry attribute only).
+[NEW] conversation fetch confirmed as `GET /api/conversations/{encodeURIComponent(id)}` → `.data.events`; `conversationId` server-assigned at open (`S.current=e.data.conversationId`), `clientSessionId` is client random.
+[NEW] chat.sumup.com/api/otel-traces: unauthenticated POST `{}` → 200 — OTEL collector accepts arbitrary spans (shared marketing-widget template).
+[CHANGED] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session OPTIONS still 204; RFC 9728 metadata unchanged — money surface byte-stable.
+
+STEP 2 — PRIORITIZE
+[PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,8.3,attack_surface=7 business_value=9 tech_exposure=9 gate_ease=8 cloud_surface=9 freshness=9
+[PRIO] api.sumup.com/.well-known/oauth-protected-resource (RFC 9728 aud-validation),6.5,attack_surface=5 business_value=9 tech_exposure=8 gate_ease=4 cloud_surface=6 freshness=8
+[PRIO] chat.sumup.com/api/conversations/{id},5.6,attack_surface=6 business_value=7 tech_exposure=6 gate_ease=2 cloud_surface=5 freshness=8
+
+STEP 3 — HYPOTHESES
+[HYP] apple-pay-session accepts `target` URL and server-side fetches it (SSRF to cloud metadata)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: Official spec declares PUT oauth2:[] (empty scope); gateway route confirmed ROUTED (OPTIONS 204, origin-echo CORS, identity.svc op) while unauth PUT is 404; Apple Pay merchant validation inherently makes a server-side request to `domainName`-roots.
+evidence_needed: 200 with `target=http://169.254.169.254/latest/meta-data/` vs Apple-URL control; any status divergence on internal vs public host.
+verify_steps: AUTH_HELPED — PUT with own checkout_id, body `{"context":"pay.sumup.com","target":"http://169.254.169.254/latest/meta-data/","displayName":"x","validationURL":"x"}` compared to Apple `https://apple-pay-gateway.apple.com/paymentservices/paymentSession`.
+impact: EC2 metadata → credentials → full SumUp prod; CRITICAL.
+testability: AUTH_HELPED
+
+[HYP] api.sumup.com gateway validates aud/iss loosely permitting cross-client token confusion
+class: AUTH
+asset: api.sumup.com (RFC 9728 resource server)
+confidence: 75
+reasoning: RFC 9728 metadata lists sole authorization_server=auth.sumup.com, header-only bearer, no resource_scopes/audiences field; staging JWTs mintable with attacker-controlled aud but cross-env JWKS isolation (ZERO kid overlap) blocks prod relay — the one untestable-passively gap.
+evidence_needed: own prod token with wrong/no `aud` accepted by a resource op (vs 401).
+verify_steps: AUTH_HELPED — bearer own-token, mutate aud to `https://api.sumup.com` vs foreign, compare status on one read op.
+impact: cross-client/broader-than-intended token validity; HIGH.
+testability: AUTH_HELPED
+
+[HYP] conversation event log is merchant-scoped by conversationId only, without ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET `/api/conversations/{encodeURIComponent(id)}` → `.data.events`; conversationId server-assigned (opaque, not client-guessable) and bound to a PKCE/prompt=none session; deterministic 500 anonymous proves handler executes pre-gate but yields no id oracle.
+evidence_needed: with a merchant session, own conversationId → 200 (control) vs foreign id → 200 foreign events.
+verify_steps: AUTH_HELPED — GET `/api/conversations/{own}` with session; then foreign ids ≤0.5 rps.
+impact: cross-merchant support-transcript/event read; MEDIUM.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+[PARKED] chat file-upload surface: **refuted** — all 12 chunks enumerate zero upload/multipart route; `interactions.chat.upload_path` is OTEL telemetry naming only.
+[PARKED] chat conversation-scoping (conf 40): conversationId server-opaque + chunk-format enumeration now exhausted → 403/404-vs-200 discriminator unreachable without a session; drops to PARKED.
+[PARKED] RFC 9728 aud-confusion (conf 75): top architectural hypothesis, still gated on own prod bearer.
+[FINAL] api.sumup.com apple-pay-session SSRF (conf 65, AUTH_HELPED) — only filing-chain-reachable CRITICAL if credentialed.
+[FINAL] api.sumup.com RFC 9728 aud-validation (conf 75, AUTH_HELPED).
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: supply ONE self-owned test credential from me.sumup.com (settings/api-keys `sup_sk_` OR OAuth2 client_id+client_secret) for own-data control tests only: (1) PUT /v0.2/checkouts/{own}/apple-pay-session `target=http://169.254.169.254/latest/meta-data/` vs Apple control (SSRF CRITICAL); (2) RFC 9728 wrong-aud token on own read op. Do NOT use it for cross-tenant receipts/persons enumeration (OOS per program note). Failing that, the passive surface is exhausted (chat chunks fully enumerated, upload refuted); no credit-less probe remains that can move any fileable hypothesis.
+
+STEP 6 — LEARNING
+[LEARN] ACCEPTED OTHER @ chat.sumup.com: chunk enumeration COMPLETE (12/12 chunks, 1.63MB) — API surface closed to {/api/conversations/[id], /api/sso/get-token, /api/sso/login, /api/otel-*}; upload hypothesis refuted for the client bundle.
+[LEARN] ACCEPTED OTHER @ chat.sumup.com/api/otel-traces: unauthenticated POST → 200; OTEL collector accepts arbitrary spans (shared widget template me/checkout/chat) — log-poisoning of internal APM only, not fileable.
+[LEARN] ACCEPTED OATH @ chat.sumup.com: conversationId server-assigned at open (`S.current=e.data.conversationId`), not client-guessable; IDOR discriminator requires a session with an own control conversation.
+
+STEP 7 — RISK
+[RISK] sumup: 70 — 0 filed bugs after 21 cycles; chat chunk enumeration closes the last fresh passive lead (upload refuted, conversationId opaque); all three live finals (apple-pay SSRF, RFC 9728 aud, readers/terminals BOLA) remain 100% blocked behind ONE human-supplied merchant credential; no passive class left that can produce a fileable finding.
