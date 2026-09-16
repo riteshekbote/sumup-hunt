@@ -844,3 +844,9 @@ https://api.sumup.com -> HTTP 404
 
 ## 2026-09-15 23:00:54 UTC
 
+
+## 2026-09-16 01:20:30 UTC
+https://auth.sumup.com -> HTTP 403
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://api.sumup.com -> HTTP 404
