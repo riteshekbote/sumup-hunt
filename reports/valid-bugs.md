@@ -38,3 +38,10 @@
 - 2 lead(s) marked VALID at 2026-09-12 00:39:58 UTC
   - **Verdict: VALID** (finding now closed — token rotated 2026-09-11)
   - | 1 | Contentful Preview Token Leak (help.sumup.com) | **VALID** (closed) | Report if still live at time of submission; token rotated |
+
+- 5 lead(s) marked VALID at 2026-09-16 20:16:23 UTC
+  - | Q7 | Reasonable triager accept? | YES — staging exposure with weaker security posture is valid |
+  - **Verdict: VALID** — Publicly reachable staging infrastructure with potential weaker controls.
+  - **Verdict: VALID**
+  - | 2 | Internal Staging Domains (sam-app.ro) | **VALID** | 5.3 |
+  - | 3 | Wildcard CORS on MCP Server | **VALID** | 5.3 |
