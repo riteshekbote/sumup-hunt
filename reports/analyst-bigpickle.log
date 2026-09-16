@@ -31316,3 +31316,417 @@ All three hypotheses survive (confidences 65, 68, 60 — all ≥40; all AUTH_HEL
 ## STEP 7 — RISK
 
 [RISK] sumup: 86 — 0 filed bugs after 18+ cycles of passive recon; all passive surfaces (OpenAPI spec, well-known, OAuth oracle, CT/ccTLD, staging sam-app.ro, help.sumup.com, mcp.sumup.com) now rationally and verifiably exhausted. The four highest-value finding classes (apple-pay SSRF→metadata CRITICAL, receipts/persons PII BOLA HIGH, payment-methods BOLA, RFC 9728 aud confusion) are 100% gated behind a single human-supplied merchant credential (sup_sk_ key or OAuth app). Each new credential-less cycle adds micro-inventory value but zero exploit exposure. The reposcan-findings.md report is stale on one finding (mcp CORS) and contains no fileable bugs. Program value keeps decaying; next cycle should either obtain credential or rotate scope to code-review angles in sumup-openapi spec design (e.g., webhook registration logic, mid query parameter trust boundary).
+===== ANALYST bigpickle 2026-09-16 16:42:31 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -m 20 -o /tmp/opencode/me_cb.html -w "HTTP %{http_code} | size %{size_download} | url %{url_effective}\n" -A "Mozilla/5.0" "https://me.sumup.com/api/auth/callback" ; grep -oE 'buildId[:="][^",} ]+' /tmp/opencode/me_cb.html | head -5; grep -oE '"[^"]*_next[^"]*"' /tmp/opencode/me_cb.html | head -20
+HTTP 404 | size 9 | url https://me.sumup.com/api/auth/callback
+[0m
+[0m$ [0mcat /tmp/opencode/me_cb.html; echo; curl -s -m 20 -o /tmp/opencode/me_root.html -w "ROOT HTTP %{http_code} | size %{size_download}\n" -A "Mozilla/5.0" "https://me.sumup.com/"; head -c 300 /tmp/opencode/me_root.html
+Not found
+ROOT HTTP 307 | size 777
+https://auth.sumup.com/oauth2/auth?client_id=dashboard&code_challenge=FAzkhp_S5nVq_6oHOusJO1I3kv7TeLGH3P9DC_Sb1IU&code_challenge_method=S256&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&scope=openid+offline+classic+email+accounting.read+accounting.write+invoices.
+[0m
+[0m$ [0mcurl -s -m 20 -o /tmp/opencode/me_next.html -w "NEXT_HOME HTTP %{http_code}\n" -A "Mozilla/5.0" -H "Accept: text/html" "https://me.sumup.com/_next/static/"; curl -s -m 20 -o /tmp/opencode/help_cb.html -w "HELP_CB HTTP %{http_code} size %{size_download}\n" -A "Mozilla/5.0" "https://help.sumup.com/api/auth/callback"; grep -oE 'buildId[^,}<]*' /tmp/opencode/help_cb.html | head -3
+NEXT_HOME HTTP 308
+HELP_CB HTTP 404 size 34747
+buildId":"EWan6wkLeTgRcOzkj36qJ"
+[0m
+[0m$ [0mBID=EWan6wkLeTgRcOzkj36qJ; curl -s -m 20 -o /tmp/opencode/bm.js -w "BM HTTP %{http_code} size %{size_download}\n" -A "Mozilla/5.0" "https://help.sumup.com/_next/static/$BID/_buildManifest.js"; grep -oE '/_next/static/chunks/[^"]+\.js' /tmp/opencode/bm.js | sort -u | wc -l; grep -oE '/_next/static/chunks/pages/[^"]+\.js' /tmp/opencode/bm.js | sort -u | head -40
+BM HTTP 200 size 1574
+0
+[0m
+[0m$ [0mcat /tmp/opencode/bm.js
+self.__BUILD_MANIFEST=function(s,e,c){return{__rewrites:{afterFiles:[],beforeFiles:[],fallback:[]},__routerFilterStatic:{numItems:0,errorRate:1e-4,numBits:0,numHashes:c,bitArray:[]},__routerFilterDynamic:{numItems:s,errorRate:1e-4,numBits:s,numHashes:c,bitArray:[]},"/":["static/chunks/pages/index-556da3ae74e853f0.js"],"/404":["static/chunks/pages/404-54c360f2bb80c800.js"],"/_error":["static/chunks/pages/_error-fb0fe9d693cf7f50.js"],"/articles/[articleSlug]":["static/chunks/pages/articles/[articleSlug]-b182587be8dffe7c.js"],"/pos":["static/chunks/pages/pos-4219052129d2019d.js"],"/pos/articles/[articleSlug]":["static/chunks/859-9797867dd8aa22e5.js","static/chunks/338-369f674e73469d52.js","static/css/6d00cbaab331e331.css","static/chunks/pages/pos/articles/[articleSlug]-4ab1fee296505660.js"],"/pos/sections/[sectionSlug]":["static/chunks/pages/pos/sections/[sectionSlug]-f43dc8b3822902df.js"],"/search/[searchTerm]":["static/css/b3d9efd2965f11f9.css","static/chunks/pages/search/[searchTerm]-9884062054627e1f.js"],"/sections/[sectionSlug]":["static/css/33fcf9cb74c39a58.css","static/chunks/pages/sections/[sectionSlug]-84af44b68124216e.js"],"/support/ai-assistant-redirect":["static/css/cbe6dd43fa49ea08.css","static/chunks/pages/support/ai-assistant-redirect-05a2a3f590ad9f87.js"],sortedPages:["/","/404","/_app","/_error","/articles/[articleSlug]","/pos","/pos/articles/[articleSlug]","/pos/sections/[sectionSlug]","/search/[searchTerm]","/sections/[sectionSlug]","/support/ai-assistant-redirect"]}}(0,1e-4,NaN),self.__BUILD_MANIFEST_CB&&self.__BUILD_MANIFEST_CB();
+[0m
+[0m$ [0mBID=EWan6wkLeTgRcOzkj36qJ; BASE="https://help.sumup.com/_next/static"; for c in "pages/index-556da3ae74e853f0.js" "pages/404-54c360f2bb80c800.js" "pages/articles/[articleSlug]-b182587be8dffe7c.js" "859-9797867dd8aa22e5.js" "338-369f674e73469d52.js"; do curl -s -m 25 -o "/tmp/opencode/chunk_$(basename $c).js" -w "CHUNK $c -> %{http_code} %{size_download}\n" -A "Mozilla/5.0" "$BASE/$BID/chunks/$c"; done
+CHUNK pages/index-556da3ae74e853f0.js -> 404 9
+CHUNK pages/404-54c360f2bb80c800.js -> 404 9
+CHUNK 859-9797867dd8aa22e5.js -> 404 9
+CHUNK 338-369f674e73469d52.js -> 404 9
+[0m
+[0m$ [0mBASE="https://help.sumup.com/_next/static"; for c in "chunks/pages/index-556da3ae74e853f0.js" "chunks/859-9797867dd8aa22e5.js" "chunks/pages/404-54c360f2bb80c800.js"; do curl -s -m 25 -o "/tmp/opencode/alt_$(basename $c).js" -w "ALT $c -> %{http_code} %{size_download}\n" -A "Mozilla/5.0" "$BASE/$c"; done
+ALT chunks/pages/index-556da3ae74e853f0.js -> 200 4468
+ALT chunks/859-9797867dd8aa22e5.js -> 200 35490
+ALT chunks/pages/404-54c360f2bb80c800.js -> 200 1691
+[0m
+[0m$ [0mBASE="https://help.sumup.com/_next/static/chunks/pages"; for c in "articles/[articleSlug]-b182587be8dffe7c.js" "pos-4219052129d2019d.js" "support/ai-assistant-redirect-05a2a3f590ad9f87.js" "search/[searchTerm]-9884062054627e1f.js" "sections/[sectionSlug]-84af44b68124216e.js"; do fn=$(echo "$c" | tr '/[]' '___'); curl -s -m 25 -o "/tmp/opencode/pg_$fn.js" -w "PAGE $c -> %{http_code} %{size_download}\n" -A "Mozilla/5.0" "$BASE/$c"; done
+PAGE pos-4219052129d2019d.js -> 200 4265
+PAGE support/ai-assistant-redirect-05a2a3f590ad9f87.js -> 200 5216
+[0m
+[0m$ [0mBASE="https://help.sumup.com/_next/static/chunks/pages"; for c in "articles/%5BarticleSlug%5D-b182587be8dffe7c.js" "search/%5BsearchTerm%5D-9884062054627e1f.js" "sections/%5BsectionSlug%5D-84af44b68124216e.js"; do fn=$(echo "$c" | tr '/%[]' '____'); curl -s -m 25 -o "/tmp/opencode/pg_$fn.js" -w "PAGE $c -> %{http_code} %{size_download}\n" -A "Mozilla/5.0" "$BASE/$c"; done
+PAGE articles/%5BarticleSlug%5D-b182587be8dffe7c.js -> 200 4790
+PAGE search/%5BsearchTerm%5D-9884062054627e1f.js -> 200 8336
+PAGE sections/%5BsectionSlug%5D-84af44b68124216e.js -> 200 7246
+[0m
+[0m$ [0mcd /tmp/opencode; grep -ohE '(["'"'])?[A-Za-z0-9+/=_-]{24,}(["'"'])?' pg_*.js alt_*.js chunk_*.js 2>/dev/null | grep -viE '^[0-9]{1,3}\\.[0-9]' | sort -u | grep -iE 'cfpa|cfat|cma|xrp|preview|manage|token|key|secret|bearer|sha|password' | head -40; echo "=== endpoints ==="; grep -ohE 'https?://[a-zA-Z0-9.-]+(/[a-zA-Z0-9/_.-]*)?' pg_*.js alt_*.js | sort -u | head -60
+/bin/bash: -c: line 1: syntax error near unexpected token `)'
+/bin/bash: -c: line 1: `cd /tmp/opencode; grep -ohE '(["'"'])?[A-Za-z0-9+/=_-]{24,}(["'"'])?' pg_*.js alt_*.js chunk_*.js 2>/dev/null | grep -viE '^[0-9]{1,3}\\.[0-9]' | sort -u | grep -iE 'cfpa|cfat|cma|xrp|preview|manage|token|key|secret|bearer|sha|password' | head -40; echo "=== endpoints ==="; grep -ohE 'https?://[a-zA-Z0-9.-]+(/[a-zA-Z0-9/_.-]*)?' pg_*.js alt_*.js | sort -u | head -60'
+[0m
+[0m$ [0mcd /tmp/opencode && grep -ohE '"cf[^"]{10,60}"|"xrp[^"]{8,60}"|preview[^"]{0,40}' pg_*.js alt_*.js chunk_*.js 2>/dev/null | sort -u | head -30; echo ===URLS===; grep -ohE 'https?://[a-zA-Z0-9._-]+' pg_*.js alt_*.js chunk_*.js 2>/dev/null | sort -u | head -50
+===URLS===
+http://www.w3.org
+https://images.ctfassets.net
+https://me.sumup.com
+https://sumup.com
+https://support.thegoodtill.com
+[0m
+[0m$ [0mcd /tmp/opencode && curl -s -m 25 -o help_home.html -w "HOME %{http_code} %{size_download}\n" -A "Mozilla/5.0" "https://help.sumup.com/" && grep -oE 'src="/_next/[^"]+\.js"' help_home.html | sort -u
+HOME 307 15
+[0m
+[0m$ [0mcd /tmp/opencode && curl -s -m 25 -D - -o help_home.html "https://help.sumup.com/" | grep -iE '^(location|HTTP)'; curl -s -m 25 -o help_article.html -w "ART %{http_code} %{size_download}\n" -A "Mozilla/5.0" "https://help.sumup.com/articles/getting-started" && grep -oE 'src="/_next/[^"]+\.js"' help_article.html | sort -u | head -20
+HTTP/2 307 
+location: /en-GB
+ART 307 15
+[0m
+[0m$ [0mcd /tmp/opencode && curl -s -m 25 -o help_en.html -w "EN %{http_code} %{size_download}\n" -A "Mozilla/5.0" "https://help.sumup.com/en-GB" && grep -oE 'src="/_next/[^"]+\.js"' help_en.html | sort -u
+EN 200 167358
+src="/_next/static/EWan6wkLeTgRcOzkj36qJ/_buildManifest.js"
+src="/_next/static/EWan6wkLeTgRcOzkj36qJ/_ssgManifest.js"
+src="/_next/static/chunks/framework-86442cb55e14eee1.js"
+src="/_next/static/chunks/main-3272915ba100fc48.js"
+src="/_next/static/chunks/pages/_app-ff45710d089e8565.js"
+src="/_next/static/chunks/pages/index-556da3ae74e853f0.js"
+src="/_next/static/chunks/polyfills-42372ed130431b0a.js"
+src="/_next/static/chunks/webpack-7cb16904fa9e597e.js"
+[0m
+[0m$ [0mcd /tmp/opencode && for c in "pages/_app-ff45710d089e8565.js" "main-3272915ba100fc48.js" "webpack-7cb16904fa9e597e.js" "framework-86442cb55e14eee1.js"; do curl -s -m 30 -o "AP_$c" -w "AP $c -> %{http_code} %{size_download}\n" -A "Mozilla/5.0" "https://help.sumup.com/_next/static/chunks/$c"; done
+AP pages/_app-ff45710d089e8565.js -> 200 0
+AP main-3272915ba100fc48.js -> 200 132620
+AP webpack-7cb16904fa9e597e.js -> 200 5297
+AP framework-86442cb55e14eee1.js -> 200 189820
+[0m
+[0m$ [0mcd /tmp/opencode && wc -c AP_pages/_app-ff45710d089e8565.js; grep -ohE 'http(s)?://[a-zA-Z0-9._-]+' AP_main-3272915ba100fc48.js AP_webpack-7cb16904fa9e597e.js AP_pages/_app-ff45710d089e8565.js | sort -u | head -50; echo ===SEC===; grep -oiE '(access[_-]?token|preview[_-]?token|bearer|cfpa|cma|manage[_-]?token|apikey|secret)[^,;}]{0,60}' AP_main-3272915ba100fc48.js | sort -u | head -30
+wc: AP_pages/_app-ff45710d089e8565.js: No such file or directory
+grep: AP_pages/_app-ff45710d089e8565.js: No such file or directory
+http://f
+http://n
+https://nextjs.org
+https://vercel.live
+===SEC===
+[0m
+[0m$ [0mcd /tmp/opencode && curl -s -m 30 -o AP_app.js -w "APP %{http_code} %{size_download}\n" -A "Mozilla/5.0" "https://help.sumup.com/_next/static/chunks/pages/_app-ff45710d089e8565.js" && grep -oihE '(CFPAT|CFAT|XRP)[A-Za-z0-9_-]{8,40}|access_token[^,;]{0,50}|preview[^,;]{0,60}' AP_app.js AP_main-3272915ba100fc48.js | sort -u | head -30; echo ===URLS_APP===; grep -oE 'https://[a-zA-Z0-9._/-]+' AP_app.js | sort -u | head -40
+APP 200 764137
+PREVIEW")
+PREVIEW:"XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM"
+PREVIEW:(0
+PREVIEW_HOST")
+PREVIEW_HOST:"preview.contentful.com"
+PREVIEW_HOST:(0
+Preview
+Preview"
+Preview":"Enable Preview"
+Preview(){return this.state.isPreview}constructor(e
+Preview:!!P
+Preview:K.isPreview
+Preview:P}){this.sdc={}
+Preview:h
+Preview:o.isPreview})
+Preview=!!u.props.__N_PREVIEW
+Preview|Yeti|googleweblight/i}
+Preview||!w.__N_SSG||m||z(Object.assign({}
+preview/disable":"/api/preview/enable"
+previewEnabled:r.preview})
+previewEnabled:t}=e
+preview|redditbot|ia_archiver|Bingbot|BingPreview|applebot|facebook
+===URLS_APP===
+https://8dbbf265d21442b9b5f8f324c3109461
+https://api.sumup.com
+https://auth.sumup.com
+https://cdn-ukwest.onetrust.com/scripttemplates/otSDKStub.js
+https://cdn.optimizely.com/datafiles/
+https://ch-de.sumup.com
+https://ch-fr.sumup.com
+https://ch-it.sumup.com
+https://chat.sumup.com/iframe
+https://circuit.sumup.com/icons/v2
+https://config.optimizely.com/datafiles/auth/
+https://de.sumup.lu/
+https://fr.sumup.be/
+https://fr.sumup.ca
+https://fr.sumup.lu
+https://github.com/GoogleChrome/dialog-polyfill/
+https://github.com/uuidjs/uuid
+https://help.sumup.com
+https://help.sumup.com/api/auth/callback
+https://help.sumup.com/en-IE/articles/77yj0WHGxG6HAa8RkEBwgz
+https://images.ctfassets.net/214q1nptnllb/LRIlckAzjNAaBDoIZpRo1/ae3e8127689c57b4a1140bdb0c743f05/HARDWARE.png
+https://logx.optimizely.com/v1/events
+https://nextjs.org/docs/app/api-reference/functions/use-search-params
+https://nextjs.org/docs/messages/invalid-images-config
+https://nextjs.org/docs/messages/next-image-missing-loader
+https://nl.sumup.be
+https://sse.sumup.com
+https://sse.sumup.com/sse/scss
+https://sumup.at
+https://sumup.bg
+https://sumup.cl
+https://sumup.co
+https://sumup.co.uk
+https://sumup.com
+https://sumup.com.au
+https://sumup.com.br
+https://sumup.com.ca
+https://sumup.com.cy
+https://sumup.com.mt
+https://sumup.cz
+[0m
+New hosts and a live token re-discovered in the current build.
+[0m$ [0mecho -n 'XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM' | sha256sum; curl -s -m 20 -o /tmp/opencode/preview_test.json -w "PREVIEW %{http_code}\n" -A "Mozilla/5.0" "https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=1&access_token=XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM"; head -c 120 /tmp/opencode/preview_test.json
+52136da577d765e37cdefa39db5f22cde6df8c0bd945d6793ea2513c1ab58997  -
+PREVIEW 200
+{"sys":{"type":"Array"},"total":9575,"skip":0,"limit":1,"items":[{"metadata":{"tags":[],"concepts":[]},"sys":{"space":{"
+[0m
+PREVIEW token still live — prior closure was wrong.
+[0m$ [0mcurl -s -m 20 -o /tmp/opencode/cdn_count.json -w "CDN %{http_code}\n" -A "Mozilla/5.0" "https://cdn.contentful.com/spaces/214q1nptnllb/entries?limit=1"; grep -oE '"total":[0-9]+' /tmp/opencode/cdn_count.json; curl -s -m 20 -o /tmp/opencode/preview_art.json -w "PREV_ART %{http_code}\n" -A "Mozilla/5.0" "https://preview.contentful.com/spaces/214q1nptnllb/entries?limit=30&content_type=article&access_token=XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM"; grep -oE '"total":[0-9]+' /tmp/opencode/preview_art.json; grep -oE '"publishedAt"[^,}]*' /tmp/opencode/preview_art.json | head -3; grep -cE '"sys"' /tmp/opencode/preview_art.json
+CDN 401
+PREV_ART 200
+"total":882
+"publishedAt":"2026-09-16T09:01:53.469Z"
+"publishedAt":"2026-09-16T08:39:05.981Z"
+"publishedAt":"2026-09-16T08:37:10.900Z"
+1
+[0m
+[0m$ [0mcd /tmp/opencode && grep -ohE '(CFPAT|CFAT|XRP|CFA[P]?|TF)[A-Za-z0-9_-]{20,60}|Ku2cameg[A-Za-z0-9_-]+' AP_app.js AP_main-3272915ba100fc48.js | sort -u | head; echo ===; grep -oE '"accessToken"[^,}]{0,50}|DELIVERY[^"]{0,30}' AP_app.js | sort -u | head
+Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4
+XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM
+===
+DELIVERY
+DELIVERY:
+DELIVERY:(0,n.A)(
+DELIVERY}),te=e=>e.includes(e7.i.ZENDE
+[0m
+[0m$ [0mcurl -s -m 20 -o /tmp/opencode/cdn2.json -w "CDN2 %{http_code}\n" -A "Mozilla/5.0" "https://cdn.contentful.com/spaces/214q1nptnllb/entries?limit=1&access_token=Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4"; grep -oE '"total":[0-9]+' /tmp/opencode/cdn2.json; curl -s -m 15 -o /dev/null -w "SPACES_ENV %{http_code}\n" -A "Mozilla/5.0" "https://preview.contentful.com/spaces/214q1nptnllb/environments?access_token=XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM"
+CDN2 200
+"total":8425
+SPACES_ENV 404
+[0m
+Fully re-verified. Now probing the four new hosts leaked from the bundle.
+[0m$ [0mfor h in chat.sumup.com sse.sumup.com circuit.sumup.com ch-de.sumup.com; do curl -s -m 15 -o /dev/null -w "$h root -> %{http_code} | %{url_effective}\n" -A "Mozilla/5.0" "https://$h/"; done; curl -s -m 15 -o /dev/null -w "sse /sse/scss -> %{http_code}\n" -A "Mozilla/5.0" "https://sse.sumup.com/sse/scss"; curl -s -m 15 -o /dev/null -w "chat /iframe -> %{http_code}\n" -A "Mozilla/5.0" "https://chat.sumup.com/iframe"; curl -s -m 15 -o /dev/null -w "circuit /icons/v2 -> %{http_code}\n" -A "Mozilla/5.0" "https://circuit.sumup.com/icons/v2"
+chat.sumup.com root -> 200 | https://chat.sumup.com/
+sse.sumup.com root -> 404 | https://sse.sumup.com/
+circuit.sumup.com root -> 200 | https://circuit.sumup.com/
+ch-de.sumup.com root -> 301 | https://ch-de.sumup.com/
+sse /sse/scss -> 404
+chat /iframe -> 200
+circuit /icons/v2 -> 200
+[0m
+[0m$ [0mfor u in "https://chat.sumup.com/" "https://sse.sumup.com/" "https://circuit.sumup.com/" "https://ch-de.sumup.com/"; do echo "=== $u"; curl -s -m 15 -D - -o /dev/null -A "Mozilla/5.0" "$u" | grep -iE '^(HTTP|server:|via:|x-|content-type|cf-ray|set-cookie|location)' | head -12; done
+=== https://chat.sumup.com/
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+server: Vercel
+x-matched-path: /
+x-vercel-cache: HIT
+x-vercel-id: sfo1::pgwfr-1789576751810-e40a781d26d1
+=== https://sse.sumup.com/
+HTTP/2 404 
+content-type: text/plain; charset=utf-8
+x-content-type-options: nosniff
+set-cookie: __cf_bm=8CDvhpbB8ZP9rAZ2PI6szA.9vFgAkGHOc6ZQcwd2YeY-1789576751.8943172-1.0.1.1-p8m0I5xu_TkN9RDMB.VkRuIN3LnkDEVRMr5_e5.x8tGG83h0Yh1dHWx1K0l6f2edLRXwcBOC4Rv0496ZPrPgBVGlYXY2c189vujzpMeXVIUtYTfOt5bPkQ6VoCBRTJVszsW6PN2n2eS.nuEoxnjJJA; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Wed, 16 Sep 2026 17:09:12 GMT
+server: cloudflare
+cf-ray: a3c14e4b5d34892f-LAX
+=== https://circuit.sumup.com/
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+server: Vercel
+x-content-type-options: nosniff
+x-dns-prefetch-control: on
+x-vercel-cache: HIT
+x-vercel-id: sfo1::vgddh-1789576752416-48076ee33546
+x-xss-protection: 1; mode=block
+=== https://ch-de.sumup.com/
+HTTP/2 301 
+content-type: text/plain
+location: https://www.sumup.com/de-ch/
+server: Vercel
+x-content-type-options: nosniff
+x-download-options: noopen
+x-frame-options: SAMEORIGIN
+x-vercel-id: sfo1::5t52z-1789576752509-6dc6fb40cd0f
+x-xss-protection: 1
+[0m
+[0m$ [0mcurl -s -m 15 -o /tmp/opencode/chat.html -A "Mozilla/5.0" "https://chat.sumup.com/"; grep -oE '(<title>[^<]*</title>)|src="[^"]+"|href="/[^"]*"|api[^",]\w+' /tmp/opencode/chat.html | sort -u | head -30
+<title>SumUp Chat</title>
+href="/_next/static/chunks/webpack-684217da73817c18.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+href="/_next/static/css/013b1c7dc57ba1e5.css?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+href="/_next/static/css/2c60ef34aba9a316.css?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+href="/_next/static/css/7940c852c32619db.css?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+href="/_next/static/css/ae1c5ddf034a581c.css?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+href="/favicon.ico"
+src="/_next/static/chunks/1732-c2214c48784fafa8.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/2117-868e9ecfbdeb7232.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/2711-fb461c845a14d21b.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/3915-c0084b36cba275d6.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/8790-20beda9eb567d7b6.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/8977-d3a23cbe88172038.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/app/layout-928c906eecba2548.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/app/page-5d748fa45de2bd4c.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/dc112a36-7ca7a7d409b86d48.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/fd9d1056-6e04b50902f703e2.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/main-app-be3d940aef6bd3eb.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/polyfills-42372ed130431b0a.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/webpack-684217da73817c18.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+[0m
+[0m$ [0mcd /tmp/opencode && for c in "app/layout-928c906eecba2548.js" "app/page-5d748fa45de2bd4c.js" "1732-c2214c48784fafa8.js" "8790-20beda9eb567d7b6.js" "3915-c0084b36cba275d6.js" "main-app-be3d940aef6bd3eb.js"; do curl -s -m 20 -o "C_$(basename $c .js|tr '/.' '__').js" -w "C $c -> %{http_code} %{size_download}\n" -A "Mozilla/5.0" "https://chat.sumup.com/_next/static/chunks/$c"; done
+C app/layout-928c906eecba2548.js -> 200 3505
+C app/page-5d748fa45de2bd4c.js -> 200 1068
+C 1732-c2214c48784fafa8.js -> 200 243459
+C 8790-20beda9eb567d7b6.js -> 200 651340
+C 3915-c0084b36cba275d6.js -> 200 72266
+C main-app-be3d940aef6bd3eb.js -> 200 471
+[0m
+[0m$ [0mcd /tmp/opencode && grep -ohE 'https?://[a-zA-Z0-9._-]+(/[a-zA-Z0-9._/{}${:}$.-]*)?' C_app_layout* C_app_page* C_1732* C_8790* C_3915* C_main_app* 2>/dev/null | grep -iE 'sumup|chat|sse|socket|api|event|secure|ws' | sort -u | head -40
+(no output)
+[0m
+[0m$ [0mcd /tmp/opencode && for f in C_app_layout_928c906eecba2548.js C_app_page_5d748fa45de2bd4c.js C_1732-c2214c48784fafa8.js C_8790-20beda9eb567d7b6.js C_3915-c0084b36cba275d6.js C_main_app-be3d940aef6bd3eb.js; do echo "== $f"; grep -oE '"https?:[^"]{0,80}"|"wss?:[^"]{0,80}"|sumup\.(com|net)[^"]{0,50}' "$f" 2>/dev/null | sort -u | head -15; done
+== C_app_layout_928c906eecba2548.js
+== C_app_page_5d748fa45de2bd4c.js
+== C_1732-c2214c48784fafa8.js
+"http:"
+"http://localhost"
+"http://localhost:4318/"
+"https:"
+== C_8790-20beda9eb567d7b6.js
+"http://"
+"http://n"
+"http://www.w3.org/1999/xhtml"
+"http://www.w3.org/2000/svg"
+"https://"
+== C_3915-c0084b36cba275d6.js
+== C_main_app-be3d940aef6bd3eb.js
+[0m
+[0m$ [0mcd /tmp/opencode && grep -ohE '"/[a-zA-Z0-9_./{}$:-]{3,60}"' C_8790-20beda9eb567d7b6.js C_1732-c2214c48784fafa8.js C_3915-c0084b36cba275d6.js 2>/dev/null | sort -u | grep -iE 'api|chat|msg|conv|session|agent|sse|stream|event|auth|token|socket|ws' | head -40
+(no output)
+[0m
+[0m$ [0mcd /tmp/opencode && grep -ohE '(_?next|vercel|upstash|redis|kv|telemetry|langchain|openai|anthropic|embedding|vector|polybase|turso|reactflow|sentry[@-])[A-Za-z0-9_.@"-]{0,40}' C_8790-20beda9eb567d7b6.js C_1732-c2214c48784fafa8.js C_3915-c0084b36cba275d6.js 2>/dev/null | sort -u | head -40; echo ===; grep -ohE 'OTEL|EXPO|OPENTELEMETRY|traceparent|baggage|_otel_|langsmith|feedback' C_8790-20beda9eb567d7b6.js | sort -u | head
+_next
+_next_edge_ssr_entry__"
+_next_metadata__"
+_next_metadata_image_meta__"
+_next_metadata_route__"
+kv"
+kviolet
+kvlistValue
+kvys"
+next
+next"
+next"in
+next-app-dir"
+next-cache-soft-tags"
+next-cache-tags"
+next-folder-conflict"
+next-http-backend
+next-pages"
+next-revalidate-tag-token"
+next-revalidated-tags"
+next-root-dir"
+next-rsc-action-client-wrapper"
+next-rsc-action-encryption"
+next-rsc-action-validate"
+next-rsc-mod-ref-proxy"
+next-rsc-server-reference"
+next.changeLanguage
+next.init
+next.loadNamespace
+next.prev
+next.use
+next.use.
+nextBulletRegex
+nextSibling
+nextSibling.addEventListener
+nextSibling.classList.add
+nextTick
+nextjs.org
+telemetry
+telemetry"
+===
+EXPO
+[0m
+[0m$ [0mfor p in "/health" "/healthz" "/v1" "/api" "/events" "/openapi.json" "/swagger-ui.html" "/.well-known/oauth-protected-resource" "/robots.txt"; do curl -s -m 10 -o /dev/null -w "sse.sumup.com$p -> %{http_code} %{content_type}\n" -A "Mozilla/5.0" "https://sse.sumup.com$p"; done
+sse.sumup.com/health -> 404 text/plain; charset=utf-8
+sse.sumup.com/healthz -> 404 text/plain; charset=utf-8
+sse.sumup.com/v1 -> 404 text/plain; charset=utf-8
+sse.sumup.com/api -> 404 text/plain; charset=utf-8
+sse.sumup.com/events -> 404 text/plain; charset=utf-8
+sse.sumup.com/openapi.json -> 404 text/plain; charset=utf-8
+sse.sumup.com/swagger-ui.html -> 404 text/plain; charset=utf-8
+sse.sumup.com/.well-known/oauth-protected-resource -> 404 text/plain; charset=utf-8
+sse.sumup.com/robots.txt -> 404 text/plain; charset=utf-8
+[0m
+[0m$ [0mcd /tmp/opencode && for c in "2117-868e9ecfbdeb7232" "8977-d3a23cbe88172038" "2711-fb461c845a14d21b" "fd9d1056-6e04b50902f703e2"; do curl -s -m 20 -o "CH_$c.js" -w "CH $c -> %{http_code} %{size_download}\n" -A "Mozilla/5.0" "https://chat.sumup.com/_next/static/chunks/$c.js"; done; grep -ohE '"[a-zA-Z0-9_./{}$]*sumup[a-zA-Z0-9_./{}$:-]*"' CH_*.js | sort -u | head -20
+CH 2117-868e9ecfbdeb7232 -> 200 125161
+CH 8977-d3a23cbe88172038 -> 200 26493
+CH 2711-fb461c845a14d21b -> 200 218314
+CH fd9d1056-6e04b50902f703e2 -> 200 172837
+"chat.sumup.com"
+"sumup.dashboard.cookies.names"
+"sumup.dashboard.cookies.sizes"
+"sumup.dashboard.cookies.total_size"
+"sumup.dashboard.vercel.requestid"
+"sumup.interactions.chat.upload_path"
+"sumup.merchant.code"
+"sumup.org.chat"
+"sumup.org.squad"
+"sumup.org.tribe"
+"sumup.support.attempt_number"
+"sumup.support.client_code"
+"sumup.support.client_connection_type"
+"sumup.support.client_name"
+"sumup.support.client_platform"
+"sumup.support.conversation.event"
+"sumup.support.conversation_id"
+"sumup.support.max_attempts"
+"sumup.support.mfa.channel"
+"sumup.support.retry_reason"
+[0m
+## STEP 1 — DELTA
+
+- [NEW] **Contentful PREVIEW token RE-OPENED**: same token `XRP4rB5w…` (sha256 `52136da5…8997`) authenticates today — `preview.contentful.com/spaces/214q1nptnllb/entries` → **200, total 9,575**; CDN delivery (token `Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4`) → **200, total 8,425**; delta **1,150 unpublished entries**, environments API 404 (space-bounded). Contradicts KB closure "rotated/401 2026-09-11".
+- [NEW] **chat.sumup.com** — "SumUp Chat", Next.js App Router on Vercel, anonymous 200 HTML; chunks carry OTEL keys `sumup.support.conversation_id`, `sumup.merchant.code`, `sumup.org.chat`, `interactions.chat.upload_path`. Absent from inventory.
+- [NEW] **sse.sumup.com** — Cloudflare-fronted (non-Vercel), uniform 404 text/plain on root/health/v1/events/openapi/swagger/well-known/robots; sets `__cf_bm` on Domain=sumup.com.
+- [NEW] **circuit.sumup.com** (Vercel, 200, /icons/v2 200) + ch-de/ch-fr/ch-it.sumup.com (301→www.sumup.com locale) — low value.
+- [CHANGED] help.sumup.com buildId now `EWan6wkLeTgRcOzkj36qJ` (was `0Uxy…`); both leaked tokens persist verbatim in current `_app-ff45710d089e8565.js` (764 KB). me.sumup.com/api/auth/callback now plain 404 "Not found" (was Next.js shell).
+
+## STEP 2 — PRIORITIZE
+
+- [PRIO] chat.sumup.com,6.5,attack_surface=6 business_value=5 tech_exposure=6 gate_ease=9 cloud_surface=5 freshness=10
+- [PRIO] help.sumup.com PREVIEW token (re-opened, verified),5.8,attack_surface=5 business_value=3 tech_exposure=6 gate_ease=10 cloud_surface=4 freshness=10
+- [PRIO] sse.sumup.com,5.2,attack_surface=4 business_value=6 tech_exposure=5 gate_ease=2 cloud_surface=6 freshness=10
+- (existing leases unchanged: api.sumup.com/v0.2/apple-pay-session 8.3, /v0.1/payment-methods 7.9, /v1.1/receipts 7.5 — all AUTH_HELPED)
+
+## STEP 3 — HYPOTHESES
+
+[HYP] Anonymous Next.js App-Router chat exposes unauthenticated RSC/server-action surface with conversation scoping defect
+class: AUTH
+asset: chat.sumup.com
+confidence: 45
+reasoning: Anonymous GET / returns 200 HTML to no session; app is App-Router (main-app chunk, app/layout + app/page only 1KB — real logic lazy-loaded). OTEL span names prove real domain state: sumup.support.conversation_id, sumup.merchant.code, sumup.org.chat, interactions.chat.upload_path, dashboard-cookie attribution keys. Chat writes/reads typically go through POST server actions or API routes (not reachable via read-only verbs). No GET-visible endpoint strings extracted from 5 chunks pulled this cycle.
+evidence_needed: (1) server-action manifest/route presence in RSC payload; (2) whether a mute/cancel/send action enforces a session and binds conversation_id to it; (3) conversation_id format/guessing.
+verify_steps: PASSIVE-only this cycle is exhausted (chunk grep); POST/RSC action probing required next. GET https://chat.sumup.com/robots.txt, /sitemap.xml to enumerate routed pages first; then POST-gated actions.
+impact: cross-conversation/cross-merchant chat transcript read or agent prompt-injection via unauthenticated actions; MEDIUM-HIGH.
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+
+- [PARKED] sse.sumup.com: uniform 404 across 9 read-only probes — parameter surface undetectable passively; infra-class until a path guess or credential exists.
+- [PARKED] RFC 9728 request-level `aud` validation (nemotron conf 75): still untestable without a valid merchant token; unchanged from prior cycles.
+- [FINAL] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session SSRF->metadata (65, AUTH_HELPED) — unchanged, top exploit value.
+- [FINAL] chat.sumup.com unauthenticated RSC/action surface (45) — only genuinely new attack surface this cycle.
+- Dropped: circuit.sumup.com, ch-de/ch-fr/ch-it — endpoint-map/banner only (REJECTED class).
+
+## STEP 5 — NEXT ACTION
+
+[NEXT] HUMAN: submit the re-verified Contentful PREVIEW-token report (P4) — repro is `GET https://preview.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM` → 200/9,575 vs CDN `Ku2cameg…` → 8,425 (1,150 unpublished, space-bounded, token in current build chunk `/_next/static/chunks/pages/_app-ff45710d089e8565.js` of buildId `EWan6wkLeTgRcOzkj36qJ`, sha256 `52136da5…8997`); parallel ask: one `sup_sk_`/OAuth merchant credential to unblock the four AUTH_HELPED api.sumup.com classes (apple-pay SSRF CRITICAL, receipts/persons PII BOLA HIGH).
+
+## STEP 6 — LEARNING
+
+- [LEARN] ACCEPTED MISCONFIG @ help.sumup.com: PREVIEW token RE-OPENED and verified live today — same sha256 `52136da5…8997`, 200/9,575 preview vs 8,425 cdn (1,150 unpublished), present in CURRENT build; the 2026-09-11 "rotated/401" closure was WRONG (transient 401 or rollback). Reportable P4, deltas freshly measured this cycle.
+- [LEARN] ACCEPTED OTHER @ chat.sumup.com: new first-party asset "SumUp Chat" (Next.js App Router, Vercel, anonymous 200) — adds real program surface; concurrency/chunk layout means chat logic is in POST-gated RSC/actions, not GET-visible.
+- [LEARN] ACCEPTED OTHER @ sse.sumup.com: Cloudflare-origin (unique among SumUp Vercel assets), uniform text/plain 404, `__cf_bm` Domain=sumup.com — inventory entry only.
+- [LEARN] REJECTED OTHER @ circuit.sumup.com & ch-de/ch-fr/ch-it.sumup.com: static icon host / locale-301 marketing redirects — endpoint-map-only class.
+
+## STEP 7 — RISK
+
+[RISK] sumup: 74 — one verified (if P4-informational) finding re-opened and freshly measurable, all four api.sumup.com CRITICAL/HIGH hypothesis classes still 100% blocked on a single human-supplied merchant credential after 19 cycles; new anonymous surface (chat.sumup.com) is thin (conf 45) and POST-gated. Program exposure decays slower this cycle only because the PREVIEW finding is currently live and time-to-rotate is unknown.
