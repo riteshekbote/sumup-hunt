@@ -31730,3 +31730,277 @@ testability: AUTH_HELPED
 ## STEP 7 — RISK
 
 [RISK] sumup: 74 — one verified (if P4-informational) finding re-opened and freshly measurable, all four api.sumup.com CRITICAL/HIGH hypothesis classes still 100% blocked on a single human-supplied merchant credential after 19 cycles; new anonymous surface (chat.sumup.com) is thin (conf 45) and POST-gated. Program exposure decays slower this cycle only because the PREVIEW finding is currently live and time-to-rotate is unknown.
+===== ANALYST bigpickle 2026-09-16 20:04:07 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mfor p in "/robots.txt" "/sitemap.xml"; do echo "=== $p ==="; curl -s -o /dev/null -w "code=%{http_code} ct=%{content_type} len=%{size_download} redirect=%{redirect_url}\n" --max-time 15 "https://chat.sumup.com$p"; done
+=== /robots.txt ===
+code=404 ct=text/html; charset=utf-8 len=9506 redirect=
+=== /sitemap.xml ===
+code=404 ct=text/html; charset=utf-8 len=9506 redirect=
+[0m
+[0m$ [0mcurl -s -D - -o /tmp/chat_root.html --max-time 20 "https://chat.sumup.com/" | head -30; echo "--- body size:"; wc -c /tmp/chat_root.html
+HTTP/2 200 
+accept-ranges: bytes
+access-control-allow-origin: *
+age: 193033
+cache-control: public, max-age=0, must-revalidate
+content-disposition: inline
+content-security-policy: frame-ancestors https://*.sumup.com;
+content-type: text/html; charset=utf-8
+date: Wed, 16 Sep 2026 19:45:34 GMT
+etag: "f29ab8a251d984ea160c5a38a095b543"
+server: Vercel
+strict-transport-security: max-age=63072000
+vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch
+x-matched-path: /
+x-vercel-cache: HIT
+x-vercel-id: sfo1::xv8hf-1789587934055-fec22d108a41
+content-length: 8785
+
+--- body size:
+8785 /tmp/chat_root.html
+[0m
+[0m$ [0mgrep -oE 'href="[^"]*"|src="[^"]*"|/api/[A-Za-z0-9_/.-]*|__next[^"]*|"actionPath[^"]*"|actionId[^"]*' /tmp/chat_root.html | sort -u | head -60
+__next_f.push([1,
+__next_f=self.__next_f||[]).push([0]);self.__next_f.push([2,null])</script><script>self.__next_f.push([1,
+href="/_next/static/chunks/webpack-684217da73817c18.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+href="/_next/static/css/013b1c7dc57ba1e5.css?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+href="/_next/static/css/2c60ef34aba9a316.css?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+href="/_next/static/css/7940c852c32619db.css?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+href="/_next/static/css/ae1c5ddf034a581c.css?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+href="/favicon.ico"
+src="/_next/static/chunks/1732-c2214c48784fafa8.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/2117-868e9ecfbdeb7232.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/2711-fb461c845a14d21b.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/3915-c0084b36cba275d6.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/8790-20beda9eb567d7b6.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/8977-d3a23cbe88172038.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/app/layout-928c906eecba2548.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/app/page-5d748fa45de2bd4c.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/dc112a36-7ca7a7d409b86d48.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/fd9d1056-6e04b50902f703e2.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/main-app-be3d940aef6bd3eb.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/polyfills-42372ed130431b0a.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+src="/_next/static/chunks/webpack-684217da73817c18.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg"
+[0m
+[0m$ [0mgrep -oE '"tree":\["[^"]*"|"segment":"[^"]*"|pagePaths":"[^"]*"|"rsc":"[^"]*"' /tmp/chat_root.html | sort -u | head -20; echo ---; grep -oiE 'conversation|upload|merchant|support|widget|inbox|ticket' /tmp/chat_root.html | sort | uniq -c | sort -rn | head -15
+---
+      1 Conversation
+[0m
+[0m$ [0mcurl -s --max-time 20 "https://chat.sumup.com/_next/static/chunks/app/page-5d748fa45de2bd4c.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg" -o /tmp/chat_page.js; wc -c /tmp/chat_page.js; grep -oE '(fetch\(|/api/[A-Za-z0-9_/.:-]*|wss?://[^"'"'"']*|https://[a-z0-9.-]*sumup[a-z0-9.-]*|conversation[A-Za-z0-9_.-]*|/v[0-9]+/[A-Za-z0-9_/-]*)' /tmp/chat_page.js | sort -u | head -40
+1068 /tmp/chat_page.js
+https://chat.sumup.com
+[0m
+[0m$ [0mfor c in "1732-c2214c48784fafa8" "2711-fb461c845a14d21b" "3915-c0084b36cba275d6"; do curl -s --max-time 20 "https://chat.sumup.com/_next/static/chunks/$c.js?dpl=dpl_HB7LHv9bdjPnx1mZUhaGaGKvM1Wg" -o /tmp/chat_$c.js; echo "$c: $(wc -c </tmp/chat_$c.js) bytes"; done
+1732-c2214c48784fafa8: 243459 bytes
+2711-fb461c845a14d21b: 218314 bytes
+3915-c0084b36cba275d6: 72266 bytes
+[0m
+[0m$ [0mgrep -hoE '"/api/[A-Za-z0-9_/.:{}%?-]*"|https://[a-z0-9.-]+/(api|v[0-9])[A-Za-z0-9_/.:{}%?-]*|/conversations?[A-Za-z0-9_/.:-]*|/messages?[A-Za-z0-9_/.:{}-]*|/uploads?[A-Za-z0-9_/.:{}-]*|wss?://[a-z0-9.:/-]+' /tmp/chat_1*.js /tmp/chat_2*.js /tmp/chat_3*.js 2>/dev/null | sort -u | head -50
+"/api/conversations/"
+"/api/sso/get-token"
+"/api/sso/login"
+[0m
+[0m$ [0mfor f in /tmp/chat_1*.js /tmp/chat_2*.js /tmp/chat_3*.js; do echo "== $f"; grep -oE '.{120}/api/conversations/.{160}' "$f" | head -3; grep -oE '.{80}/api/sso/(get-token|login).{120}' "$f" | head -3; done
+== /tmp/chat_1732-c2214c48784fafa8.js
+== /tmp/chat_2711-fb461c845a14d21b.js
+l=n(61440),ec=n(2416),ed=n(9996),eu=n(89932);let e_=n(83464).Z.create();async function ep(e){let{conversationId:t}=e,n="/api/conversations/".concat(encodeURIComponent(t));return(await e_.get(n)).data.events}let em={fetchHistory:async function(e){var t,n,a;let{parentOrigin:s,conversationId:i,isAuthe
+rn;if(e instanceof ef){if(e.classification===h.Permanent){window.location.href="/api/sso/login";return}e.attempts>=10&&(Q.recordRetryExhausted(e.attempts),V&&(0,eo.pl)({outcome:"auth_unrecoverable",failureReason:"r
+ol":"no-cache",pragma:"no-cache"};e&&(a["x-csrf-token"]=e);let s=await fetch(t?"/api/sso/get-token?refresh=true":"/api/sso/get-token",{credentials:"include",headers:a,cache:"no-store"});if(s.ok){var n;let e=await s.jso
+(e){return"unauthorized"===e||"http_403"===e}function i(){window.location.href="/api/sso/login"}async function r(){try{return(await fetch("/api/sso/get-token?check=true",{credentials:"include",cache:"no-store",head
+== /tmp/chat_3915-c0084b36cba275d6.js
+[0m
+[0m$ [0mcurl -s -D - -o /dev/null --max-time 15 "https://chat.sumup.com/api/sso/get-token?check=true"; echo "==="; curl -s -D - -o /dev/null --max-time 15 "https://chat.sumup.com/api/sso/login"; echo "==="; curl -s -D - -o /dev/null --max-time 15 "https://chat.sumup.com/api/sso/get-token"
+HTTP/2 401 
+age: 0
+cache-control: no-store, no-cache, must-revalidate, private
+content-security-policy: frame-ancestors https://*.sumup.com;
+content-type: application/json; charset=utf-8
+date: Wed, 16 Sep 2026 19:46:06 GMT
+etag: "12cyln96apxo"
+pragma: no-cache
+server: Vercel
+strict-transport-security: max-age=63072000
+x-matched-path: /api/sso/get-token
+x-vercel-cache: MISS
+x-vercel-id: sfo1::iad1::fwvd5-1789587966111-d1ddea16e74e
+content-length: 24
+
+===
+HTTP/2 307 
+age: 0
+cache-control: public, max-age=0, must-revalidate
+content-security-policy: frame-ancestors https://*.sumup.com;
+date: Wed, 16 Sep 2026 19:46:06 GMT
+location: https://auth.sumup.com/oauth2/auth?client_id=support_chat&code_challenge=QUkPyCAaFmOKIVwaiOkONenbXHTgEu3OQbYosTNcvJk&code_challenge_method=S256&redirect_uri=https%3A%2F%2Fchat.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&scope=openid+offline+classic&prompt=none&ui_locales=&state=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBTdGF0ZSI6eyJwYXRobmFtZSI6Ii9pZnJhbWUiLCJxdWVyeVBhcmFtcyI6e319LCJpYXQiOjE3ODk1ODc5NjYsImV4cCI6MTc4OTU4OTc2Nn0.Q1fbRNJzfCz8al1kdZszMyjA9SxTcVYDpaYtZanAAGE
+server: Vercel
+set-cookie: oidc:code_verifier=v2rUPr9nykPayiB1-j1fjhMJmw0_ndSrH3YsGqeplDU; Path=/; HttpOnly; Secure; Partitioned; SameSite=None
+strict-transport-security: max-age=63072000
+x-matched-path: /api/sso/login
+x-vercel-cache: MISS
+x-vercel-id: sfo1::iad1::qdvc7-1789587966258-f36f6c51d5b8
+
+===
+HTTP/2 401 
+age: 0
+cache-control: no-store, no-cache, must-revalidate, private
+content-security-policy: frame-ancestors https://*.sumup.com;
+content-type: application/json; charset=utf-8
+date: Wed, 16 Sep 2026 19:46:06 GMT
+etag: "12cyln96apxo"
+pragma: no-cache
+server: Vercel
+set-cookie: oidc:csrf=f9fec2f7f6fa9a75673918b1aa19ce249028ecf4050f91414d40a1122089df3d; Path=/; Secure; Partitioned; SameSite=None
+strict-transport-security: max-age=63072000
+x-matched-path: /api/sso/get-token
+x-vercel-cache: MISS
+x-vercel-id: sfo1::iad1::5swvp-1789587966407-bb056665a889
+content-length: 24
+[0m
+[0m$ [0mgrep -hoE 'conversationId[^,;)]{0,40}|parentOrigin[^,;)]{0,40}|channel[A-Za-z]*[:=][^,;)]{0,30}|new URLSearchParams\([^)]*\)|location.search[^;]{0,60}' /tmp/chat_1*.js /tmp/chat_2*.js /tmp/chat_3*.js | sort -u | head -30
+channel:N.current
+channel:R.bj.channel}}
+channel:R.er.CALLBACK
+channel:a
+channel:a.channel
+channel:e.channel}
+channel:e.data.channel}
+channel:e}
+channel:g.channel}
+channel:l}=e
+channel:o.channel
+channel:s
+channel:t
+channel:u.channel
+channel===R.er.AI_ASSISTANT&&V({type:R
+channel===R.er.MIAW&&V({type:R.As.AGEN
+channel===R.er.OFFLINE_MESSAGE
+channel===R.er.OFFLINE_MESSAGE&&V({typ
+channels:Z.data.channels
+channels:m.channels
+channels:t
+conversationId
+conversationId"
+conversationId:""
+conversationId:""}
+conversationId:"AIAssistantSender_conversationId__u_0f
+conversationId:(
+conversationId:S.current
+conversationId:S.current||r
+conversationId:_
+[0m
+[0m$ [0mcurl -s -o /dev/null -D - --max-time 15 "https://chat.sumup.com/api/conversations/__probe_anonymous__" | head -10; echo "==="; curl -s --max-time 15 "https://chat.sumup.com/api/sso/get-token?check=true"
+HTTP/2 500 
+age: 0
+cache-control: public, max-age=0, must-revalidate
+content-security-policy: frame-ancestors https://*.sumup.com;
+content-type: application/json; charset=utf-8
+date: Wed, 16 Sep 2026 19:46:22 GMT
+etag: "83a50j1a5qz"
+server: Vercel
+strict-transport-security: max-age=63072000
+x-matched-path: /api/conversations/[conversationId]
+===
+{"error":"Unauthorized"}
+[0m
+[0m$ [0mcurl -s -o /dev/null -D - --max-time 15 "https://auth.sumup.com/oauth2/auth?client_id=support_chat&redirect_uri=https%3A%2F%2Fchat.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&scope=openid+offline+classic&prompt=none&state=0123456789" | head -12; echo "==="; curl -s -o /dev/null -D - --max-time 15 "https://api.sumup.com/authorize?client_id=support_chat&redirect_uri=https%3A%2F%2Fchat.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=0123456789" | head -12
+HTTP/2 303 
+date: Wed, 16 Sep 2026 19:46:21 GMT
+content-length: 0
+location: https://chat.sumup.com/api/sso/callback?error=login_required&error_description=The+Authorization+Server+requires+End-User+authentication.+Prompt+%27none%27+was+requested%2C+but+no+existing+login+session+was+found.&state=0123456789
+cache-control: no-store
+pragma: no-cache
+x-envoy-upstream-service-time: 3
+server: cloudflare
+x-request-id: 9323809a-790c-9fa9-8c6a-435e0692922f
+x-envoy-decorator-operation: envoy-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+===
+HTTP/2 302 
+date: Wed, 16 Sep 2026 19:46:22 GMT
+content-length: 0
+location: https://auth.sumup.com/flows/oauth2/error?error=invalid_client&error_description=The+requested+OAuth+2.0+Client+does+not+exist.
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+x-envoy-upstream-service-time: 5
+server: cloudflare
+x-request-id: 9eb9b10d-a0e5-9d1b-bd64-c891a625e831
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+access-control-allow-methods: GET,HEAD,PUT,PATCH,POST,DELETE
+access-control-allow-origin: *
+access-control-max-age: 300
+[0m
+[0m$ [0mgrep -hoE '"(conv[A-Za-z_0-9-]*|sup-?[a-z0-9-]*|chat[-_][a-z0-9-]*|ticket[-_][a-z0-9-]*)"|COOKIE_[A-Za-z_]+|oidc:[a-z_]+|[A-Za-z]{2,4}-[0-9]{6,}' /tmp/chat_1*.js /tmp/chat_2*.js /tmp/chat_3*.js | sort -u | head -30; echo "==="; grep -oE '"/api/sso/callback[^"]*"|"/api/[a-z-]+"' /tmp/chat_1*.js /tmp/chat_2*.js /tmp/chat_3*.js /tmp/chat_page.js | sort -u
+"chat_opening"
+"chat_submission"
+"conversationId"
+"conversationStarter"
+"conversation_fetch_error"
+"conversation_history_opening"
+"conversation_id"
+"conversation_opening"
+"conversation_screen"
+"conversation_starter"
+"conversations"
+"super"
+"support"
+oidc:csrf
+===
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "id=0 -> %{http_code}\n" --max-time 15 "https://chat.sumup.com/api/conversations/0"; curl -s -o /dev/null -w "id=Z -> %{http_code}\n" --max-time 15 "https://chat.sumup.com/api/conversations/Z"; curl -s -o /dev/null -w "empty-ish -> %{http_code}\n" --max-time 15 "https://chat.sumup.com/api/conversations/"
+id=0 -> 500
+id=Z -> 500
+empty-ish -> 308
+[0m
+STEP 1 — DELTA
+[NEW] chat.sumup.com OAuth client `support_chat` discovered: `/api/sso/login` 307 → `auth.sumup.com/oauth2/auth` with `client_id=support_chat`, PKCE S256, `scope=openid+offline+classic`, `redirect_uri=https://chat.sumup.com/api/sso/callback`, `prompt=none`, HS256 state `appState.pathname=/iframe`; sets `oidc:code_verifier` (HttpOnly, Partitioned, SameSite=None).
+[NEW] `support_chat` confirmed on **modern** auth server (303→chat.sumup.com/api/sso/callback `login_required` w/ verified redirect, prompt=none) but **invalid_client** on legacy `api.sumup.com/authorize` — 3rd instance of modern/legacy registry divergence (dashboard, support_centre, support_chat) + same "classic" scope family.
+[NEW] chat.sumup.com API surface mapped from chunks + read-only probes: `/api/conversations/[conversationId]` (dynamic route; GET of any id anonymous → **deterministic 500** JSON, 308 on bare path, `x-matched-path` confirms route capture), `/api/sso/get-token` (401 `{"error":"Unauthorized"}` anonymous, sets `oidc:csrf`), `/api/sso/login`, `/api/sso/callback`; `x-csrf-token` header on conversation client.
+[CHANGED] chat.sumup.com root 200 (Vercel, 8.8KB, page chunk 1.06KB — logic lazy-loaded); robots.txt/sitemap.xml 404 (Next 404 shell).
+
+STEP 2 — PRIORITIZE
+[PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,8.3,attack_surface=7 business_value=9 tech_exposure=9 gate_ease=8 cloud_surface=9 freshness=9
+[PRIO] api.sumup.com/.well-known/oauth-protected-resource (RFC 9728 aud-validation),6.5,attack_surface=5 business_value=9 tech_exposure=8 gate_ease=4 cloud_surface=6 freshness=8
+[PRIO] chat.sumup.com/api/conversations/{id} + /api/sso/*,6.0,attack_surface=6 business_value=7 tech_exposure=6 gate_ease=3 cloud_surface=5 freshness=9
+[PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,5.9,attack_surface=8 business_value=8 tech_exposure=7 gate_ease=3 cloud_surface=8 freshness=8
+[PRIO] auth.sumup.com/oauth2/auth (support_chat),5.2,attack_surface=5 business_value=5 tech_exposure=7 gate_ease=3 cloud_surface=5 freshness=9
+
+STEP 3 — HYPOTHESES
+[HYP] chat.sumup.com conversation scoping defect reachable via prompt=none session with no ownership discriminator on conversationId
+class: AUTH
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 42
+reasoning: Handler is reachable anonymously (deterministic 500 for ANY id incl. `0`, `Z` — proves no edge/auth gate before handler executes and id is processed unvalidated); client performs GET `/api/conversations/{id}` → `.data.events` (SSE/event log). Auth is PKCE+prompt=none silent iframe; session cookie `oidc:code_verifier` is Partitioned so it binds to chat.sumup.com. Prior OTEL spans (KB) show `sumup.support.conversation_id`, `sumup.merchant.code`, `interactions.chat.upload_path` in session attributes — conversation_id is the scoping primitive. Need to observe whether event log is merchant-scoped server-side.
+evidence_needed: (1) with a valid merchant session, own conversationId → 200 events (control); (2) hypothesize/enumerate a foreign conversationId → 200 foreign events (IDOR) vs 403/404 (scoped); (3) 500-under-auth vs 500-anonymous distinguishes handler pre-auth throw.
+verify_steps: AUTH_HELPED — GET /api/conversations/{own_id} with session cookie → control; then foreign ids at <=0.5 rps; first PASSIVE: enumerate remaining chunks (8790/8977) for id format constants and /upload route.
+impact: cross-merchant chat transcript/event read (PII in support transcripts) or agent injection if support agent sees forged conversation; MEDIUM.
+testability: AUTH_HELPED
+[HYP] chat.sumup.com file-upload surface accepts unauthenticated/untargeted object PUT (OTEL span interactions.chat.upload_path)
+class: BUSLOGIC
+asset: chat.sumup.com (upload route)
+confidence: 35
+reasoning: Prior OTEL span attributes (KB) reference `interactions.chat.upload_path`; attachment handling is the typical preg-known weak point in support-chat widgets. No /upload endpoint string survived chunk grep this cycle (only /api/sso/* + /api/conversations/*), so the route must live in an unretrieved chunk (8790/8977/fd9d1056) or a server action — endpoint existence unproven.
+evidence_needed: passive — endpoint string in remaining chunks; then control auth-gated upload with own session.
+verify_steps: PASSIVE now — pull chunks 8790×2, 8977, fd9d1056, grep for upload/attachments/multipart/server-actions paths.
+impact: anonymous file drop or cross-tenant attachment retrieval; MEDIUM.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+[FINAL] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session SSRF→169.254.169.254 (conf 65, AUTH_HELPED) — own-data control vs Apple control; highest blast radius; no customer-data exposure in the probe itself.
+[PARKED] api.sumup.com RFC 9728 aud-validation (conf 75): top architectural hypothesis; requires own bearer to mint wrong-aud token and observe gate; unchanged since prior cycles.
+[PARKED] api.sumup.com payment-methods BOLA (conf 68): handler-level disambiguation only with bearer; OWN/foreign code divergence proves a defect, but the cross-tenant PII variants (receipts/persons) sit inside the program's OOS class "any exposure of customer/employee/financial/authentication data during testing" — treat as NOT-fileable.
+[FINAL] chat.sumup.com conversation-scoping (conf 42) — only fresh surface; drops to PARKED if id-format enumeration fails passively.
+[DROP] chat upload (conf 35 < 40).
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: supply ONE **self-owned test** merchant credential from me.sumup.com (settings/api-keys `sup_sk_` **or** OAuth2 client_id+client_secret) — scoped strictly to own-data control tests ONLY: (1) PUT /v0.2/checkouts/{own}/apple-pay-session `{"context":"pay.sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` vs Apple URL control (SSRF critical); (2) RFC 9728 aud-validation with a wrong-aud token on own resource. Do NOT use the credential for cross-tenant receipts/persons enumeration — that class conflicts with the program's customer-data OOS note. If no credential is available, resume PASSIVE chunk-enumeration of chat.sumup.com (8790/8977/fd9d1056) for the conversationId format and upload route.
+
+STEP 6 — LEARNING
+[LEARN] ACCEPTED OATH @ auth.sumup.com: New first-party client `support_chat` — redirect `https://chat.sumup.com/api/sso/callback` verified on modern server (303 login_required, prompt=none), `invalid_client` on legacy `api.sumup.com/authorize`; scopes `openid+offline+classic`. Third modern/legacy registry-divergence instance (dashboard, support_centre, support_chat) — pattern now structurally confirmed, per-client redirect allowlists strict.
+[LEARN] ACCEPTED OTHER @ chat.sumup.com: Anonymous surface mapped via GET-only probes: `/api/conversations/[conversationId]` dynamic route live (deterministic 500 all id shapes; 308 bare path = Next normalization), `/api/sso/get-token` 401 JSON, `/api/sso/login` 307→auth.sumup.com; PKCE S256 + `oidc:csrf`/`oidc:code_verifier` Partitioned cookies; widget runs at appState `/iframe` (silent-auth).
+[LEARN] REJECTED MISCONFIG @ chat.sumup.com: deterministic anonymous 500 on `/api/conversations/{id}` is id-independent and pre-auth (same missing-auth throw class as the previously rejected help.sumup.com /api/search 500) — robustness note, not a divergence bug.
+
+STEP 7 — RISK
+[RISK] sumup: 72 — chat.sumup.com adds one genuinely fresh surface (new first-party OAuth client `support_chat`, dynamic conversations route, anonymous handler reach) but every exploit-grade probe (SSRF, aud-confusion, chat scoping) remains AUTH_HELPED behind a merchant session/PKCE session; all byte-stable prod surfaces unchanged for 20+ cycles; and 2 of the 4 long-standing "final" hypothesis classes (receipts/persons cross-tenant PII) are OOS per program note, so the realistic fileable ceiling is lower than the tracked score.

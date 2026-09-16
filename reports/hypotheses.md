@@ -1922,3 +1922,10 @@
 - LEARN: ACCEPTED OTHER @ sumup-openapi: Full 42-op security model enumerated — exactly 2 empty-scope ops (payment-methods GET, apple-pay-session PUT), apiKey=HTTP Beare
 - LEARN: ACCEPTED OTHER @ pay.sumup.com: Apple Pay merchant domain (spec `domainName`) is a third Vercel WAF-deny asset (x-vercel-mitigated: deny, uniform 403 incl. appl
 - LEARN: ACCEPTED OATH @ auth.sumup.com/oauth2/auth + spec: readers.read/terminals.read are the ONLY scopes dashboard consent can issue yet are ABSENT from the public 16
+
+## RANKED HYPOTHESES 2026-09-16 20:04:07 UTC
+- [42] chat.sumup.com/api/conversations/{conversationId}: chat.sumup.com conversation scoping defect reachable via prompt=none session with no ownership discriminator on conversationId (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: supply ONE **self-owned test** merchant credential from me.sumup.com (settings/api-keys `sup_sk_` **or** OAuth2 client_id+client_secret) — scoped strictl
+- LEARN: ACCEPTED OATH @ auth.sumup.com: New first-party client `support_chat` — redirect `https://chat.sumup.com/api/sso/callback` verified on modern server (303 login_
+- LEARN: ACCEPTED OTHER @ chat.sumup.com: Anonymous surface mapped via GET-only probes: `/api/conversations/[conversationId]` dynamic route live (deterministic 500 all i
+- LEARN: REJECTED MISCONFIG @ chat.sumup.com: deterministic anonymous 500 on `/api/conversations/{id}` is id-independent and pre-auth (same missing-auth throw class as t

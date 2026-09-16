@@ -760,3 +760,9 @@ www.sumup.com
 ## 2026-09-16 11:52:57 UTC
 
 ## 2026-09-16 16:42:31 UTC
+
+## 2026-09-16 20:04:07 UTC
+- NEW chat.sumup.com OAuth client `support_chat` discovered: `/api/sso/login` 307 → `auth.sumup.com/oauth2/auth` with `client_id=support_chat`, PKCE S256, `scope=openid+offline+classic`, `redirect_uri=https
+- NEW `support_chat` confirmed on **modern** auth server (303→chat.sumup.com/api/sso/callback `login_required` w/ verified redirect, prompt=none) but **invalid_client** on legacy `api.sumup.com/authorize` —
+- NEW chat.sumup.com API surface mapped from chunks + read-only probes: `/api/conversations/[conversationId]` (dynamic route; GET of any id anonymous → **deterministic 500** JSON, 308 on bare path, `x-match
+- CHANGED chat.sumup.com root 200 (Vercel, 8.8KB, page chunk 1.06KB — logic lazy-loaded); robots.txt/sitemap.xml 404 (Next 404 shell).
