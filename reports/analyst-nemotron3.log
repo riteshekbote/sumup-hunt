@@ -13705,3 +13705,75 @@ testability: AUTH_HELPED
 
 **STEP 7 — RISK**
 [RISK] sumup: 72 — Contentful P4 finding closed (token rotated). Highest remaining risk: RFC 9728 token validation surface on api.sumup.com (confidence 75, AUTH_HELPED) could yield cross-resource-server access to payment APIs if aud/claim validation is flawed. Staging dynamic registration (auth.sam-app.ro) is LIVE but cross-env JWKS isolation (ZERO kid overlap) currently blocks token relay; client-level sync to prod provenance DB untested. Legacy OAuth gateway (api.sumup.com/authorize) has client_id oracle + wildcard CORS but callback enumeration exhausted (0 HITs). support_centre client on modern auth server introduces new scope model ("classic") but unexplorable without auth. Two spec-documented empty-scope operations (payment-methods, apple-pay-session) are BOLA/SSRF targets blocked on merchant token. Legacy token endpoint (api.sumup.com/token) newly confirmed live — potential for client_credentials grant with public client_id. All critical paths require merchant OAuth token (AUTH_HELPED).
+===== ANALYST nemotron3 2026-09-16 11:52:57 UTC =====
+[0m
+> build · nemotron-3-ultra-free
+[0m
+STEP 1 — DELTA
+NO_DELTA — all passive surfaces byte-stable: RFC 9728 metadata static 200, legacy token endpoint OPTIONS 204 origin-echo CORS, api.sumup.com/authorize client_id oracle + redirect divergence LIVE, auth.sam-app.ro dynamic registration LIVE, staging JWTs mintable but cross-env JWKS isolation (ZERO kid overlap) blocks prod relay, support_centre client registered modern-only with classic scope, two empty-scope ops (payment-methods GET, apple-pay-session PUT) in OpenAPI spec, readers.read/terminals.read only dashboard-issuable scopes absent from public catalog.
+
+STEP 2 — PRIORITIZE
+[PRIO] api.sumup.com/token, 7.5, attack_surface=9 business_value=9 tech_exposure=8 gate_ease=8 cloud_surface=7 freshness=9
+[PRIO] api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods, 7.2, attack_surface=8 business_value=9 tech_exposure=7 gate_ease=6 cloud_surface=8 freshness=9
+[PRIO] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session, 6.8, attack_surface=7 business_value=9 tech_exposure=8 gate_ease=6 cloud_surface=8 freshness=9
+[PRIO] api.sumup.com/.well-known/oauth-protected-resource, 6.5, attack_surface=7 business_value=8 tech_exposure=7 gate_ease=7 cloud_surface=7 freshness=8
+[PRIO] auth.sam-app.ro/oauth2/register, 5.8, attack_surface=8 business_value=5 tech_exposure=8 gate_ease=9 cloud_surface=6 freshness=8
+
+STEP 3 — HYPOTHESES
+[HYP] RFC 9728 token validation on api.sumup.com permits audience/claim confusion
+class: AUTH
+asset: api.sumup.com (payment API gateway)
+confidence: 75
+reasoning: RFC 9728 metadata declares sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; no resource_scopes/audiences field published. Gateway validates JWT structure (structured problem+json vs plain 404) but per-operation scope enforcement untested. Staging mints JWTs with empty scp + attacker-controlled aud; cross-env JWKS isolation (ZERO kid overlap) currently blocks relay but client-level sync to prod provenance DB untested.
+evidence_needed: Valid merchant token (any scope) accepted on api.sumup.com for a resource the token was not issued for (aud mismatch) or with empty scp reaching oauth2:[] operations
+verify_steps: AUTH_HELPED: Obtain merchant OAuth token via dashboard; replay against GET /v0.1/merchants/{other_merchant}/payment-methods (oauth2:[]) and PUT /v0.2/checkouts/{owned}/apple-pay-session (oauth2:[]) with crafted aud/claims; observe 200 vs 403/404
+impact: Cross-tenant read of merchant payment-method metadata (BOLA) or SSRF via Apple Pay session endpoint — CRITICAL
+testability: AUTH_HELPED
+
+[HYP] Empty-scope OAuth token reaches GET /v0.1/merchants/{merchant_code}/payment-methods of any merchant (documented oauth2:[])
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 55
+reasoning: Official OpenAPI spec marks this operation oauth2:[] (no scope required); staging dynamic clients yield real JWTs with empty scp; gateway distinguishes valid vs absent JWT (structured problem vs plain 404) but per-operation scope enforcement untested; endpoint exposes payment-method PII
+evidence_needed: Token with empty/any scope returning 200 on a non-owned merchant_code
+verify_steps: AUTH_HELPED: mint any-scope merchant token via dashboard or registered app; GET https://api.sumup.com/v0.1/merchants/{other_merchant_code}/payment-methods → 200(leak) vs 404/403(gated)
+impact: Cross-tenant read of merchant payment-method metadata — CRITICAL if confirmed
+testability: AUTH_HELPED
+
+[HYP] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session — server-side fetch of attacker-chosen target URI with no per-op scope binding (oauth2:[])
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 50
+reasoning: Official OpenAPI spec declares oauth2:[] for this operation; Apple Pay session endpoint typically accepts a target URL for server-side session creation; empty scope + attacker-controlled target parameter = potential SSRF to cloud metadata (169.254.169.254) or internal services
+evidence_needed: Valid token (any scope) + crafted target parameter reaching internal endpoint or metadata service
+verify_steps: AUTH_HELPED: obtain merchant token; POST https://api.sumup.com/v0.2/checkouts/{owned_checkout_id}/apple-pay-session with body {"target": "http://169.254.169.254/latest/meta-data/"} → observe response; test with target=http://localhost:8080, target=http://metadata.google.internal
+impact: SSRF to cloud metadata → IAM credentials, instance identity, internal service enumeration — CRITICAL
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+[PARKED] Legacy token endpoint mints scoped bearer for unattested public client_id=dashboard via client_credentials: confidence 45 but requires valid client_secret for dashboard client (not public); "none" auth_method documented on modern auth server but dashboard rejects it; legacy gateway config unknown, may require secret. Without client_secret, client_credentials cannot be tested passively.
+[PARKED] Empty-scope OAuth token reaches GET /v0.1/merchants/{merchant_code}/payment-methods: confidence 55 but gated behind AUTH_HELPED (merchant token); no passive path to token; staging empty-scope tokens blocked by cross-env JWKS isolation (ZERO kid overlap).
+[PARKED] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session SSRF: confidence 50 but requires valid checkout_id oracle + merchant token (AUTH_HELPED); parameter schema unknown (target field speculative from Apple Pay pattern); speculative without token.
+[FINAL] 1. RFC 9728 token validation on api.sumup.com permits audience/claim confusion (75, AUTH_HELPED)
+[FINAL] 2. Empty-scope OAuth token reaches GET /v0.1/merchants/{merchant_code}/payment-methods (55, AUTH_HELPED)
+[FINAL] 3. PUT /v0.2/checkouts/{checkout_id}/apple-pay-session SSRF (50, AUTH_HELPED)
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: provide ONE merchant credential from me.sumup.com — either a `sup_sk_` API key (settings/api-keys) OR an OAuth2 application client_id+client_secret (settings/oauth2-applications) to unblock AUTH_HELPED verification of the three FINAL hypotheses
+
+STEP 6 — LEARNING
+[LEARN] ACCEPTED OTHER @ developer.sumup.com/api: official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public — full 42-op production model incl. exact paths, per-op scopes, apiKey scheme, and legacy OAuth endpoint pair (authorize+token on api.sumup.com); highest-value passive recon of this cycle
+[LEARN] ACCEPTED OATH @ api.sumup.com/token: legacy token endpoint ROUTED (OPTIONS 204 + structured 404 on GET, identity.svc operation) — documented in official spec, live on gateway; access-control-allow-origin echoes Origin (api.sumup.com), not literal * — KB "wildcard CORS" claim corrected
+[LEARN] ACCEPTED OATH @ auth.sumup.com/oauth2/auth: scope-acceptance oracle disambiguated (302 login_challenge=allowed vs 303 invalid_scope); dashboard allows readers.read/terminals.read, rejects all 13 REST spec scopes — modern dashboard scope set is closed
+[LEARN] ACCEPTED OATH @ auth.sumup.com: support_centre allowlist is exactly {openid, classic, offline}; classic+any scope → invalid_scope; scope oracle for support_centre exhausted
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com spec: GET /v0.1/merchants/{merchant_code}/payment-methods and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session declared oauth2:[] — empty-scope BOLA/SSRF targets for AUTH_HELPED gating test
+[LEARN] REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token rotated (401) — finding non-reproducible; report file never existed despite KB hallucinations
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + wildcard CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combos, 0 HITs); legacy allowlist host not recoverable from any passive surface
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks resource access; prod sync untestable passively
+[LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, JWKS URI; no resource_scopes/audience-oracle field; recon surface exhausted
+[LEARN] ACCEPTED OTHER @ sumup-openapi: Full 42-op security model enumerated — exactly 2 empty-scope ops (payment-methods GET, apple-pay-session PUT), apiKey=HTTP Bearer (same header as OAuth), `mid` REQUIRED-query on receipts, persons IDs `pers_<26 alnum>`, 6 unsecured outbound webhooks; no remaining passive gap in the spec surface.
+[LEARN] ACCEPTED OTHER @ pay.sumup.com: Apple Pay merchant domain (spec `domainName`) is a third Vercel WAF-deny asset (x-vercel-mitigated: deny, uniform 403 incl. apple-merchantid-domain-association file) — inventory-only; no anonymous surface.
+[LEARN] ACCEPTED OATH @ auth.sumup.com/oauth2/auth + spec: readers.read/terminals.read are the ONLY scopes dashboard consent can issue yet are ABSENT from the public 16-scope catalog — readers/terminals GET BOLA testing requires only a dashboard session, not an OAuth app.
+
+STEP 7 — RISK
+[RISK] sumup: 72 — Contentful P4 finding closed (token rotated). Highest remaining risk: RFC 9728 token validation surface on api.sumup.com (confidence 75, AUTH_HELPED) could yield cross-resource-server access to payment APIs if aud/claim validation is flawed. Staging dynamic registration (auth.sam-app.ro) is LIVE but cross-env JWKS isolation (ZERO kid overlap) currently blocks token relay; client-level sync to prod provenance DB untested. Legacy OAuth gateway (api.sumup.com/authorize) has client_id oracle + wildcard CORS but callback enumeration exhausted (0 HITs). support_centre client on modern auth server introduces new scope model ("classic") but unexplorable without auth. Two spec-documented empty-scope operations (payment-methods, apple-pay-session) are BOLA/SSRF targets blocked on merchant token. Legacy token endpoint (api.sumup.com/token) newly confirmed live — potential for client_credentials grant with public client_id. All critical paths require merchant OAuth token (AUTH_HELPED).
