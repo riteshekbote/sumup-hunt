@@ -850,3 +850,9 @@ https://auth.sumup.com -> HTTP 403
 https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
 https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
 https://api.sumup.com -> HTTP 404
+
+## 2026-09-16 06:22:53 UTC
+https://auth.sumup.com -> HTTP 403
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://api.sumup.com -> HTTP 404

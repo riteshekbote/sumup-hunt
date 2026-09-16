@@ -4510,3 +4510,36 @@ testability: AUTH_HELPED
 [LEARN] REJECTED MISCONFIG @ reports/: `contentful-preview-token-leak.md` verified STILL ABSENT via `ls` 2026-09-15 — final archival close; no further file-claim assertions. Finding itself closed (token rotated 401).
 [RISK] sumup: 85 — 0 filed bugs. Three high-value handler-level classes (apple-pay SSRF→metadata CRITICAL, payment-methods BOLA, receipts PII IDOR) plus a live RFC 9728 aud-validation test are gated behind ONE human-supplied merchant credential; this cycle confirmed byte-stable surface and zero new passive exposure. Risk of program-value collapse grows with continued credential-less cycles; prepare to rotate scope to `reposcan-findings.md` (285KB hypothesis set) for passive-only code-review angles if the credential cannot be sourced.
 ## 2026-09-16 01:20:13 UTC [target] (model bigpickle)
+## 2026-09-16 06:22:40 UTC [target] (model bigpickle)
+[HYP] apple-pay-session server-side fetch of attacker-chosen target (no gateway scope gate)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 60
+reasoning: Full-frame spec re-read this cycle confirms this is (a) one of exactly two empty-scope ops (oauth2:[], apiKey:[]) and (b) the ONLY empty-scope WRITE op — body must contain `context` (format hostname) + `target` (format uri), server-side proxy to create Apple merchant session; route stays ROUTED (OPTIONS 204, identity.svc op) while method-level unauth 404; target allowlist unverifiable passively.
+evidence_needed: merchant bearer + PUT target=http://169.254.169.254/latest/meta-data/ vs control https://apple-pay-gateway-cert.apple.com — divergent 200/400/302 proves unfiltered fetch.
+verify_steps: AUTH_HELPED — PUT /v0.2/checkouts/{own}/apple-pay-session {"context":"sumup.com","target":"http://169.254.169.254/latest/meta-data/"} vs control; 0.5rps.
+impact: metadata → IAM creds → lateral; CRITICAL.
+testability: AUTH_HELPED
+[HYP] Cross-tenant receipt PII via query-owned `mid` + guessable int64 `tx_event_id`
+class: IDOR
+asset: api.sumup.com/v1.1/receipts/{transaction_id}
+confidence: 60
+reasoning: Spec (verbatim this cycle): `mid` is REQUIRED query, `tx_event_id` optional int64 (ex 9567461191) — owner ID in query implies handler binds mid↔token (if at all) server-side; transaction_id accepts plain code form TS7HDYLSKD; no spec language binding mid to token ownership; receipts echo card last4 + customer PII.
+evidence_needed: own-control via valid bearer?mid={own}&tx_event_id={own} 200 control, then foreign mid / neighboring tx_event_id returns foreign receipt.
+verify_steps: AUTH_HELPED — GET /v1.1/receipts/{own_tx}?mid={own} (+tx_event_id) 200; swap mid to foreign at 0.5rps.
+impact: cross-tenant e-receipt PII (financial) disclosure; HIGH.
+testability: AUTH_HELPED
+[HYP] Cross-tenant payment-methods BOLA resolves handler-level with no ownership check
+class: IDOR
+asset: api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods
+confidence: 68
+reasoning: Spec 200 schema shows real per-country APM output (apple_pay/blik/qr_code_pix) while unauth serves static {"card"} for {MH4H92C7,MK01A8C2,MK10CL2A,MCXXXXXX}×{EUR,BRL,PLN} — gateway skips auth for this empty-scope GET; resolution is handler-side; only missing discriminator is a bearer to make bodies diverge.
+evidence_needed: own-code bearer control vs foreign codes → bodies diverge; own stable.
+verify_steps: AUTH_HELPED — GET {own}/payment-methods?amount=9.99&currency={EUR,BRL,PLN} Bearer vs {MK01A8C2,MK10CL2A,MCXXXXXX}; 0.5rps.
+impact: cross-tenant APM/acquirer enablement read feeding checkout/refund eligibility; MEDIUM/HIGH.
+testability: AUTH_HELPED
+[NEXT] HUMAN: provide ONE merchant credential from me.sumup.com — preferred `sup_sk_` API key (settings/api-keys) OR OAuth2 app client_id+client_secret (settings/oauth2-applications). Enables in a single session: (1) PUT /v0.2/checkouts/{own}/apple-pay-session `{"context":"pay.sumup.com","target":"http://169.254.169.254/latest/meta-data/"}` vs Apple control (SSRF→metadata CRITICAL); (2) GET {own,foreign}/payment-methods ×{EUR,BRL,PLN}; (3) GET /v1.1/receipts/{own}?mid={own} then foreign mid/tx_event_id; (4) GET /v1/merchants/{code}/persons (PII BOLA). NOTA: if only a dashboard login (no API key/OAuth app) is available, its consent grants exactly readers.read+terminals.read → GET /v0.1/merchants/{code}/readers, /readers/{id}/status still executable cross-tenant.
+[LEARN] ACCEPTED OTHER @ sumup-openapi: Full 42-op security model enumerated — exactly 2 empty-scope ops (payment-methods GET, apple-pay-session PUT), apiKey=HTTP Bearer (same header as OAuth), `mid` REQUIRED-query on receipts, persons IDs `pers_<26 alnum>`, 6 unsecured outbound webhooks; no remaining passive gap in the spec surface.
+[LEARN] ACCEPTED OTHER @ pay.sumup.com: Apple Pay merchant domain (spec `domainName`) is a third Vercel WAF-deny asset (x-vercel-mitigated: deny, uniform 403 incl. apple-merchantid-domain-association file) — inventory-only; no anonymous surface.
+[LEARN] ACCEPTED OATH @ auth.sumup.com/oauth2/auth + spec: readers.read/terminals.read are the ONLY scopes dashboard consent can issue yet are ABSENT from the public 16-scope catalog — readers/terminals GET BOLA testing requires only a dashboard session, not an OAuth app.
+[RISK] sumup: 86 — 0 filed bugs; ~2 weeks of credential-less cycles with all passive surfaces byte-stable and now rationally exhausted (spec, well-known, OAuth oracle, CT/ccTLD enumeration all closed). Four distinct handler-level classes (apple-pay SSRF→metadata CRITICAL, receipts/persons PII BOLA HIGH, payment-methods BOLA) plus the RFC 9728 aud-validation test are 100% gated behind ONE human-supplied merchant credential; each NEW cycle adds inventory/lead value but zero exposure. Program value keeps decaying; escalate credential acquisition or rotate effort to the pre-existing 285KB reposcan hypothesis set.
