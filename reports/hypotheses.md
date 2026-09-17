@@ -1936,3 +1936,5 @@
 - LEARN: ACCEPTED OTHER @ chat.sumup.com: chunk enumeration COMPLETE (12/12 chunks, 1.63MB) — API surface closed to {/api/conversations/[id], /api/sso/get-token, /api/ss
 - LEARN: ACCEPTED OTHER @ chat.sumup.com/api/otel-traces: unauthenticated POST → 200; OTEL collector accepts arbitrary spans (shared widget template me/checkout/chat) — 
 - LEARN: ACCEPTED OATH @ chat.sumup.com: conversationId server-assigned at open (`S.current=e.data.conversationId`), not client-guessable; IDOR discriminator requires a 
+
+## RANKED HYPOTHESES 2026-09-17 01:15:26 UTC

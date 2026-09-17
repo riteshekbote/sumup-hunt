@@ -4680,3 +4680,4 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OTHER @ chat.sumup.com/api/otel-traces: unauthenticated POST → 200; OTEL collector accepts arbitrary spans (shared widget template me/checkout/chat) — log-poisoning of internal APM only, not fileable.
 [LEARN] ACCEPTED OATH @ chat.sumup.com: conversationId server-assigned at open (`S.current=e.data.conversationId`), not client-guessable; IDOR discriminator requires a session with an own control conversation.
 [RISK] sumup: 70 — 0 filed bugs after 21 cycles; chat chunk enumeration closes the last fresh passive lead (upload refuted, conversationId opaque); all three live finals (apple-pay SSRF, RFC 9728 aud, readers/terminals BOLA) remain 100% blocked behind ONE human-supplied merchant credential; no passive class left that can produce a fileable finding.
+## 2026-09-17 01:14:38 UTC [target] (model bigpickle)

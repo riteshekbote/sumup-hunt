@@ -772,3 +772,5 @@ www.sumup.com
 - NEW conversation fetch confirmed as `GET /api/conversations/{encodeURIComponent(id)}` → `.data.events`; `conversationId` server-assigned at open (`S.current=e.data.conversationId`), `clientSessionId` is c
 - NEW chat.sumup.com/api/otel-traces: unauthenticated POST `{}` → 200 — OTEL collector accepts arbitrary spans (shared marketing-widget template).
 - CHANGED api.sumup.com/v0.2/checkouts/{id}/apple-pay-session OPTIONS still 204; RFC 9728 metadata unchanged — money surface byte-stable.
+
+## 2026-09-17 01:15:26 UTC
