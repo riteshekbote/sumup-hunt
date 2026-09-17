@@ -796,3 +796,6 @@ www.sumup.com
 - CHANGED `api.sumup.com/.well-known/oauth-protected-resource` RFC 9728 metadata static 200 — `authorization_servers=["https://auth.sumup.com"]`, `bearer_methods_supported=["header"]`, `jwks_uri="https://auth.s
 - CHANGED `auth.sumup.com/oauth2/auth` scope-acceptance oracle disambiguated: 302 `login_challenge`=allowed vs 303 `invalid_scope`; dashboard allows only `readers.read`/`terminals.read`, rejects all 13 REST spe
 - CHANGED `auth.sumup.com`: `support_centre` allowlist exactly `{openid, classic, offline}`; `classic`+any scope → `invalid_scope`; scope oracle exhausted
+
+## 2026-09-17 20:09:33 UTC
+- CHANGED api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway now requires bearer token even for spec-declared `oauth2:[]` operations

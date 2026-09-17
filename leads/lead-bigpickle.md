@@ -4827,3 +4827,40 @@ impact: cross-merchant support-transcript read; MEDIUM.
 testability: AUTH_HELPED
 [NEXT] PROBE: OPTIONS method-fingerprint sweep of the 42 sumup-openapi paths on api.sumup.com (≤1 rps; dummy id fine — routing matches on path pattern, e.g. OPTIONS /v0.2/checkouts/dd0f54f0267e4f5a4b2c9e8d1/apple-pay-session). Controls known-routed: /authorize, /token, /v0.1/merchants/{MH4H92C7}/payment-methods, apple-pay-session. Classify each path: 204/200=routed vs 404 structured problem+json=unrouted; for any NEW routed path, follow with one GET/HEAD to detect handler-level unauth reachability divergence beyond the two documented oauth2:[] ops. Record status codes + `x-envoy-decorator-operation` to fingerprint per-route gateway/*.identity.svc placement.
 [RISK] sumup: 66 — 0 filed after 22+ cycles; the sole validated finding (Contentful P4) closed via rotation; three finals (aud conf 75, apple-pay SSRF 65, chat IDOR 40) remain 100% blocked behind a single human-supplied own merchant credential or session; the sweep adds bounded recon value but a realistic third reachable sector is unproven. Credible ceiling is one CRITICAL (apple-pay SSRF) iff the credential materializes; otherwise the only passive fileable is the low-Medium api.sumup.com/authorize client_id-oracle + legacy/modern redirect-set-divergence informational misconfig. Standing erodes each credentialless cycle; file that informational report or obtain the credential before further sweep cycles.
+## 2026-09-17 20:07:35 UTC [target] (model bigpickle)
+[HYP] api.sumup.com gateway aud/iss validation loose (cross-client token confusion)
+class: AUTH
+asset: api.sumup.com (RFC 9728 resource server / gateway JWT validation)
+confidence: 75
+reasoning: RFC 9728 metadata static (sole authorization_server auth.sumup.com, header-only bearer, no resource_scopes/audience field); staging JWTs mintable via RFC 7591 and rejected at prod only at JWKS layer (ZERO kid overlap); request-level aud/iss/scope handling is the single unverified seam.
+evidence_needed: own prod bearer on one read op; token re-signed with aud/iss mutated → identical 2xx implies no aud/iss binding.
+verify_steps: AUTH_HELPED — client_credentials mint own token; GET own resource unmutated (control) then aud-mutated; compare status; repeat for iss.
+impact: cross-client/subject authorization confusion; HIGH.
+testability: AUTH_HELPED
+[HYP] apple-pay-session validationURL server-side fetch (SSRF to cloud metadata)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: spec declares PUT oauth2:[]; route ROUTED at gateway (OPTIONS 204, origin-echo CORS, identity.svc) while unauth method 404; Apple Pay merchant-session flow issues server-side HTTP fetch rooted at supplied validationURL.
+evidence_needed: own bearer+own checkout; PUT with validationURL=http://169.254.169.254/ and http://100.100.100.200/ vs control https://apple-pay-gateway.apple.com/... — status/timing/body divergence.
+verify_steps: AUTH_HELPED — control PUT own checkout then metadata-URL PUT; compare status/body/timing.
+impact: SSRF→EC2 metadata→cross-env credentials; CRITICAL if reachable.
+testability: AUTH_HELPED
+[HYP] spec 42-path routing fingerprint reveals handler-level divergence beyond the two oauth2:[] ops
+class: BUSLOGIC
+asset: api.sumup.com (all 42 sumup-openapi paths)
+confidence: 40
+reasoning: 3 controls known-routed (/authorize, /token, payment-methods, apple-pay-session); gateway matches path patterns so OPTIONS reveals per-route routing independent of auth; any additional ROUTED path that also returns non-404 on method-level without bearer is a new pre-auth reachability surface.
+evidence_needed: OPTIONS per path: 204/200=routed vs structured problem+json 404=unrouted; any routed path followed by one GET/HEAD for method-level unauth divergence.
+verify_steps: PASSIVE — loop OPTIONS over the 42 spec paths with dummy ids (e.g. OPTIONS /v0.2/checkouts/dd0f54f0267e4f5a4b2c9e8d1/apple-pay-session), ≤1 rps; record status + x-envoy-decorator-operation; follow any new 204 with single GET/HEAD.
+impact: new pre-auth surface or gateway/identity.svc placement map only; LOW-MEDIUM.
+testability: PASSIVE
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET returns .data.events; conversationId server-assigned/opaque; anonymous GET yields deterministic 500 pre-gate with no id oracle; support transcripts cross-merchant by nature.
+evidence_needed: own PKCE/prompt=none session → own conversation 200; foreign id → 200 foreign events.
+verify_steps: AUTH_HELPED — full /api/sso/login flow, GET own id; adjacent ids ≤0.5 rps.
+impact: cross-merchant support-transcript read; MEDIUM.
+testability: AUTH_HELPED

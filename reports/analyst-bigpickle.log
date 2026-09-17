@@ -33410,3 +33410,74 @@ STEP 6 — LEARNING:
 
 STEP 7 — RISK:
 [RISK] sumup: 66 — 0 filed after 22+ cycles; the sole validated finding (Contentful P4) closed via rotation; three finals (aud conf 75, apple-pay SSRF 65, chat IDOR 40) remain 100% blocked behind a single human-supplied own merchant credential or session; the sweep adds bounded recon value but a realistic third reachable sector is unproven. Credible ceiling is one CRITICAL (apple-pay SSRF) iff the credential materializes; otherwise the only passive fileable is the low-Medium api.sumup.com/authorize client_id-oracle + legacy/modern redirect-set-divergence informational misconfig. Standing erodes each credentialless cycle; file that informational report or obtain the credential before further sweep cycles.
+===== ANALYST bigpickle 2026-09-17 20:09:33 UTC =====
+[0m
+> build · big-pickle
+[0m
+STEP 1 — DELTA:
+- NO_DELTA: Last cycle (2026-09-17 16:43:12) is the most recent event; no new signals since. All monitored passive surfaces byte-stable: RFC 9728 (`/.well-known/oauth-protected-resource`) 200 static, `/v0.2/checkouts/{id}/apple-pay-session` OPTIONS 204 (origin-echo CORS, identity.svc op), `/token` OPTIONS 204, chat.sumup.com surface closed to 4 route classes. No merchant credential materialized → all three prior finals remain AUTH_HELPED. The 42-path OPTIONS fingerprint sweep was proposed last cycle but NOT yet executed on record.
+- [CHANGED] No revision of any prior ACCEPTED/REJECTED entry this cycle.
+
+STEP 2 — PRIORITIZE:
+- [PRIO] api.sumup.com,6.65,attack_surface=8/business_value=9/tech_exposure=6(OAuth+JWT+envoy identity.svc)/gate_ease=2(fully gated)/cloud_surface=7(Cloudflare+envoy K8s)/freshness=5
+- [PRIO] auth.sumup.com,5.75,attack_surface=6/business_value=8/tech_exposure=7(OAuth2/OIDC/PKCE/scope-oracle)/gate_ease=2(client-auth required)/cloud_surface=5/freshness=4
+- [PRIO] chat.sumup.com,5.25,attack_surface=5/business_value=6/tech_exposure=5(next.js+PKCE+OTEL)/gate_ease=3(anonymous 500 pre-gate)/cloud_surface=4(Vercel)/freshness=9
+
+STEP 3 — HYPOTHESES:
+[HYP] api.sumup.com gateway aud/iss validation loose (cross-client token confusion)
+class: AUTH
+asset: api.sumup.com (RFC 9728 resource server / gateway JWT validation)
+confidence: 75
+reasoning: RFC 9728 metadata static (sole authorization_server auth.sumup.com, header-only bearer, no resource_scopes/audience field); staging JWTs mintable via RFC 7591 and rejected at prod only at JWKS layer (ZERO kid overlap); request-level aud/iss/scope handling is the single unverified seam.
+evidence_needed: own prod bearer on one read op; token re-signed with aud/iss mutated → identical 2xx implies no aud/iss binding.
+verify_steps: AUTH_HELPED — client_credentials mint own token; GET own resource unmutated (control) then aud-mutated; compare status; repeat for iss.
+impact: cross-client/subject authorization confusion; HIGH.
+testability: AUTH_HELPED
+
+[HYP] apple-pay-session validationURL server-side fetch (SSRF to cloud metadata)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: spec declares PUT oauth2:[]; route ROUTED at gateway (OPTIONS 204, origin-echo CORS, identity.svc) while unauth method 404; Apple Pay merchant-session flow issues server-side HTTP fetch rooted at supplied validationURL.
+evidence_needed: own bearer+own checkout; PUT with validationURL=http://169.254.169.254/ and http://100.100.100.200/ vs control https://apple-pay-gateway.apple.com/... — status/timing/body divergence.
+verify_steps: AUTH_HELPED — control PUT own checkout then metadata-URL PUT; compare status/body/timing.
+impact: SSRF→EC2 metadata→cross-env credentials; CRITICAL if reachable.
+testability: AUTH_HELPED
+
+[HYP] spec 42-path routing fingerprint reveals handler-level divergence beyond the two oauth2:[] ops
+class: BUSLOGIC
+asset: api.sumup.com (all 42 sumup-openapi paths)
+confidence: 40
+reasoning: 3 controls known-routed (/authorize, /token, payment-methods, apple-pay-session); gateway matches path patterns so OPTIONS reveals per-route routing independent of auth; any additional ROUTED path that also returns non-404 on method-level without bearer is a new pre-auth reachability surface.
+evidence_needed: OPTIONS per path: 204/200=routed vs structured problem+json 404=unrouted; any routed path followed by one GET/HEAD for method-level unauth divergence.
+verify_steps: PASSIVE — loop OPTIONS over the 42 spec paths with dummy ids (e.g. OPTIONS /v0.2/checkouts/dd0f54f0267e4f5a4b2c9e8d1/apple-pay-session), ≤1 rps; record status + x-envoy-decorator-operation; follow any new 204 with single GET/HEAD.
+impact: new pre-auth surface or gateway/identity.svc placement map only; LOW-MEDIUM.
+testability: PASSIVE
+
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET returns .data.events; conversationId server-assigned/opaque; anonymous GET yields deterministic 500 pre-gate with no id oracle; support transcripts cross-merchant by nature.
+evidence_needed: own PKCE/prompt=none session → own conversation 200; foreign id → 200 foreign events.
+verify_steps: AUTH_HELPED — full /api/sso/login flow, GET own id; adjacent ids ≤0.5 rps.
+impact: cross-merchant support-transcript read; MEDIUM.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE:
+- [PARKED] chat conversationId IDOR: conf at floor (40); requires completing a PKCE login flow AND a server-initiated own conversation to obtain any valid id; deterministic-500 gate offers no pre-auth oracle — pure AUTH_HELPED with no passive discriminator. Parked, not dropped.
+- [PARKED] aud/iss validation: top hypothesis but 100% blocked behind own prod token; staging mintable tokens are JWKS-rejected cross-env; not actionable this cycle.
+- [FINAL] survivors ranked: 1) gateway aud/iss (75, AUTH_HELPED); 2) apple-pay SSRF (65, AUTH_HELPED); 3) spec routing fingerprint (40, PASSIVE — the only executable item).
+- Self-critique: no new vulnerability invented this cycle; the sweep is bounded recon with uncertain payout; every validator-grade outcome remains human-credential-gated.
+
+STEP 5 — NEXT ACTION:
+- [NEXT] PROBE: OPTIONS method-fingerprint sweep of the 42 sumup-openapi paths on api.sumup.com (≤1 rps, dummy ids per path pattern). Controls known-routed: /authorize, /token, GET /v0.1/merchants/{MH4H92C7}/payment-methods, PUT /v0.2/checkouts/{dummy}/apple-pay-session. Classify each: 204/200=routed vs structured problem+json 404=unrouted; on any NEW routed path emit one GET/HEAD to detect handler-level unauth reachability divergence beyond the two documented oauth2:[] ops; record status + `x-envoy-decorator-operation` per route.
+
+STEP 6 — LEARNING:
+- [LEARN] ACCEPTED OTHER @ api.sumup.com: 42-path OPTIONS sweep proposed 2026-09-17 16:43 but no results recorded — actionable passive item; controls (authorize/token/payment-methods/apple-pay) already known-routed per KB.
+- [LEARN] ACCEPTED OTHER @ reports/valid-bugs.md: confirmed on disk (NOT root); running count remains 0 after 22+ cycles; only passive-class fileable is the low-Medium api.sumup.com/authorize client_id-oracle + redirect-set divergence, still unfiled.
+- [LEARN] ACCEPTED OTHER @ chat.sumup.com: survey complete — support_chat client + closed API surface + OTEL log-poisoning; no remaining passive gap; IDOR parked behind own-session requirement.
+- [LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata byte-stable across 18+ cycles — genuinely static; recon surface exhausted.
+
+STEP 7 — RISK:
+- [RISK] sumup: 63 — another credentialless, delta-free cycle; 0 findings filed after 22+ cycles; the only validated finding (Contentful P4) closed via rotation. Three livable finals (aud validation 75, apple-pay SSRF 65, chat IDOR 40) all require a human-supplied own merchant credential or session. The executable items this cycle are bounded recon (42-path OPTIONS sweep, low expected payout) and the standing informational report (api.sumup.com/authorize client_id oracle + legacy/modern redirect-set divergence, low-Medium). Standing erodes structurally each credentialless cycle; realistic ceiling remains one CRITICAL (apple-pay SSRF) iff the credential materializes, otherwise submit the informational report or await fresh surface.
