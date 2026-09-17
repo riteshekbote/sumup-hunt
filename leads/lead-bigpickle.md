@@ -4681,3 +4681,89 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OATH @ chat.sumup.com: conversationId server-assigned at open (`S.current=e.data.conversationId`), not client-guessable; IDOR discriminator requires a session with an own control conversation.
 [RISK] sumup: 70 — 0 filed bugs after 21 cycles; chat chunk enumeration closes the last fresh passive lead (upload refuted, conversationId opaque); all three live finals (apple-pay SSRF, RFC 9728 aud, readers/terminals BOLA) remain 100% blocked behind ONE human-supplied merchant credential; no passive class left that can produce a fileable finding.
 ## 2026-09-17 01:14:38 UTC [target] (model bigpickle)
+## 2026-09-17 06:16:43 UTC [target] (model bigpickle)
+[PRIO] api.sumup.com,8.0,attack_surface:8 business_value:9 tech_exposure:8 gate_ease:7 cloud_surface:7 freshness:5
+[PRIO] admin.sumup.com,7.2,attack_surface:6 business_value:9 tech_exposure:7 gate_ease:5 cloud_surface:7 freshness:5
+[PRIO] auth.sumup.com,7.0,attack_surface:7 business_value:8 tech_exposure:7 gate_ease:4 cloud_surface:7 freshness:5
+[PRIO] portal.sumup.com,6.8,attack_surface:6 business_value:7 tech_exposure:6 gate_ease:5 cloud_surface:5 freshness:5
+[PRIO] dashboard.sumup.com,6.5,attack_surface:6 business_value:8 tech_exposure:6 gate_ease:5 cloud_surface:5 freshness:5
+[PRIO] web.sumup.com,5.5,attack_surface:5 business_value:5 tech_exposure:5 gate_ease:6 cloud_surface:5 freshness:5
+[HYP] api.sumup.com open API surface exploration
+class: BUSLOGIC
+asset: api.sumup.com
+confidence: 65
+reasoning: api.sumup.com returns 404 on root; Cloudflare-fronted; common payment API patterns suggest versioned endpoints (/v1/, /v2/, /merchants/, /payments/) likely exist behind 404. Gateway non-standard ports (2082/2083/8080/8443) warrant probing. No prior enumeration done.
+evidence_needed: Valid API endpoints returning 200/401/400 with documented schema (swagger/openapi).
+verify_steps: GET https://api.sumup.com/v1/merchants, GET https://api.sumup.com/v1/payments, GET https://api.sumup.com/swagger.json, GET https://api.sumup.com/openapi.json, GET https://api.sumup.com/api-docs, GET https://api.sumup.com/health, GET https://api.sumup.com/v2/, GET https://api.sumup.com/graphql.
+impact: Unauthenticated API discovery leaks merchant data, payment endpoints, or internal service maps. Severity: medium-high.
+testability: PASSIVE
+[HYP] admin.sumup.com internal admin panel
+class: AUTH
+asset: admin.sumup.com
+confidence: 58
+reasoning: nginx/1.26.1 serving 403 on root (not cloudflare); backed by AWS ELB in eu-west-1; 403 suggests auth-gated admin panel; common pattern for internal tooling (merchant management, support dashboards).
+evidence_needed: Login page, SSO redirect, or leaked path returning 200; framework fingerprinting.
+verify_steps: GET https://admin.sumup.com/admin, GET https://admin.sumup.com/login, GET https://admin.sumup.com/health, GET https://admin.sumup.com/api/health, OPTIONS https://admin.sumup.com/, GET https://admin.sumup.com/robots.txt.
+impact: Admin panel access could lead to merchant data manipulation or account takeover. Severity: high.
+testability: PASSIVE
+[HYP] auth.sumup.com OAuth flow enumeration
+class: OATH
+asset: auth.sumup.com
+confidence: 52
+reasoning: Redirects to /flows/login; Cloudflare-fronted; SumUp likely uses OAuth2/OIDC for merchant auth across web/mobile; redirect_uri validation flaws are common in payment platforms.
+evidence_needed: OAuth authorize endpoint with exposed client_id/redirect_uri parameters; callback endpoints.
+verify_steps: GET https://auth.sumup.com/.well-known/openid-configuration, GET https://auth.sumup.com/oauth/authorize, GET https://auth.sumup.com/flows/login (with Referer), GET https://auth.sumup.com/.well-known/oauth-authorization-server.
+impact: OAuth misconfig could enable account takeover or session hijacking. Severity: critical.
+testability: PASSIVE
+[FINAL] 1. api.sumup.com — API surface exploration: confidence 65, highest business+tech value, no auth barriers yet
+[FINAL] 2. admin.sumup.com — internal admin panel: confidence 58, high value but 403 gate
+[FINAL] 3. auth.sumup.com — OAuth flow enumeration: confidence 52, critical impact if found, limited passive evidence
+[NEXT] PROBE: GET https://api.sumup.com/swagger.json && GET https://api.sumup.com/openapi.json && GET https://api.sumup.com/v1/merchants && GET https://api.sumup.com/health && GET https://api.sumup.com/graphql (HEAD first on each, then GET, ≤1 rps)
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
+[LEARN] ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling.
+[RISK] SumUp: 25 — well-provisioned payment company with Cloudflare edge, likely mature security; low-permission research surface without auth assistance.
+[NEW] api.sumup.com: non-standard ports (2082/2083/2086/2087/8080/8443) detected; shared edge/proxy noted but verify with proper scan.
+[CHANGED] admin.sumup.com: nginx/1.26.1 + AWS ELB (eu-west-1); 403 on root confirmed.
+[CHANGED] portal.sumup.com: third-party CRM (iriscrm.com) CNAME confirmed; SSRF surface plausible via webhook/callback.
+[PRIO] api.sumup.com,8.0,attack_surface:8 business_value:9 tech_exposure:8 gate_ease:7 cloud_surface:7 freshness:5
+[PRIO] admin.sumup.com,7.2,attack_surface:6 business_value:9 tech_exposure:7 gate_ease:5 cloud_surface:7 freshness:5
+[PRIO] auth.sumup.com,7.0,attack_surface:7 business_value:8 tech_exposure:7 gate_ease:4 cloud_surface:7 freshness:5
+[HYP] api.sumup.com open API surface exploration
+class: BUSLOGIC
+asset: api.sumup.com
+confidence: 65
+reasoning: api.sumup.com returns 404 on root; Cloudflare-fronted; common payment API patterns suggest versioned endpoints (/v1/, /v2/, /merchants/, /payments/) likely exist behind 404. Gateway non-standard ports (2082/2083/8080/8443) warrant probing. No prior enumeration done.
+evidence_needed: Valid API endpoints returning 200/401/400 with documented schema (swagger/openapi).
+verify_steps: GET https://api.sumup.com/v1/merchants, GET https://api.sumup.com/v1/payments, GET https://api.sumup.com/swagger.json, GET https://api.sumup.com/openapi.json, GET https://api.sumup.com/api-docs, GET https://api.sumup.com/health, GET https://api.sumup.com/v2/, GET https://api.sumup.com/graphql.
+impact: Unauthenticated API discovery leaks merchant data, payment endpoints, or internal service maps. Severity: medium-high.
+testability: PASSIVE
+[HYP] admin.sumup.com internal admin panel
+class: AUTH
+asset: admin.sumup.com
+[HYP] apple-pay-session `target` URL server-side fetch (SSRF to cloud metadata)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: spec declares PUT oauth2:[]; gateway route ROUTED (OPTIONS 204, origin-echo CORS, identity.svc) while unauth PUT 404; Apple Pay merchant-session validation inherently triggers a server-side request rooted at the provided `domainName`.
+evidence_needed: own PUT with `target=http://169.254.169.254/latest/meta-data/` vs Apple `https://apple-pay-gateway.apple.com/paymentservices/paymentSession` — any status/timing divergence on internal vs public host.
+verify_steps: AUTH_HELPED — own checkout_id, body {"context":"pay.sumup.com","target":..,"displayName":"x","validationURL":..} vs Apple-URL control.
+impact: EC2 metadata → cross-env credentials → prod compromise; CRITICAL.
+testability: AUTH_HELPED
+[HYP] api.sumup.com gateway aud/iss validation loose (cross-client token confusion)
+class: AUTH
+asset: api.sumup.com (RFC 9728 resource server)
+confidence: 75
+reasoning: RFC 9728 metadata declares sole authorization_server auth.sumup.com, header-only bearer, no resource_scopes/aud field; mintable attacker-aud staging JWTs blocked only by cross-env JWKS isolation (ZERO kid overlap) — request-level aud handling is the sole unverified seam.
+evidence_needed: own prod token with wrong/absent aud accepted by a resource op (vs 401); own-token control on a read op.
+verify_steps: AUTH_HELPED — bearer own token, mutate aud vs normal, compare status on one read op.
+impact: broader-than-intended token validity / cross-client confusion; HIGH.
+testability: AUTH_HELPED
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET `/api/conversations/{encodeURIComponent(id)}` → `.data.events`; conversationId server-assigned/opaque; anonymous GET throws deterministic 500 pre-gate with no id oracle; PKCE/prompt=none session required to obtain any valid id.
+evidence_needed: own-session control conversation 200; foreign id → 200 foreign events.
+verify_steps: AUTH_HELPED — GET own id with session; foreign ids ≤0.5 rps.
+impact: cross-merchant support-transcript read; MEDIUM.
+testability: AUTH_HELPED

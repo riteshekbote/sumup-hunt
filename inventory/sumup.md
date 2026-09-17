@@ -774,3 +774,8 @@ www.sumup.com
 - CHANGED api.sumup.com/v0.2/checkouts/{id}/apple-pay-session OPTIONS still 204; RFC 9728 metadata unchanged — money surface byte-stable.
 
 ## 2026-09-17 01:15:26 UTC
+
+## 2026-09-17 06:16:54 UTC
+- NEW api.sumup.com: non-standard ports (2082/2083/2086/2087/8080/8443) detected; shared edge/proxy noted but verify with proper scan.
+- CHANGED admin.sumup.com: nginx/1.26.1 + AWS ELB (eu-west-1); 403 on root confirmed.
+- CHANGED portal.sumup.com: third-party CRM (iriscrm.com) CNAME confirmed; SSRF surface plausible via webhook/callback.

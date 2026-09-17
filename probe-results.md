@@ -879,3 +879,17 @@ https://api.sumup.com` -> ERR <urlopen error [Errno -2] Name or service not know
 
 ## 2026-09-17 01:15:26 UTC
 
+
+## 2026-09-17 06:17:11 UTC
+https://auth.sumup.com -> HTTP 403
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/v1/merchants -> HTTP 404
+https://api.sumup.com/v1/payments -> HTTP 404
+https://api.sumup.com/swagger.json -> HTTP 404
+https://api.sumup.com/openapi.json -> HTTP 404
+https://api.sumup.com/api-docs -> HTTP 404
+https://api.sumup.com/health -> HTTP 404
+https://api.sumup.com/v2/ -> HTTP 404
+https://api.sumup.com/graphql -> HTTP 404
