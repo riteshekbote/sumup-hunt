@@ -900,3 +900,11 @@ https://auth.sumup.com -> HTTP 403
 https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
 https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
 https://api.sumup.com -> HTTP 404
+
+## 2026-09-17 16:44:14 UTC
+https://chat.sumup.com/api/sso/callback` -> HTTP 404
+https://auth.sumup.com -> HTTP 403
+https://auth.sumup.com/.well-known/jwks.json -> 200 len=15316
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://api.sumup.com -> HTTP 404

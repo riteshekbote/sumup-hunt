@@ -786,3 +786,13 @@ www.sumup.com
 - CHANGED `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauth 200 static `{"card"}` re-verified for 4 merchant codes × 3 currencies — per-merchant resolution bearer-gated; AUTH_HELPED gate confirmed
 - CHANGED `api.sumup.com/v0.2/checkouts/{id}/apple-pay-session` OPTIONS 204 re-verified (origin-echo CORS, `identity.svc` op header, `__cf_bm` Domain=sumup.com SameSite=None) — route ROUTED, method-level unauth
 - CHANGED `api.sumup.com/token` OPTIONS 204 re-verified — `access-control-allow-origin` echoes Origin (`api.sumup.com`), not literal `*`; KB "wildcard CORS" corrected to origin-echo
+
+## 2026-09-17 16:44:07 UTC
+- NEW `chat.sumup.com` OAuth client `support_chat` registered on modern `auth.sumup.com` (redirect `https://chat.sumup.com/api/sso/callback`, scopes `openid+offline+classic`), absent from legacy `api.sumup.
+- NEW `chat.sumup.com` anonymous surface mapped: `/api/conversations/[conversationId]` dynamic route (deterministic 500 all IDs), `/api/sso/get-token` 401, `/api/sso/login` 307→auth, `/api/otel-traces` unau
+- CHANGED `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauth 200 static `{"card"}` re-verified for 4 merchant codes × 3 currencies — per-merchant resolution bearer-gated; AUTH_HELPED gate confirmed
+- CHANGED `api.sumup.com/v0.2/checkouts/{id}/apple-pay-session` OPTIONS 204 re-verified (origin-echo CORS, `identity.svc` op header, `__cf_bm` Domain=sumup.com SameSite=None) — route ROUTED, method-level unauth
+- CHANGED `api.sumup.com/token` OPTIONS 204 re-verified — `access-control-allow-origin` echoes Origin (`api.sumup.com`), not literal `*`; KB "wildcard CORS" corrected to origin-echo
+- CHANGED `api.sumup.com/.well-known/oauth-protected-resource` RFC 9728 metadata static 200 — `authorization_servers=["https://auth.sumup.com"]`, `bearer_methods_supported=["header"]`, `jwks_uri="https://auth.s
+- CHANGED `auth.sumup.com/oauth2/auth` scope-acceptance oracle disambiguated: 302 `login_challenge`=allowed vs 303 `invalid_scope`; dashboard allows only `readers.read`/`terminals.read`, rejects all 13 REST spe
+- CHANGED `auth.sumup.com`: `support_centre` allowlist exactly `{openid, classic, offline}`; `classic`+any scope → `invalid_scope`; scope oracle exhausted
