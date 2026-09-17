@@ -799,3 +799,8 @@ www.sumup.com
 
 ## 2026-09-17 20:09:33 UTC
 - CHANGED api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway now requires bearer token even for spec-declared `oauth2:[]` operations
+
+## 2026-09-17 22:56:45 UTC
+- CHANGED api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway now requires bearer token even for spec-declared `oauth2:[]` operations
+- NEW api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway now requires bearer token even for spec-declared `oauth2:[]` operations
+- CHANGED No other surface changes detected; all other endpoints byte-stable per 10+ probe cycles

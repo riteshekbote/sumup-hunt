@@ -913,3 +913,8 @@ https://api.sumup.com -> HTTP 404
 https://auth.sumup.com -> HTTP 403
 https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
 https://api.sumup.com -> HTTP 404
+
+## 2026-09-17 22:56:50 UTC
+https://auth.sumup.com -> HTTP 403
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://api.sumup.com -> HTTP 404
