@@ -33093,3 +33093,262 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 - [RISK] sumup: 68 — 0 filed after 21 cycles; only validated reportable finding (Contentful preview-token P4) is closed (rotated); all three live finals (apple-pay SSRF conf 65, aud-validation conf 75, readers/terminals BOLA) are 100% blocked behind a single human-supplied merchant credential; client_id registry sweep adds a bounded negative (no new OAuth client to chase) so no fresh passive class remains; realistic fileable ceiling is one CRITICAL (apple-pay SSRF) if and only if the credential materializes — otherwise this cycle's only true value is archival honesty about the report file hallucination history.
+===== ANALYST bigpickle 2026-09-17 11:57:39 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null || echo "No reports directory"
+total 4508
+drwxr-xr-x  2 runner runner    4096 Sep 17 11:54 .
+drwxr-xr-x 12 runner runner    4096 Sep 17 11:54 ..
+-rw-r--r--  1 runner runner 2572255 Sep 17 11:54 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   19964 Sep 17 11:54 analyst-laguna.log
+-rw-r--r--  1 runner runner   19872 Sep 17 11:54 analyst-ling3.log
+-rw-r--r--  1 runner runner   20056 Sep 17 11:54 analyst-longcat.log
+-rw-r--r--  1 runner runner 1617945 Sep 17 11:54 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    8179 Sep 17 11:54 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 17 11:54 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 17 11:54 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 17 11:54 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner    9528 Sep 17 11:54 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  302771 Sep 17 11:54 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 17 11:54 reposcan-findings.md
+-rw-r--r--  1 runner runner    3487 Sep 17 11:54 valid-bugs.md
+[0m
+[0m$ [0mls -la art/ 2>/dev/null || echo "No art directory"
+No art directory
+[0m
+Let me first check the current state of the workspace and any existing reports.
+[0m✗ [0mRead art/valid-bugs.md failed
+[91m[1mError: [0mFile not found: /home/runner/work/sumup-hunt/sumup-hunt/art/valid-bugs.md
+[0m✗ [0mRead art/hypotheses-bigpickle.txt failed
+[91m[1mError: [0mFile not found: /home/runner/work/sumup-hunt/sumup-hunt/art/hypotheses-bigpickle.txt
+[0m→ [0mRead reports/valid-bugs.md
+[0m→ [0mRead reports/hypotheses-bigpickle.txt
+[0m→ [0mRead reports/analyst-bigpickle.log[90m [offset=1, limit=100][0m
+[0m→ [0mRead reports/reposcan-findings.md
+[0m→ [0mRead reports/analyst-bigpickle.log[90m [offset=33000, limit=100][0m
+[0m
+[0m$ [0mcurl -sI --max-time 15 "https://support.sumup.com/" 2>&1 | head -30
+HTTP/2 308 
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain
+date: Thu, 17 Sep 2026 11:56:41 GMT
+location: https://help.sumup.com/
+refresh: 0;url=https://help.sumup.com/
+server: Vercel
+strict-transport-security: max-age=63072000
+x-vercel-id: cle1::gxg4v-1789646201282-b3ff7ecd2131
+[0m
+[0m$ [0mcurl -sI --max-time 15 "https://dashboard.sumup.com/" 2>&1 | head -30
+HTTP/2 308 
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain
+date: Thu, 17 Sep 2026 11:56:41 GMT
+location: https://me.sumup.com/
+refresh: 0;url=https://me.sumup.com/
+server: Vercel
+strict-transport-security: max-age=63072000
+x-vercel-id: cle1::l8d9d-1789646201417-577a9be6c878
+[0m
+Now let me probe the few hosts that haven't been deeply explored yet.
+[0m$ [0mcurl -sI --max-time 15 "https://developer.sumup.com/" 2>&1 | head -30
+HTTP/2 200 
+date: Thu, 17 Sep 2026 11:56:41 GMT
+content-type: text/html
+cf-cache-status: HIT
+access-control-allow-origin: *
+cache-control: public, max-age=0, must-revalidate
+link: </api/>; rel="service-doc"
+set-cookie: __cf_bm=ysQuaZDh3XGzNtE.a_8pgFuV9Hww6GlN7lX4UMJ8whE-1789646201.6494927-1.0.1.1-_Eu_AT6_lfstWhGWfppdbecP1UFLXbYXJI_edbwG5z14qvVdfmSloiuRg5ubO7ciaw42Jzq05S1OHattEslKtcD1..Q1GIMvkSQ8xiJyPWYkCwQM.xi5RMP__eB4SfH7MfJBXbwp.C65jAvLLf9DPQ; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Thu, 17 Sep 2026 12:26:41 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=1eCt8wPTzpBZQdJX2oHF0R2dfL1cU6oAuxOneonGdvqWbw50Fjsbk5eL2kqiVd3dmbs1p8nFb6XGpkhuOys5HPklhAOCqqxrxNv7FYfkBroicmh42IwXsqCyf3r%2FiyxsuR4t3No%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+server: cloudflare
+cf-ray: a3c7edd84fe81e27-MSP
+[0m
+[0m$ [0msleep 1 && curl -sI --max-time 15 "https://developer.sumup.com/api/" 2>&1 | head -20
+HTTP/2 307 
+date: Thu, 17 Sep 2026 11:56:48 GMT
+location: /api
+access-control-allow-origin: *
+set-cookie: __cf_bm=Vw.Iakhct30eh1gmK9H5C4zWZwW7EpTcZg7F3ihHbBY-1789646208.1937523-1.0.1.1-rfTN9sR..pXxFH19asJWyF28OlrlVC05dvX27A60yNYo4Fl_gWk0e3NkNcTSTQ3UR6M5ndrHjB0Op4FcseKdqnE2RyqAT.Z8KM9JjWFzBUihiTaW4L_D9eq_fhTJQd94QO3ralhWN7ggr78XdOiFHA; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Thu, 17 Sep 2026 12:26:48 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=DpSmYOdKkG%2FCufWx4NprXKLLg3iBCkPGuPLZSP4C2%2BGd%2FbzGTtvrUmoUuIAMIXoh6DG5Na0kjXTVbKj123wQmDaEAWWyhKfSYLtdbjj%2FqQwjkrNA9Eul3fky5ck84GxAfbKcGSI%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+server: cloudflare
+cf-ray: a3c7ee012a931e27-MSP
+[0m
+[0m$ [0msleep 1 && curl -sI --max-time 15 "https://developer.sumup.com/login" 2>&1 | head -20
+HTTP/2 404 
+date: Thu, 17 Sep 2026 11:56:48 GMT
+content-type: text/html
+cf-cache-status: HIT
+access-control-allow-origin: *
+cache-control: public, max-age=0, must-revalidate
+set-cookie: __cf_bm=_qwyEEwZ2jfGPxeRQNh87g3LOXrfcyZvcL4Hyyy5oRA-1789646208.3649325-1.0.1.1-RPfjHTtCSTX7ETh_s2dDbh_V8F5raKAAGwu4.ZxXOpG9AtMPsBTfKFKxv8o1SqHDSYjpMYDz38SgQ9kynLvmgKYhfk67Tt6zC9uvuYh4kp73bpfHr_SWhcmadAmjpmwRJh27SfoqFil_qFuS6jps.Q; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Thu, 17 Sep 2026 12:26:48 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=vNTaoSqc0mZVxPBQfbpzF1yYiBrVeNaFpluO5OlpbmuyzqAsFDy%2BGVO6%2BQi3x0BBiNygmyoAdHAAY%2Bd440jXVG8rEBF6E6Lg359%2BrS4h9vPDzNwPBkQFNmtEGN382IseaNem%2Fxs%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+server: cloudflare
+cf-ray: a3c7ee024973511c-MSP
+[0m
+[0m$ [0msleep 1 && curl -sI --max-time 15 "https://developer.sumup.com/admin" 2>&1 | head -20
+HTTP/2 404 
+date: Thu, 17 Sep 2026 11:56:48 GMT
+content-type: text/html
+cf-cache-status: HIT
+access-control-allow-origin: *
+cache-control: public, max-age=0, must-revalidate
+set-cookie: __cf_bm=vkJE6aJCuX3Q1XfKyLDKKfDVpGIeWMpP7vSc_mhWCp4-1789646208.7094352-1.0.1.1-iTVzcHbBXfExw7nQjItGRbRru7rYTQzF.uzt_GjmaXnssxNzgkQvNq4AUISI5n8LfeBd3fTUvAhHoYyICf4KoAWrVF9RHEkwqK2XAa2RcEfb4yAfRXLcEazA9XVmAE6pcJm4OE2XTSfmX.25Kd7.zQ; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Thu, 17 Sep 2026 12:26:48 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=78GY4cGIYm%2BVLj%2Bx4%2BwqVBxBojWcGx6cxkiWA5TJPEPZEnBwMmBTQm%2Fm7P1KqTlenxC0n4C2sS%2FKz9JhYXBlT5X2MqN3YN2qwoYkfJMWxG%2FinBZJ%2BUtZXyYs2EkE5Hu3i4reREw%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+server: cloudflare
+cf-ray: a3c7ee046f02d8ab-ORD
+[0m
+[0m$ [0msleep 1 && curl -s --max-time 15 "https://developer.sumup.com/api" 2>&1 | head -50
+<!DOCTYPE html><link slot="head" rel="canonical" href="https://developer.sumup.com/api"><html lang="en" dir="ltr" data-theme="dark" data-has-sidebar class="astro-vdxcvpsm"><head><script>
+  (function () {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        const element = mutation.target;
+        element.dataset.colorScheme = element.dataset.theme;
+      });
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+  })();
+</script><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>API Reference | SumUp Developer</title><link rel="canonical" href="https://developer.sumup.com/api/"/><link rel="sitemap" href="/sitemap-index.xml"/><link rel="preload" href="https://static.sumup.com/fonts/sumup/sumup-narrow-latin-s.woff2" as="font" type="font/woff2" crossorigin="true"/><link rel="icon" type="image/svg+xml" href="https://static.sumup.com/favicons/favicon.svg"/><link rel="icon" sizes="96x96" type="image/png" href="https://static.sumup.com/favicons/favicon-96x96.png"/><link rel="apple-touch-icon" sizes="180x180" href="https://static.sumup.com/favicons/apple-touch-icon.png"/><link rel="manifest" href="https://static.sumup.com/favicons/site.webmanifest"/><link rel="mask-icon" href="https://static.sumup.com/favicons/safari-pinned-tab.svg" color="#ffffff"/><script src="https://static.sumup.com/legacy-browsers/check-support.js" defer></script><link rel="alternate" type="application/rss+xml" title="SumUp Developer Changelog RSS" href="/changelog/rss.xml"/><script defer charset="UTF-8" src="https://cdn-ukwest.onetrust.com/scripttemplates/otSDKStub.js" data-domain-script="5667d606-3c71-4361-b99b-ca612a6fe5ac-test"></script><script src="https://www.googletagmanager.com/gtag/js?id=G-2RJ8FNEG5J"></script><script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-2RJ8FNEG5J');
+      </script><link rel="shortcut icon" href="https://static.sumup.com/favicons/favicon.svg" type="image/svg+xml"/><link rel="shortcut icon" href="https://static.sumup.com/favicons/favicon.ico"/><link rel="shortcut icon" href="https://static.sumup.com/favicons/favicon.ico"/><meta name="generator" content="Astro v7.3.2"/><meta name="generator" content="Starlight v0.41.7"/><meta property="og:title" content="API Reference | SumUp Developer"/><meta property="og:type" content="article"/><meta property="og:url" content="https://developer.sumup.com/api/"/><meta property="og:locale" content="en_GB"/><meta property="og:description" content="SumUp API reference and code samples."/><meta property="og:site_name" content="SumUp Developer"/><meta name="twitter:card" content="summary_large_image"/><meta name="description" content="SumUp API reference and code samples."/><meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)"/><meta name="theme-color" content="#fbfbf9"/><meta name="google-site-verification" content="0mA7KPaajXK9CtZgu7A9lLDHeTEZ_SiHdmXz2vDej7Y"/><meta property="og:image" content="https://developer.sumup.com/og/api.png"/><meta property="og:image:secure_url" content="https://developer.sumup.com/og/api.png"/><meta property="og:image:width" content="1200"/><meta property="og:image:height" content="600"/><meta name="twitter:title" content="API Reference | SumUp Developer"/><meta name="twitter:image" content="https://developer.sumup.com/og/api.png"/><meta name="twitter:site" content="@SumUp"/><meta name="twitter:description" content="SumUp API reference and code samples."/><meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1"/><link rel="alternate" type="text/markdown" href="https://developer.sumup.com/api/index.md"/><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.Ddnni-j8.js"></script><script>
+	window.StarlightThemeProvider = (() => {
+		const storedTheme =
+			typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+		const theme =
+			storedTheme ||
+			(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+		document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+		return {
+			updatePickers(theme = storedTheme || 'auto') {
+				document.querySelectorAll('starlight-theme-select').forEach((picker) => {
+					const select = picker.querySelector('select');
+					if (select) select.value = theme;
+					/** @type {HTMLTemplateElement | null} */
+					const tmpl = document.querySelector(`#theme-icons`);
+					const newIcon = tmpl && tmpl.content.querySelector('.' + theme);
+					if (newIcon) {
+						const oldIcon = picker.querySelector('svg.label-icon');
+						if (oldIcon) {
+							oldIcon.replaceChildren(...newIcon.cloneNode(true).childNodes);
+						}
+					}
+				});
+			},
+		};
+	})();
+</script><template id="theme-icons"><svg aria-hidden="true" class="light astro-n5k4ipy7" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M5 12a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h1a1 1 0 0 0 1-1Zm.64 5-.71.71a1 1 0 0 0 0 1.41 1 1 0 0 0 1.41 0l.71-.71A1 1 0 0 0 5.64 17ZM12 5a1 1 0 0 0 1-1V3a1 1 0 0 0-2 0v1a1 1 0 0 0 1 1Zm5.66 2.34a1 1 0 0 0 .7-.29l.71-.71a1 1 0 1 0-1.41-1.41l-.66.71a1 1 0 0 0 0 1.41 1 1 0 0 0 .66.29Zm-12-.29a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.71-.71a1.004 1.004 0 1 0-1.43 1.41l.73.71ZM21 11h-1a1 1 0 0 0 0 2h1a1 1 0 0 0 0-2Zm-2.64 6A1 1 0 0 0 17 18.36l.71.71a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.76-.66ZM12 6.5a5.5 5.5 0 1 0 5.5 5.5A5.51 5.51 0 0 0 12 6.5Zm0 9a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm0 3.5a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/></svg><svg aria-hidden="true" class="dark astro-n5k4ipy7" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.64 13a1 1 0 0 0-1.05-.14 8.049 8.049 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05Zm-9.5 6.69A8.14 8.14 0 0 1 7.08 5.22v.27a10.15 10.15 0 0 0 10.14 10.14 9.784 9.784 0 0 0 2.1-.22 8.11 8.11 0 0 1-7.18 4.32v-.04Z"/></svg><svg aria-hidden="true" class="auto astro-n5k4ipy7" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg></template><link rel="stylesheet" href="/_astro/print.ehPL0gv-.css" media="print"><link rel="stylesheet" href="/_astro/middleware.WCXGvydO.css"><link rel="stylesheet" href="/_astro/_..kLVZ9nRa.css"><style>._tableFrame_1h3p5_1{box-sizing:border-box;border:var(--cui-border-width-kilo) solid var(--cui-border-normal);border-radius:var(--cui-border-radius-byte);width:100%;margin-top:var(--cui-spacings-byte);overflow:hidden}._tableContainer_1h3p5_10{overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;width:100%;overflow:auto}._table_1h3p5_1{border-collapse:separate;border-spacing:0;table-layout:fixed;width:100%;min-width:100%}._table_1h3p5_1 th,._table_1h3p5_1 td{padding:var(--cui-spacings-byte) var(--cui-spacings-kilo);border-bottom:var(--cui-border-width-kilo) solid var(--cui-border-subtle);vertical-align:top;text-align:left;font-size:var(--cui-body-s-font-size);line-height:var(--cui-body-s-line-height);white-space:normal;overflow-wrap:anywhere;word-break:break-word}._table_1h3p5_1 th{z-index:1;background:var(--sl-color-bg);position:sticky;top:0}._table_1h3p5_1 tbody tr:last-child td{border-bottom:0}._icon_1h3p5_50{width:24px;height:24px;display:block}
+@layer starlight.components{svg:where(.astro-n5k4ipy7){color:var(--sl-icon-color);font-size:var(--sl-icon-size,1em);width:1em;height:1em}}
+@layer starlight.components{starlight-tabs:where(.astro-hbt4ddzs){display:block}.tablist-wrapper:where(.astro-hbt4ddzs){overflow-x:auto}:where(.astro-hbt4ddzs)[role=tablist]{border-bottom:2px solid var(--sl-color-gray-5);padding:0;list-style:none;display:flex}.tab:where(.astro-hbt4ddzs){display:flex}.tab:where(.astro-hbt4ddzs)>:where(.astro-hbt4ddzs)[role=tab]{--sl-tab-color-border:var(--sl-color-gray-5);line-height:var(--sl-line-height-headings);box-shadow:0 2px 0 var(--sl-tab-color-border);color:var(--sl-color-gray-3);outline-offset:var(--sl-outline-offset-inside);overflow-wrap:initial;align-items:center;gap:.5rem;padding:.275rem 1.25rem;text-decoration:none;display:flex}.tab:where(.astro-hbt4ddzs) :where(.astro-hbt4ddzs)[role=tab][aria-selected=true]{--sl-tab-color-border:var(--sl-color-text-accent);color:var(--sl-color-white);font-weight:600}.tablist-wrapper:where(.astro-hbt4ddzs)~[role=tabpanel]{margin-top:1rem}}
+._selector_itf3g_1{flex:none;width:max-content;max-width:100%}._selector_itf3g_1>div{width:max-content;max-width:100%}._selector_itf3g_1>div>svg{width:26px;height:26px;padding:6px}._selector_itf3g_1 select select{width:auto;min-width:0;padding:2px 26px 2px var(--cui-spacings-byte);font-size:var(--cui-body-s-font-size);line-height:var(--cui-body-s-line-height);background-color:var(--cui-bg-subtle)}button:where(.astro-3gcnyqnl){cursor:pointer;padding:var(--cui-spacings-bit) var(--cui-spacings-byte);border-radius:var(--cui-border-radius-bit);color:var(--cui-fg-subtle);white-space:nowrap;appearance:button;user-select:none;background:0 0;border:0;margin:0;line-height:1;transition:background .15s;display:inline-block;position:relative}button:where(.astro-3gcnyqnl):hover{color:var(--cui-fg-subtle-hovered);background:var(--cui-bg-subtle-hovered)}button:where(.astro-3gcnyqnl) svg{width:18px;height:18px;display:block}.copy-code-btn:where(.astro-b7hqme5l).float{top:var(--cui-spacings-byte);right:var(--cui-spacings-byte);position:absolute}.copy-code-btn .copy:where(.astro-b7hqme5l){display:block}.copy-code-btn .checkmark:where(.astro-b7hqme5l),.copy-code-btn.copied .copy:where(.astro-b7hqme5l){display:none}.copy-code-btn.copied .checkmark:where(.astro-b7hqme5l){display:block}.expressive-code code{white-space:pre}.expressive-code pre{scrollbar-width:thin!important;max-height:min(68vh,1000px)!important}.codeblock:where(.astro-45xxx37a){font-size:.8rem;font-family:var(--cui-font-stack-mono);border:var(--cui-border-width-kilo) solid var(--cui-border-subtle);border-radius:var(--cui-border-radius-byte);background-color:var(--sl-color-black);flex-direction:column;align-self:start;display:flex;position:relative;overflow:hidden}.header:where(.astro-45xxx37a){padding:var(--cui-spacings-bit) var(--cui-spacings-byte) var(--cui-spacings-bit) var(--cui-spacings-kilo);border-bottom:var(--cui-border-width-kilo) solid var(--cui-border-subtle);background:var(--sl-color-black);justify-content:space-between;align-items:center;display:flex}.options:where(.astro-45xxx37a){gap:var(--cui-spacings-byte);flex-direction:row;display:flex}.description:where(.astro-45xxx37a){color:var(--ec-frm-trmTtbFg);padding:var(--cui-spacings-byte) var(--cui-spacings-kilo)}.code:where(.astro-45xxx37a){overflow:auto}.code:where(.astro-45xxx37a).active{display:block}button:where(.astro-45xxx37a){appearance:none;color:var(--cui-fg-subtle)}.copy-code-btn .copy:where(.astro-45xxx37a){display:block}.copy-code-btn .checkmark:where(.astro-45xxx37a),.copy-code-btn.copied .copy:where(.astro-45xxx37a){display:none}.copy-code-btn.copied .checkmark:where(.astro-45xxx37a){display:block}.header:where(.astro-jtoreb7l){padding:var(--cui-spacings-bit) var(--cui-spacings-byte) var(--cui-spacings-bit) var(--cui-spacings-kilo);border-bottom:var(--cui-border-width-kilo) solid var(--cui-border-subtle);flex-direction:row;justify-content:space-between;align-items:center;display:flex}.split:where(.astro-jtoreb7l){justify-content:space-between;align-items:center;gap:var(--cui-spacings-mega);width:100%;display:flex}.segment:where(.astro-jtoreb7l){justify-content:space-between;align-items:center;gap:var(--cui-spacings-bit);display:flex}.left:where(.astro-jtoreb7l){white-space:nowrap;text-overflow:ellipsis;overflow:hidden}.description:where(.astro-pulpd4o4){color:var(--cui-fg-subtle);padding:var(--cui-spacings-byte) var(--cui-spacings-kilo)}.code:where(.astro-pulpd4o4){display:none;overflow:auto}.code:where(.astro-pulpd4o4).active{display:block}
+._selector_itf3g_1{flex:none;width:max-content;max-width:100%}._selector_itf3g_1>div{width:max-content;max-width:100%}._selector_itf3g_1>div>svg{width:26px;height:26px;padding:6px}._selector_itf3g_1 select select{width:auto;min-width:0;padding:2px 26px 2px var(--cui-spacings-byte);font-size:var(--cui-body-s-font-size);line-height:var(--cui-body-s-line-height);background-color:var(--cui-bg-subtle)}button:where(.astro-3gcnyqnl){cursor:pointer;padding:var(--cui-spacings-bit) var(--cui-spacings-byte);border-radius:var(--cui-border-radius-bit);color:var(--cui-fg-subtle);white-space:nowrap;appearance:button;-webkit-user-select:none;user-select:none;background:0 0;border:0;margin:0;line-height:1;transition:background .15s;display:inline-block;position:relative}button:where(.astro-3gcnyqnl):hover{color:var(--cui-fg-subtle-hovered);background:var(--cui-bg-subtle-hovered)}button:where(.astro-3gcnyqnl) svg{width:18px;height:18px;display:block}.copy-code-btn:where(.astro-b7hqme5l).float{top:var(--cui-spacings-byte);right:var(--cui-spacings-byte);position:absolute}.copy-code-btn .copy:where(.astro-b7hqme5l){display:block}.copy-code-btn .checkmark:where(.astro-b7hqme5l),.copy-code-btn.copied .copy:where(.astro-b7hqme5l){display:none}.copy-code-btn.copied .checkmark:where(.astro-b7hqme5l){display:block}.expressive-code code{white-space:pre}.expressive-code pre{scrollbar-width:thin!important;max-height:min(68vh,1000px)!important}.codeblock:where(.astro-45xxx37a){font-size:.8rem;font-family:var(--cui-font-stack-mono);border:var(--cui-border-width-kilo) solid var(--cui-border-subtle);border-radius:var(--cui-border-radius-byte);background-color:var(--sl-color-black);flex-direction:column;align-self:start;display:flex;position:relative;overflow:hidden}.header:where(.astro-45xxx37a){padding:var(--cui-spacings-bit) var(--cui-spacings-byte) var(--cui-spacings-bit) var(--cui-spacings-kilo);border-bottom:var(--cui-border-width-kilo) solid var(--cui-border-subtle);background:var(--sl-color-black);justify-content:space-between;align-items:center;display:flex}.options:where(.astro-45xxx37a){gap:var(--cui-spacings-byte);flex-direction:row;display:flex}.description:where(.astro-45xxx37a){color:var(--ec-frm-trmTtbFg);padding:var(--cui-spacings-byte) var(--cui-spacings-kilo)}.code:where(.astro-45xxx37a){overflow:auto}.code:where(.astro-45xxx37a).active{display:block}button:where(.astro-45xxx37a){appearance:none;color:var(--cui-fg-subtle)}.copy-code-btn .copy:where(.astro-45xxx37a){display:block}.copy-code-btn .checkmark:where(.astro-45xxx37a),.copy-code-btn.copied .copy:where(.astro-45xxx37a){display:none}.copy-code-btn.copied .checkmark:where(.astro-45xxx37a){display:block}.header:where(.astro-jtoreb7l){padding:var(--cui-spacings-bit) var(--cui-spacings-byte) var(--cui-spacings-bit) var(--cui-spacings-kilo);border-bottom:var(--cui-border-width-kilo) solid var(--cui-border-subtle);flex-direction:row;justify-content:space-between;align-items:center;display:flex}.split:where(.astro-jtoreb7l){justify-content:space-between;align-items:center;gap:var(--cui-spacings-mega);width:100%;display:flex}.segment:where(.astro-jtoreb7l){justify-content:space-between;align-items:center;gap:var(--cui-spacings-bit);display:flex}.left:where(.astro-jtoreb7l){white-space:nowrap;text-overflow:ellipsis;overflow:hidden}.description:where(.astro-pulpd4o4){color:var(--cui-fg-subtle);padding:var(--cui-spacings-byte) var(--cui-spacings-kilo)}.code:where(.astro-pulpd4o4){display:none;overflow:auto}.code:where(.astro-pulpd4o4).active{display:block}
+@layer starlight.components{.sl-steps{--bullet-size:calc(var(--sl-line-height) * 1rem);--bullet-margin:.375rem;counter-reset:steps-counter var(--sl-steps-start,0);padding-inline-start:0;list-style:none}.sl-steps>li{counter-increment:steps-counter;padding-inline-start:calc(var(--bullet-size) + 1rem);min-height:calc(var(--bullet-size) + var(--bullet-margin));padding-bottom:1px;position:relative}.sl-steps>li+li{margin-top:0}.sl-steps>li:before{content:counter(steps-counter);top:0;width:var(--bullet-size);height:var(--bullet-size);line-height:var(--bullet-size);font-size:var(--sl-text-xs);text-align:center;color:var(--sl-color-white);background-color:var(--sl-color-gray-6);box-shadow:inset 0 0 0 1px var(--sl-color-gray-5);border-radius:99rem;font-weight:600;position:absolute;inset-inline-start:0}.sl-steps>li:after{--guide-width:1px;content:"";top:calc(var(--bullet-size) + var(--bullet-margin));bottom:var(--bullet-margin);width:var(--guide-width);background-color:var(--sl-color-hairline-light);position:absolute;inset-inline-start:calc((var(--bullet-size) - var(--guide-width)) / 2)}}@layer starlight.content{.sl-steps>li>:first-child{--lh:calc(1em * var(--sl-line-height));--shift-y:calc(.5 * (var(--bullet-size) - var(--lh)));transform:translateY(var(--shift-y));margin-bottom:var(--shift-y)}.sl-steps>li>:first-child:where(h1,h2,h3,h4,h5,h6){--lh:calc(1em * var(--sl-line-height-headings))}@supports (--prop:1lh){.sl-steps>li>:first-child{--lh:1lh}}}
+[0m
+[0m$ [0msleep 1 && curl -sI --max-time 15 "https://developer.sumup.com/robots.txt" 2>&1 | head -10
+HTTP/2 200 
+date: Thu, 17 Sep 2026 11:56:56 GMT
+content-type: text/plain
+cf-cache-status: HIT
+access-control-allow-origin: *
+cache-control: public, max-age=0, must-revalidate
+etag: "ad2e4d63432cc09ed36914d02a99b82b"
+x-robots-tag: noindex
+set-cookie: __cf_bm=xLMtDp3bWciC8zgpWqRFDpPaOC64gdEIs6Azg0SiTBQ-1789646216.4856555-1.0.1.1-nTzZuqnEQxN8RcCKhkARReueTcnRK8yZXPPOd9Y4cshJn8MOEF4j1K_sHW1WuNN9822P6JngJQmrad_7cp0.6ihrGu4jDxOez2IIGCCYmdMOfpA57QZ_HMJMWpfF040bwOECnIFuNjcw_zvZ8l8erg; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Thu, 17 Sep 2026 12:26:56 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=lx2xpT00QwuaC4zBP3m60XPbQvHuRudRT49e9gBrt54hWmngq1VQ%2BqRqo7KCV2EViQtlktiBzYudybXSmXafign0%2BMLoQ2tkw7r7edN9khWq9VOgVxTafxdPi5ScaGmJT8L%2Fky8%3D"}]}
+[0m
+[0m$ [0msleep 1 && curl -sI --max-time 15 "https://developer.sumup.com/docs" 2>&1 | head -10
+HTTP/2 404 
+date: Thu, 17 Sep 2026 11:56:56 GMT
+content-type: text/html
+cf-cache-status: HIT
+access-control-allow-origin: *
+cache-control: public, max-age=0, must-revalidate
+set-cookie: __cf_bm=YiG_CiX40ArH5_PLwdZjrHX2t4yntADmoJdhn_PZgvs-1789646216.8817348-1.0.1.1-n0gJXv_9184j6bcS43kZmuGmQSpITer2lMi8ooUGiY.pQ4SX5ceDA8DfJEobjsz3wFUXgDX.lH.vxrrIZcEKLWgI6HXaVYuh2xgW_sp03I64dqU2TKCixVztcpLZQaeWv4sy9BtYjJ.l6putWz3rfg; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Thu, 17 Sep 2026 12:26:56 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=S0Td07BWNVX0uOCRcDh%2Fa3YbzI5Pmrc7sU59EJ%2FThuj%2Btd8SsjHWNDTLjxuaZ5i%2F2Uu6dH7TF2jsNtve9VXBygJA%2BNg12zjoUrRG8SNLQnGOvgChycvRIiHXfzEfsv7TQqkNfPI%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+server: cloudflare
+[0m
+Now I have all the data I need. Let me run the 8-step analysis.
+
+## STEP 1 — DELTA
+
+- [NEW] `support.sumup.com` → 308 redirect to `help.sumup.com` (Vercel); alias, not separate asset. Removed from active inventory.
+- [NEW] `dashboard.sumup.com` → 308 redirect to `me.sumup.com` (Vercel); alias, not separate asset. Removed from active inventory.
+- [NEW] `developer.sumup.com` → 200 Astro/Starlight docs portal (Cloudflare, CORS *), `/api` 307→`/api` serves OpenAPI spec, `/robots.txt` 200 with `x-robots-tag: noindex`, `/login` and `/admin` 404. No admin/debug surface.
+- [CHANGED] Modern auth registry negative sweep: {help, app, pos-sdk, web, checkout, sumup-pay, readers} all `invalid_client` (302→flows/oauth2/error) — registry remains exactly {dashboard, support_centre, support_chat}; client_id oracle byte-stable.
+- [CHANGED] None of the three AUTH_HELPED hypotheses have advanced; all three remain blocked on the same single credential.
+
+## STEP 2 — PRIORITIZE
+
+- [PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,8.3,attack_surface=7 business_value=9 tech_exposure=9 gate_ease=8 cloud_surface=9 freshness=9
+- [PRIO] api.sumup.com (RFC 9728 aud-validation),6.5,attack_surface=5 business_value=9 tech_exposure=8 gate_ease=4 cloud_surface=6 freshness=8
+- [PRIO] chat.sumup.com/api/conversations/{id},5.6,attack_surface=6 business_value=7 tech_exposure=6 gate_ease=2 cloud_surface=5 freshness=8
+
+Rationale: No change from last cycle. All three hypotheses are AUTH_HELPED. No new passive signal exists.
+
+## STEP 3 — HYPOTHESES
+
+[HYP] apple-pay-session `target` URL server-side fetch (SSRF to cloud metadata)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: spec declares PUT oauth2:[]; gateway route ROUTED (OPTIONS 204, origin-echo CORS, identity.svc) while unauth PUT 404; Apple Pay merchant-session validation inherently triggers a server-side request rooted at the provided `domainName`. This is the highest blast-radius hypothesis remaining.
+evidence_needed: own PUT with `target=http://169.254.169.254/latest/meta-data/` vs Apple `https://apple-pay-gateway.apple.com/paymentservices/paymentSession` — any status/timing divergence on internal vs public host.
+verify_steps: AUTH_HELPED — own checkout_id, body {"context":"pay.sumup.com","target":..,"displayName":"x","validationURL":..} vs Apple-URL control.
+impact: EC2 metadata → cross-env credentials → prod compromise; CRITICAL.
+testability: AUTH_HELPED
+
+[HYP] api.sumup.com gateway aud/iss validation loose (cross-client token confusion)
+class: AUTH
+asset: api.sumup.com (RFC 9728 resource server)
+confidence: 75
+reasoning: RFC 9728 metadata declares sole authorization_server auth.sumup.com, header-only bearer, no resource_scopes/aud field; mintable attacker-aud staging JWTs blocked only by cross-env JWKS isolation (ZERO kid overlap) — request-level aud handling is the sole unverified seam.
+evidence_needed: own prod token with wrong/absent aud accepted by a resource op (vs 401); own-token control on a read op.
+verify_steps: AUTH_HELPED — bearer own token, mutate aud vs normal, compare status on one read op.
+impact: broader-than-intended token validity / cross-client confusion; HIGH.
+testability: AUTH_HELPED
+
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET `/api/conversations/{encodeURIComponent(id)}` → `.data.events`; conversationId server-assigned/opaque; anonymous GET throws deterministic 500 pre-gate with no id oracle; PKCE/prompt=none session required to obtain any valid id.
+evidence_needed: own-session control conversation 200; foreign id → 200 foreign events.
+verify_steps: AUTH_HELPED — GET own id with session; foreign ids ≤0.5 rps.
+impact: cross-merchant support-transcript read; MEDIUM.
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+
+- [PARKED] chat conversationId (conf 40): conversationId server-opaque; discriminator unreachable without a merchant session — below filing bar passively.
+- [FINAL] api.sumup.com apple-pay-session SSRF (conf 65, AUTH_HELPED) — highest blast radius, own-data control only.
+- [FINAL] api.sumup.com RFC 9728 aud-validation (conf 75, AUTH_HELPED) — top architectural hypothesis, gated on own prod bearer.
+
+All 3 survive the 40-bar. All are AUTH_HELPED. No new passive signal exists to raise/lower confidence.
+
+## STEP 5 — NEXT ACTION
+
+[NEXT] HUMAN: supply ONE self-owned test merchant credential from me.sumup.com (settings/api-keys `sup_sk_` OR OAuth2 client_id+client_secret). Scoped STRICTLY to own-data control tests only: (1) PUT /v0.2/checkouts/{own}/apple-pay-session with `target=http://169.254.169.254/latest/meta-data/` vs Apple-URL control (SSRF CRITICAL); (2) own token with mutated aud on one own read op. Do NOT use for cross-tenant enumeration (program-OOS). No credential → passive surface is genuinely exhausted; the only action left is to file a report on the already-validated api.sumup.com/authorize client_id oracle + wildcard CORS misconfig (impact: low-Medium informational) for whatever credit the program offers, or await fresh attack surface.
+
+## STEP 6 — LEARNING
+
+- [LEARN] ACCEPTED OTHER @ support.sumup.com: 308 → help.sumup.com (Vercel alias); not a separate asset, removed from active inventory.
+- [LEARN] ACCEPTED OTHER @ dashboard.sumup.com: 308 → me.sumup.com (Vercel alias); not a separate asset, removed from active inventory.
+- [LEARN] ACCEPTED OTHER @ developer.sumup.com: Astro/Starlight docs portal; CORS *; OpenAPI spec at /api; /robots.txt noindex; /login and /admin 404; no admin/debug surface found.
+- [LEARN] ACCEPTED OATH @ auth.sumup.com: Modern auth registry negative sweep confirms closed set {dashboard, support_centre, support_chat}; 7 new candidates all invalid_client. Passive oracle exhausted.
+- [LEARN] ACCEPTED OTHER @ api.sumup.com: RFC 9728 metadata + apple-pay OPTIONS 204 + root 404 all byte-stable across 22+ cycles — money surface genuinely static, no new passive signal.
+
+## STEP 7 — RISK
+
+[RISK] sumup: 68 — 0 filed after 22 cycles; only validated reportable finding (Contentful preview-token P4) is closed (rotated); all three live finals (apple-pay SSRF conf 65, aud-validation conf 75, readers/terminals BOLA) are 100% blocked behind a single human-supplied merchant credential; client_id registry sweep adds bounded negatives (no new OAuth clients); inventory aliases resolved (support→help, dashboard→me); realistic fileable ceiling is one CRITICAL (apple-pay SSRF) if and only if the credential materializes — otherwise the only passive-class reportable is the low-Medium api.sumup.com/authorize client_id oracle + wildcard CORS informational misconfig.

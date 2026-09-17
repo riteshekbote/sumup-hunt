@@ -4767,3 +4767,33 @@ evidence_needed: own-session control conversation 200; foreign id → 200 foreig
 verify_steps: AUTH_HELPED — GET own id with session; foreign ids ≤0.5 rps.
 impact: cross-merchant support-transcript read; MEDIUM.
 testability: AUTH_HELPED
+## 2026-09-17 11:57:28 UTC [target] (model bigpickle)
+[HYP] apple-pay-session `target` URL server-side fetch (SSRF to cloud metadata)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: spec declares PUT oauth2:[]; gateway route ROUTED (OPTIONS 204, origin-echo CORS, identity.svc) while unauth PUT 404; Apple Pay merchant-session validation inherently triggers a server-side request rooted at the provided `domainName`. This is the highest blast-radius hypothesis remaining.
+evidence_needed: own PUT with `target=http://169.254.169.254/latest/meta-data/` vs Apple `https://apple-pay-gateway.apple.com/paymentservices/paymentSession` — any status/timing divergence on internal vs public host.
+verify_steps: AUTH_HELPED — own checkout_id, body {"context":"pay.sumup.com","target":..,"displayName":"x","validationURL":..} vs Apple-URL control.
+impact: EC2 metadata → cross-env credentials → prod compromise; CRITICAL.
+testability: AUTH_HELPED
+[HYP] api.sumup.com gateway aud/iss validation loose (cross-client token confusion)
+class: AUTH
+asset: api.sumup.com (RFC 9728 resource server)
+confidence: 75
+reasoning: RFC 9728 metadata declares sole authorization_server auth.sumup.com, header-only bearer, no resource_scopes/aud field; mintable attacker-aud staging JWTs blocked only by cross-env JWKS isolation (ZERO kid overlap) — request-level aud handling is the sole unverified seam.
+evidence_needed: own prod token with wrong/absent aud accepted by a resource op (vs 401); own-token control on a read op.
+verify_steps: AUTH_HELPED — bearer own token, mutate aud vs normal, compare status on one read op.
+impact: broader-than-intended token validity / cross-client confusion; HIGH.
+testability: AUTH_HELPED
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET `/api/conversations/{encodeURIComponent(id)}` → `.data.events`; conversationId server-assigned/opaque; anonymous GET throws deterministic 500 pre-gate with no id oracle; PKCE/prompt=none session required to obtain any valid id.
+evidence_needed: own-session control conversation 200; foreign id → 200 foreign events.
+verify_steps: AUTH_HELPED — GET own id with session; foreign ids ≤0.5 rps.
+impact: cross-merchant support-transcript read; MEDIUM.
+testability: AUTH_HELPED
+[NEXT] HUMAN: supply ONE self-owned test merchant credential from me.sumup.com (settings/api-keys `sup_sk_` OR OAuth2 client_id+client_secret). Scoped STRICTLY to own-data control tests only: (1) PUT /v0.2/checkouts/{own}/apple-pay-session with `target=http://169.254.169.254/latest/meta-data/` vs Apple-URL control (SSRF CRITICAL); (2) own token with mutated aud on one own read op. Do NOT use for cross-tenant enumeration (program-OOS). No credential → passive surface is genuinely exhausted; the only action left is to file a report on the already-validated api.sumup.com/authorize client_id oracle + wildcard CORS misconfig (impact: low-Medium informational) for whatever credit the program offers, or await fresh attack surface.
+[RISK] sumup: 68 — 0 filed after 22 cycles; only validated reportable finding (Contentful preview-token P4) is closed (rotated); all three live finals (apple-pay SSRF conf 65, aud-validation conf 75, readers/terminals BOLA) are 100% blocked behind a single human-supplied merchant credential; client_id registry sweep adds bounded negatives (no new OAuth clients); inventory aliases resolved (support→help, dashboard→me); realistic fileable ceiling is one CRITICAL (apple-pay SSRF) if and only if the credential materializes — otherwise the only passive-class reportable is the low-Medium api.sumup.com/authorize client_id oracle + wildcard CORS informational misconfig.

@@ -893,3 +893,10 @@ https://api.sumup.com/api-docs -> HTTP 404
 https://api.sumup.com/health -> HTTP 404
 https://api.sumup.com/v2/ -> HTTP 404
 https://api.sumup.com/graphql -> HTTP 404
+
+## 2026-09-17 11:57:47 UTC
+https://chat.sumup.com/api/sso/callback` -> HTTP 404
+https://auth.sumup.com -> HTTP 403
+https://api.sumup.com/v0.1/merchants/{other_merchant_code -> HTTP 404
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://api.sumup.com -> HTTP 404
