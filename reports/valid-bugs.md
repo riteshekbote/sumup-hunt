@@ -45,3 +45,20 @@
   - **Verdict: VALID**
   - | 2 | Internal Staging Domains (sam-app.ro) | **VALID** | 5.3 |
   - | 3 | Wildcard CORS on MCP Server | **VALID** | 5.3 |
+
+- 15 lead(s) marked VALID at 2026-09-17 12:13:01 UTC
+  - | Q5 Novel/unreported? | PARTIALLY — previously marked VALID 2026-09-09, token rotated 2026-09-11. **Need to re-verify if token is still live**. If token was rotated and new token not leaked, this is 
+  - | Q3 Real impact? | YES — attacker can register arbitrary OAuth clients, mint real JWT access tokens via client_credentials grant. JWTs are valid at api.sam-app.ro gateway (confirmed by structured err
+  - | Q5 Novel/unreported? | YES — not in valid-bugs.md as filed report; staging-only but staging often leads to prod pivot |
+  - | Q7 Reasonable triager? | YES — unauthenticated client registration on staging auth server with mintable tokens is a valid finding |
+  - **Verdict: VALID**
+  - | Q3 Real impact? | LOW — error taxonomy (`invalid_client` vs `invalid_request`) is standard OAuth error behavior. Wildcard CORS exists but the endpoint only redirects to error pages; no code/token le
+  - | Q5 Novel/unreported? | ALREADY REPORTED — marked VALID in valid-bugs.md (2026-09-10) |
+  - | Q3 Real impact? | LOW — wildcard CORS + `Authorization: Bearer` header-only auth. No cookies ambient creds. Hardening-only config. Already marked VALID in valid-bugs.md. |
+  - | Q2 Attacker reachable? | Partially — all unauthenticated paths return 404. Requires valid merchant OAuth token. |
+  - | Q4 Provable non-invasively? | **NO** — requires valid merchant OAuth token with dashboard scopes. All unauthenticated paths 404. Cannot test passively. |
+  - | Q2 Attacker reachable? | Partially — OIDC discovery is public, but actual token flow requires valid client registration |
+  - **Verdict: HOLD** — Interesting theoretical vector but insufficient proof. redirect_uri strict allowlist + PAR unrouted + no public client registration = mitigated. Could be VALID if a public client r
+  - **Verdict: HOLD** — Valid code issue (private key material in log output) but in a development tool, not production infrastructure. May be accepted as informational. Needs scoping clarification.
+  - | 1 | Contentful Preview Token Leak (help.sumup.com) | **HOLD** | 5.3 | Re-verify token liveness; if live → VALID, FILE REPORT |
+  - | 2 | auth.sam-app.ro unauthenticated client registration → JWTs | **VALID** | 7.5 | FILE REPORT |
