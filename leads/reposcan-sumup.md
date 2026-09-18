@@ -490,3 +490,5 @@ impact: HIGH
 verify_steps: 1) curl "https://preview.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM&limit=1" returns 9,584. 2) curl "https://cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4&limit=1" returns 8,436. 3) Diff = 1,148 drafts exposed.
 ## REPOSCAN 2026-09-18 10:06:53 UTC
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-18 14:32:27 UTC
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
