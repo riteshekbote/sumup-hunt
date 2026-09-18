@@ -1,9 +1,9 @@
-## 2026-09-18 21:18:09 UTC [target] (model nemotron3)
-[PRIO] auth.sam-app.ro/oauth2/register, 7.6, attack_surface=9 business_value=7 tech_exposure=9 gate_ease=10 cloud_surface=6 freshness=8
-[PRIO] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session, 6.2, attack_surface=7 business_value=8 tech_exposure=8 gate_ease=4 cloud_surface=7 freshness=8
-[PRIO] api.sumup.com/.well-known/oauth-protected-resource, 6.0, attack_surface=6 business_value=8 tech_exposure=7 gate_ease=7 cloud_surface=7 freshness=8
-[PRIO] auth.sumup.com/oauth2/auth, 5.6, attack_surface=7 business_value=6 tech_exposure=6 gate_ease=5 cloud_surface=7 freshness=8
-[PRIO] api.sumup.com/v0.1/merchants/{merchant_code}/payment-methods, 5.1, attack_surface=6 business_value=7 tech_exposure=4 gate_ease=4 cloud_surface=6 freshness=9
+## 2026-09-18 23:26:58 UTC [target] (model nemotron3)
+[PRIO] auth.sam-app.ro/oauth2/register, 8.2, attack_surface=9 business_value=8 tech_exposure=9 gate_ease=10 cloud_surface=7 freshness=9
+[PRIO] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session, 6.8, attack_surface=7 business_value=9 tech_exposure=8 gate_ease=3 cloud_surface=8 freshness=8
+[PRIO] api.sumup.com/.well-known/oauth-protected-resource, 6.2, attack_surface=6 business_value=8 tech_exposure=7 gate_ease=7 cloud_surface=7 freshness=9
+[PRIO] api.sumup.com/authorize, 5.9, attack_surface=7 business_value=6 tech_exposure=6 gate_ease=5 cloud_surface=7 freshness=8
+[PRIO] auth.sumup.com/oauth2/auth, 5.5, attack_surface=7 business_value=6 tech_exposure=6 gate_ease=4 cloud_surface=7 freshness=8
 [HYP] auth.sam-app.ro unauthenticated dynamic client registration → JWT minting with attacker-controlled aud
 class: AUTH
 asset: auth.sam-app.ro/oauth2/register
@@ -33,8 +33,8 @@ impact: SSRF to cloud metadata → IAM credentials, instance identity, internal 
 testability: AUTH_HELPED
 [PARKED] auth.sam-app.ro dynamic registration → prod client sync: confidence 85 but verify_steps require observing prod acceptance of staging client — untestable passively; no evidence of sync mechanism; cross-env JWKS isolation (ZERO kid overlap) currently blocks relay; keep as watch-item
 [PARKED] Apple Pay session SSRF: confidence 65 but requires AUTH_HELPED (valid merchant token + owned checkout_id); no passive path to checkout creation or token acquisition; speculative without auth
-[FINAL] 1. RFC 9728 token validation on api.sumup.com permits audience/claim confusion (75, AUTH_HELPED) — highest testability with auth, direct money-flow impact
-[FINAL] 2. auth.sam-app.ro unauthenticated dynamic client registration → JWT minting with attacker-controlled aud (85, PASSIVE) — live registration confirmed, client sync untested but architectural risk
+[FINAL] 1. auth.sam-app.ro unauthenticated dynamic client registration → JWT minting with attacker-controlled aud (85, PASSIVE) — live registration confirmed, client sync untested but architectural risk
+[FINAL] 2. RFC 9728 token validation on api.sumup.com permits audience/claim confusion (75, AUTH_HELPED) — highest testability with auth, direct money-flow impact
 [FINAL] 3. PUT /v0.2/checkouts/{checkout_id}/apple-pay-session SSRF to cloud metadata (65, AUTH_HELPED) — highest blast radius, spec-declared oauth2:[], requires auth + checkout control
 [NEXT] PROBE: POST https://auth.sam-app.ro/oauth2/register with body {"client_name":"test","redirect_uris":["https://api.sumup.com/callback"],"token_endpoint_auth_method":"client_secret_post","scope":"","grant_types":["client_credentials"]} → capture client_id/client_secret; POST https://auth.sam-app.ro/oauth2/token with grant_type=client_credentials&client_id={id}&client_secret={secret} → capture JWT; GET https://api.sumup.com/v0.1/merchants/MH4H92C7 with Authorization: Bearer {staging_jwt} → observe structured problem+json vs plain 404 (token validation test); GET https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods with Authorization: Bearer {staging_jwt} → confirm oauth2:[] bypass (should return 200 static)
 [LEARN] ACCEPTED OTHER @ developer.sumup.com/api: official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public — full 42-op production model incl. exact paths, per-op scopes, apiKey scheme, and legacy OAuth endpoint pair (authorize+token on api.sumup.com); highest-value passive recon of this cycle

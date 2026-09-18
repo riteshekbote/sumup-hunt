@@ -831,3 +831,5 @@ www.sumup.com
 - CHANGED auth.sumup.com/oauth2/auth: scope-acceptance oracle confirmed — dashboard allows only readers.read/terminals.read; support_centre/support_chat allow only openid+classic+offline; all 13 REST spec scope
 
 ## 2026-09-18 21:20:16 UTC
+
+## 2026-09-18 23:27:09 UTC

@@ -35777,3 +35777,69 @@ testability: AUTH_HELPED
 
 **STEP 7 — RISK**
 - [RISK] sumup: 72 — 0 filed across 26 cycles; JWT confusion battery closed most of the RFC 9728 hypothesis (75→45) on evidence already in-repo, and one concrete PASSIVE-family discriminative probe (foreign-key vs protected-op gate) remains before full passive exhaustion. All CRITICAL vectors (SSRF 65, cross-env token acceptance 45, IDOR 40) still terminate at a human-supplied merchant credential or the single standing Low/Medium informational (`api.sumup.com/authorize` oracle + origin-echo CORS + redirect-set divergence). Metrics erode each cycle without the credential or that filing.
+===== ANALYST bigpickle 2026-09-18 23:27:09 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m✗ [0mWebFetch https://raw.githubusercontent.com/sumup/sumup-openapi/main/checkouts.yaml failed
+[91m[1mError: [0mStatusCode: non 2xx status code (404 GET https://raw.githubusercontent.com/sumup/sumup-openapi/main/checkouts.yaml)
+[0m◈ [0mExa Web Search "SumUp API apple-pay-session endpoint target validateApplePaySession developer docs"
+STEP 1 — DELTA
+- [CHANGED] api.sumup.com/v0.1/merchants/{code}/payment-methods: re-verified 200 static `{"card"}` (2026-09-17 "404" flap resolved; param-invariant stub, no unauth oracle) — already in KB, restating for this cycle.
+- [CHANGED] api.sumup.com gateway: staging-minted JWT accepted on oauth2:[] ops but token-ignored (identical 200/404 with vs without) — foreign-kid hypothesis narrowed to gated ops only (already in KB 09-18 18:46).
+- [NEW] Spec/doc path divergence (RAG this cycle): official docs (developer.sumup.com/llms-full.txt) document `PUT api.sumup.com/**v0.1**/checkouts/{checkoutId}/apple-pay-session`, while openapi.yaml declares **v0.2** — a v0.1 twin route is a plausible additional routed surface; unprobed.
+- [NEW] openapi.yaml grounds `target` semantics: body = {context:hostname, target:uri}; response = full ApplePayMerchantSession (merchantIdentifier, signature, domainName: pay.sumup.com) → server performs a real outbound fetch of `target` and echoes Apple's payload. SSRF primitive is the presence/absence of a host allowlist (apple-pay-gateway-cert.apple.com).
+- NO_DELTA: RFC 9728 metadata, /token OPTIONS, JWKS (8 vs 11, ZERO kid overlap), all 3 first-party clients — byte-stable.
+
+STEP 2 — PRIORITIZE
+- [PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session — 6.55 — attack:6 bus:9 tech:7 gate:3 cloud:8 fresh:5
+- [PRIO] api.sumup.com gateway JWT binding (RFC 9728 / protected ops) — 6.35 — attack:6 bus:9 tech:8 gate:2 cloud:5 fresh:6
+- [PRIO] chat.sumup.com/api/conversations/{id} — 5.20 — attack:5 bus:7 tech:6 gate:2 cloud:4 fresh:6
+- [PRIO] auth.sam-app.ro/oauth2/register — 5.35 — attack:5 bus:3 tech:7 gate:10 cloud:3 fresh:5 (source of test JWT only)
+- [PRIO] merchants/{code}/payment-methods stub — 3.10 — rejected as param-invariant oracle (deprioritized)
+
+STEP 3 — HYPOTHESES
+[HYP] apple-pay-session `target` lacks host allowlist → SSRF
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: openapi.yaml + dev docs confirm server fetches caller-supplied `target` (format:uri, required with context) and returns the fetched Apple merchantSession JSON (signature/merchantIdentifier echoed). Handler is reachable pre-token (foreign-key and no-token PUT both → 404 "checkout not found", i.e. handler-gated, not token-gated). Security control is solely whether `target` host is restrictable to *.apple.com.
+evidence_needed: own bearer + own checkout; PUT `target=http://169.254.169.254/latest/meta-data/` and `http://100.100.100.200/latest/meta-data/` vs control `https://apple-pay-gateway-cert.apple.com/paymentservices/startSession` — divergence in status/timing/body (proxy-error vs Apple session vs meta-data echo).
+verify_steps: AUTH_HELPED — after own /authorize+token: control PUT (expect merchantSession/decline), then metadata targets (expect 5xx/timeout/body divergence = no allowlist).
+impact: SSRF → EC2/aliyun metadata → cross-env creds → full prod compromise (CRITICAL).
+testability: AUTH_HELPED
+[HYP] no request-level aud/iss binding on standardized gateway JWT validation
+class: AUTH
+asset: api.sumup.com (protected ops; RFC 9728 declares sole auth_server=auth.sumup.com, no audience field)
+confidence: 75
+reasoning: metadata static and lacks audience/resource_scopes; staging JWTs minted with attacker-controlled aud+empty scp are rejected only at JWKS (ZERO kid overlap) for mcp; on the gateway the only verified seam is key binding, not aud/iss per-op binding. If the gateway validates sig only, tokens valid for other SumUp audiences may authorize here.
+evidence_needed: own prod bearer on one read op (e.g. GET own /v1/merchants/{own}/persons); identical request with aud claim mutated and iss claim mutated → same 2xx = no binding.
+verify_steps: AUTH_HELPED — 3 GETs on own read op ≤1rps: unmutated token, aud-mutated, iss-mutated; compare status codes.
+impact: cross-client/subject authorization confusion; token replay across first-party clients.
+testability: AUTH_HELPED
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET returns .data.events; ids server-assigned/opaque; anonymous GET deterministic 500 all id shapes (no oracle); transcripts inherently cross-merchant; support_chat+PKCE modern-registered.
+evidence_needed: own PKCE session → own conversation 200; adjacent/foreign id → 200 with foreign events.
+verify_steps: AUTH_HELPED — complete /api/sso/login (PKCE S256), GET own conversationId, then enumerate adjacent ids ≤0.5 rps.
+impact: cross-merchant support-transcript read (High).
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] Staging foreign-kid JWT on gated prod op (conf 45): 09-18 evidence shows gateway token-ignores oauth2:[] ops and mcp rejects at key layer; only remaining probe = gated read op with a *different* in-production key, which staging cannot produce. Effort/expectation poor.
+- [PARKED] v0.1 twin apple-pay-session route as an oracle: OPTIONS is a gateway-wide blanket (REJECTED 09-17/09-18); only GET method discriminates, and handler is uniformly gated — low value. (Still probed once in NEXT as cheap route check.)
+- [PARKED] payment-methods stub BOLA: param-invariant, rejected 09-18.
+- [FINAL] 1) apple-pay-session SSRF 65 (RAG-grounded, handler-callable pre-auth, highest value). 2) aud/iss binding gap 75 (highest confidence, AUTH_HELPED only). 3) chat IDOR 40 (kept at threshold, cheap once session exists).
+
+STEP 5 — NEXT ACTION
+[NEXT] PROBE: `GET https://api.sumup.com/v0.1/checkouts/00000000-0000-0000-0000-000000000000/apple-pay-session` (single, ≤1rps, read-only) to close the v0.1-vs-v0.2 spec/docs divergence: 405/structured-404-with-problem+json ⇒ routed twin; plain 404 ⇒ unrouted. Then archive (not a discriminator).
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED OTHER @ developer.sumup.com: Public docs (llms-full.txt) document apple-pay-session under `v0.1` while openapi.yaml declares `v0.2` — SumUp self-inconsistency flags a possible second routed version; route check via GET is the only passive discriminator.
+- [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/v0.2/checkouts/{id}/apple-pay-session: openapi.yaml + dev-docs ground truth confirms server-side fetch of caller-supplied `target` with Apple merchantSession echoed verbatim (signature, merchantIdentifier, domainName: pay.sumup.com) — the exploit primitive is entirely host-allowlist of `target`; SSRF blast radius gated by Apple-host confinement, not by token.
+- [LEARN] REJECTED BUSLOGIC @ api.sumup.com: gateway accepts staging (foreign-kid) JWT on oauth2:[] ops with identical-with/without-token responses — token is ignored there; the foreign-key question is only meaningful on gated ops, which staging keys provably cannot pass (JWKS isolation, ZERO kid overlap).
+
+STEP 7 — RISK
+[RISK] sumup: 25 — program is mature with a strict scope/out-of-scope model and the engagement has held passive-first (GET/HEAD/OPTIONS, ≤1rps, no customer data, own/staging IDs only); residual risk is behavioral drift (payment-methods 200↔404 flapping shows the gateway is not byte-stable) and the JWT/SSRF POCs are AUTH_HELPED, needing a controlled merchant session before any live validation.

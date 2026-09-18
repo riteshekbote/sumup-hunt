@@ -1,53 +1,30 @@
-## 2026-09-18 21:20:05 UTC [target] (model bigpickle)
-[HYP] apple-pay-session `target` server-side fetch (SSRF to cloud metadata)
+## 2026-09-18 23:23:59 UTC [target] (model bigpickle)
+[HYP] apple-pay-session `target` lacks host allowlist → SSRF
 class: SSRF
 asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
 confidence: 65
-reasoning: spec-declared PUT `apiKey:[]`+`oauth2:[]` REQUIRES body {context:hostname,target:uri}; Apple Pay merchant-session flow inherently triggers a server fetch rooted at `target`; unauth 404 confirms handler-gate; metadata primitive would be CRITICAL.
-evidence_needed: own bearer + own checkout; PUT `target=http://169.254.169.254/latest/meta-data/` (+ `100.100.100.200`) vs Apple-URL control — status/timing/body divergence.
-verify_steps: AUTH_HELPED — control PUT own checkout → merchantSession/decline; metadata PUT → 5xx/timeout/body divergence.
-impact: SSRF → EC2 metadata → cross-env creds → full prod compromise.
+reasoning: openapi.yaml + dev docs confirm server fetches caller-supplied `target` (format:uri, required with context) and returns the fetched Apple merchantSession JSON (signature/merchantIdentifier echoed). Handler is reachable pre-token (foreign-key and no-token PUT both → 404 "checkout not found", i.e. handler-gated, not token-gated). Security control is solely whether `target` host is restrictable to *.apple.com.
+evidence_needed: own bearer + own checkout; PUT `target=http://169.254.169.254/latest/meta-data/` and `http://100.100.100.200/latest/meta-data/` vs control `https://apple-pay-gateway-cert.apple.com/paymentservices/startSession` — divergence in status/timing/body (proxy-error vs Apple session vs meta-data echo).
+verify_steps: AUTH_HELPED — after own /authorize+token: control PUT (expect merchantSession/decline), then metadata targets (expect 5xx/timeout/body divergence = no allowlist).
+impact: SSRF → EC2/aliyun metadata → cross-env creds → full prod compromise (CRITICAL).
 testability: AUTH_HELPED
-[HYP] RFC 9728 token validation permits aud/iss claim confusion
+[HYP] no request-level aud/iss binding on standardized gateway JWT validation
 class: AUTH
-asset: api.sumup.com/.well-known/oauth-protected-resource (gateway JWT binding)
+asset: api.sumup.com (protected ops; RFC 9728 declares sole auth_server=auth.sumup.com, no audience field)
 confidence: 75
-reasoning: static metadata declares sole auth_server auth.sumup.com but no audience/resource_scopes field; staging JWTs mintable with attacker-controlled aud + empty scp, rejected at prod only at JWKS layer (ZERO kid overlap) — request-level aud/iss/scope binding is the single unverified seam.
-evidence_needed: own prod bearer on one own read op; same-kid token with aud/iss mutated → identical 2xx = no binding.
-verify_steps: AUTH_HELPED — GET one own resource unmutated, then aud-mutated, then iss-mutated; compare codes.
-impact: cross-client/subject authorization confusion.
+reasoning: metadata static and lacks audience/resource_scopes; staging JWTs minted with attacker-controlled aud+empty scp are rejected only at JWKS (ZERO kid overlap) for mcp; on the gateway the only verified seam is key binding, not aud/iss per-op binding. If the gateway validates sig only, tokens valid for other SumUp audiences may authorize here.
+evidence_needed: own prod bearer on one read op (e.g. GET own /v1/merchants/{own}/persons); identical request with aud claim mutated and iss claim mutated → same 2xx = no binding.
+verify_steps: AUTH_HELPED — 3 GETs on own read op ≤1rps: unmutated token, aud-mutated, iss-mutated; compare status codes.
+impact: cross-client/subject authorization confusion; token replay across first-party clients.
 testability: AUTH_HELPED
 [HYP] chat conversationId lacks ownership discriminator
 class: IDOR
 asset: chat.sumup.com/api/conversations/{conversationId}
 confidence: 40
-reasoning: GET returns `.data.events`; ids server-assigned/opaque; anonymous GET deterministic 500 pre-gate with no id oracle; support transcripts cross-merchant by nature; support_chat + PKCE flow verified on modern auth server.
-evidence_needed: own PKCE/prompt=none session → own conversation 200; foreign id → 200 foreign events.
-verify_steps: AUTH_HELPED — complete /api/sso/login, GET own id; adjacent ids ≤0.5 rps.
-impact: cross-merchant support-transcript read.
+reasoning: GET returns .data.events; ids server-assigned/opaque; anonymous GET deterministic 500 all id shapes (no oracle); transcripts inherently cross-merchant; support_chat+PKCE modern-registered.
+evidence_needed: own PKCE session → own conversation 200; adjacent/foreign id → 200 with foreign events.
+verify_steps: AUTH_HELPED — complete /api/sso/login (PKCE S256), GET own conversationId, then enumerate adjacent ids ≤0.5 rps.
+impact: cross-merchant support-transcript read (High).
 testability: AUTH_HELPED
-[HYP] Staging-minted (foreign-kid, attacker-registered) JWT accepted at prod routed protected spec op
-class: AUTH
-asset: api.sumup.com/v1/merchants/{merchant_code}/persons (routed protected op; garbage→401 control)
-confidence: 45
-reasoning: mcp.sumup.com rejects staging tokens (401 "no applicable key") = isolation for MCP; prod gateway rejects garbage/HS256/alg-none (401); but foreign-valid-signature token only ever tested on non-gated oauth2:[] ops and unrouted bare path (both ignored token) — the per-op gate's trust store against a genuinely valid foreign key is unverified.
-evidence_needed: fresh staging JWT (register+token) sent to a ROUTED gated op → same-class 401 = isolated; non-401 (403/404-validated/200) = gateway accepts foreign-key tokens.
-verify_steps: PASSIVE-family: POST auth.sam-app.ro/oauth2/register {client_name,redirect_uris:[https://api.sumup.com/callback],token_endpoint_auth_method:client_secret_post,scope,"",grant_types:[client_credentials]} → POST /oauth2/token client_credentials → mint JWT; GET https://api.sumup.com/v1/merchants/MK10CL2A/persons?limit=1 with `Authorization: Bearer {jwt}` AND same path no-token control (≤1 rps); classify.
-[HYP] apple-pay-session `target` server-side fetch (SSRF to cloud metadata)
-class: SSRF
-asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
-confidence: 65
-reasoning: spec PUT `apiKey:[]+oauth2:[]` REQUIRES body {context:hostname,target:uri}; PUT with foreign key AND no token both reach handler (404 "checkout not found") → endpoint is handler-gated, NOT token-gated; Apple Pay session flow issues server fetch rooted at target.
-evidence_needed: own valid checkout (created under own auth); PUT target=http://169.254.169.254/latest/meta-data/ (+100.100.100.200) vs Apple-gateway control — status/timing/body divergence.
-verify_steps: AUTH_HELPED — control PUT own checkout (merchantSession vs decline), then metadata target.
-impact: SSRF → EC2/cloud metadata → cross-env creds; CRITICAL if reachable.
-testability: AUTH_HELPED
-[HYP] chat conversationId lacks ownership discriminator
-class: IDOR
-asset: chat.sumup.com/api/conversations/{conversationId}
-confidence: 40
-reasoning: GET returns .data.events; ids server-assigned/opaque; anonymous GET = deterministic 500 pre-gate (no id oracle); support transcripts cross-merchant by nature; PKCE+prompt=none flow verified on modern auth server (support_chat).
-evidence_needed: own session → own conversation 200; foreign id → foreign events.
-verify_steps: AUTH_HELPED — /api/sso/login, GET own id, then adjacent ids ≤0.5 rps.
-impact: cross-merchant support-transcript read.
-testability: AUTH_HELPED
+[NEXT] PROBE: `GET https://api.sumup.com/v0.1/checkouts/00000000-0000-0000-0000-000000000000/apple-pay-session` (single, ≤1rps, read-only) to close the v0.1-vs-v0.2 spec/docs divergence: 405/structured-404-with-problem+json ⇒ routed twin; plain 404 ⇒ unrouted. Then archive (not a discriminator).
+[RISK] sumup: 25 — program is mature with a strict scope/out-of-scope model and the engagement has held passive-first (GET/HEAD/OPTIONS, ≤1rps, no customer data, own/staging IDs only); residual risk is behavioral drift (payment-methods 200↔404 flapping shows the gateway is not byte-stable) and the JWT/SSRF POCs are AUTH_HELPED, needing a controlled merchant session before any live validation.
