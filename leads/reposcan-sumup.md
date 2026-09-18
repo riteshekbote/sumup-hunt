@@ -480,3 +480,13 @@ TARGET_ORG not configured for sumup; skipping public-org deep scan.
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
 ## REPOSCAN 2026-09-18 05:26:04 UTC
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-18 10:05:00 UTC
+[HYP] Contentful Preview API Token Exposed in Client-Side JS Bundle — LIVE, GRANTS DRAFT ACCESS
+class: SECRET
+asset: help.sumup.com (Next.js client bundle `_app-ff45710d089e8565.js`)
+confidence: 95
+reasoning: Client-side JS bundle at help.sumup.com embeds CONTENTFUL_SPACE_ID="214q1nptnllb", CONTENTFUL_TOKEN_DELIVERY="Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4", CONTENTFUL_TOKEN_PREVIEW="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM". BOTH tokens VALID. Delivery: 8,436 entries. Preview: 9,584 entries (1,148 draft-only). Grants unauthenticated read of all draft/unpublished help center content. Not remediated since 2026-09-08 discovery.
+impact: HIGH
+verify_steps: 1) curl "https://preview.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM&limit=1" returns 9,584. 2) curl "https://cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4&limit=1" returns 8,436. 3) Diff = 1,148 drafts exposed.
+## REPOSCAN 2026-09-18 10:06:53 UTC
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
