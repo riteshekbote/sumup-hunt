@@ -4994,3 +4994,4 @@ testability: AUTH_HELPED
 [RISK] sumup: 72 — 0 filed across 24 credentialless cycles; sole confirmed finding closed (token rotation); the only HIGH/CRITICAL vectors (aud/iss 75, SSRF 65) and MEDIUM IDOR (40) remain 100% blocked behind one human-supplied own merchant credential; passive surface conclusively exhausted (payment-methods stub settled as zero-info, RFC 9728 byte-stable, CT growth unconfirmable this cycle). One filing exists to preserve a standing deliverable: the informational `api.sumup.com/authorize` oracle/CORS/redirect-divergence (Low-Medium). Without the credential or that filing, program metrics erode each cycle.
 ## 2026-09-18 06:03:11 UTC [target] (model bigpickle)
 ## 2026-09-18 11:29:53 UTC [target] (model bigpickle)
+## 2026-09-18 15:13:12 UTC [target] (model bigpickle)

@@ -939,3 +939,10 @@ https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
 https://api.sumup.com/callback -> HTTP 404
 https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
 https://api.sumup.com -> HTTP 404
+
+## 2026-09-18 15:14:07 UTC
+https://api.sumup.com/callback -> HTTP 404
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://auth.sumup.com -> HTTP 403
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://api.sumup.com -> HTTP 404
