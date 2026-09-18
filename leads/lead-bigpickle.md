@@ -4995,3 +4995,31 @@ testability: AUTH_HELPED
 ## 2026-09-18 06:03:11 UTC [target] (model bigpickle)
 ## 2026-09-18 11:29:53 UTC [target] (model bigpickle)
 ## 2026-09-18 15:13:12 UTC [target] (model bigpickle)
+## 2026-09-18 18:37:18 UTC [target] (model bigpickle)
+[HYP] apple-pay-session `target` server-side fetch (SSRF to cloud metadata)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: spec-declared PUT `apiKey:[]`+`oauth2:[]` REQUIRES body {context:hostname,target:uri}; Apple Pay merchant-session flow inherently triggers a server fetch rooted at `target`; unauth 404 confirms handler-gate; metadata primitive would be CRITICAL.
+evidence_needed: own bearer + own checkout; PUT `target=http://169.254.169.254/latest/meta-data/` (+ `100.100.100.200`) vs Apple-URL control — status/timing/body divergence.
+verify_steps: AUTH_HELPED — control PUT own checkout → merchantSession/decline; metadata PUT → 5xx/timeout/body divergence.
+impact: SSRF → EC2 metadata → cross-env creds → full prod compromise.
+testability: AUTH_HELPED
+[HYP] RFC 9728 token validation permits aud/iss claim confusion
+class: AUTH
+asset: api.sumup.com/.well-known/oauth-protected-resource (gateway JWT binding)
+confidence: 75
+reasoning: static metadata declares sole auth_server auth.sumup.com but no audience/resource_scopes field; staging JWTs mintable with attacker-controlled aud + empty scp, rejected at prod only at JWKS layer (ZERO kid overlap) — request-level aud/iss/scope binding is the single unverified seam.
+evidence_needed: own prod bearer on one own read op; same-kid token with aud/iss mutated → identical 2xx = no binding.
+verify_steps: AUTH_HELPED — GET one own resource unmutated, then aud-mutated, then iss-mutated; compare codes.
+impact: cross-client/subject authorization confusion.
+testability: AUTH_HELPED
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET returns `.data.events`; ids server-assigned/opaque; anonymous GET deterministic 500 pre-gate with no id oracle; support transcripts cross-merchant by nature; support_chat + PKCE flow verified on modern auth server.
+evidence_needed: own PKCE/prompt=none session → own conversation 200; foreign id → 200 foreign events.
+verify_steps: AUTH_HELPED — complete /api/sso/login, GET own id; adjacent ids ≤0.5 rps.
+impact: cross-merchant support-transcript read.
+testability: AUTH_HELPED

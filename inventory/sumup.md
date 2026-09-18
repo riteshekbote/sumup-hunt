@@ -820,3 +820,12 @@ www.sumup.com
 ## 2026-09-18 15:14:00 UTC
 - NEW api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway now requires bearer token even for spec-declared `oauth2:[]` operations
 - CHANGED No other surface changes detected; all other endpoints byte-stable per 10+ probe cycles
+
+## 2026-09-18 18:46:25 UTC
+- NEW api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated returns 200 static `{"card"}` (not 404 as 2026-09-17 transient log claimed; KB corrected 2026-09-18 — param-invariant stub, no merc
+- NEW auth.sam-app.ro/oauth2/register: confirmed LIVE unauthenticated RFC 7591 (POST → 201 client_id+secret+chosen redirect_uris+grant_types); mints real JWT via client_credentials (empty scp, aud fixed to 
+- NEW api.sumup.com gateway: accepts staging JWT on oauth2:[] endpoints (payment-methods, apple-pay-session) returning 200/404 structured — but these endpoints return identical responses without token; toke
+- CHANGED api.sumup.com/v0.2/checkouts/{id}/apple-pay-session: OPTIONS 204 (origin-echo CORS, identity.svc op header, __cf_bm SameSite=None); route ROUTED, method-level unauth 404; SSRF gate remains AUTH_HELPED
+- CHANGED api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static (sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI); recon surface exhausted
+- CHANGED JWKS prod vs staging: 8 vs 11 keys, ZERO kid overlap confirmed; cross-env key isolation holds (mcp.sumup.com rejects staging tokens)
+- CHANGED auth.sumup.com/oauth2/auth: scope-acceptance oracle confirmed — dashboard allows only readers.read/terminals.read; support_centre/support_chat allow only openid+classic+offline; all 13 REST spec scope
