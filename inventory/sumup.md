@@ -829,3 +829,5 @@ www.sumup.com
 - CHANGED api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static (sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI); recon surface exhausted
 - CHANGED JWKS prod vs staging: 8 vs 11 keys, ZERO kid overlap confirmed; cross-env key isolation holds (mcp.sumup.com rejects staging tokens)
 - CHANGED auth.sumup.com/oauth2/auth: scope-acceptance oracle confirmed — dashboard allows only readers.read/terminals.read; support_centre/support_chat allow only openid+classic+offline; all 13 REST spec scope
+
+## 2026-09-18 21:20:16 UTC

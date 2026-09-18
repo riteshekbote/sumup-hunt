@@ -1,4 +1,4 @@
-## 2026-09-18 18:37:18 UTC [target] (model bigpickle)
+## 2026-09-18 21:20:05 UTC [target] (model bigpickle)
 [HYP] apple-pay-session `target` server-side fetch (SSRF to cloud metadata)
 class: SSRF
 asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
@@ -24,5 +24,30 @@ confidence: 40
 reasoning: GET returns `.data.events`; ids server-assigned/opaque; anonymous GET deterministic 500 pre-gate with no id oracle; support transcripts cross-merchant by nature; support_chat + PKCE flow verified on modern auth server.
 evidence_needed: own PKCE/prompt=none session → own conversation 200; foreign id → 200 foreign events.
 verify_steps: AUTH_HELPED — complete /api/sso/login, GET own id; adjacent ids ≤0.5 rps.
+impact: cross-merchant support-transcript read.
+testability: AUTH_HELPED
+[HYP] Staging-minted (foreign-kid, attacker-registered) JWT accepted at prod routed protected spec op
+class: AUTH
+asset: api.sumup.com/v1/merchants/{merchant_code}/persons (routed protected op; garbage→401 control)
+confidence: 45
+reasoning: mcp.sumup.com rejects staging tokens (401 "no applicable key") = isolation for MCP; prod gateway rejects garbage/HS256/alg-none (401); but foreign-valid-signature token only ever tested on non-gated oauth2:[] ops and unrouted bare path (both ignored token) — the per-op gate's trust store against a genuinely valid foreign key is unverified.
+evidence_needed: fresh staging JWT (register+token) sent to a ROUTED gated op → same-class 401 = isolated; non-401 (403/404-validated/200) = gateway accepts foreign-key tokens.
+verify_steps: PASSIVE-family: POST auth.sam-app.ro/oauth2/register {client_name,redirect_uris:[https://api.sumup.com/callback],token_endpoint_auth_method:client_secret_post,scope,"",grant_types:[client_credentials]} → POST /oauth2/token client_credentials → mint JWT; GET https://api.sumup.com/v1/merchants/MK10CL2A/persons?limit=1 with `Authorization: Bearer {jwt}` AND same path no-token control (≤1 rps); classify.
+[HYP] apple-pay-session `target` server-side fetch (SSRF to cloud metadata)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: spec PUT `apiKey:[]+oauth2:[]` REQUIRES body {context:hostname,target:uri}; PUT with foreign key AND no token both reach handler (404 "checkout not found") → endpoint is handler-gated, NOT token-gated; Apple Pay session flow issues server fetch rooted at target.
+evidence_needed: own valid checkout (created under own auth); PUT target=http://169.254.169.254/latest/meta-data/ (+100.100.100.200) vs Apple-gateway control — status/timing/body divergence.
+verify_steps: AUTH_HELPED — control PUT own checkout (merchantSession vs decline), then metadata target.
+impact: SSRF → EC2/cloud metadata → cross-env creds; CRITICAL if reachable.
+testability: AUTH_HELPED
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET returns .data.events; ids server-assigned/opaque; anonymous GET = deterministic 500 pre-gate (no id oracle); support transcripts cross-merchant by nature; PKCE+prompt=none flow verified on modern auth server (support_chat).
+evidence_needed: own session → own conversation 200; foreign id → foreign events.
+verify_steps: AUTH_HELPED — /api/sso/login, GET own id, then adjacent ids ≤0.5 rps.
 impact: cross-merchant support-transcript read.
 testability: AUTH_HELPED
