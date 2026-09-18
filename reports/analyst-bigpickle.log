@@ -34877,3 +34877,113 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] sumup: 72 — 0 filed across 24 credentialless cycles; sole confirmed finding closed (token rotation); the only HIGH/CRITICAL vectors (aud/iss 75, SSRF 65) and MEDIUM IDOR (40) remain 100% blocked behind one human-supplied own merchant credential; passive surface conclusively exhausted (payment-methods stub settled as zero-info, RFC 9728 byte-stable, CT growth unconfirmable this cycle). One filing exists to preserve a standing deliverable: the informational `api.sumup.com/authorize` oracle/CORS/redirect-divergence (Low-Medium). Without the credential or that filing, program metrics erode each cycle.
+===== ANALYST bigpickle 2026-09-18 06:04:53 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la; echo '---'; ls -la reports 2>/dev/null; echo '---'; ls -la art 2>/dev/null
+total 604
+drwxr-xr-x 12 runner runner   4096 Sep 18 06:02 .
+drwxr-xr-x  3 runner runner   4096 Sep 18 06:01 ..
+drwxr-xr-x  7 runner runner   4096 Sep 18 06:02 .git
+drwxr-xr-x  3 runner runner   4096 Sep 18 06:02 .github
+-rw-r--r--  1 runner runner   1885 Sep 18 06:02 README.md
+-rw-r--r--  1 runner runner     32 Sep 18 06:02 analyst-out.txt
+-rw-r--r--  1 runner runner 237575 Sep 18 06:02 analyst-prompt.txt
+-rw-r--r--  1 runner runner 233689 Sep 18 06:02 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:02 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:02 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:02 leads
+-rw-r--r--  1 runner runner  50940 Sep 18 06:02 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:02 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:02 reports
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:02 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Sep 18 06:02 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:02 scripts
+-rw-r--r--  1 runner runner     33 Sep 18 06:02 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 18 06:02 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 18 06:02 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 18 06:02 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 18 06:02 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 18 06:02 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 18 06:02 triage
+---
+total 4744
+drwxr-xr-x  2 runner runner    4096 Sep 18 06:02 .
+drwxr-xr-x 12 runner runner    4096 Sep 18 06:02 ..
+-rw-r--r--  1 runner runner 2711327 Sep 18 06:02 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   21049 Sep 18 06:02 analyst-laguna.log
+-rw-r--r--  1 runner runner   20952 Sep 18 06:02 analyst-ling3.log
+-rw-r--r--  1 runner runner   21146 Sep 18 06:02 analyst-longcat.log
+-rw-r--r--  1 runner runner 1689996 Sep 18 06:02 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    8002 Sep 18 06:02 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 18 06:02 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 18 06:02 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 18 06:02 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner    9194 Sep 18 06:02 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  319329 Sep 18 06:02 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 18 06:02 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Sep 18 06:02 valid-bugs.md
+---
+[0m
+I'll verify current workspace state and run minimal read-only probes to check for delta before emitting the structured analysis.
+[0m$ [0mcurl -sS --max-time 15 -o /tmp/rfc.txt -w 'HTTP %{http_code}\n' 'https://api.sumup.com/.well-known/oauth-protected-resource'; echo '--- body ---'; head -c 600 /tmp/rfc.txt; echo
+HTTP 200
+--- body ---
+{
+	"resource_name": "SumUp API",
+	"resource": "https://api.sumup.com",
+	"authorization_servers": ["https://auth.sumup.com"],
+	"bearer_methods_supported": ["header"],
+	"jwks_uri": "https://auth.sumup.com/.well-known/jwks.json",
+	"resource_documentation": "https://developer.sumup.com"
+}
+[0m
+[0m$ [0mcurl -sS --max-time 15 -o /tmp/pay.txt -w 'HTTP %{http_code}\n' 'https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods' -H 'Cache-Control: no-cache'; echo '--- body (truncated) ---'; head -c 400 /tmp/pay.txt; echo
+HTTP 200
+--- body (truncated) ---
+{"available_payment_methods":[{"id":"card"}]}
+[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m
+[0m$ [0mcurl -sS --max-time 15 -o /tmp/authz.txt -w 'HTTP %{http_code}\n' 'https://api.sumup.com/authorize?client_id=dashboard&redirect_uri=https%3A%2F%2Fevil.example.com%2Fcb&response_type=code&scope=openid' -H 'Cache-Control: no-cache'; echo '--- headers ---'; head -c 600 /tmp/authz.txt; echo
+HTTP 302
+--- headers ---
+[0m
+Surfaces byte-stable. Now checking the deliverables state and running the designated discriminator probes.
+[0m$ [0mcurl -sS --max-time 15 -o /dev/null -w 'HTTP %{http_code}\n' -X OPTIONS 'https://api.sumup.com/v0.2/checkouts/demo123/apple-pay-session' -H 'Origin: https://api.sumup.com' -H 'Access-Control-Request-Method: PUT' -H 'Cache-Control: no-cache'
+HTTP 204
+[0m
+Oracle and route discriminators all re-confirmed live. Checking CT growth for new subdomains since the 09-05 sweep (only genuinely passive, un-re-run surface).
+[0m$ [0mcurl -sS --max-time 30 'https://crt.sh/?q=%25.sumup.com&output=json' -o /tmp/ct.json; echo "bytes: $(wc -c < /tmp/ct.json 2>/dev/null)"; node -e '
+const d=require("/tmp/ct.json");
+const names=new Set();
+for(const c of d){ for(const n of (c.name_value||"").split("\n")){ let x=n.trim().replace(/^\*\./,""); if(x) names.add(x.toLowerCase());} }
+const known=["admin.sumup.com","api.sumup.com","auth.sumup.com","dashboard.sumup.com","portal.sumup.com","sumup.com","support.sumup.com","web.sumup.com","www.sumup.com","me.sumup.com","checkout.sumup.com","read-api.sumup.com","sf-gateway-api.sumup.com","app-auth.sumup.com","mcp.sumup.com","pay.sumup.com","chat.sumup.com","help.sumup.com","developer.sumup.com"];
+const all=[...names].sort();
+console.log("total unique names:", all.length);
+console.log("candidate NEW-ish names (not in known list, non-wildcard, non-*.sumup.net variant):");
+for(const n of all){ if(!known.includes(n)) console.log(" ", n); }
+' 2>&1 | head -80
+bytes: 253
+node:internal/modules/cjs/loader:1928
+    throw err;
+    ^
+
+SyntaxError: /tmp/ct.json: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+    at parse (<anonymous>)
+    at Object..json (node:internal/modules/cjs/loader:1925:39)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at require (node:internal/modules/helpers:147:16)
+    at [eval]:2:9
+    at runScriptInThisContext (node:internal/vm:209:10)
+    at node:internal/process/execution:446:12
+
+Node.js v22.23.2
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcat /tmp/ct.json failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
