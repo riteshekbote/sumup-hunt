@@ -4937,3 +4937,58 @@ testability: AUTH_HELPED
 [LEARN] REJECTED BUSLOGIC @ api.sumup.com/v0.1/merchants/{code}/payment-methods: param-invariant stub (amount/currency/bogus-code/negative → identical 200; spec-declared 400 never fires) — no unauth oracle, no BOLA without bearer.
 [LEARN] ACCEPTED OTHER @ sumup-openapi: spec byte-matches live gateway; monthly auto-sync from internal sumup/apis (last #73 2026-09-04); 28 paths / 44 ops + 3 outbound webhooks documented; no unprobed endpoint exists — spec surface fully closed.
 [RISK] sumup: 74 — 0 filed after 23 credentialless cycles; sole confirmed finding (Contentful P4) closed via rotation; the two HIGH/CRITICAL finals (aud/iss 75, apple-pay SSRF 65) and MEDIUM chat IDOR (40) all remain 100% blocked behind one human-supplied own merchant credential; the OPTIONS-sweep next-action is now conclusively exhausted, leaving no fresh passive wedge; fileable passive inventory is one Low/Medium informational (client_id oracle + origin-echo CORS + redirect-set divergence on api.sumup.com/authorize). Recommendation: file that informational report now to preserve a standing deliverable while awaiting the credential, or the program metrics are zero-week with erosion each cycle.
+## 2026-09-18 01:11:10 UTC [target] (model bigpickle)
+testability: AUTH_HELPED
+[HYP] apple-pay-session `target` server-side fetch (SSRF to cloud metadata)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: spec declares PUT `apiKey:[]`+`oauth2:[]` and REQUIRES body `{context:hostname, target:uri}` (example `https://apple-pay-gateway-cert.apple.com/paymentservices/startSession`); the Apple Pay merchant-session flow inherently triggers a server-side HTTP fetch rooted at `target`; unauth PUT → 404 so fetch is handler-gated; metadata reachability would be a critical primitive.
+evidence_needed: own bearer + own checkout; PUT `target=http://169.254.169.254/latest/meta-data/` (and `http://100.100.100.200/`) vs control `target=https://apple-pay-gateway.apple.com/...` — status/timing/body divergence.
+verify_steps: AUTH_HELPED — control PUT own checkout → merchantSession/decline; metadata-URL PUT → 5xx/timeout/divergence.
+impact: SSRF → EC2 metadata → cross-env credentials → full prod compromise; CRITICAL if reachable.
+testability: AUTH_HELPED
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET returns `.data.events`; conversationId server-assigned/opaque; anonymous GET yields deterministic 500 pre-gate with no id oracle; support transcripts cross-merchant by nature.
+evidence_needed: own PKCE/prompt=none session → own conversation 200; foreign id → 200 foreign events.
+verify_steps: AUTH_HELPED — complete /api/sso/login flow, GET own id; adjacent ids at ≤0.5 rps.
+impact: cross-merchant support-transcript read; MEDIUM.
+testability: AUTH_HELPED
+[NEXT] HUMAN: provide ONE self-owned merchant credential (me.sumup.com → `sup_sk_` API key under settings/api-keys, OR OAuth2 application client_id+client_secret under settings/oauth2-applications) scoped STRICTLY to own-data controls: (1) PUT `/v0.2/checkouts/{own}/apple-pay-session` `target=http://169.254.169.254/latest/meta-data/` vs Apple-URL control (SSRF CRITICAL); (2) own token aud/iss-mutated on one own read op (auth confusion); (3) own token on `GET /v0.1/merchants/{other_owned}/payment-methods` (empty-scope BOLA). No credential → passive surface is genuinely exhausted; the only remaining passive filing is the informational `api.sumup.com/authorize` client_id-oracle + origin-echo-CORS + legacy/modern redirect-set divergence.
+[LEARN] CHANGED @ api.sumup.com/v0.1/merchants/{code}/payment-methods: 200 static `{"card"}` re-verified this cycle — the dual-lead 2026-09-17 20:09 "now 404" was transient/flapping; handler remains unauth-reachable but is a param-invariant stub, no merchant leak.
+[LEARN] REJECTED BUSLOGIC @ api.sumup.com: OPTIONS 204 + origin-echo CORS is a gateway-wide blanket on all paths incl. unrouted — OPTIONS is NOT a route discriminator; only method-level handler responses discriminate and those are uniformly gated except the payment-methods stub.
+[LEARN] REJECTED BUSLOGIC @ api.sumup.com/v0.1/merchants/{code}/payment-methods: param-invariant stub (amount/currency/bogus-code/negative → identical 200; spec-declared 400 never fires) — no unauth oracle, no BOLA without bearer.
+[LEARN] ACCEPTED OTHER @ sumup-openapi: spec byte-matches live gateway; monthly auto-sync from internal sumup/apis (last #73 2026-09-04); 28 paths / 44 ops + 3 outbound webhooks documented; no unprobed endpoint exists — spec surface fully closed.
+[RISK] sumup: 74 — 0 filed after 23 credentialless cycles; sole confirmed finding (Contentful P4) closed via rotation; the two HIGH/CRITICAL finals (aud/iss 75, apple-pay SSRF 65) and MEDIUM chat IDOR (40) all remain 100% blocked behind one human-supplied own merchant credential; the OPTIONS-sweep next-action is now conclusively exhausted, leaving no fresh passive wedge; fileable passive inventory is one Low/Medium informational (client_id oracle + origin-echo CORS + redirect-set divergence on api.sumup.com/authorize). Recommendation: file that informational report now to preserve a standing deliverable while awaiting the credential, or the program metrics are zero-week with erosion each cycle.
+[HYP] RFC 9728 token validation on api.sumup.com permits aud/iss claim confusion
+class: AUTH
+asset: api.sumup.com/.well-known/oauth-protected-resource (gateway JWT binding)
+confidence: 75
+reasoning: RFC 9728 metadata static (sole authorization_server=auth.sumup.com, bearer_methods_supported=[header], JWKS URI, no resource_scopes/aud field); staging JWTs mintable with attacker-controlled aud + empty scp and rejected at prod only at JWKS layer (ZERO kid overlap) — request-level aud/iss/scope binding is the single unverified seam; spec marks 2 ops oauth2:[] so scope-free tokens are highest-leverage.
+evidence_needed: own prod bearer on one own read op; re-signed same-kid token with aud/iss mutated → identical 2xx = no binding.
+verify_steps: AUTH_HELPED — GET one own resource unmutated (control), then aud-mutated, then iss-mutated; compare codes.
+impact: cross-client/subject authorization confusion, broader-than-intended API authorization; HIGH.
+testability: AUTH_HELPED
+[HYP] apple-pay-session `target` server-side fetch (SSRF to cloud metadata)
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: spec declares PUT apiKey:[]+oauth2:[] REQUIRING body {context:hostname,target:uri} (example apple-pay-gateway-cert.apple.com/paymentservices/startSession); Apple Pay merchant-session flow inherently triggers a server-side HTTP fetch rooted at target; unauth PUT 404 so fetch is handler-gated.
+evidence_needed: own bearer + own checkout; PUT target=http://169.254.169.254/latest/meta-data/ (and 100.100.100.200) vs Apple-URL control — status/timing/body divergence.
+verify_steps: AUTH_HELPED — control PUT own checkout; metadata-URL PUT → 5xx/timeout/divergence.
+impact: SSRF → EC2 metadata → cross-env credentials; CRITICAL if reachable.
+testability: AUTH_HELPED
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET returns .data.events; conversationId server-assigned/opaque; anonymous GET yields deterministic 500 pre-gate with no id oracle; support transcripts cross-merchant by nature; support_chat client + PKCE flow verified on modern auth server.
+evidence_needed: own PKCE/prompt=none session → own conversation 200; foreign id → 200 foreign events.
+verify_steps: AUTH_HELPED — complete /api/sso/login, GET own id; adjacent ids ≤0.5 rps.
+impact: cross-merchant support-transcript read; MEDIUM.
+testability: AUTH_HELPED
+[NEXT] HUMAN: supply ONE self-owned merchant credential (me.sumup.com → `sup_sk_` API key, or OAuth2 client_id+client_secret) to run the three own-data controls now blocked for 20+ cycles: (1) PUT `/v0.2/checkouts/{own}/apple-pay-session` `target=http://169.254.169.254/latest/meta-data/` vs Apple control (SSRF CRITICAL); (2) own token aud/iss-mutated on one own read op (AUTH 75); (3) own token on `GET /v0.1/merchants/{other_owned}/payment-methods` (empty-scope BOLA). While awaiting: file the informational `api.sumup.com/authorize` client_id-oracle + origin-echo-CORS + legacy/modern redirect-divergence report as the standing deliverable.
+[RISK] sumup: 72 — 0 filed across 24 credentialless cycles; sole confirmed finding closed (token rotation); the only HIGH/CRITICAL vectors (aud/iss 75, SSRF 65) and MEDIUM IDOR (40) remain 100% blocked behind one human-supplied own merchant credential; passive surface conclusively exhausted (payment-methods stub settled as zero-info, RFC 9728 byte-stable, CT growth unconfirmable this cycle). One filing exists to preserve a standing deliverable: the informational `api.sumup.com/authorize` oracle/CORS/redirect-divergence (Low-Medium). Without the credential or that filing, program metrics erode each cycle.
