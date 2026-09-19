@@ -1029,3 +1029,11 @@ https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
 https://api.sumup.com/v0.1/merchants/MH4H92C7 -> HTTP 404
 https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods -> HTTP 404
 https://api.sumup.com -> HTTP 404
+
+## 2026-09-19 22:31:08 UTC
+https://api.sumup.com/callback -> HTTP 404
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://auth.sumup.com -> HTTP 403
+https://api.sumup.com -> HTTP 404
+https://api.sumup.com/v0.1/merchants/MH4H92C7 -> HTTP 404
+https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods -> HTTP 404

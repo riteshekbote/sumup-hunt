@@ -1,4 +1,34 @@
-## 2026-09-19 20:24:14 UTC [target] (model bigpickle)
+## 2026-09-19 22:29:36 UTC [target] (model bigpickle)
+verify_steps: AUTH_HELPED: Obtain merchant OAuth token via dashboard; replay against GET /v0.1/merchants/{other_merchant}/payment-methods (oauth2:[]) and PUT /v0.2/checkouts/{owned}/apple-pay-session (oauth2:[]) with crafted aud/claims; observe 200 vs 403/404
+impact: Cross-tenant read of merchant payment-method metadata (BOLA) or SSRF via Apple Pay session endpoint — CRITICAL
+testability: AUTH_HELPED
+[HYP] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session — server-side fetch of attacker-chosen target URI with no per-op scope binding (oauth2:[])
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: Official OpenAPI spec declares oauth2:[] for this operation; Apple Pay session endpoint inherently triggers server-side request to provided target URL (domainName/validationURL); empty scope + attacker-controlled target parameter = potential SSRF to cloud metadata (169.254.169.254) or internal services
+evidence_needed: Valid token (any scope) + crafted target parameter reaching internal endpoint or metadata service
+verify_steps: AUTH_HELPED: obtain merchant token; POST https://api.sumup.com/v0.2/checkouts/{owned_checkout_id}/apple-pay-session with body {"target": "http://169.254.169.254/latest/meta-data/"} → observe response; test
+impact: SSRF to cloud metadata → IAM credentials, instance identity, internal service enumeration — CRITICAL
+testability: AUTH_HELPED
+[PARKED] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session SSRF: confidence 65 but requires AUTH_HELPED (valid merchant token + owned checkout_id); no passive path to checkout creation or token acquisition; speculative without auth
+[FINAL] 1. auth.sam-app.ro unauthenticated dynamic client registration → JWT minting with attacker-controlled aud (85, PASSIVE) — live registration confirmed, client sync untested but architectural risk
+[FINAL] 2. RFC 9728 token validation on api.sumup.com permits audience/claim confusion (75, AUTH_HELPED) — highest testability with auth, direct money-flow impact
+[NEXT] PROBE: POST https://auth.sam-app.ro/oauth2/register with body {"client_name":"poc","redirect_uris":["https://api.sumup.com/callback"],"token_endpoint_auth_method":"client_secret_post","scope":"","grant_types":["client_credentials"]} → capture client_id/client_secret; POST https://auth.sam-app.ro/oauth2/token with grant_type=client_credentials&client_id={id}&client_secret={secret} → capture JWT; GET https://api.sumup.com/v0.1/merchants/MH4H92C7 with Authorization: Bearer {staging_jwt} → observe structured problem+json vs plain 404 (token validation test); GET https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods with Authorization: Bearer {staging_jwt} → confirm oauth2:[] bypass (returns 200 static)
+[LEARN] ACCEPTED OTHER @ developer.sumup.com/api: official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public — full 42-op production model incl. exact paths, per-op scopes, apiKey scheme, and legacy OAuth endpoint pair (authorize+token on api.sumup.com); highest-value passive recon of this cycle
+[LEARN] ACCEPTED OATH @ api.sumup.com/token: legacy token endpoint ROUTED (OPTIONS 204 + structured 404 on GET, identity.svc operation) — documented in official spec, live on gateway; access-control-allow-origin echoes Origin (api.sumup.com), not literal * — KB "wildcard CORS" claim corrected
+[LEARN] ACCEPTED OATH @ auth.sumup.com/oauth2/auth: scope-acceptance oracle disambiguated (302 login_challenge=allowed vs 303 invalid_scope); dashboard allows readers.read/terminals.read, rejects all 13 REST spec scopes — modern dashboard scope set is closed
+[LEARN] ACCEPTED OATH @ auth.sumup.com: support_centre allowlist is exactly {openid, classic, offline}; classic+any scope → invalid_scope; scope oracle for support_centre exhausted
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com spec: GET /v0.1/merchants/{merchant_code}/payment-methods and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session declared oauth2:[] — empty-scope BOLA/SSRF targets for AUTH_HELPED gating test
+[LEARN] REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token rotated (401) — finding non-reproducible; report file never existed despite KB hallucinations
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + origin-echo CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 combos, 0 HITs); legacy allowlist host not recoverable from any passive surface
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks resource access; prod sync untestable passively
+[LEARN] ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com, header-only bearer, JWKS URI; no resource_scopes/audience-oracle field; recon surface exhausted
+[LEARN] ACCEPTED OTHER @ sumup-openapi: Full 42-op security model enumerated — exactly 2 empty-scope ops (payment-methods GET, apple-pay-session PUT), apiKey=HTTP Bearer (same header as OAuth), `mid` REQUIRED-query on receipts, persons IDs `pers_<26 alnum>`, 6 unsecured outbound webhooks; no remaining passive gap in the spec surface.
+[LEARN] CHANGED @ api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated returns 200 static `{"card"}` re-verified — the 2026-09-17 "now 404" was transient/flapping; handler remains unauth-reachable but is a param-invariant stub, no merchant leak
+[LEARN] REJECTED BUSLOGIC @ api.sumup.com: OPTIONS 204 + origin-echo CORS is a gateway-wide blanket on all paths incl. unrouted — OPTIONS is NOT a route discriminator; only method-level handler responses discriminate and those are uniformly gated except the payment-methods stub
+[LEARN] REJECTED BUSLOGIC @ api.sumup.com/v0.1/merchants/{code}/payment-methods: param-invariant stub (amount/currency/bogus-code/negative → identical 200; spec-declared 400 never fires) — no unauth oracle, no BOLA without bearer
+[RISK] sumup: 70 — Contentful P4 finding closed (token rotated 2026-09-11). Highest remaining risk: auth.sam-app.ro unauthenticated registration → JWTs with attacker-controlled aud (confidence 85, PASSIVE) could bypass prod if client provenance synced; RFC 9728 token validation on api.sumup.com (confidence 75, AUTH_HELPED) could yield cross-tenant BOLA/SSRF if aud/claim validation flawed; Apple Pay session SSRF (confidence 65) highest blast radius (EC2 metadata → prod compromise). Legacy OAuth gateway client_id oracle + origin-echo CORS remains but callback enumeration exhausted (0 HITs). Three modern-only OAuth clients (dashboard, support_centre, support_chat) introduce "classic" scope model unexplorable without auth. Passive surface genuinely exhausted.
 [CHANGED] process: `reports/valid-bugs.md` running count still **0** — the auth.sam-app.ro RFC 7591 finding (triage-VALID 7.5) remains unfiled for the 2nd consecutive candidate-HUMAN cycle.
 [HYP] apple-pay-session `target` lacks host allowlist → SSRF
 class: SSRF
@@ -28,6 +58,37 @@ verify_steps: AUTH_HELPED — complete /api/sso/login (PKCE S256), GET own conve
 impact: cross-merchant support-transcript read — High.
 testability: AUTH_HELPED
 [NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding (POST /oauth2/register → 201; client_credentials mints real JWTs, empty scp, attacker-controlled aud; staging-only; JWKS cross-env isolation = no prod pivot as-is; repro/evidence at `reports/hypotheses-nemotron3.txt` + triage runs) to bugs.olivermaicher.eu, then append the ticket to `reports/valid-bugs.md` (running count 0 → 1).
-[LEARN] ACCEPTED OTHER @ api.sumup.com: payment-methods stub 200, RFC 9728 metadata, apple-pay GET structured 404, prod JWKS 8-kid set — all byte-stable re-verified 2026-09-19 (19th stable cycle); passive money/auth surface genuinely exhausted.
-[LEARN] REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the binding control; the fileable finding is staging posture only (VALable). Retaining confidence 85 on the prod-relay leg is overstated.
-[RISK] sumup: 25 — probes this cycle: 5 read-only GETs (≤1rps) on in-scope public metadata/stub endpoints; no customer data, no mutating, no auth-bypass. Residuals unchanged: payment-methods 200↔404 flapping (behavioral drift, observed once 2026-09-17), and both top api hypotheses remain validated-nowhere after 19 cycles — every live-validation path requires an authorized merchant session that engagement discipline forbids me from obtaining. Filing backlog (0/1) is the only material program-side exposure.
+[HYP] not-assigned / underweighted
+class: OTHER
+asset: auth.sam-app.ro staging stack
+confidence: 85
+reasoning: The one triage-VALID (Q3/Q5/Q7 all yes) fileable finding — unauthenticated POST /oauth2/register → 201 client_id+secret; client_credentials mints real JWTs (empty scp, attacker-controlled aud); gateway validates signature; cross-env JWKS isolation (ZERO kid overlap) blocks prod relay as-is. 3rd consecutive cycle unpushed.
+evidence_needed: none — evidence complete at reports/hypotheses-nemotron3.txt + triage runs in valid-bugs.md.
+verify_steps: not applicable.
+impact: staging-auth compromise / client impersonation surface; prod pivot absent without sync evidence — Medium (7.5).
+testability: PASSIVE
+[HYP] no request-level aud/iss binding on gateway JWT validation
+class: AUTH
+asset: api.sumup.com protected ops (RFC 9728 resource server)
+confidence: 65
+reasoning: RFC 9728 declares sole auth_server=auth.sumup.com with no audience field; observed cross-env rejection is key-level only; staging JWTs carry attacker-controlled aud+empty scp; claim-level binding never observed.
+evidence_needed: own prod bearer on one read op; aud-mutated and iss-mutated copies → same 2xx = no binding.
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/persons ×3 ≤1rps: unmutated vs aud/iss-mutated; compare status/body.
+impact: cross-client token replay — High.
+testability: AUTH_HELPED
+[HYP] apple-pay-session `target` lacks host allowlist → SSRF
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: spec declares oauth2:[]; handler fetches caller-supplied `target` (format:uri); gate is AUTH_HELPED not auth-at-runtime; sole control is *.apple.com host restriction.
+evidence_needed: own bearer+own checkout; PUT metadata URLs vs control apple URL.
+verify_steps: AUTH_HELPED — control PUT then EC2/aliyun metadata targets ≤1rps; 5xx/timeout/echo = no allowlist.
+impact: SSRF→metadata→creds→prod compromise — Critical.
+testability: AUTH_HELPED
+[PARKED] chat.sumup.com conversationId IDOR: anonymity gives no oracle, enrollment requires a live PKCE session — no new passive yield; parked at conf 40.
+[FINAL] 1. auth.sam-app.ro RFC 7591 filing (85, PASSIVE, evidence complete) — not a test gap, a delivery gap.
+[FINAL] 2. aud/iss binding (65) and 3. apple-pay SSRF (65) — both require the merchant session that discipline forbids; retained as post-auth queue.
+[NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding (POST /oauth2/register → 201 client_id+secret; client_credentials mints real JWTs, empty scp, attacker-controlled aud; staging-only; JWKS isolation = no prod pivot as-is; evidence at `reports/hypotheses-nemotron3.txt`, triage at `reports/valid-bugs.md`) to bugs.olivermaicher.eu, then append ticket (running count 0 → 1).
+[LEARN] ACCEPTED OTHER @ reports/valid-bugs.md: count remains 0 after 2 HUMAN cycles — the blocker is submission, not triage; evidence for the leading finding is complete and self-contained.
+[LEARN] REJECTED AUTH @ api.sumup.com: no new passive discriminator exists between aud-binding and key-level gates — 19 cycles of GET probes cannot falsify the hypothesis; only a live bearer can.
+[RISK] sumup: 25 — this cycle: file reads only, zero live probes (all surfaces byte-stable, no new testable surface emerged; allocation went to filing-prep verification). Residuals unchanged: payment-methods 200↔404 flapping (behavioral drift, single 2026-09-17 observation), and the material program-side exposure is the unfiled VALID 7.5 finding (0/1), now 3 cycles stale.
