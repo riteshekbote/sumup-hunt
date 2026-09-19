@@ -5218,3 +5218,36 @@ testability: AUTH_HELPED
 [NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 dynamic-client-registration finding (evidence + repro at `reports/hypotheses-nemotron3.txt`: unauthenticated POST /oauth2/register → 201 client_id+secret; client_credentials mints JWTs with attacker-controlled aud; cross-env JWKS isolation = no prod pivot as-is) to bugs.olivermaicher.eu, then record the ticket in `reports/valid-bugs.md` (running count 0 → 1).
 [RISK] sumup: 25 — one GET this cycle to auth.sumup.com/.well-known/jwks.json (200, public discovery metadata, well under 1rps); no mutating, no auth-bypass, no customer data. Residuals unchanged: payment-methods stub 200↔404 flapping (behavioral drift), and every top hypothesis remains blocked on an authorized merchant test session — no live validation of aud/iss or SSRF attempted.
 ## 2026-09-19 17:54:43 UTC [target] (model bigpickle)
+## 2026-09-19 20:24:14 UTC [target] (model bigpickle)
+[CHANGED] process: `reports/valid-bugs.md` running count still **0** — the auth.sam-app.ro RFC 7591 finding (triage-VALID 7.5) remains unfiled for the 2nd consecutive candidate-HUMAN cycle.
+[HYP] apple-pay-session `target` lacks host allowlist → SSRF
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: openapi+dev docs confirm server fetches caller-supplied `target` (format:uri) returning Apple merchantSession; spec declares oauth2:[] (no scope bound); handler reached pre-token (no-token PUT → 404 "checkout not found"); sole control is host restriction to *.apple.com; v0.1/v0.2 twins route identically.
+evidence_needed: own bearer + own checkout; PUT metadata targets vs control apple URL — status/timing/body divergence.
+verify_steps: AUTH_HELPED — control PUT `target=https://apple-pay-gateway-cert.apple.com/paymentservices/startSession` then `http://169.254.169.254/latest/meta-data/` + aliyun analog; 5xx/timeout/echo = no allowlist; ≤1rps.
+impact: SSRF → EC2/aliyun metadata → cross-env creds → full prod compromise — Critical.
+testability: AUTH_HELPED
+[HYP] no request-level aud/iss binding on gateway JWT validation
+class: AUTH
+asset: api.sumup.com protected ops (RFC 9728 resource server)
+confidence: 65
+reasoning: RFC 9728 declares sole auth_server=auth.sumup.com with NO audience/resource_scopes field; prod JWKS stable (8 keys) so observed cross-env rejections are key-level only; staging JWTs (attacker-controlled aud, empty scp) were accepted pre-token on oauth2:[] routes — claim-level binding never observed.
+evidence_needed: own prod bearer on one read op; aud-mutated and iss-mutated copies → same 2xx = no claim binding.
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/persons ×3 ≤1rps: unmutated vs aud-mutated vs iss-mutated; compare status/body.
+impact: cross-client/subject token replay across first-party clients — High.
+testability: AUTH_HELPED
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET returns `.data.events`; conversationId server-assigned at open (S.current=e.data.conversationId); anonymous GET deterministic 500 (no oracle); support transcripts inherently cross-merchant; support_chat client PKCE-registered on modern auth.
+evidence_needed: own PKCE session → own conversation 200; adjacent/foreign id → 200 with foreign events.
+verify_steps: AUTH_HELPED — complete /api/sso/login (PKCE S256), GET own conversationId, enumerate adjacent ids ≤0.5rps.
+impact: cross-merchant support-transcript read — High.
+testability: AUTH_HELPED
+[NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding (POST /oauth2/register → 201; client_credentials mints real JWTs, empty scp, attacker-controlled aud; staging-only; JWKS cross-env isolation = no prod pivot as-is; repro/evidence at `reports/hypotheses-nemotron3.txt` + triage runs) to bugs.olivermaicher.eu, then append the ticket to `reports/valid-bugs.md` (running count 0 → 1).
+[LEARN] ACCEPTED OTHER @ api.sumup.com: payment-methods stub 200, RFC 9728 metadata, apple-pay GET structured 404, prod JWKS 8-kid set — all byte-stable re-verified 2026-09-19 (19th stable cycle); passive money/auth surface genuinely exhausted.
+[LEARN] REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the binding control; the fileable finding is staging posture only (VALable). Retaining confidence 85 on the prod-relay leg is overstated.
+[RISK] sumup: 25 — probes this cycle: 5 read-only GETs (≤1rps) on in-scope public metadata/stub endpoints; no customer data, no mutating, no auth-bypass. Residuals unchanged: payment-methods 200↔404 flapping (behavioral drift, observed once 2026-09-17), and both top api hypotheses remain validated-nowhere after 19 cycles — every live-validation path requires an authorized merchant session that engagement discipline forbids me from obtaining. Filing backlog (0/1) is the only material program-side exposure.
