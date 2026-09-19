@@ -1,16 +1,26 @@
-## 2026-09-19 06:38:47 UTC [target] (model nemotron3)
+## 2026-09-19 11:35:55 UTC [target] (model nemotron3)
 [PRIO] auth.sam-app.ro/oauth2/register,9.5,attack_surface=10,business_value=9,tech_exposure=10,gate_ease=10,cloud_surface=9,freshness=9
 [PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,8.0,attack_surface=8,business_value=10,tech_exposure=9,gate_ease=3,cloud_surface=10,freshness=7
 [PRIO] api.sumup.com (RFC 9728 token validation),7.5,attack_surface=7,business_value=10,tech_exposure=8,gate_ease=3,cloud_surface=9,freshness=8
+[PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,6.5,attack_surface=6,business_value=8,tech_exposure=7,gate_ease=3,cloud_surface=8,freshness=6
 [HYP] auth.sam-app.ro unauthenticated dynamic client registration → JWT minting with attacker-controlled aud
 class: AUTH
 asset: auth.sam-app.ro/oauth2/register
 confidence: 85
 reasoning: RFC 7591 dynamic registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris+grant_types=["client_credentials"]); mints real JWT access_tokens via client_credentials (empty scp, aud fixed to staging api.sam-app.ro, audience param ignored at token endpoint); api.sam-app.ro gateway validates JWT structure (structured problem+json vs plain 404); cross-env JWKS isolation (prod 8 keys, staging 11 keys, ZERO kid overlap) blocks prod relay via key mismatch; client-level sync to prod provenance DB untested — if staging-registered client synced to prod auth.sumup.com, its tokens would validate on prod
 evidence_needed: Staging-registered client accepted by prod auth.sumup.com token endpoint or api.sumup.com gateway (aud validation bypass or client sync)
-verify_steps: PASSIVE: POST https://auth.sam-app.ro/oauth2/register with body {"client_name":"test","redirect_uris":["https://api.sumup.com/callback"],"token_endpoint_auth_method":"client_secret_post","scope":"","grant_types":["client_credentials"]} → capture client_id/client_secret; POST https://auth.sam-app.ro/oauth2/token with grant_type=client_credentials&client_id={id}&client_secret={secret} → capture JWT aud claim; GET https://api.sumup.com/.well-known/oauth-protected-resource with Authorization: Bearer {staging_jwt} → observe 401 vs 200 (aud validation test); monitor for client sync via periodic prod token endpoint probe with staging client_id
+verify_steps: PASSIVE: POST https://auth.sam-app.ro/oauth2/register with body {"client_name":"poc","redirect_uris":["https://api.sumup.com/callback"],"token_endpoint_auth_method":"client_secret_post","scope":"","grant_types":["client_credentials"]} → capture client_id/client_secret; POST https://auth.sam-app.ro/oauth2/token with grant_type=client_credentials&client_id={id}&client_secret={secret} → capture JWT aud claim; GET https://api.sumup.com/.well-known/oauth-protected-resource with Authorization: Bearer {staging_jwt} → observe 401 vs 200 (aud validation test); monitor for client sync via periodic prod token endpoint probe with staging client_id
 impact: If prod accepts staging-minted tokens → full merchant API access via forged aud — CRITICAL
 testability: PASSIVE
+[HYP] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session — server-side fetch of attacker-chosen target URI with no per-op scope binding (oauth2:[])
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: Official OpenAPI spec declares oauth2:[] for this operation; Apple Pay session endpoint inherently triggers server-side request to provided target URL (domainName/validationURL); empty scope + attacker-controlled target parameter = potential SSRF to cloud metadata (169.254.169.254) or internal services
+evidence_needed: Valid token (any scope) + crafted target parameter reaching internal endpoint or metadata service
+verify_steps: AUTH_HELPED: obtain merchant token; POST https://api.sumup.com/v0.2/checkouts/{owned_checkout_id}/apple-pay-session with body {"target": "http://169.254.169.254/latest/meta-data/"} → observe response; test
+impact: SSRF to cloud metadata → IAM credentials, instance identity, internal service enumeration — CRITICAL
+testability: AUTH_HELPED
 [HYP] RFC 9728 token validation on api.sumup.com permits audience/claim confusion
 class: AUTH
 asset: api.sumup.com (payment API gateway)
@@ -19,15 +29,6 @@ reasoning: RFC 9728 metadata declares sole auth_server=https://auth.sumup.com, h
 evidence_needed: Valid merchant token (any scope) accepted on api.sumup.com for a resource the token was not issued for (aud mismatch) or with empty scp reaching oauth2:[] operations
 verify_steps: AUTH_HELPED: Obtain merchant OAuth token via dashboard; replay against GET /v0.1/merchants/{other_merchant}/payment-methods (oauth2:[]) and PUT /v0.2/checkouts/{owned}/apple-pay-session (oauth2:[]) with crafted aud/claims; observe 200 vs 403/404
 impact: Cross-tenant read of merchant payment-method metadata (BOLA) or SSRF via Apple Pay session endpoint — CRITICAL
-testability: AUTH_HELPED
-[HYP] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session — server-side fetch of attacker-chosen target URI with no per-op scope binding (oauth2:[])
-class: SSRF
-asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
-confidence: 65
-reasoning: Official OpenAPI spec declares oauth2:[] for this operation; Apple Pay session endpoint inherently triggers server-side request to provided target URL (domainName/validationURL); empty scope + attacker-controlled target parameter = potential SSRF to cloud metadata (169.254.169.254) or internal services
-evidence_needed: Valid token (any scope) + crafted target parameter reaching internal endpoint or metadata service
-verify_steps: AUTH_HELPED: obtain merchant token; POST https://api.sumup.com/v0.2/checkouts/{owned_checkout_id}/apple-pay-session with body {"target": "http://169.254.169.254/latest/meta-data/"} → observe response; test with target=http://localhost:8080, target=http://metadata.google.internal
-impact: SSRF to cloud metadata → IAM credentials, instance identity, internal service enumeration — CRITICAL
 testability: AUTH_HELPED
 [PARKED] auth.sam-app.ro unauthenticated dynamic client registration → JWT minting with attacker-controlled aud: confidence 85 but verify_steps require observing prod acceptance of staging client — untestable passively; no evidence of sync mechanism; cross-env JWKS isolation (ZERO kid overlap) currently blocks relay; keep as watch-item
 [PARKED] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session SSRF: confidence 65 but requires AUTH_HELPED (valid merchant token + owned checkout_id); no passive path to checkout creation or token acquisition; speculative without auth

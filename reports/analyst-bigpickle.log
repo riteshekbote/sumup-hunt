@@ -36269,3 +36269,145 @@ testability: AUTH_HELPED
 
 ## STEP 7 — RISK
 - [RISK] sumup: 25 — single ≤1rps read-only GET executed this cycle; no customer data, own/test IDs only; all live POCs remain AUTH_HELPED-gated on legit test credentials; residual risk unchanged (gateway behavioral drift — payment-methods 200↔404 flapping — tracked, no new exposure).
+===== ANALYST bigpickle 2026-09-19 11:36:14 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /home/runner/work/sumup-hunt/sumup-hunt && echo "---" && ls -la /home/runner/work/sumup-hunt/sumup-hunt/reports 2>/dev/null; echo "---"; ls /home/runner/work/sumup-hunt 2>/dev/null
+total 608
+drwxr-xr-x 12 runner runner   4096 Sep 19 11:33 .
+drwxr-xr-x  3 runner runner   4096 Sep 19 11:33 ..
+drwxr-xr-x  7 runner runner   4096 Sep 19 11:33 .git
+drwxr-xr-x  3 runner runner   4096 Sep 19 11:33 .github
+-rw-r--r--  1 runner runner   1885 Sep 19 11:33 README.md
+-rw-r--r--  1 runner runner     32 Sep 19 11:33 analyst-out.txt
+-rw-r--r--  1 runner runner 240685 Sep 19 11:33 analyst-prompt.txt
+-rw-r--r--  1 runner runner 236799 Sep 19 11:33 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 19 11:33 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 19 11:33 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 19 11:33 leads
+-rw-r--r--  1 runner runner  54138 Sep 19 11:33 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 19 11:33 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 19 11:33 reports
+drwxr-xr-x  2 runner runner   4096 Sep 19 11:33 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Sep 19 11:33 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 19 11:33 scripts
+-rw-r--r--  1 runner runner     33 Sep 19 11:33 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 19 11:33 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 19 11:33 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 19 11:33 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 19 11:33 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 19 11:33 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 19 11:33 triage
+---
+total 4996
+drwxr-xr-x  2 runner runner    4096 Sep 19 11:33 .
+drwxr-xr-x 12 runner runner    4096 Sep 19 11:33 ..
+-rw-r--r--  1 runner runner 2807304 Sep 19 11:33 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   22785 Sep 19 11:33 analyst-laguna.log
+-rw-r--r--  1 runner runner   22680 Sep 19 11:33 analyst-ling3.log
+-rw-r--r--  1 runner runner   22890 Sep 19 11:33 analyst-longcat.log
+-rw-r--r--  1 runner runner 1830841 Sep 19 11:33 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    2648 Sep 19 11:33 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 19 11:33 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 19 11:33 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 19 11:33 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   10427 Sep 19 11:33 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  340515 Sep 19 11:33 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 19 11:33 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Sep 19 11:33 valid-bugs.md
+---
+sumup-hunt
+[0m
+[0m✱ [0mGlob "**/*.{yml,yaml,md,txt,json}"[90m 100 matches[0m
+[0m→ [0mRead scope.yml
+[0m→ [0mRead reports/valid-bugs.md
+[0m→ [0mRead reports/hypotheses-bigpickle.txt
+[0m→ [0mRead state_bigpickle.json
+[0m→ [0mRead analyst-out.txt
+[0m→ [0mRead triage/run-2026-09-19-01-36.md
+[0m
+[0m$ [0mls -la /home/runner/work/sumup-hunt/sumup-hunt/reports/ | grep -i contentful; echo "exit:$?"; echo "---valid count---"; head -1 /home/runner/work/sumup-hunt/sumup-hunt/reports/valid-bugs.md
+exit:1
+---valid count---
+# Validated findings (running count 0)
+[0m
+[0m✱ [0mGrep "v0.1/checkouts|/checkouts/00000000|apple-pay"[90m in probe-results.md · 100 matches[0m
+[0m
+[0m$ [0mcode=$(curl -sS -o /tmp/applepay_v01.txt -D /tmp/applepay_v01.h -w '%{http_code}' --max-time 20 -A 'Mozilla/5.0 (compatible; hunt-analyst/1.0)' 'https://api.sumup.com/v0.1/checkouts/00000000-0000-0000-0000-000000000000/apple-pay-session'); echo "HTTP=$code"; echo "---headers---"; grep -iE '^(HTTP|content-type|x-envoy|x-request|cf-|set-cookie)' /tmp/applepay_v01.h; echo "---body(400b)---"; head -c 400 /tmp/applepay_v01.txt; echo
+HTTP=404
+---headers---
+HTTP/2 404 
+content-type: application/json
+x-request-id: 99c0c972-e7ab-96af-b304-2f09eabad924
+x-envoy-upstream-service-time: 1
+x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*
+cf-cache-status: DYNAMIC
+set-cookie: __cf_bm=iBcy_.LwYwDZ3hU.1fUi.EuyXCl0iIGPc06XhRtH.LU-1789817677.270757-1.0.1.1-sn.d1ZZ7c3lC66XGur4Sl7ymx9j9PeFou3Rpaw1ua1jxmNu.IovMXE9M0_KsgGEH7AB17t_YoV6heFfz6KP4eseAcJR17mpExZbEts4cT.op0IAmcfLSDWdrciDqPs0vs9XUoTjxpFdqG6Y1ku3RUQ; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 19 Sep 2026 12:04:37 GMT
+cf-ray: a3d84842fb0e8e06-IAD
+---body(400b)---
+{
+	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",
+	"title": "Not Found",
+	"status": 404,
+	"detail": "Resource not found"
+}
+[0m
+Executed the single pending read-only probe. Output only structured blocks.
+
+STEP 1 — DELTA:
+- CHANGED @ api.sumup.com/v0.1/checkouts/{id}/apple-pay-session: single GET `00000000-...` → 404 structured problem+json (`type=.../problem/404-not-found`, `detail="Resource not found"`, `x-envoy-decorator-operation: apigateway2-headless.identity.svc.cluster.local:8080/*`) — v0.1 twin is ROUTED at gitway identically to v0.2; closes the v0.1-vs-v0.2 spec/docs divergence. Hybrid responder is handler-level, GET-method 404 — no discriminator, archival.
+- RE-VERIFIED @ reports/: `contentful-preview-token-leak.md` ABSENT (`ls`/grep exit 1) — consistent with closed/rotated finding; `reports/valid-bugs.md` on disk, header "running count 0".
+- NO_DELTA else: payment-methods unauth 200 static `{"card"}` (re-verified 2026-09-18/19), RFC 9728 metadata static, JWKS kid isolation holds, authorize oracle + origin-echo CORS unchanged.
+
+STEP 2 — PRIORITIZE:
+- [PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session SSRF,7.4,money-path+cloud-metadata; both v0.1/v0.2 twins routed, handler-gated pre-token
+- [PRIO] api.sumup.com JWT aud/iss binding,6.2,gateway validates sig-only → cross-client replay; RFC 9728 has no audience field
+- [PRIO] auth.sam-app.ro/oauth2/register,6.0,unauthenticated RFC 7591 + mintable JWT (VALID, pending FILE REPORT)
+- [PRIO] chat.sumup.com/api/conversations/{id},4.3,opaque server-assigned ids, no anonymous oracle
+
+STEP 3 — HYPOTHESES:
+[HYP] apple-pay-session `target` lacks host allowlist → SSRF
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: openapi+dev docs confirm server fetches caller-supplied `target` (format:uri) and returns Apple merchantSession; control is solely host restriction to *.apple.com. Both v0.1/v0.2 twins route at gateway (this cycle: GET → structured problem+json 404, handler-level); handler is reached pre-token (foreign/no-token PUT → 404 "checkout not found"). All verification still awaits bearer+own checkout.
+evidence_needed: own bearer + own checkout; PUT `target=http://169.254.169.254/latest/meta-data/` and `http://100.100.100.200/latest/meta-data/` vs control `https://apple-pay-gateway-cert.apple.com/paymentservices/startSession` — status/timing/body divergence.
+verify_steps: AUTH_HELPED — control PUT (expect merchantSession/decline) then metadata targets (expect 5xx/timeout/body echo = no allowlist), ≤1rps.
+impact: SSRF → EC2/aliyun metadata → cross-env creds → full prod compromise (CRITICAL).
+testability: AUTH_HELPED
+[HYP] no request-level aud/iss binding on gateway JWT validation
+class: AUTH
+asset: api.sumup.com protected ops
+confidence: 75
+reasoning: RFC 9728 declares sole auth_server=auth.sumup.com with NO audience/resource_scopes field; staging JWTs (attacker-controlled aud, empty scp) rejected only at JWKS (ZERO kid overlap) on mcp; on the gateway the only verified seam is key binding (staging token accepted on oauth2:[] ops). Sig-only validation would accept tokens minted for other SumUp audiences/subjects.
+evidence_needed: own prod bearer on one read op (GET own /v1/merchants/{own}/persons); aud-mutated and iss-mutated copies → same 2xx = no binding.
+verify_steps: AUTH_HELPED — 3 GETs ≤1rps: unmutated, aud-mutated, iss-mutated; compare status codes.
+impact: cross-client/subject authorization confusion; token replay across first-party clients (High).
+testability: AUTH_HELPED
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET returns `.data.events`; ids server-assigned/opaque; anonymous GET is deterministic 500 (no oracle); support transcripts are inherently cross-merchant; support_chat client registered with PKCE on modern auth.
+evidence_needed: own PKCE session → own conversation 200; adjacent/foreign id → 200 with foreign events.
+verify_steps: AUTH_HELPED — complete /api/sso/login (PKCE S256), GET own conversationId, enumerate adjacent ids ≤0.5rps.
+impact: cross-merchant support-transcript read (High).
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE:
+- [PARKED] chat conversationId IDOR: conf 40 at drop-floor; no anonymous oracle, requires a live support_chat PKCE session which the engagement does not hold; upstream guess probability material below apple/aud. Low marginal value to re-rank.
+- [PARKED] auth.sam-app.ro register: not a hypothesis — already fully confirmed (201, mintable JWT, empty scp, JWKS isolation), triage-validated 7.5; only remaining step is submission.
+- [FINAL] apple-pay SSRF (conf 65): evidence base factual (spec + handler-gating + both twins routed), but gate is AUTH_HELPED; no passive contradiction exists.
+- [FINAL] aud/iss binding (conf 75): highest confidence open hypothesis; all three verify steps are AUTH_HELPED.
+- Dropped: cherry of `support_chat/support_centre` scope oracles (exhausted per KB), OPTIONS-204/header classes (REJECTED), contentful token (rotated, closed).
+
+STEP 5 — NEXT ACTION:
+[NEXT] HUMAN: submit `reports/hypotheses-nemotron3.txt`-backed, triage-VALID (7.5) finding — auth.sam-app.ro unauthenticated RFC 7591 dynamic client registration minting JWTs (empty scp, attacker-controlled aud, staging-only, JWKS cross-env isolation means no prod pivot as-is) — to bugs.olivermaicher.eu; valid-bugs.md still shows running count 0 (nothing filed). apple-pay SSRF and aud/iss remain blocked on an authorized merchant test session.
+
+STEP 6 — LEARNING:
+[LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/v0.1/checkouts/{id}/apple-pay-session: GET `00000000-...` → structured problem+json 404 (identity.svc op header) — v0.1 twin ROUTED exactly like v0.2; twin divergence closed; GET-method 404 is handler-level, not a route discriminator. Archived.
+[LEARN] ACCEPTED OTHER @ base: v0.1/v0.2 apple-pay-session both handler-routed; all versioned payment paths return the same gateway problem+json on GET — the only byte-different unauth response in the money surface remains the payment-methods `{"card"}` stub.
+
+STEP 7 — RISK:
+[RISK] sumup: 25 — one read-only GET this cycle at ≤1rps on in-scope api.sumup.com (no customer data, zero-id path); engagement discipline intact. Residuals: gateway behavioral drift (payment-methods 200↔404 flapping, 2026-09-17), and both top hypotheses require an authorized merchant session before any live validation — no auth bypass or mutating/write action ever attempted against live infra.
