@@ -35843,3 +35843,133 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] sumup: 25 — program is mature with a strict scope/out-of-scope model and the engagement has held passive-first (GET/HEAD/OPTIONS, ≤1rps, no customer data, own/staging IDs only); residual risk is behavioral drift (payment-methods 200↔404 flapping shows the gateway is not byte-stable) and the JWT/SSRF POCs are AUTH_HELPED, needing a controlled merchant session before any live validation.
+===== ANALYST bigpickle 2026-09-19 01:41:27 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la && ls -la reports/ 2>/dev/null | head -30
+total 596
+drwxr-xr-x 12 runner runner   4096 Sep 19 01:37 .
+drwxr-xr-x  3 runner runner   4096 Sep 19 01:36 ..
+drwxr-xr-x  7 runner runner   4096 Sep 19 01:37 .git
+drwxr-xr-x  3 runner runner   4096 Sep 19 01:36 .github
+-rw-r--r--  1 runner runner   1885 Sep 19 01:36 README.md
+-rw-r--r--  1 runner runner     32 Sep 19 01:37 analyst-out.txt
+-rw-r--r--  1 runner runner 237098 Sep 19 01:37 analyst-prompt.txt
+-rw-r--r--  1 runner runner 233212 Sep 19 01:37 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 leads
+-rw-r--r--  1 runner runner  53205 Sep 19 01:36 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 reports
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Sep 19 01:36 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 scripts
+-rw-r--r--  1 runner runner     33 Sep 19 01:36 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 19 01:36 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 19 01:36 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 19 01:36 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 19 01:36 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 19 01:36 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 triage
+total 4916
+drwxr-xr-x  2 runner runner    4096 Sep 19 01:36 .
+drwxr-xr-x 12 runner runner    4096 Sep 19 01:37 ..
+-rw-r--r--  1 runner runner 2783493 Sep 19 01:36 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   22351 Sep 19 01:36 analyst-laguna.log
+-rw-r--r--  1 runner runner   22248 Sep 19 01:36 analyst-ling3.log
+-rw-r--r--  1 runner runner   22454 Sep 19 01:36 analyst-longcat.log
+-rw-r--r--  1 runner runner 1780873 Sep 19 01:36 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    3606 Sep 19 01:36 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 19 01:36 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 19 01:36 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 19 01:36 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   10817 Sep 19 01:36 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  334728 Sep 19 01:36 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 19 01:36 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Sep 19 01:36 valid-bugs.md
+[0m
+[0m$ [0mcat state_bigpickle.json && echo "---" && cat reports/hypotheses-bigpickle.txt && echo "---" && cat analyst-out.txt
+{"phase": "POC", "target": "api"}---
+## 2026-09-18 23:23:59 UTC [target] (model bigpickle)
+[HYP] apple-pay-session `target` lacks host allowlist → SSRF
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: openapi.yaml + dev docs confirm server fetches caller-supplied `target` (format:uri, required with context) and returns the fetched Apple merchantSession JSON (signature/merchantIdentifier echoed). Handler is reachable pre-token (foreign-key and no-token PUT both → 404 "checkout not found", i.e. handler-gated, not token-gated). Security control is solely whether `target` host is restrictable to *.apple.com.
+evidence_needed: own bearer + own checkout; PUT `target=http://169.254.169.254/latest/meta-data/` and `http://100.100.100.200/latest/meta-data/` vs control `https://apple-pay-gateway-cert.apple.com/paymentservices/startSession` — divergence in status/timing/body (proxy-error vs Apple session vs meta-data echo).
+verify_steps: AUTH_HELPED — after own /authorize+token: control PUT (expect merchantSession/decline), then metadata targets (expect 5xx/timeout/body divergence = no allowlist).
+impact: SSRF → EC2/aliyun metadata → cross-env creds → full prod compromise (CRITICAL).
+testability: AUTH_HELPED
+[HYP] no request-level aud/iss binding on standardized gateway JWT validation
+class: AUTH
+asset: api.sumup.com (protected ops; RFC 9728 declares sole auth_server=auth.sumup.com, no audience field)
+confidence: 75
+reasoning: metadata static and lacks audience/resource_scopes; staging JWTs minted with attacker-controlled aud+empty scp are rejected only at JWKS (ZERO kid overlap) for mcp; on the gateway the only verified seam is key binding, not aud/iss per-op binding. If the gateway validates sig only, tokens valid for other SumUp audiences may authorize here.
+evidence_needed: own prod bearer on one read op (e.g. GET own /v1/merchants/{own}/persons); identical request with aud claim mutated and iss claim mutated → same 2xx = no binding.
+verify_steps: AUTH_HELPED — 3 GETs on own read op ≤1rps: unmutated token, aud-mutated, iss-mutated; compare status codes.
+impact: cross-client/subject authorization confusion; token replay across first-party clients.
+testability: AUTH_HELPED
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET returns .data.events; ids server-assigned/opaque; anonymous GET deterministic 500 all id shapes (no oracle); transcripts inherently cross-merchant; support_chat+PKCE modern-registered.
+evidence_needed: own PKCE session → own conversation 200; adjacent/foreign id → 200 with foreign events.
+verify_steps: AUTH_HELPED — complete /api/sso/login (PKCE S256), GET own conversationId, then enumerate adjacent ids ≤0.5 rps.
+impact: cross-merchant support-transcript read (High).
+testability: AUTH_HELPED
+[NEXT] PROBE: `GET https://api.sumup.com/v0.1/checkouts/00000000-0000-0000-0000-000000000000/apple-pay-session` (single, ≤1rps, read-only) to close the v0.1-vs-v0.2 spec/docs divergence: 405/structured-404-with-problem+json ⇒ routed twin; plain 404 ⇒ unrouted. Then archive (not a discriminator).
+[RISK] sumup: 25 — program is mature with a strict scope/out-of-scope model and the engagement has held passive-first (GET/HEAD/OPTIONS, ≤1rps, no customer data, own/staging IDs only); residual risk is behavioral drift (payment-methods 200↔404 flapping shows the gateway is not byte-stable) and the JWT/SSRF POCs are AUTH_HELPED, needing a controlled merchant session before any live validation.
+---
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la && ls -la reports/ 2>/dev/null | head -30
+total 596
+drwxr-xr-x 12 runner runner   4096 Sep 19 01:37 .
+drwxr-xr-x  3 runner runner   4096 Sep 19 01:36 ..
+drwxr-xr-x  7 runner runner   4096 Sep 19 01:37 .git
+drwxr-xr-x  3 runner runner   4096 Sep 19 01:36 .github
+-rw-r--r--  1 runner runner   1885 Sep 19 01:36 README.md
+-rw-r--r--  1 runner runner     32 Sep 19 01:37 analyst-out.txt
+-rw-r--r--  1 runner runner 237098 Sep 19 01:37 analyst-prompt.txt
+-rw-r--r--  1 runner runner 233212 Sep 19 01:37 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 leads
+-rw-r--r--  1 runner runner  53205 Sep 19 01:36 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 reports
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Sep 19 01:36 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 scripts
+-rw-r--r--  1 runner runner     33 Sep 19 01:36 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 19 01:36 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 19 01:36 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 19 01:36 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 19 01:36 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 19 01:36 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 19 01:36 triage
+total 4916
+drwxr-xr-x  2 runner runner    4096 Sep 19 01:36 .
+drwxr-xr-x 12 runner runner    4096 Sep 19 01:37 ..
+-rw-r--r--  1 runner runner 2783493 Sep 19 01:36 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   22351 Sep 19 01:36 analyst-laguna.log
+-rw-r--r--  1 runner runner   22248 Sep 19 01:36 analyst-ling3.log
+-rw-r--r--  1 runner runner   22454 Sep 19 01:36 analyst-longcat.log
+-rw-r--r--  1 runner runner 1780873 Sep 19 01:36 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    3606 Sep 19 01:36 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 19 01:36 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 19 01:36 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 19 01:36 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   10817 Sep 19 01:36 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  334728 Sep 19 01:36 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 19 01:36 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Sep 19 01:36 valid-bugs.md
+[0m
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -sS -o /tmp/v01_aps.txt -D - --max-time 20 "https://api.sumup.com/v0.1/checkouts/00000000-0000-0000-0000-000000000000/apple-pay-session" | head -40; echo "---BODY---"; cat /tmp/v01_aps.txt | head -c 500 failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.

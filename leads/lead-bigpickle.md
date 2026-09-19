@@ -5106,3 +5106,33 @@ impact: cross-merchant support-transcript read (High).
 testability: AUTH_HELPED
 [NEXT] PROBE: `GET https://api.sumup.com/v0.1/checkouts/00000000-0000-0000-0000-000000000000/apple-pay-session` (single, ≤1rps, read-only) to close the v0.1-vs-v0.2 spec/docs divergence: 405/structured-404-with-problem+json ⇒ routed twin; plain 404 ⇒ unrouted. Then archive (not a discriminator).
 [RISK] sumup: 25 — program is mature with a strict scope/out-of-scope model and the engagement has held passive-first (GET/HEAD/OPTIONS, ≤1rps, no customer data, own/staging IDs only); residual risk is behavioral drift (payment-methods 200↔404 flapping shows the gateway is not byte-stable) and the JWT/SSRF POCs are AUTH_HELPED, needing a controlled merchant session before any live validation.
+## 2026-09-19 01:37:20 UTC [target] (model bigpickle)
+[HYP] apple-pay-session `target` lacks host allowlist → SSRF
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: openapi.yaml + dev docs confirm server fetches caller-supplied `target` (format:uri, required with context) and returns the fetched Apple merchantSession JSON (signature/merchantIdentifier echoed). Handler is reachable pre-token (foreign-key and no-token PUT both → 404 "checkout not found", i.e. handler-gated, not token-gated). Security control is solely whether `target` host is restrictable to *.apple.com.
+evidence_needed: own bearer + own checkout; PUT `target=http://169.254.169.254/latest/meta-data/` and `http://100.100.100.200/latest/meta-data/` vs control `https://apple-pay-gateway-cert.apple.com/paymentservices/startSession` — divergence in status/timing/body (proxy-error vs Apple session vs meta-data echo).
+verify_steps: AUTH_HELPED — after own /authorize+token: control PUT (expect merchantSession/decline), then metadata targets (expect 5xx/timeout/body divergence = no allowlist).
+impact: SSRF → EC2/aliyun metadata → cross-env creds → full prod compromise (CRITICAL).
+testability: AUTH_HELPED
+[HYP] no request-level aud/iss binding on standardized gateway JWT validation
+class: AUTH
+asset: api.sumup.com (protected ops; RFC 9728 declares sole auth_server=auth.sumup.com, no audience field)
+confidence: 75
+reasoning: metadata static and lacks audience/resource_scopes; staging JWTs minted with attacker-controlled aud+empty scp are rejected only at JWKS (ZERO kid overlap) for mcp; on the gateway the only verified seam is key binding, not aud/iss per-op binding. If the gateway validates sig only, tokens valid for other SumUp audiences may authorize here.
+evidence_needed: own prod bearer on one read op (e.g. GET own /v1/merchants/{own}/persons); identical request with aud claim mutated and iss claim mutated → same 2xx = no binding.
+verify_steps: AUTH_HELPED — 3 GETs on own read op ≤1rps: unmutated token, aud-mutated, iss-mutated; compare status codes.
+impact: cross-client/subject authorization confusion; token replay across first-party clients.
+testability: AUTH_HELPED
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET returns .data.events; ids server-assigned/opaque; anonymous GET deterministic 500 all id shapes (no oracle); transcripts inherently cross-merchant; support_chat+PKCE modern-registered.
+evidence_needed: own PKCE session → own conversation 200; adjacent/foreign id → 200 with foreign events.
+verify_steps: AUTH_HELPED — complete /api/sso/login (PKCE S256), GET own conversationId, then enumerate adjacent ids ≤0.5 rps.
+impact: cross-merchant support-transcript read (High).
+testability: AUTH_HELPED
+[NEXT] PROBE: `GET https://api.sumup.com/v0.1/checkouts/00000000-0000-0000-0000-000000000000/apple-pay-session` (single, ≤1rps, read-only) to close the v0.1-vs-v0.2 spec/docs divergence: 405/structured-404-with-problem+json ⇒ routed twin; plain 404 ⇒ unrouted. Then archive (not a discriminator).
+[RISK] sumup: 25 — program is mature with a strict scope/out-of-scope model and the engagement has held passive-first (GET/HEAD/OPTIONS, ≤1rps, no customer data, own/staging IDs only); residual risk is behavioral drift (payment-methods 200↔404 flapping shows the gateway is not byte-stable) and the JWT/SSRF POCs are AUTH_HELPED, needing a controlled merchant session before any live validation.
