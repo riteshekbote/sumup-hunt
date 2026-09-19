@@ -5217,3 +5217,4 @@ impact: SSRF → EC2/aliyun metadata → credentials → full prod compromise �
 testability: AUTH_HELPED
 [NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 dynamic-client-registration finding (evidence + repro at `reports/hypotheses-nemotron3.txt`: unauthenticated POST /oauth2/register → 201 client_id+secret; client_credentials mints JWTs with attacker-controlled aud; cross-env JWKS isolation = no prod pivot as-is) to bugs.olivermaicher.eu, then record the ticket in `reports/valid-bugs.md` (running count 0 → 1).
 [RISK] sumup: 25 — one GET this cycle to auth.sumup.com/.well-known/jwks.json (200, public discovery metadata, well under 1rps); no mutating, no auth-bypass, no customer data. Residuals unchanged: payment-methods stub 200↔404 flapping (behavioral drift), and every top hypothesis remains blocked on an authorized merchant test session — no live validation of aud/iss or SSRF attempted.
+## 2026-09-19 17:54:43 UTC [target] (model bigpickle)
