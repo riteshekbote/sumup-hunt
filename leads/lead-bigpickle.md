@@ -5136,3 +5136,31 @@ impact: cross-merchant support-transcript read (High).
 testability: AUTH_HELPED
 [NEXT] PROBE: `GET https://api.sumup.com/v0.1/checkouts/00000000-0000-0000-0000-000000000000/apple-pay-session` (single, ≤1rps, read-only) to close the v0.1-vs-v0.2 spec/docs divergence: 405/structured-404-with-problem+json ⇒ routed twin; plain 404 ⇒ unrouted. Then archive (not a discriminator).
 [RISK] sumup: 25 — program is mature with a strict scope/out-of-scope model and the engagement has held passive-first (GET/HEAD/OPTIONS, ≤1rps, no customer data, own/staging IDs only); residual risk is behavioral drift (payment-methods 200↔404 flapping shows the gateway is not byte-stable) and the JWT/SSRF POCs are AUTH_HELPED, needing a controlled merchant session before any live validation.
+## 2026-09-19 06:38:19 UTC [target] (model bigpickle)
+[HYP] apple-pay-session `target` lacks host allowlist → SSRF
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: openapi + dev docs confirm server fetches caller-supplied `target` (format:uri) and returns fetched Apple merchantSession JSON. Handler reachable pre-token (foreign/no-token PUT → 404 "checkout not found": handler-gated, not token-gated). Control is solely `target` host restriction to *.apple.com. Unauthenticated GET structured-404 on both v0.1/v0.2 twins confirms route exists at handler level.
+evidence_needed: own bearer + own checkout; PUT `target=http://169.254.169.254/latest/meta-data/` and aliyun `http://100.100.100.200/latest/meta-data/` vs control `https://apple-pay-gateway-cert.apple.com/paymentservices/startSession` — status/timing/body divergence.
+verify_steps: AUTH_HELPED — control PUT (expect merchantSession/decline) then metadata targets (expect 5xx/timeout/body echo = no allowlist).
+impact: SSRF → EC2/aliyun metadata → cross-env creds → full prod compromise (CRITICAL).
+testability: AUTH_HELPED
+[HYP] no request-level aud/iss binding on standardized gateway JWT validation
+class: AUTH
+asset: api.sumup.com protected ops
+confidence: 75
+reasoning: RFC 9728 declares sole auth_server=auth.sumup.com with NO audience/resource_scopes field; staging JWTs with attacker-controlled aud+empty scp rejected only at JWKS (ZERO kid overlap) on mcp; on the gateway the only verified seam is key binding. Sig-only validation would accept tokens minted for other SumUp audiences.
+evidence_needed: own prod bearer on one read op (GET own /v1/merchants/{own}/persons); aud-mutated and iss-mutated copies → same 2xx = no binding.
+verify_steps: AUTH_HELPED — 3 GETs ≤1rps: unmutated, aud-mutated, iss-mutated; compare status.
+impact: cross-client/subject authorization confusion; token replay across first-party clients (High).
+testability: AUTH_HELPED
+[HYP] chat conversationId lacks ownership discriminator
+class: IDOR
+asset: chat.sumup.com/api/conversations/{conversationId}
+confidence: 40
+reasoning: GET returns .data.events; ids server-assigned/opaque; anonymous GET deterministic 500 (no oracle); transcripts inherently cross-merchant; support_chat client PKCE modern-registered.
+evidence_needed: own PKCE session → own conversation 200; adjacent/foreign id → 200 with foreign events.
+verify_steps: AUTH_HELPED — complete /api/sso/login (PKCE S256), GET own conversationId, enumerate adjacent ids ≤0.5rps.
+impact: cross-merchant support-transcript read (High).
+testability: AUTH_HELPED

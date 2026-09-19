@@ -985,3 +985,12 @@ https://api.sumup.com/v0.1/merchants/MH4H92C7 -> HTTP 404
 https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods -> HTTP 404
 https://api.sumup.com -> HTTP 404
 https://api.sumup.com/v0.1/checkouts/00000000-0000-0000-0000-000000000000/apple-pay-session` -> HTTP 404
+
+## 2026-09-19 06:39:42 UTC
+https://api.sumup.com/callback -> HTTP 404
+https://api.sumup.com/.well-known/oauth-protected-resource -> 200 len=286
+https://auth.sumup.com -> HTTP 403
+https://api.sumup.com/v0.2/checkouts/{owned_checkout_id -> HTTP 404
+https://api.sumup.com/v0.1/merchants/MH4H92C7 -> HTTP 404
+https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods -> HTTP 404
+https://api.sumup.com -> HTTP 404

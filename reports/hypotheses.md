@@ -2183,3 +2183,21 @@
 - LEARN: CHANGED @ api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated returns 200 static `{"card"}` re-verified — the 2026-09-17 "now 404" was transien
 - LEARN: REJECTED BUSLOGIC @ api.sumup.com: OPTIONS 204 + origin-echo CORS is a gateway-wide blanket on all paths incl. unrouted — OPTIONS is NOT a route discriminator; 
 - LEARN: REJECTED BUSLOGIC @ api.sumup.com/v0.1/merchants/{code}/payment-methods: param-invariant stub (amount/currency/bogus-code/negative → identical 200; spec-declare
+
+## RANKED HYPOTHESES 2026-09-19 06:39:33 UTC
+- [85] auth.sam-app.ro/oauth2/register: auth.sam-app.ro unauthenticated dynamic client registration → JWT minting with attacker-controlled aud (from art/lead_nemotron3.txt)
+- [65] api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session: apple-pay-session `target` lacks host allowlist → SSRF (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-nemotron3.txt): PROBE: POST https://auth.sam-app.ro/oauth2/register with body {"client_name":"poc","redirect_uris":["https://api.sumup.com/callback"],"token_endpoint_auth_metho
+- LEARN: ACCEPTED OTHER @ developer.sumup.com/api: official SumUp OpenAPI spec (github.com/sumup/sumup-openapi) public — full 42-op production model incl. exact paths, p
+- LEARN: ACCEPTED OATH @ api.sumup.com/token: legacy token endpoint ROUTED (OPTIONS 204 + structured 404 on GET, identity.svc operation) — documented in official spec, l
+- LEARN: ACCEPTED OATH @ auth.sumup.com/oauth2/auth: scope-acceptance oracle disambiguated (302 login_challenge=allowed vs 303 invalid_scope); dashboard allows readers.r
+- LEARN: ACCEPTED OATH @ auth.sumup.com: support_centre allowlist is exactly {openid, classic, offline}; classic+any scope → invalid_scope; scope oracle for support_cent
+- LEARN: ACCEPTED BUSLOGIC @ api.sumup.com spec: GET /v0.1/merchants/{merchant_code}/payment-methods and PUT /v0.2/checkouts/{checkout_id}/apple-pay-session declared oau
+- LEARN: REJECTED MISCONFIG @ help.sumup.com: Contentful PREVIEW token rotated (401) — finding non-reproducible; report file never existed despite KB hallucinations
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: Client_id oracle + origin-echo CORS + redirect-set divergence LIVE; callback host enumeration fully exhaustive (~200 co
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: Dynamic client registration LIVE; staging JWTs mintable but empty-scope + cross-env JWKS isolation (ZERO kid overlap) blocks re
+- LEARN: ACCEPTED OTHER @ api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static — resource=https://api.sumup.com, sole auth server auth.sumup.com,
+- LEARN: ACCEPTED OTHER @ sumup-openapi: Full 42-op security model enumerated — exactly 2 empty-scope ops (payment-methods GET, apple-pay-session PUT), apiKey=HTTP Beare
+- LEARN: CHANGED @ api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated returns 200 static `{"card"}` re-verified — the 2026-09-17 "now 404" was transien
+- LEARN: REJECTED BUSLOGIC @ api.sumup.com: OPTIONS 204 + origin-echo CORS is a gateway-wide blanket on all paths incl. unrouted — OPTIONS is NOT a route discriminator; 
+- LEARN: REJECTED BUSLOGIC @ api.sumup.com/v0.1/merchants/{code}/payment-methods: param-invariant stub (amount/currency/bogus-code/negative → identical 200; spec-declare
