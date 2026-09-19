@@ -5196,3 +5196,24 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED BUSLOGIC @ api.sumup.com/v0.1/checkouts/{id}/apple-pay-session: GET `00000000-...` → structured problem+json 404 (identity.svc op header) — v0.1 twin ROUTED exactly like v0.2; twin divergence closed; GET-method 404 is handler-level, not a route discriminator. Archived.
 [LEARN] ACCEPTED OTHER @ base: v0.1/v0.2 apple-pay-session both handler-routed; all versioned payment paths return the same gateway problem+json on GET — the only byte-different unauth response in the money surface remains the payment-methods `{"card"}` stub.
 [RISK] sumup: 25 — one read-only GET this cycle at ≤1rps on in-scope api.sumup.com (no customer data, zero-id path); engagement discipline intact. Residuals: gateway behavioral drift (payment-methods 200↔404 flapping, 2026-09-17), and both top hypotheses require an authorized merchant session before any live validation — no auth bypass or mutating/write action ever attempted against live infra.
+## 2026-09-19 14:49:24 UTC [target] (model bigpickle)
+[HYP] no request-level aud/iss binding on standardized gateway JWT validation
+class: AUTH
+asset: api.sumup.com protected ops (RFC 9728-declared resource server)
+confidence: 65
+reasoning: RFC 9728 declares sole auth_server=auth.sumup.com with NO audience/resource_scopes field; prod JWKS stable 8-key set (re-verified this cycle) so the only documented cross-env rejection (staging kids → no applicable key) is key-level, not claim-level; staging JWTs carry attacker-controlled aud+empty scp, and empty scp was accepted pre-token on oauth2:[] routes while token-rejection seam elsewhere is key-only.
+evidence_needed: own prod bearer on one read op; aud-mutated and iss-mutated copies → same 2xx means no claim binding.
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/persons ×3 ≤1rps: unmutated vs aud-mutated vs iss-mutated; compare status/body.
+impact: cross-client/subject token replay across first-party clients — High.
+testability: AUTH_HELPED
+[HYP] apple-pay-session `target` lacks host allowlist → SSRF
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: openapi+dev docs confirm server fetches caller-supplied `target` (format:uri) returning Apple merchantSession; v0.1/v0.2 twins handler-routed (structured problem+json 404 on GET without token); handler reached pre-token (foreign/no-token PUT → 404 "checkout not found"), so gate is AUTH_HELPED not auth-required-at-runtime; sole control is host restriction to *.apple.com.
+evidence_needed: own bearer + own checkout; PUT metadata targets vs control https://apple-pay-gateway-cert.apple.com/paymentservices/startSession — status/timing/body divergence.
+verify_steps: AUTH_HELPED — control PUT then EC2/aliyun metadata targets (expect 5xx/timeout/echo = no allowlist), ≤1rps.
+impact: SSRF → EC2/aliyun metadata → credentials → full prod compromise — Critical.
+testability: AUTH_HELPED
+[NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 dynamic-client-registration finding (evidence + repro at `reports/hypotheses-nemotron3.txt`: unauthenticated POST /oauth2/register → 201 client_id+secret; client_credentials mints JWTs with attacker-controlled aud; cross-env JWKS isolation = no prod pivot as-is) to bugs.olivermaicher.eu, then record the ticket in `reports/valid-bugs.md` (running count 0 → 1).
+[RISK] sumup: 25 — one GET this cycle to auth.sumup.com/.well-known/jwks.json (200, public discovery metadata, well under 1rps); no mutating, no auth-bypass, no customer data. Residuals unchanged: payment-methods stub 200↔404 flapping (behavioral drift), and every top hypothesis remains blocked on an authorized merchant test session — no live validation of aud/iss or SSRF attempted.

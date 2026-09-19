@@ -2222,3 +2222,14 @@
 - LEARN: CHANGED @ api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated returns 200 static `{"card"}` re-verified — the 2026-09-17 "now 404" was transien
 - LEARN: REJECTED BUSLOGIC @ api.sumup.com: OPTIONS 204 + origin-echo CORS is a gateway-wide blanket on all paths incl. unrouted — OPTIONS is NOT a route discriminator; 
 - LEARN: REJECTED BUSLOGIC @ api.sumup.com/v0.1/merchants/{code}/payment-methods: param-invariant stub (amount/currency/bogus-code/negative → identical 200; spec-declare
+
+## RANKED HYPOTHESES 2026-09-19 14:52:04 UTC
+- [85] auth.sam-app.ro/oauth2/register: auth.sam-app.ro unauthenticated dynamic client registration → JWT minting with attacker-controlled aud (from art/lead_nemotron3.txt)
+- [65] api.sumup.com: no request-level aud/iss binding on standardized gateway JWT validation (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: submit the auth.sam-app.ro RFC 7591 dynamic-client-registration finding (evidence + repro at `reports/hypotheses-nemotron3.txt`: unauthenticated POST /oa
+- NEXT(hypotheses-nemotron3.txt): PROBE: POST https://auth.sam-app.ro/oauth2/register with body {"client_name":"poc","redirect_uris":["https://api.sumup.com/callback"],"token_endpoint_auth_metho
+- LEARN: REJECTED BUSLOGIC @ api.sumup.com: OPTIONS 204 + origin-echo CORS is a gateway-wide blanket on all paths incl. unrouted — OPTIONS is NOT a route discriminator; 
+- LEARN: REJECTED BUSLOGIC @ api.sumup.com/v0.1/merchants/{code}/payment-methods: param-invariant stub (amount/currency/bogus-code/negative → identical 200; spec-declare
+- LEARN: ACCEPTED OTHER @ base: v0.1/v0.2 apple-pay-session both handler-routed; all versioned payment paths return the same gateway problem+json on GET — the only byte-
+- LEARN: ACCEPTED OTHER @ sumup-openapi: spec byte-matches live gateway; monthly auto-sync from internal sumup/apis (last #73 2026-09-04); 28 paths / 44 ops + 3 outbound
+- LEARN: CHANGED @ api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated returns 200 static `{"card"}` re-verified — the 2026-09-17 "now 404" was transien

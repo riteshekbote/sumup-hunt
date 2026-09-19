@@ -36411,3 +36411,71 @@ STEP 6 — LEARNING:
 
 STEP 7 — RISK:
 [RISK] sumup: 25 — one read-only GET this cycle at ≤1rps on in-scope api.sumup.com (no customer data, zero-id path); engagement discipline intact. Residuals: gateway behavioral drift (payment-methods 200↔404 flapping, 2026-09-17), and both top hypotheses require an authorized merchant session before any live validation — no auth bypass or mutating/write action ever attempted against live infra.
+===== ANALYST bigpickle 2026-09-19 14:52:04 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -m 20 -w '\nHTTP %{http_code}\n' https://auth.sumup.com/.well-known/jwks.json | python3 -c "
+import sys, json
+raw = sys.stdin.read()
+body, _, status = raw.rpartition('HTTP ')
+try:
+    data = json.loads(body)
+    keys = data.get('keys', [])
+    kids = sorted(k.get('kid','') for k in keys)
+    print('keys:', len(keys))
+    print('kids:', kids)
+    algs = sorted(k.get('alg','') for k in keys)
+    print('algs:', algs)
+except Exception as e:
+    print('parse-error:', e)
+print('status:', status.strip())
+"
+keys: 8
+kids: ['-tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4', '1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM', 'public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9', 'public:32ad4b15-8641-4aaa-9a2e-427bb1848321', 'public:38618372-f016-4e5d-97b2-d043a975d243', 'public:8c332d17-2b35-4cba-a61e-6843b4375a71', 'public:8e43ec38-e8f1-47e4-aa6c-9990c3ae20b3', 'public:a4627362-0900-4bfa-8b68-3a740165dbcf']
+algs: ['EdDSA', 'RS256', 'RS256', 'RS256', 'RS256', 'RS256', 'RS256', 'RS256']
+status: 200
+[0m
+**STEP 1 — DELTA**
+- CONFIRM: prod JWKS re-fetched live 2026-09-19 — 8 keys, kid set byte-identical to the 2026-09-07 baseline (6 `public:*` RSA + 1 unnamed RSA + 1 EdDSA); zero signing-key rotation across 12 days.
+- NO_DELTA: all other documented passive surfaces byte-stable (payment-methods `{"card"}` stub re-verified 200 this day, v0.1/v0.2 apple-pay twins handler-routed, RFC 9728 metadata static, chat.sumup.com API closed).
+
+**STEP 2 — PRIORITIZE**
+- [PRIO] api.sumup.com gateway JWT aud/iss validation, 5.45, tech_exposure+gating (JWT scope oracle, money-flow value)
+- [PRIO] auth.sam-app.ro/oauth2/register (RFC 7591 → JWT mint), 5.45, gate_ease (unauthenticated 201, but staging-only blast radius)
+- [PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session target SSRF, 5.35, cloud_surface (SSRF→metadata reach)
+- [PARKED] chat.sumup.com conversationId IDOR, 3.95 — confidence 40, no anonymous oracle, AUTH_HELPED, adjacent-id test impossible without own session.
+
+**STEP 3 — HYPOTHESES**
+[HYP] no request-level aud/iss binding on standardized gateway JWT validation
+class: AUTH
+asset: api.sumup.com protected ops (RFC 9728-declared resource server)
+confidence: 65
+reasoning: RFC 9728 declares sole auth_server=auth.sumup.com with NO audience/resource_scopes field; prod JWKS stable 8-key set (re-verified this cycle) so the only documented cross-env rejection (staging kids → no applicable key) is key-level, not claim-level; staging JWTs carry attacker-controlled aud+empty scp, and empty scp was accepted pre-token on oauth2:[] routes while token-rejection seam elsewhere is key-only.
+evidence_needed: own prod bearer on one read op; aud-mutated and iss-mutated copies → same 2xx means no claim binding.
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/persons ×3 ≤1rps: unmutated vs aud-mutated vs iss-mutated; compare status/body.
+impact: cross-client/subject token replay across first-party clients — High.
+testability: AUTH_HELPED
+[HYP] apple-pay-session `target` lacks host allowlist → SSRF
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: openapi+dev docs confirm server fetches caller-supplied `target` (format:uri) returning Apple merchantSession; v0.1/v0.2 twins handler-routed (structured problem+json 404 on GET without token); handler reached pre-token (foreign/no-token PUT → 404 "checkout not found"), so gate is AUTH_HELPED not auth-required-at-runtime; sole control is host restriction to *.apple.com.
+evidence_needed: own bearer + own checkout; PUT metadata targets vs control https://apple-pay-gateway-cert.apple.com/paymentservices/startSession — status/timing/body divergence.
+verify_steps: AUTH_HELPED — control PUT then EC2/aliyun metadata targets (expect 5xx/timeout/echo = no allowlist), ≤1rps.
+impact: SSRF → EC2/aliyun metadata → credentials → full prod compromise — Critical.
+testability: AUTH_HELPED
+
+**STEP 4 — SELF-CRITIQUE**
+- [PARKED] chat.sumup.com conversationId IDOR (conf 40, no oracle, needs own session — parked).
+- [FINAL] gateway aud/iss binding (65; cheap 3-request discriminator, unaffected by the new JWKS-stability data point) and apple-pay SSRF (65; highest ceiling, blocked purely on auth). sam-app.ro RFC 7591 is no longer a hypothesis — it is an ACCEPTED, triage-VALID (7.5) finding whose only blocker is HUMAN submission (valid-bugs.md count still 0).
+
+**STEP 5 — NEXT ACTION**
+[NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 dynamic-client-registration finding (evidence + repro at `reports/hypotheses-nemotron3.txt`: unauthenticated POST /oauth2/register → 201 client_id+secret; client_credentials mints JWTs with attacker-controlled aud; cross-env JWKS isolation = no prod pivot as-is) to bugs.olivermaicher.eu, then record the ticket in `reports/valid-bugs.md` (running count 0 → 1).
+
+**STEP 6 — LEARNING**
+- [LEARN] ACCEPTED OTHER @ auth.sumup.com/.well-known/jwks.json: kid set re-verified identical to 2026-09-07 baseline (8 keys, 6 public:* RSA + 1 unnamed RSA + 1 EdDSA) — zero signing-key rotation in 12 days; gateway/JWKS-cache seam is stable, so key-rotation-grace reuse tests are non-starters until a rotation event is observed.
+- [LEARN] ACCEPTED OTHER @ base: all money/OAuth surfaces except the payment-methods stub remain byte-stable; the only actionable gap on api.sumup.com is claim-level JWT validation, and it is strictly AUTH_HELPED.
+
+**STEP 7 — RISK**
+[RISK] sumup: 25 — one GET this cycle to auth.sumup.com/.well-known/jwks.json (200, public discovery metadata, well under 1rps); no mutating, no auth-bypass, no customer data. Residuals unchanged: payment-methods stub 200↔404 flapping (behavioral drift), and every top hypothesis remains blocked on an authorized merchant test session — no live validation of aud/iss or SSRF attempted.
