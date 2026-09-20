@@ -37612,3 +37612,80 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 - [RISK] sumup: 25 — this cycle: local file reads only, zero live probes on the byte-stable surface (22nd stable cycle). Residuals unchanged: the payment-methods 200↔404 flap (single 2026-09-17 observation, reverted twice) and the material exposure remains the unfiled VALID 7.5 finding (0/1), now 6 cycles stale — the only number that moves the needle.
+===== ANALYST bigpickle 2026-09-20 22:22:02 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m✱ [0mGlob "reports/*"[90m 13 matches[0m
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null; echo "---"; git log --oneline -3 2>/dev/null
+total 5248
+drwxr-xr-x  2 runner runner    4096 Sep 20 22:19 .
+drwxr-xr-x 12 runner runner    4096 Sep 20 22:19 ..
+-rw-r--r--  1 runner runner 2919864 Sep 20 22:19 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   25172 Sep 20 22:19 analyst-laguna.log
+-rw-r--r--  1 runner runner   25056 Sep 20 22:19 analyst-ling3.log
+-rw-r--r--  1 runner runner   25288 Sep 20 22:19 analyst-longcat.log
+-rw-r--r--  1 runner runner 1940935 Sep 20 22:19 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    2256 Sep 20 22:19 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 20 22:19 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 20 22:19 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 20 22:19 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner    7655 Sep 20 22:19 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  372295 Sep 20 22:19 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 20 22:19 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Sep 20 22:19 valid-bugs.md
+---
+462853c reposcan 2026-09-20-20-51
+[0m
+[0m→ [0mRead reports/valid-bugs.md
+STEP 1 — DELTA
+- NO_DELTA on network surface — 22nd byte-stable cycle; payment-methods stub 200 / RFC 9728 metadata / apple-pay GET structured 404 / prod JWKS 8-kid all unchanged (no probes run; KB marks re-probing waste).
+- Files ground-truthed this cycle: `reports/valid-bugs.md` on disk, running count **0** (line 1); 7.5-VALID `auth.sam-app.ro unauth dynamic client registration → JWTs` still flagged **FILE REPORT** (lines 64, 79); evidence file `reports/hypotheses-nemotron3.txt` present. Nothing moved — submission remains the sole blocker, now 6 cycles stale.
+
+STEP 2 — PRIORITIZE
+- [PRIO] auth.sam-app.ro,7.5,auth/evidence-complete; staging auth server, mintable JWTs, unauth reachable, high freshness-per-impact; priority dominated by business_value (only fileable bug) = 0.25·6+0.25·8+0.15·6+0.15·7+0.10·4+0.10·5 ≈ 6.2
+
+STEP 3 — HYPOTHESES
+[HYP] staging RFC 7591 unauth dynamic client registration — valid finding unfiled (evidence complete, submission pending)
+class: AUTH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: unauth POST → 201 client_id+secret+chosen redirect_uris (declared in openid-configuration, absent in prod auth.sumup.com 404); client_credentials mints real JWTs (empty scp, attacker-controlled aud); api.sam-app.ro gateway validates signature (structured problem+json vs plain 404); cross-env JWKS isolation (prod 8 / staging 11 kids, ZERO overlap) blocks prod relay as-is. Triage VALID 7.5 at reports/valid-bugs.md lines 11/32/64/79, re-read on disk this cycle.
+evidence_needed: none — evidence complete (reports/hypotheses-nemotron3.txt + valid-bugs.md verified present).
+verify_steps: not applicable — passive evidence complete; only action is submission.
+impact: staging auth compromise / attacker-registered OAuth clients + mintable valid-on-gateway JWTs — Medium (7.5).
+testability: PASSIVE
+[HYP] apple-pay-session target lacks host allowlist → SSRF-to-metadata
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: spec declares oauth2:[]; handler fetches caller-supplied target (format:uri); v0.1 twin routes identically; route-level OPTIONS 204, method-level unauth 404 — gate AUTH_HELPED; no claim-level binding observed.
+evidence_needed: own bearer + own checkout; PUT metadata target vs control Apple URL.
+verify_steps: AUTH_HELPED — PUT target=https://apple-pay-gateway-cert.apple.com/paymentservices/startSession control, then http://169.254.169.254/latest/meta-data/ ≤1rps; 5xx/timeout/echo = no allowlist.
+impact: SSRF → cloud metadata → cross-env creds — Critical.
+testability: AUTH_HELPED
+[HYP] no request-level aud/iss binding on gateway JWT validation
+class: AUTH
+asset: api.sumup.com protected ops (RFC 9728 resource server)
+confidence: 65
+reasoning: RFC 9728 declares sole auth_server=auth.sumup.com with no audience field; staging JWTs carry attacker-controlled aud + empty scp; cross-env rejection is key-level only; claim-level binding unobserved across 22 cycles.
+evidence_needed: own prod bearer: aud-mutated and iss-mutated copies → same 2xx = no claim binding.
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/persons ×3 ≤1rps (unmutated vs aud vs iss); compare status/body.
+impact: cross-client/subject token replay across first-party clients — High.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- [PARKED] apple-pay SSRF (65): no passive leg; requires own bearer+checkout — AUTH_HELPED, unchanged.
+- [PARKED] aud/iss binding (65): 22 cycles of GET cannot falsify claim-level gate; requires own prod bearer.
+- [FINAL] 1. auth.sam-app.ro RFC 7591 unauth dynamic-client-registration (85, PASSIVE, evidence complete, triage-VALID 7.5 on disk) — not a testing gap, a submission gap, now 6 cycles stale. Re-probing any byte-stable surface adds zero expected yield and is explicitly rejected in KB.
+
+STEP 5 — NEXT ACTION
+- [NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding to bugs.olivermaicher.eu (POST /oauth2/register → 201 client_id+secret+chosen redirect_uris; client_credentials mints real JWTs, empty scp, attacker-controlled aud; staging-only, JWKS kid isolation = no prod pivot as-is; evidence `reports/hypotheses-nemotron3.txt`, triage VALID 7.5 at `reports/valid-bugs.md`), then append the ticket to `reports/valid-bugs.md` (running count 0 → 1). Evidence + valid-bugs.md both verified on disk this cycle — nothing further to gather.
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED OTHER @ reports/: valid-bugs.md count 0 re-verified via clean read this cycle; hypotheses-nemotron3.txt + valid-bugs.md present — file ground truth confirmed, no hallucination; blocker is submission, not triage/evidence, 6th consecutive cycle.
+- [LEARN] REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 22 stable cycles; only a live bearer discriminates; re-probing has zero expected yield.
+
+STEP 7 — RISK
+- [RISK] sumup: 25 — this cycle: local file reads only, zero network probes; network surface byte-stable for the 22nd cycle. Residuals unchanged: payment-methods 200↔404 single flap (2026-09-17, reverted twice) and the material exposure remains the unfiled VALID 7.5 finding (0/1), now 6 cycles stale — the only number that moves the needle.

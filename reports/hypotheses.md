@@ -2404,3 +2404,14 @@
 - LEARN: ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only a live bearer can discriminate aud/iss binding vs key-level gate; re
 - LEARN: ACCEPTED OTHER @ api.sumup.com: payment-methods stub 200, RFC 9728 metadata, apple-pay GET structured 404, prod JWKS 8-kid set — all byte-stable re-verified 202
 - LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
+
+## RANKED HYPOTHESES 2026-09-20 22:22:02 UTC
+- [85] auth.sam-app.ro/oauth2/register: staging RFC 7591 unauth dynamic client registration — valid finding unfiled (evidence complete, submission pending) (from art/lead_bigpickle.txt)
+- [85] auth.sam-app.ro/oauth2/register: auth.sam-app.ro unauthenticated dynamic client registration → mintable JWTs on staging (from art/lead_nemotron3.txt)
+- NEXT(hypotheses-nemotron3.txt): HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding (POST /oauth2/register → 201 client_id+secret; client_credentials
+- LEARN: ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via clean `ls` this cycle — file-read ground truth, no hallucination; blocker remains submission, no
+- LEARN: REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 21 stable cycles, only a live bearer discriminates; r
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET is consistent with the prior POST-only confirmation — endpoint presence unchanged, no drift signal
+- LEARN: ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only a live bearer can discriminate aud/iss binding vs key-level gate; re
+- LEARN: ACCEPTED OTHER @ api.sumup.com: payment-methods stub 200, RFC 9728 metadata, apple-pay GET structured 404, prod JWKS 8-kid set — all byte-stable re-verified 202
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
