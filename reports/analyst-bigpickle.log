@@ -37404,3 +37404,51 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 - [RISK] sumup: 25 — this cycle: 1 GET probe + 1 file read only; surfaces byte-stable (22nd stable cycle). Residuals unchanged: payment-methods 200↔404 flap (single 2026-09-17 observation, reverted twice), and the material exposure is the unfiled VALID 7.5 finding (0 filed), now 6 cycles stale — that is the only number that moves the needle.
+===== ANALYST bigpickle 2026-09-20 17:37:13 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>&1 | head -50
+total 5220
+drwxr-xr-x  2 runner runner    4096 Sep 20 17:34 .
+drwxr-xr-x 12 runner runner    4096 Sep 20 17:35 ..
+-rw-r--r--  1 runner runner 2903029 Sep 20 17:34 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   24738 Sep 20 17:34 analyst-laguna.log
+-rw-r--r--  1 runner runner   24624 Sep 20 17:34 analyst-ling3.log
+-rw-r--r--  1 runner runner   24852 Sep 20 17:34 analyst-longcat.log
+-rw-r--r--  1 runner runner 1925131 Sep 20 17:34 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    1690 Sep 20 17:34 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 20 17:34 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 20 17:34 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 20 17:34 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner    8184 Sep 20 17:34 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  369275 Sep 20 17:34 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 20 17:34 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Sep 20 17:34 valid-bugs.md
+[0m
+[0m$ [0mls -la reports/hypotheses-nemotron3.txt reports/valid-bugs.md 2>&1; wc -l reports/valid-bugs.md 2>&1
+-rw-r--r-- 1 runner runner 8184 Sep 20 17:34 reports/hypotheses-nemotron3.txt
+-rw-r--r-- 1 runner runner 7384 Sep 20 17:34 reports/valid-bugs.md
+79 reports/valid-bugs.md
+[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m
+[0m$ [0mrg -c "dashboard\.sumup\.com|support\.sumup\.com" reports/analyst-*.log 2>/dev/null; rg -in "dashboard\.sumup\.com|support\.sumup\.com" reports/hypotheses.md reports/valid-bugs.md reports/reposcan-findings.md 2>/dev/null | head -20
+(no output)
+[0m
+Ground truth verified. Let me check two inventory hosts (`dashboard.sumup.com`, `support.sumup.com`) that I have no probe evidence for — a genuine breadth gap, distinct from the exhausted byte-stable endpoints.
+Both hosts are unprobed discovery candidates — a genuine breadth gap. Running minimal read-only probes (≤1rps, 2 hosts).
+[0m$ [0mfor h in dashboard.sumup.com support.sumup.com; do echo "== $h =="; getent hosts $h || (getent ahosts $h 2>/dev/null; true); done; echo "== CNAME via dig =="; command -v dig >/dev/null && { dig +short CNAME dashboard.sumup.com; dig +short CNAME support.sumup.com; } || echo "no dig"
+== dashboard.sumup.com ==
+76.76.21.164    cname.vercel-dns.com dashboard.sumup.com
+66.33.60.34     cname.vercel-dns.com dashboard.sumup.com
+== support.sumup.com ==
+76.76.21.164    cname.vercel-dns.com support.sumup.com
+66.33.60.34     cname.vercel-dns.com support.sumup.com
+== CNAME via dig ==
+cname.vercel-dns.com.
+cname.vercel-dns.com.
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcurl -s -o /tmp/dash_body -D /tmp/dash_hdr -m 15 -A "Mozilla/5.0" https://dashboard.sumup.com/ ; echo "--- dashboard headers ---"; cat /tmp/dash_hdr; echo "--- dashboard body (first 300) ---"; head -c 300 /tmp/dash_body | tr -d '\0'; echo failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.

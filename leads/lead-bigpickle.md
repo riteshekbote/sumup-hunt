@@ -5478,3 +5478,4 @@ evidence_needed: own bearer + own checkout; PUT metadata target vs control apple
 verify_steps: AUTH_HELPED — PUT target=https://apple-pay-gateway-cert.apple.com/paymentservices/startSession control, then http://169.254.169.254/latest/meta-data/ ≤1rps; 5xx/timeout/echo = no allowlist.
 impact: SSRF → cloud metadata → cross-env creds — Critical.
 testability: AUTH_HELPED
+## 2026-09-20 17:35:37 UTC [target] (model bigpickle)
