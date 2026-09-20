@@ -37193,3 +37193,163 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] sumup: 25 — this cycle: `ls` + 3 read-only GET probes only; no surface drift; risk floor is submission discipline, not recon. Residuals: payment-methods 200↔404 flap (single 2026-09-17 observation, reverted twice), and the material exposure is the unfiled VALID 7.5 finding (0/1), now 4 probe-cycles stale — the only number that moves the needle.
+===== ANALYST bigpickle 2026-09-20 10:10:22 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null; echo "---"; ls -la . 2>/dev/null | head -30
+total 5176
+drwxr-xr-x  2 runner runner    4096 Sep 20 10:09 .
+drwxr-xr-x 12 runner runner    4096 Sep 20 10:09 ..
+-rw-r--r--  1 runner runner 2885556 Sep 20 10:09 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   24304 Sep 20 10:09 analyst-laguna.log
+-rw-r--r--  1 runner runner   24192 Sep 20 10:09 analyst-ling3.log
+-rw-r--r--  1 runner runner   24416 Sep 20 10:09 analyst-longcat.log
+-rw-r--r--  1 runner runner 1908953 Sep 20 10:09 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    3307 Sep 20 10:09 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 20 10:09 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 20 10:09 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 20 10:09 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   10514 Sep 20 10:09 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  365429 Sep 20 10:09 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 20 10:09 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Sep 20 10:09 valid-bugs.md
+---
+total 632
+drwxr-xr-x 12 runner runner   4096 Sep 20 10:09 .
+drwxr-xr-x  3 runner runner   4096 Sep 20 10:09 ..
+drwxr-xr-x  7 runner runner   4096 Sep 20 10:09 .git
+drwxr-xr-x  3 runner runner   4096 Sep 20 10:09 .github
+-rw-r--r--  1 runner runner   1885 Sep 20 10:09 README.md
+-rw-r--r--  1 runner runner     32 Sep 20 10:09 analyst-out.txt
+-rw-r--r--  1 runner runner 249857 Sep 20 10:09 analyst-prompt.txt
+-rw-r--r--  1 runner runner 245971 Sep 20 10:09 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 20 10:09 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 20 10:09 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 20 10:09 leads
+-rw-r--r--  1 runner runner  56516 Sep 20 10:09 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 20 10:09 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 20 10:09 reports
+drwxr-xr-x  2 runner runner   4096 Sep 20 10:09 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Sep 20 10:09 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 20 10:09 scripts
+-rw-r--r--  1 runner runner     33 Sep 20 10:09 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 20 10:09 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 20 10:09 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 20 10:09 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 20 10:09 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 20 10:09 state_nemotron3.json
+drwxr-xr-x  2 runner runner   4096 Sep 20 10:09 triage
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}" --max-time 15 "https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods" ; echo; curl -s --max-time 15 "https://api.sumup.com/.well-known/oauth-protected-resource" | head -c 400; echo
+200
+{
+	"resource_name": "SumUp API",
+	"resource": "https://api.sumup.com",
+	"authorization_servers": ["https://auth.sumup.com"],
+	"bearer_methods_supported": ["header"],
+	"jwks_uri": "https://auth.sumup.com/.well-known/jwks.json",
+	"resource_documentation": "https://developer.sumup.com"
+}
+[0m
+[0m$ [0mgrep -n "count\|VALID\|7.5\|http" reports/valid-bugs.md | head -40
+1:# Validated findings (running count 0)
+3:- 1 lead(s) marked VALID at 2026-09-04 06:02:58 UTC
+6:- 7 lead(s) marked VALID at 2026-09-06 21:30:02 UTC
+7:  - **Verdict: VALID**
+9:  - **Verdict: VALID**
+10:  - **Verdict: VALID**
+11:  - | 1 | `auth.sam-app.ro` unauthenticated dynamic client registration | **VALID** | 7.5 |
+12:  - | 2 | `api.sumup.com/authorize` client-ID oracle + wildcard CORS | **VALID** | 5.3 |
+13:  - | 3 | `mcp.sumup.com` wildcard CORS on Bearer-protected endpoint | **VALID** | 5.3 |
+15:- 3 lead(s) marked VALID at 2026-09-09 15:21:03 UTC
+16:  - **Verdict: VALID**
+18:  - | 1 | help.sumup.com Contentful Preview Token Leak | **VALID** | 5.3 (Medium) | **FILE REPORT** |
+20:- 3 lead(s) marked VALID at 2026-09-10 16:19:46 UTC
+21:  - **VERDICT: VALID**
+23:  - | 1 | Contentful Preview API Token Leak (help.sumup.com) | **VALID** | 5.3 |
+25:- 4 lead(s) marked VALID at 2026-09-10 19:11:04 UTC
+27:  - **Verdict: VALID** — Client ID oracle on legacy OAuth endpoint. Read-only proof: GET requests to `/authorize` with different client_ids show error differentiation. Impact: Medium (information disclosu
+29:  - | VALID | 1 | #6: Legacy OAuth client_id oracle on api.sumup.com/authorize |
+31:- 5 lead(s) marked VALID at 2026-09-10 21:43:51 UTC
+32:  - | 1 | `auth.sam-app.ro` unauthenticated RFC 7591 dynamic client registration → mintable JWTs | staging auth | AUTH | 7.5 | VALID |
+33:  - | 2 | `api.sumup.com/authorize` client_id oracle (invalid_client vs invalid_request) | api gateway | INFO | 5.3 | VALID |
+34:  - | 3 | `mcp.sumup.com` wildcard CORS (`*`) on Bearer-protected MCP endpoint | MCP server | MISCONFIG | 5.3 | VALID |
+35:  - | 4 | `help.sumup.com` Contentful Preview API token leak → 1,082 draft entries readable | help center | MISCONFIG | 5.3 | VALID |
+38:- 2 lead(s) marked VALID at 2026-09-12 00:39:58 UTC
+39:  - **Verdict: VALID** (finding now closed — token rotated 2026-09-11)
+40:  - | 1 | Contentful Preview Token Leak (help.sumup.com) | **VALID** (closed) | Report if still live at time of submission; token rotated |
+42:- 5 lead(s) marked VALID at 2026-09-16 20:16:23 UTC
+44:  - **Verdict: VALID** — Publicly reachable staging infrastructure with potential weaker controls.
+45:  - **Verdict: VALID**
+46:  - | 2 | Internal Staging Domains (sam-app.ro) | **VALID** | 5.3 |
+47:  - | 3 | Wildcard CORS on MCP Server | **VALID** | 5.3 |
+49:- 15 lead(s) marked VALID at 2026-09-17 12:13:01 UTC
+50:  - | Q5 Novel/unreported? | PARTIALLY — previously marked VALID 2026-09-09, token rotated 2026-09-11. **Need to re-verify if token is still live**. If token was rotated and new token not leaked, this is 
+54:  - **Verdict: VALID**
+56:  - | Q5 Novel/unreported? | ALREADY REPORTED — marked VALID in valid-bugs.md (2026-09-10) |
+57:  - | Q3 Real impact? | LOW — wildcard CORS + `Authorization: Bearer` header-only auth. No cookies ambient creds. Hardening-only config. Already marked VALID in valid-bugs.md. |
+61:  - **Verdict: HOLD** — Interesting theoretical vector but insufficient proof. redirect_uri strict allowlist + PAR unrouted + no public client registration = mitigated. Could be VALID if a public client r
+63:  - | 1 | Contentful Preview Token Leak (help.sumup.com) | **HOLD** | 5.3 | Re-verify token liveness; if live → VALID, FILE REPORT |
+64:  - | 2 | auth.sam-app.ro unauthenticated client registration → JWTs | **VALID** | 7.5 | FILE REPORT |
+66:- 13 lead(s) marked VALID at 2026-09-18 01:28:35 UTC
+[0m
+[0m$ [0mcurl -s --max-time 15 "https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods" ; echo; curl -s -o /dev/null -w "register GET: %{http_code}\n" --max-time 15 "https://auth.sam-app.ro/oauth2/register"; curl -s --max-time 15 "https://auth.sumup.com/.well-known/jwks.json" | python3 -c "import sys,json; d=json.load(sys.stdin); print('prod JWKS keys:', len(d.get('keys',[])), [k.get('kid') for k in d.get('keys',[])])" 2>/dev/null
+{"available_payment_methods":[{"id":"card"}]}
+
+register GET: 404
+prod JWKS keys: 8 ['public:38618372-f016-4e5d-97b2-d043a975d243', 'public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9', 'public:8c332d17-2b35-4cba-a61e-6843b4375a71', 'public:a4627362-0900-4bfa-8b68-3a740165dbcf', 'public:32ad4b15-8641-4aaa-9a2e-427bb1848321', 'public:8e43ec38-e8f1-47e4-aa6c-9990c3ae20b3', '1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM', '-tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4']
+[0m
+STEP 1 — DELTA
+NO_DELTA — re-verified live this cycle: `api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods` → 200 `{"available_payment_methods":[{"id":"card"}]}` (byte-stable); RFC 9728 metadata 200 (byte-stable); `auth.sam-app.ro/oauth2/register` GET → 404 (consistent with prior POST-only confirmation, no drift); prod JWKS 8 keys, kid set identical. `reports/valid-bugs.md` on disk, running count still 0 — the triage-VALID 7.5 auth.sam-app.ro finding remains unfiled, now 5th consecutive cycle.
+
+STEP 2 — PRIORITIZE
+[PRIO] auth.sam-app.ro/oauth2/register,9.5,attack_surface=10,business_value=9,tech_exposure=10,gate_ease=10,cloud_surface=9,freshness=9
+[PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,7.8,attack_surface=7,business_value=9,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
+[PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,7.5,attack_surface=6,business_value=9,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
+
+STEP 3 — HYPOTHESES
+[HYP] staging RFC 7591 unauth dynamic client registration — valid finding unfiled
+class: AUTH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: unauth POST → 201 client_id+secret+chosen redirect_uris; client_credentials mints real JWTs (empty scp, attacker-controlled aud); api.sam-app.ro gateway validates signature (structured problem+json vs plain 404); cross-env JWKS isolation (prod 8 / staging 11 kids, ZERO overlap) blocks prod relay as-is; triage VALID 7.5 at reports/valid-bugs.md lines 32/64/79; on disk re-verified this cycle, count 0.
+evidence_needed: none — evidence complete (reports/hypotheses-nemotron3.txt + valid-bugs.md).
+verify_steps: not applicable (passive evidence complete).
+impact: staging auth compromise / client impersonation surface — Medium (7.5).
+testability: PASSIVE
+[HYP] apple-pay-session target lacks host allowlist → SSRF-to-metadata
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: spec declares oauth2:[]; handler fetches caller-supplied target (format:uri); v0.1 twin routes identically; gate is AUTH_HELPED; no claim-level binding observed (RFC 9728 declares no resource_scopes).
+evidence_needed: own bearer + own checkout; PUT metadata targets vs control apple URL.
+verify_steps: AUTH_HELPED — PUT target=https://apple-pay-gateway-cert.apple.com/paymentservices/startSession then http://169.254.169.254/latest/meta-data/ ≤1rps; 5xx/timeout/echo = no allowlist.
+impact: SSRF → cloud metadata → cross-env creds — Critical.
+testability: AUTH_HELPED
+[HYP] no request-level aud/iss binding on gateway JWT validation
+class: AUTH
+asset: api.sumup.com protected ops (RFC 9728 resource server)
+confidence: 65
+reasoning: RFC 9728 declares sole auth_server=auth.sumup.com, no audience field; staging JWTs carry attacker-controlled aud + empty scp; cross-env rejection is key-level only; claim-level binding unobserved across 20 cycles.
+evidence_needed: own prod bearer: aud-mutated and iss-mutated copies → same 2xx = no claim binding.
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/persons ×3 ≤1rps (unmutated vs aud vs iss); compare status/body.
+impact: cross-client/subject token replay across first-party clients — High.
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+[PARKED] chat.sumup.com conversationId IDOR: anonymity gives no oracle; requires live PKCE session — no passive yield.
+[PARKED] api.sumup.com aud/iss binding: 20 cycles of GET cannot falsify claim-level gate; requires own prod bearer.
+[FINAL] 1. auth.sam-app.ro RFC 7591 staging dynamic-client-registration (85, PASSIVE, evidence complete, triage-VALID 7.5 on disk) — not a testing gap, a submission gap, now 5 cycles stale.
+[FINAL] 2. apple-pay SSRF (65) and 3. aud/iss binding (65) — post-auth queue, unchanged; both AUTH_HELPED, no passive leg.
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding to bugs.olivermaicher.eu (POST /oauth2/register → 201 client_id+secret+chosen redirect_uris; client_credentials mints real JWTs, empty scp, attacker-controlled aud; staging-only, JWKS kid isolation = no prod pivot as-is; evidence `reports/hypotheses-nemotron3.txt`, triage VALID 7.5 at `reports/valid-bugs.md`), then append the ticket to `reports/valid-bugs.md` (running count 0 → 1). The evidence file and valid-bugs.md both verified on disk this cycle — nothing further to gather.
+
+STEP 6 — LEARNING
+[LEARN] ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via clean read this cycle — file ground truth confirmed; blocker is submission, not triage or evidence, for the 5th consecutive cycle.
+[LEARN] ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register GET 404 re-verified — consistent with POST-only endpoint, no drift signal.
+[LEARN] REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 21 stable cycles; only a live bearer discriminates; re-probing has zero expected yield.
+
+STEP 7 — RISK
+[RISK] sumup: 25 — this cycle: 4 read-only GET probes + file reads only; all surfaces byte-stable (21st stable cycle); no surface drift. Residuals unchanged: payment-methods 200↔404 flap (single 2026-09-17 observation, reverted twice), and the material exposure remains the unfiled VALID 7.5 finding (0/1), now 5 cycles stale — that is the only number that moves the needle.

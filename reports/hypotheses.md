@@ -2357,3 +2357,18 @@
 - LEARN: CHANGED @ api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated returns 200 static `{"card"}` re-verified — the 2026-09-17 "now 404" was transien
 - LEARN: REJECTED BUSLOGIC @ api.sumup.com: OPTIONS 204 + origin-echo CORS is a gateway-wide blanket on all paths incl. unrouted — OPTIONS is NOT a route discriminator; 
 - LEARN: REJECTED BUSLOGIC @ api.sumup.com/v0.1/merchants/{code}/payment-methods: param-invariant stub (amount/currency/bogus-code/negative → identical 200; spec-declare
+
+## RANKED HYPOTHESES 2026-09-20 10:10:22 UTC
+- [85] auth.sam-app.ro/oauth2/register: staging RFC 7591 unauth dynamic client registration — valid finding unfiled (from art/lead_bigpickle.txt)
+- [85] auth.sam-app.ro/oauth2/register: auth.sam-app.ro unauthenticated dynamic client registration → mintable JWTs on staging (from art/lead_nemotron3.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding to bugs.olivermaicher.eu (POST /oauth2/register → 201 client_id+s
+- NEXT(hypotheses-nemotron3.txt): HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding (POST /oauth2/register → 201 client_id+secret; client_credentials
+- LEARN: ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via clean read this cycle — file ground truth confirmed; blocker is submission, not triage or eviden
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register GET 404 re-verified — consistent with POST-only endpoint, no drift signal.
+- LEARN: REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 21 stable cycles; only a live bearer discriminates; r
+- LEARN: ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via clean `ls` this cycle — file-read ground truth, no hallucination; blocker remains submission, no
+- LEARN: REJECTED BUSLOGIC @ api.sumup.com: any further GET-only probe across the byte-stable surface is waste — 20 stable cycles, only a live bearer discriminates; re-p
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET is consistent with the prior POST-only confirmation — endpoint presence unchanged, no drift signal
+- LEARN: ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only a live bearer can discriminate aud/iss binding vs key-level gate; re
+- LEARN: ACCEPTED OTHER @ api.sumup.com: payment-methods stub 200, RFC 9728 metadata, apple-pay GET structured 404, prod JWKS 8-kid set — all byte-stable re-verified 202
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi

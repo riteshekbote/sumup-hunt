@@ -534,3 +534,6 @@
 - 2026-09-20 ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via clean `ls` this cycle — file-read ground truth, no hallucination; blocker remains submission, not triage/evidence.
 - 2026-09-20 REJECTED BUSLOGIC @ api.sumup.com: any further GET-only probe across the byte-stable surface is waste — 20 stable cycles, only a live bearer discriminates; re-probing has zero expected yield.
 - 2026-09-20 ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET is consistent with the prior POST-only confirmation — endpoint presence unchanged, no drift signal.
+- 2026-09-20 ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via clean read this cycle — file ground truth confirmed; blocker is submission, not triage or evidence, for the 5th consecutive cycle.
+- 2026-09-20 ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register GET 404 re-verified — consistent with POST-only endpoint, no drift signal.
+- 2026-09-20 REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 21 stable cycles; only a live bearer discriminates; re-probing has zero expected yield.
