@@ -5459,3 +5459,22 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register GET 404 re-verified — consistent with POST-only endpoint, no drift signal.
 [LEARN] REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 21 stable cycles; only a live bearer discriminates; re-probing has zero expected yield.
 [RISK] sumup: 25 — this cycle: 4 read-only GET probes + file reads only; all surfaces byte-stable (21st stable cycle); no surface drift. Residuals unchanged: payment-methods 200↔404 flap (single 2026-09-17 observation, reverted twice), and the material exposure remains the unfiled VALID 7.5 finding (0/1), now 5 cycles stale — that is the only number that moves the needle.
+## 2026-09-20 14:21:18 UTC [target] (model bigpickle)
+[HYP] staging RFC 7591 unauth dynamic client registration — valid finding unfiled
+class: AUTH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: unauth POST → 201 client_id+secret+chosen redirect_uris; client_credentials mints real JWTs (empty scp, attacker-controlled aud); api.sam-app.ro gateway validates signature (structured problem+json vs plain 404); cross-env JWKS isolation (prod 8 / staging 11 kids, ZERO overlap) blocks prod relay as-is; triage VALID 7.5 at reports/valid-bugs.md lines 11/32/64/79, on disk re-read this cycle.
+evidence_needed: none — evidence complete (reports/hypotheses-nemotron3.txt + valid-bugs.md).
+verify_steps: not applicable (passive evidence complete).
+impact: staging auth compromise / attacker-registered clients + mintable tokens — Medium (7.5).
+testability: PASSIVE
+[HYP] apple-pay-session target lacks host allowlist → SSRF-to-metadata
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: spec declares oauth2:[]; handler fetches caller-supplied target (format:uri); v0.1 twin routes identically; v0.1/v0.2 OPTIONS 204 route-level, method-level unauth gated — test requires own checkout + bearer; no claim-level binding observed.
+evidence_needed: own bearer + own checkout; PUT metadata target vs control apple URL.
+verify_steps: AUTH_HELPED — PUT target=https://apple-pay-gateway-cert.apple.com/paymentservices/startSession control, then http://169.254.169.254/latest/meta-data/ ≤1rps; 5xx/timeout/echo = no allowlist.
+impact: SSRF → cloud metadata → cross-env creds — Critical.
+testability: AUTH_HELPED

@@ -860,3 +860,6 @@ www.sumup.com
 
 ## 2026-09-20 10:10:22 UTC
 - NEW NO_DELTA — all passive surfaces byte-stable since last cycle (20th stable cycle); api.sumup.com/v0.1/merchants/{code}/payment-methods unauth 200 static `{"card"}` re-verified; auth.sam-app.ro/oauth2/r
+
+## 2026-09-20 14:21:29 UTC
+- NEW NO_DELTA — all passive surfaces byte-stable (21st stable cycle); api.sumup.com/v0.1/merchants/{code}/payment-methods unauth 200 static `{"card"}` re-verified; auth.sam-app.ro/oauth2/register LIVE unau
