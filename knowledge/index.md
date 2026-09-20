@@ -531,3 +531,6 @@
 - 2026-09-20 CHANGED @ api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated returns 200 static `{"card"}` re-verified — the 2026-09-17 "now 404" was transient/flapping; handler remains unauth-reachable but is a param-invariant stub, no merchant leak
 - 2026-09-20 REJECTED BUSLOGIC @ api.sumup.com: OPTIONS 204 + origin-echo CORS is a gateway-wide blanket on all paths incl. unrouted — OPTIONS is NOT a route discriminator; only method-level handler responses discriminate and those are uniformly gated except the payment-methods stub
 - 2026-09-20 REJECTED BUSLOGIC @ api.sumup.com/v0.1/merchants/{code}/payment-methods: param-invariant stub (amount/currency/bogus-code/negative → identical 200; spec-declared 400 never fires) — no unauth oracle, no BOLA without bearer
+- 2026-09-20 ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via clean `ls` this cycle — file-read ground truth, no hallucination; blocker remains submission, not triage/evidence.
+- 2026-09-20 REJECTED BUSLOGIC @ api.sumup.com: any further GET-only probe across the byte-stable surface is waste — 20 stable cycles, only a live bearer discriminates; re-probing has zero expected yield.
+- 2026-09-20 ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET is consistent with the prior POST-only confirmation — endpoint presence unchanged, no drift signal.

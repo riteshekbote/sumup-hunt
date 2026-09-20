@@ -5397,3 +5397,25 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OTHER @ reports/: `contentful-preview-token-leak.md` verified STILL ABSENT via `ls` — archival close holds; no further file-claim assertions.
 [LEARN] ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only a live bearer can discriminate aud/iss binding vs key-level gate; re-probing is waste.
 [RISK] sumup: 25 — this cycle: file reads only, zero live probes (all surfaces byte-stable, no new surface worth touching; risk floor is discipline, not absence). Residuals unchanged: payment-methods 200↔404 flap (single 2026-09-17 observation, reverted twice), and the material exposure is the unfiled VALID 7.5 finding (0/1), now 3 cycles stale — that is the only number that matters.
+## 2026-09-20 05:26:18 UTC [target] (model bigpickle)
+[PRIO] auth.sam-app.ro/oauth2/register,9.5,attack_surface=10,business_value=9,tech_exposure=10,gate_ease=10,cloud_surface=9,freshness=9
+[PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,7.8,attack_surface=7,business_value=9,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
+[PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,7.5,attack_surface=6,business_value=9,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
+[HYP] apple-pay-session target lacks host allowlist → SSRF-to-metadata
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: official spec declares oauth2:[]; handler fetches caller-supplied target (format:uri); v0.1 twin routes identically; gateway accepts any valid-signer bearer where prod relay was refuted only at key-level (ZERO kid overlap), not claim-level.
+evidence_needed: own bearer + own checkout; PUT metadata targets vs control apple URL.
+verify_steps: AUTH_HELPED — control PUT target=https://apple-pay-gateway-cert.apple.com/paymentservices/startSession then http://169.254.169.254/latest/meta-data/ + aliyun analog ≤1rps; 5xx/timeout/echo = no allowlist.
+impact: SSRF → EC2/aliyun metadata → cross-env creds — Critical.
+testability: AUTH_HELPED
+[PARKED] chat.sumup.com conversationId IDOR: anonymity gives no oracle; enrollment needs live PKCE session — no passive yield.
+[PARKED] aud/iss binding @ api.sumup.com: 20 cycles of GET cannot falsify; requires own prod bearer.
+[FINAL] 1. auth.sam-app.ro RFC 7591 staging dynamic-client-registration (85, PASSIVE, evidence complete + triage-VALID 7.5 on disk) — not a test gap, a delivery gap, now 4 probe-cycles / 3 HUMAN-cycles stale.
+[FINAL] 2. apple-pay SSRF (65) and 3. aud/iss binding (65) — post-auth queue, unchanged.
+[NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding to bugs.olivermaicher.eu (POST /oauth2/register → 201 client_id+secret; client_credentials mints real JWTs, empty scp, attacker-controlled aud; staging-only, JWKS kid isolation = no prod pivot as-is; evidence `reports/hypotheses-nemotron3.txt`, triage VALID 7.5 at `reports/valid-bugs.md`), then append ticket to valid-bugs.md (running count 0 → 1). This is the 4th consecutive cycle this has been the sole actionable item.
+[LEARN] ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via clean `ls` this cycle — file-read ground truth, no hallucination; blocker remains submission, not triage/evidence.
+[LEARN] REJECTED BUSLOGIC @ api.sumup.com: any further GET-only probe across the byte-stable surface is waste — 20 stable cycles, only a live bearer discriminates; re-probing has zero expected yield.
+[LEARN] ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET is consistent with the prior POST-only confirmation — endpoint presence unchanged, no drift signal.
+[RISK] sumup: 25 — this cycle: `ls` + 3 read-only GET probes only; no surface drift; risk floor is submission discipline, not recon. Residuals: payment-methods 200↔404 flap (single 2026-09-17 observation, reverted twice), and the material exposure is the unfiled VALID 7.5 finding (0/1), now 4 probe-cycles stale — the only number that moves the needle.
