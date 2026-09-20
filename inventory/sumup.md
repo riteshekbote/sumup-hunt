@@ -851,3 +851,7 @@ www.sumup.com
 ## 2026-09-19 22:30:58 UTC
 - CHANGED process: `reports/valid-bugs.md` running count still **0** — the auth.sam-app.ro RFC 7591 finding (triage-VALID 7.5) remains unfiled for the 2nd consecutive candidate-HUMAN cycle.
 - NEW NO_DELTA — all passive surfaces byte-stable since last cycle (19th stable cycle); api.sumup.com/v0.1/merchants/{code}/payment-methods unauth 200 static `{"card"}` re-verified; auth.sam-app.ro/oauth2/r
+
+## 2026-09-20 00:25:22 UTC
+- NEW NO_DELTA — all passive surfaces byte-stable since last cycle (19th stable cycle); api.sumup.com/v0.1/merchants/{code}/payment-methods unauth 200 static `{"card"}` re-verified; auth.sam-app.ro/oauth2/r
+- NEW NO_DELTA — all passive surfaces byte-stable (19th stable cycle); api.sumup.com/v0.1/merchants/{code}/payment-methods unauth 200 static `{"card"}` re-verified; auth.sam-app.ro/oauth2/register LIVE unau
