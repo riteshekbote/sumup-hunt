@@ -1,8 +1,8 @@
-## 2026-09-21 10:57:00 UTC [target] (model nemotron3)
-[PRIO] auth.sam-app.ro/oauth2/register,9.5,attack_surface=10,business_value=9,tech_exposure=10,gate_ease=10,cloud_surface=9,freshness=9
-[PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,7.8,attack_surface=7,business_value=9,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
-[PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,7.5,attack_surface=6,business_value=9,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
-[PRIO] api.sumup.com (RFC 9728 resource server),7.2,attack_surface=6,business_value=8,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
+## 2026-09-21 16:59:16 UTC [target] (model nemotron3)
+[PRIO] auth.sam-app.ro/oauth2/register,9.55,attack_surface=10,business_value=9,tech_exposure=10,gate_ease=10,cloud_surface=9,freshness=9
+[PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,7.65,attack_surface=7,business_value=9,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
+[PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,7.40,attack_surface=6,business_value=9,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
+[PRIO] api.sumup.com (RFC 9728 resource server),7.15,attack_surface=6,business_value=8,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
 [HYP] auth.sam-app.ro unauthenticated dynamic client registration → mintable JWTs on staging
 class: AUTH
 asset: auth.sam-app.ro/oauth2/register
@@ -18,7 +18,7 @@ asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
 confidence: 65
 reasoning: Official OpenAPI spec declares oauth2:[] for this operation; Apple Pay session endpoint inherently triggers server-side request to provided target URL (domainName/validationURL); empty scope + attacker-controlled target parameter = potential SSRF to cloud metadata (169.254.169.254) or internal services; v0.1 twin routes identically
 evidence_needed: Valid token (any scope) + crafted target parameter reaching internal endpoint or metadata service
-verify_steps: AUTH_HELPED: obtain merchant token
+verify_steps: AUTH_HELPED: obtain merchant token via dashboard OAuth; create checkout via API; PUT /v0.2/checkouts/{checkout_id}/apple-pay-session with validationURL=http://169.254.169.254/latest/meta-data/iam/security-credentials/ → observe response
 impact: SSRF to cloud metadata → IAM credentials, instance identity, internal service enumeration — CRITICAL
 testability: AUTH_HELPED
 [HYP] RFC 9728 token validation on api.sumup.com lacks audience/claim binding
