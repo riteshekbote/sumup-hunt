@@ -534,3 +534,68 @@ TARGET_ORG not configured for sumup; skipping public-org deep scan.
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
 ## REPOSCAN 2026-09-21 11:35:14 UTC
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-21 17:16:00 UTC
+[HYP] Cloudflare Account ID Hardcoded in All Environment Blocks
+class: SECRET
+asset: sumup-mcp/wrangler.jsonc (lines 25, 50, 75)
+confidence: 90
+reasoning: Cloudflare account_id `2037fc18a2fb8175c20d20776cac65c5` is hardcoded in clear text in all three env blocks (dev/stage/live). This 32-char hex identifier is used in Cloudflare API calls and dashboard URLs. Not a full credential, but enables targeted account enumeration, Workers/KV/D1 resource discovery, and is a prerequisite for any Cloudflare API token abuse.
+impact: Low-Medium
+verify_steps: 1) `curl -s https://dash.cloudflare.com/2037fc18a2fb8175c20d20776cac65c5` to confirm account exists. 2) `GET /client/v4/accounts/2037fc18a2fb8175c20d20776cac65c5` via Cloudflare API (passive, requires token).
+[HYP] Internal Staging/Development Infrastructure Hostnames Exposed
+class: MISCONFIG
+asset: sumup-mcp/wrangler.jsonc (env.dev.vars, env.stage.vars, routes)
+confidence: 95
+reasoning: Full internal naming convention exposed: `mcp-theta.sam-app.ro` (dev), `api-theta.sam-app.ro` (dev API), `auth-theta.sam-app.ro` (dev auth), `mcp.sam-app.ro` (stage), `api.sam-app.ro` (stage API), `auth.sam-app.ro` (stage auth). Reveals `sam-app.ro` as SumUp's internal staging domain with environment-specific subdomains. These are live Cloudflare Workers custom domains.
+impact: Medium — exposes internal attack surface; staging environments may have weaker security controls than production
+verify_steps: 1) `dig mcp-theta.sam-app.ro api.sam-app.ro auth.sam-app.ro` to check DNS resolution. 2) HTTP HEAD to confirm running services. 3) Check if staging auth/debug modes are weaker than production.
+[HYP] Production URLs Committed in .dev.vars Secrets File (Not in .gitignore)
+class: MISCONFIG
+asset: sumup-mcp/.dev.vars
+confidence: 80
+reasoning: The `.dev.vars` file (Cloudflare Workers local secrets file) is committed to the public repo and is NOT listed in `.gitignore` (confirmed via `grep`). It now contains production URLs: `HOST=https://mcp.sumup.com`, `SUMUP_API_HOST=https://api.sumup.com`, `SUMUP_AUTH_HOST=https://auth.sumup.com`. While not secrets themselves, committing a file designed for local secrets means any developer adding real API keys or tokens to this file will automatically commit them. The file's purpose is specifically for local dev secrets — it should be gitignored.
+impact: Low — currently contains only URLs, but dangerous anti-pattern; any future developer adding secrets will leak them
+verify_steps: 1) Confirm `.dev.vars` is absent from `sumup-mcp/.gitignore`. 2) `git log --oneline -- .dev.vars` to check commit history for actual secrets.
+[HYP] Wildcard CORS on Production MCP Server (mcp.sumup.com)
+class: MISCONFIG
+asset: sumup-mcp/src/config.ts:10
+confidence: 85
+reasoning: `Access-Control-Allow-Origin: *` set in `CORS_HEADERS` on the production MCP server at `mcp.sumup.com`. This endpoint handles OAuth-authenticated requests with merchant payment data via Bearer JWT. The wildcard allows any website to make credentialed cross-origin requests. Combined with Bearer token auth, this could enable CSRF-style token exfiltration if a user visits a malicious site while holding a valid MCP token.
+impact: Medium — any origin can interact with the MCP endpoint; could facilitate token theft via malicious page
+verify_steps: 1) `curl -I -X OPTIONS https://mcp.sumup.com/mcp -H "Origin: https://evil.com" -H "Access-Control-Request-Method: POST"` to confirm wildcard CORS. 2) Verify Authorization headers are sent cross-origin in browser context.
+[HYP] Wildcard CORS on Developer Portal (developer.sumup.com)
+class: MISCONFIG
+asset: sumup-developer/public/_headers:2
+confidence: 75
+reasoning: `Access-Control-Allow-Origin: *` set on all paths (`/*`) of the production developer portal. While primarily documentation, the wildcard allows cross-origin reading of any non-public API responses if the portal serves authenticated content.
+impact: Low-Medium — documentation site; lower risk than MCP server but violates CORS best practices for a SumUp production property
+verify_steps: 1) `curl -I https://developer.sumup.com/ -H "Origin: https://evil.com"` to confirm CORS header. 2) Check if any authenticated routes exist.
+[HYP] Source Maps Upload Enabled on Production Workers
+class: MISCONFIG
+asset: sumup-mcp/wrangler.jsonc (line 15), sumup-developer/wrangler.jsonc (line 14)
+confidence: 85
+reasoning: Both the MCP server and developer portal Cloudflare Worker configs have `upload_source_maps: true`. When deployed, this uploads source maps to Cloudflare, making the original TypeScript source decompilable by anyone who can access the Workers runtime or debug endpoints. This exposes internal logic, comments, and potentially internal-only code paths.
+impact: Low — source code exposure via source maps; requires additional access to Cloudflare debugging surface
+verify_steps: 1) Inspect Worker responses for source map references. 2) Check if Cloudflare source map access controls are properly configured.
+[HYP] TLS Private Key Logged to Console in Terraform Provider
+class: SECRET
+asset: terraform-provider-kafka-connect/connect/provider.go:88
+confidence: 90
+reasoning: Line 88 does `log.Printf("[INFO]Cert : %s\nKey: %s", crt, key)` which prints the TLS certificate content AND private key to Terraform logs. In CI/CD pipelines or debug output, this exposes private key material. While the values come from env vars (not hardcoded), the logging of key material is a credential exposure vulnerability.
+impact: Medium — private key material visible in Terraform logs/CI output; exploitation requires access to log streams
+verify_steps: 1) Run `TF_LOG=DEBUG terraform plan` and check output for key material. 2) Confirm the log.Printf call at provider.go:88.
+[HYP] Hardcoded Default "supersecret" in Vendure/Medusa Plugin Docker Examples
+class: SECRET
+asset: sumup-plugin-vendure/examples/docker/vendure/vendure-config.ts:26,29,36,39, sumup-plugin-medusa/examples/docker/medusa/medusa-config.ts:12-13
+confidence: 70
+reasoning: `SUPERADMIN_PASSWORD`, `COOKIE_SECRET`, `SESSION_SECRET` all default to `"supersecret"` when env vars are unset. `POSTGRES_PASSWORD=vendure`, `POSTGRES_USER=vendure` in example.env files. The `entrypoint.sh` seeds an admin user with this password. Developers deploying the Docker example without overriding env vars get trivially guessable admin credentials and JWT signing keys.
+impact: Low — only affects example/demo Docker deployments; risk only if deployed without modification
+verify_steps: 1) Confirm no SumUp staging/prod deployments use these defaults. 2) Check if Postgres port is exposed externally.
+[HYP] Postman Workflow Hardcodes Collection UUID Instead of Using Secret Variable
+class: MISCONFIG
+asset: sumup-postman/.github/workflows/upload-postman.yaml:32
+confidence: 50
+reasoning: The `POSTMAN_COLLECTION_ID` is defined as a secret-derived env var on line 27 (`${{ secrets.POSTMAN_COLLECTION_ID }}`) but the curl command on line 32 hardcodes the UUID `646ec366-4881-41f6-9ec1-c19e9b22ddb7` directly in the URL instead of using `${POSTMAN_COLLECTION_ID}`. This makes the secret definition dead code and the UUID permanently exposed. The UUID alone is not credential material but the pattern suggests possible copy-paste oversight.
+impact: Low
+verify_steps: 1) Confirm the UUID maps to a SumUp Postman collection. 2) Verify `POSTMAN_COLLECTION_ID` secret is not referenced elsewhere.
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
