@@ -1,4 +1,4 @@
-## 2026-09-21 05:14:05 UTC [target] (model nemotron3)
+## 2026-09-21 10:57:00 UTC [target] (model nemotron3)
 [PRIO] auth.sam-app.ro/oauth2/register,9.5,attack_surface=10,business_value=9,tech_exposure=10,gate_ease=10,cloud_surface=9,freshness=9
 [PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,7.8,attack_surface=7,business_value=9,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
 [PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,7.5,attack_surface=6,business_value=9,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
@@ -30,8 +30,8 @@ evidence_needed: Valid merchant token (any scope) accepted on api.sumup.com for 
 verify_steps: AUTH_HELPED: Obtain merchant OAuth token via dashboard; replay against GET /v0.1/merchants/{other_merchant}/payment-methods (oauth2:[]) and PUT /v0.2/checkouts/{owned}/apple-pay-session (oauth2:[]) with crafted aud/claims; observe 200 vs 403/404
 impact: Cross-tenant read of merchant payment-method metadata (BOLA) or SSRF via Apple Pay session endpoint — CRITICAL
 testability: AUTH_HELPED
-[PARKED] RFC 9728 audience/claim confusion: confidence 60 but requires AUTH_HELPED (valid merchant token); no passive path to token acquisition; claim-level binding never observed passively
 [PARKED] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session SSRF: confidence 65 but requires AUTH_HELPED (valid merchant token + owned checkout_id); no passive path to checkout creation or token acquisition
+[PARKED] RFC 9728 audience/claim confusion: confidence 60 but requires AUTH_HELPED (valid merchant token); no passive path to token acquisition; claim-level binding never observed passively
 [FINAL] 1. auth.sam-app.ro/oauth2/register: auth.sam-app.ro unauthenticated dynamic client registration → mintable JWTs on staging (85, PASSIVE) — live registration confirmed, staging posture finding fileable per triage (7.5); prod pivot architectural but unproven
 [NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding (POST /oauth2/register → 201 client_id+secret; client_credentials mints real JWTs, empty scp, attacker-controlled aud; staging-only; JWKS cross-env isolation = no prod pivot as-is; repro/evidence at `reports/hypotheses-nemotron3.txt` + triage runs) to bugs.olivermaicher.eu, then append the ticket to `reports/valid-bugs.md` (running count 0 → 1)
 [LEARN] ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via clean `ls` this cycle — file-read ground truth, no hallucination; blocker remains submission, not triage/evidence
