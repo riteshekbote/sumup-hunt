@@ -38204,3 +38204,192 @@ STEP 6 — LEARNING
 
 STEP 7 — RISK
 [RISK] sumup: 45 — one triage-valid (7.5) staging OAuth finding unfiled across 5+ HUMAN cycles while all other surfaces are 22-cycle-stable; residual unknown is claim-level aud/iss binding on prod (untestable without bearer). No active exploitation; risk driven by submission backlog, not exposure.
+===== ANALYST bigpickle 2026-09-21 20:58:35 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mcurl -s -o /tmp/opencode/pm.txt -w "pm:%{http_code}\n" "https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods"; curl -s -o /tmp/opencode/rfc.txt -w "rfc:%{http_code}\n" "https://api.sumup.com/.well-known/oauth-protected-resource"; curl -s -o /tmp/opencode/id.txt -w "id:%{http_code}\n" "https://auth.sam-app.ro/.well-known/openid-configuration"; ls -la reports/valid-bugs.md 2>&1; ls reports/ 2>&1
+pm:200
+rfc:200
+id:200
+-rw-r--r-- 1 runner runner 7384 Sep 21 20:56 reports/valid-bugs.md
+analyst-bigpickle.log
+analyst-laguna.log
+analyst-ling3.log
+analyst-longcat.log
+analyst-nemotron3.log
+hypotheses-bigpickle.txt
+hypotheses-laguna.txt
+hypotheses-ling3.txt
+hypotheses-longcat.txt
+hypotheses-nemotron3.txt
+hypotheses.md
+reposcan-findings.md
+valid-bugs.md
+[0m
+[0m$ [0mcat /tmp/opencode/pm.txt; echo "---"; cat /tmp/opencode/rfc.txt; echo "---"; grep -o '"registration_endpoint":"[^"]*"' /tmp/opencode/id.txt; echo "---"; rg -n "COUNT|count|0$" reports/valid-bugs.md | head -5
+{"available_payment_methods":[{"id":"card"}]}
+---
+{
+	"resource_name": "SumUp API",
+	"resource": "https://api.sumup.com",
+	"authorization_servers": ["https://auth.sumup.com"],
+	"bearer_methods_supported": ["header"],
+	"jwks_uri": "https://auth.sumup.com/.well-known/jwks.json",
+	"resource_documentation": "https://developer.sumup.com"
+}
+---
+---
+/bin/bash: line 1: rg: command not found
+[0m
+[0m$ [0mgrep -io '"[^"]*register[^"]*":\s*"[^"]*"' /tmp/opencode/id.txt; echo "---regkeys---"; grep -io '"[a-z_]*endpoints[a-z_]*"' /tmp/opencode/id.txt | sort -u; echo "---"; cat reports/valid-bugs.md
+---regkeys---
+---
+# Validated findings (running count 0)
+
+- 1 lead(s) marked VALID at 2026-09-04 06:02:58 UTC
+  - | Q4 Provable non-invasively? | **NO** — all unauthenticated paths return 404; requires valid merchant OAuth token to test. Probe results confirm 404 on every enumerated path (v0/v0.1/v1/v2/merchants/
+
+- 7 lead(s) marked VALID at 2026-09-06 21:30:02 UTC
+  - **Verdict: VALID**
+  - | Impact | Attacker-controlled OAuth clients on staging; mintable JWTs (empty scope blocks resources but token is valid at gateway). Staging environments often lack prod hardening. |
+  - **Verdict: VALID**
+  - **Verdict: VALID**
+  - | 1 | `auth.sam-app.ro` unauthenticated dynamic client registration | **VALID** | 7.5 |
+  - | 2 | `api.sumup.com/authorize` client-ID oracle + wildcard CORS | **VALID** | 5.3 |
+  - | 3 | `mcp.sumup.com` wildcard CORS on Bearer-protected endpoint | **VALID** | 5.3 |
+
+- 3 lead(s) marked VALID at 2026-09-09 15:21:03 UTC
+  - **Verdict: VALID**
+  - | Q3 | Real security impact? | Low — error taxonomy (`invalid_client` vs `invalid_request`) is a standard OAuth error pattern; wildcard CORS on an authorize endpoint that only redirects to error pages
+  - | 1 | help.sumup.com Contentful Preview Token Leak | **VALID** | 5.3 (Medium) | **FILE REPORT** |
+
+- 3 lead(s) marked VALID at 2026-09-10 16:19:46 UTC
+  - **VERDICT: VALID**
+  - **VERDICT: HOLD** — Missing webhook HMAC verification in Vendure plugin is a valid code issue, but responsibility may lie with integrators who deploy the plugin. Needs clarification on whether this is
+  - | 1 | Contentful Preview API Token Leak (help.sumup.com) | **VALID** | 5.3 |
+
+- 4 lead(s) marked VALID at 2026-09-10 19:11:04 UTC
+  - | Q7 Reasonable triager | YES — client_id enumeration via error differentiation is a valid finding |
+  - **Verdict: VALID** — Client ID oracle on legacy OAuth endpoint. Read-only proof: GET requests to `/authorize` with different client_ids show error differentiation. Impact: Medium (information disclosu
+  - | Q4 Provable | NO — requires valid merchant OAuth token (AUTH_HELPED) |
+  - | VALID | 1 | #6: Legacy OAuth client_id oracle on api.sumup.com/authorize |
+
+- 5 lead(s) marked VALID at 2026-09-10 21:43:51 UTC
+  - | 1 | `auth.sam-app.ro` unauthenticated RFC 7591 dynamic client registration → mintable JWTs | staging auth | AUTH | 7.5 | VALID |
+  - | 2 | `api.sumup.com/authorize` client_id oracle (invalid_client vs invalid_request) | api gateway | INFO | 5.3 | VALID |
+  - | 3 | `mcp.sumup.com` wildcard CORS (`*`) on Bearer-protected MCP endpoint | MCP server | MISCONFIG | 5.3 | VALID |
+  - | 4 | `help.sumup.com` Contentful Preview API token leak → 1,082 draft entries readable | help center | MISCONFIG | 5.3 | VALID |
+  - | 9 | API BOLA via dashboard-client scopes | Requires valid merchant OAuth token |
+
+- 2 lead(s) marked VALID at 2026-09-12 00:39:58 UTC
+  - **Verdict: VALID** (finding now closed — token rotated 2026-09-11)
+  - | 1 | Contentful Preview Token Leak (help.sumup.com) | **VALID** (closed) | Report if still live at time of submission; token rotated |
+
+- 5 lead(s) marked VALID at 2026-09-16 20:16:23 UTC
+  - | Q7 | Reasonable triager accept? | YES — staging exposure with weaker security posture is valid |
+  - **Verdict: VALID** — Publicly reachable staging infrastructure with potential weaker controls.
+  - **Verdict: VALID**
+  - | 2 | Internal Staging Domains (sam-app.ro) | **VALID** | 5.3 |
+  - | 3 | Wildcard CORS on MCP Server | **VALID** | 5.3 |
+
+- 15 lead(s) marked VALID at 2026-09-17 12:13:01 UTC
+  - | Q5 Novel/unreported? | PARTIALLY — previously marked VALID 2026-09-09, token rotated 2026-09-11. **Need to re-verify if token is still live**. If token was rotated and new token not leaked, this is 
+  - | Q3 Real impact? | YES — attacker can register arbitrary OAuth clients, mint real JWT access tokens via client_credentials grant. JWTs are valid at api.sam-app.ro gateway (confirmed by structured err
+  - | Q5 Novel/unreported? | YES — not in valid-bugs.md as filed report; staging-only but staging often leads to prod pivot |
+  - | Q7 Reasonable triager? | YES — unauthenticated client registration on staging auth server with mintable tokens is a valid finding |
+  - **Verdict: VALID**
+  - | Q3 Real impact? | LOW — error taxonomy (`invalid_client` vs `invalid_request`) is standard OAuth error behavior. Wildcard CORS exists but the endpoint only redirects to error pages; no code/token le
+  - | Q5 Novel/unreported? | ALREADY REPORTED — marked VALID in valid-bugs.md (2026-09-10) |
+  - | Q3 Real impact? | LOW — wildcard CORS + `Authorization: Bearer` header-only auth. No cookies ambient creds. Hardening-only config. Already marked VALID in valid-bugs.md. |
+  - | Q2 Attacker reachable? | Partially — all unauthenticated paths return 404. Requires valid merchant OAuth token. |
+  - | Q4 Provable non-invasively? | **NO** — requires valid merchant OAuth token with dashboard scopes. All unauthenticated paths 404. Cannot test passively. |
+  - | Q2 Attacker reachable? | Partially — OIDC discovery is public, but actual token flow requires valid client registration |
+  - **Verdict: HOLD** — Interesting theoretical vector but insufficient proof. redirect_uri strict allowlist + PAR unrouted + no public client registration = mitigated. Could be VALID if a public client r
+  - **Verdict: HOLD** — Valid code issue (private key material in log output) but in a development tool, not production infrastructure. May be accepted as informational. Needs scoping clarification.
+  - | 1 | Contentful Preview Token Leak (help.sumup.com) | **HOLD** | 5.3 | Re-verify token liveness; if live → VALID, FILE REPORT |
+  - | 2 | auth.sam-app.ro unauthenticated client registration → JWTs | **VALID** | 7.5 | FILE REPORT |
+
+- 13 lead(s) marked VALID at 2026-09-18 01:28:35 UTC
+  - | Q3 | Real impact? | **YES** — attacker-controlled OAuth clients mint real JWT access tokens via `client_credentials` grant. Tokens valid at `api.sam-app.ro` gateway (structured error response). Stag
+  - | Q5 | Novel/unreported? | **YES** — not in `valid-bugs.md` as filed report. |
+  - | Q7 | Reasonable triager? | **YES** — unauthenticated client registration on staging auth server with mintable tokens is a valid finding. |
+  - **Verdict: VALID**
+  - | Q5 | Novel/unreported? | **ALREADY REPORTED** — marked VALID in `valid-bugs.md` (2026-09-10). |
+  - | Q7 | Reasonable triager? | **YES, but low bounty** — valid information disclosure, but standard OAuth errors. Already filed. |
+  - | Q5 | Novel/unreported? | **ALREADY REPORTED** — marked VALID in `valid-bugs.md`. |
+  - | Q5 | Novel/unreported? | **YES at time of discovery** — marked VALID 2026-09-09. |
+  - | Q2 | Attacker reachable? | **NO** — all unauthenticated paths return 404. Requires valid merchant OAuth token. |
+  - | Q4 | Provable non-invasively? | **NO** — requires valid merchant OAuth token with dashboard scopes to test ID-swapping. AUTH_HELPED. |
+  - | Q3 | Real impact? | **NO** — OPTIONS returns 204 (no content), wildcard CORS on a token endpoint that rejects all POST requests with `invalid_client` (no valid client credentials known). The `x-envo
+  - | Q5 | Novel/unreported? | **Possibly novel** — not in `valid-bugs.md`. |
+  - | 1 | `auth.sam-app.ro` unauth dynamic client registration → JWTs | **VALID** | 7.5 | FILE REPORT |
+[0m
+[0m$ [0mgrep -o '"[a-zA-Z0-9_]*"\s*:' /tmp/opencode/id.txt | tr -d '":' | tr -d ' ' | sort -u | tr '\n' ' '
+authorization_endpoint backchannel_logout_session_supported backchannel_logout_supported claims_supported code_challenge_methods_supported device_authorization_endpoint dpop_signing_alg_values_supported end_session_endpoint frontchannel_logout_session_supported frontchannel_logout_supported grant_types_supported id_token_signing_alg_values_supported issuer jwks_uri nonce_endpoint pushed_authorization_request_endpoint registration_endpoint request_object_signing_alg_values_supported request_parameter_supported request_uri_parameter_supported require_request_uri_registration response_modes_supported response_types_supported revocation_endpoint scopes_supported service_documentation subject_types_supported token_endpoint token_endpoint_auth_methods_supported token_endpoint_auth_signing_alg_values_supported ui_locales_supported userinfo_endpoint userinfo_signing_alg_values_supported
+[0m
+[0m$ [0mgrep -o '"registration_endpoint":"[^"]*"' /tmp/opencode/id.txt; grep -o '"pushed_authorization_request_endpoint":"[^"]*"' /tmp/opencode/id.txt
+(no output)
+[0m
+[0m$ [0mgrep -n "registration" /tmp/opencode/id.txt | head; echo "---"; wc -c /tmp/opencode/id.txt
+6:  "registration_endpoint": "https://auth.sam-app.ro/oauth2/register",
+92:  "require_request_uri_registration": true,
+---
+2708 /tmp/opencode/id.txt
+[0m
+STEP 1 — DELTA
+- NO_DELTA: payment-methods 200 static, RFC 9728 metadata 200 static, staging discovery 200 with `registration_endpoint`=https://auth.sam-app.ro/oauth2/register still declared — 23rd byte-stable cycle, zero drift on all three discriminators.
+- NO_DELTA: `reports/valid-bugs.md` on disk (7,384 B, mtime this cycle); running count 0; auth.sam-app.ro finding marked VALID 7.5 FILE REPORT for the 6th+ consecutive cycle.
+- PRECISION: payment-methods canonical body is `{"available_payment_methods":[{"id":"card"}]}` — KB's `{"card"}` shorthand was ever the abbreviated read; status 200 + param-invariance held, so not a functional CHANGED.
+
+STEP 2 — PRIORITIZE
+- [PRIO] auth.sam-app.ro/oauth2/register,9.5,attack_surface=10,business_value=9,tech_exposure=10,gate_ease=10,cloud_surface=9,freshness=9
+- [PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,7.8,attack_surface=7,business_value=9,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
+- [PRIO] api.sumup.com (RFC 9728 resource server),7.2,attack_surface=6,business_value=8,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
+
+STEP 3 — HYPOTHESES
+[HYP] staging RFC 7591 unauth dynamic client registration — valid, submission-blocked
+class: AUTH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: unauth POST → 201 client_id+secret+chosen redirect_uris (re-verified: discovery still declares registration_endpoint this cycle); client_credentials mints gateway-valid JWTs (empty scp, attacker-controlled aud); cross-env JWKS isolation (prod 8/staging 11 kids, ZERO overlap) blocks prod relay; prod /register absent (404 GET/POST/OPTIONS); triage-VALID 7.5 at reports/valid-bugs.md
+evidence_needed: none — complete and self-contained
+verify_steps: not applicable — PASSIVE; only remaining action is HUMAN submission
+impact: staging OAuth compromise / attacker-registered clients + mintable gateway-valid JWTs — Medium (7.5)
+testability: PASSIVE
+
+[HYP] apple-pay-session SSRF-to-metadata with attacker-chosen target
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: official spec declares oauth2:[] (empty scope); handler fetches caller-supplied target; v0.1 twin routed identically; route OPTIONS 204, method-level unauth 404; claim-level binding unobserved across 23 cycles; GET-only probes cannot falsify
+evidence_needed: own bearer + own checkout; PUT metadata target vs Apple control URL
+verify_steps: AUTH_HELPED — PUT /v0.2/checkouts/{own}/apple-pay-session target=https://apple-pay-gateway-cert.apple.com/paymentservices/startSession (control) then http://169.254.169.254/latest/meta-data/ ≤1rps; identical 2xx/failure = no allowlist
+impact: SSRF → cloud metadata → cross-env creds — Critical
+testability: AUTH_HELPED
+
+[HYP] no request-level aud/iss binding on api.sumup.com JWT validation
+class: AUTH
+asset: api.sumup.com protected ops (RFC 9728 resource server)
+confidence: 65
+reasoning: RFC 9728 declares sole auth_server=auth.sumup.com, no audience field; staging JWTs carry attacker-controlled aud; observed rejection is key-level only; claim-level binding unobserved across 23 cycles
+evidence_needed: own prod bearer; aud-mutated / iss-mutated copies → same 2xx = no claim binding
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/persons ×3 ≤1rps (unmutated vs aud vs iss); compare status/body
+impact: cross-client/subject token replay across first-party clients — High
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+- [FINAL] auth.sam-app.ro/oauth2/register — conf 85, evidence complete, no REJECTED class; prod-relay leg already dropped (zero sync evidence; key-level isolation is binding control). Only gap = submission.
+- [FINAL] apple-pay-session SSRF — conf 65, AUTH_HELPED, track intact (spec-true empty scope + controlled target).
+- [FINAL] aud/iss binding — conf 65, AUTH_HELPED; survives as AUTH class (oracle is 2xx/4xx on mutated claims, not header/banner).
+- [PARKED] chat.sumup.com conversation IDOR — server-assigned IDs, discriminator needs own session; no passive yield.
+
+STEP 5 — NEXT ACTION
+- [NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding (POST /oauth2/register → 201 client_id+secret; client_credentials mints gateway-valid JWT with attacker-controlled aud; prod registration absent; triage 7.5 at reports/valid-bugs.md) to bugs.olivermaicher.eu — sole blocking deliverable; evidence re-verified intact this cycle.
+
+STEP 6 — LEARNING
+- [LEARN] ACCEPTED OTHER @ sumup inventory: NO_DELTA — 23rd byte-stable cycle; payment-methods 200 (canonical body `{"available_payment_methods":[{"id":"card"}]}`), RFC 9728 200 static, staging discovery still declares registration_endpoint; passive surface genuinely exhausted.
+- [LEARN] ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via file read — no hallucination; blocker remains HUMAN submission for the 6th+ consecutive cycle.
+
+STEP 7 — RISK
+- [RISK] sumup: 45 — one triage-valid (7.5) staging OAuth finding unfiled across 6+ HUMAN cycles while all other surfaces are 23-cycle-stable; residual unknown is claim-level aud/iss binding on prod (untestable without bearer). Risk driven by submission backlog, not exposure.

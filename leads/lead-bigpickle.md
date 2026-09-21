@@ -5763,3 +5763,31 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register GET 404 consistent with POST-only presence — no drift.
 [LEARN] ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified — blocker is HUMAN submission, not triage/evidence, for the 5+th consecutive cycle.
 [RISK] sumup: 45 — one triage-valid (7.5) staging OAuth finding unfiled across 5+ HUMAN cycles while all other surfaces are 22-cycle-stable; residual unknown is claim-level aud/iss binding on prod (untestable without bearer). No active exploitation; risk driven by submission backlog, not exposure.
+## 2026-09-21 20:57:03 UTC [target] (model bigpickle)
+[HYP] staging RFC 7591 unauth dynamic client registration — valid, submission-blocked
+class: AUTH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: unauth POST → 201 client_id+secret+chosen redirect_uris (re-verified: discovery still declares registration_endpoint this cycle); client_credentials mints gateway-valid JWTs (empty scp, attacker-controlled aud); cross-env JWKS isolation (prod 8/staging 11 kids, ZERO overlap) blocks prod relay; prod /register absent (404 GET/POST/OPTIONS); triage-VALID 7.5 at reports/valid-bugs.md
+evidence_needed: none — complete and self-contained
+verify_steps: not applicable — PASSIVE; only remaining action is HUMAN submission
+impact: staging OAuth compromise / attacker-registered clients + mintable gateway-valid JWTs — Medium (7.5)
+testability: PASSIVE
+[HYP] apple-pay-session SSRF-to-metadata with attacker-chosen target
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: official spec declares oauth2:[] (empty scope); handler fetches caller-supplied target; v0.1 twin routed identically; route OPTIONS 204, method-level unauth 404; claim-level binding unobserved across 23 cycles; GET-only probes cannot falsify
+evidence_needed: own bearer + own checkout; PUT metadata target vs Apple control URL
+verify_steps: AUTH_HELPED — PUT /v0.2/checkouts/{own}/apple-pay-session target=https://apple-pay-gateway-cert.apple.com/paymentservices/startSession (control) then http://169.254.169.254/latest/meta-data/ ≤1rps; identical 2xx/failure = no allowlist
+impact: SSRF → cloud metadata → cross-env creds — Critical
+testability: AUTH_HELPED
+[HYP] no request-level aud/iss binding on api.sumup.com JWT validation
+class: AUTH
+asset: api.sumup.com protected ops (RFC 9728 resource server)
+confidence: 65
+reasoning: RFC 9728 declares sole auth_server=auth.sumup.com, no audience field; staging JWTs carry attacker-controlled aud; observed rejection is key-level only; claim-level binding unobserved across 23 cycles
+evidence_needed: own prod bearer; aud-mutated / iss-mutated copies → same 2xx = no claim binding
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/persons ×3 ≤1rps (unmutated vs aud vs iss); compare status/body
+impact: cross-client/subject token replay across first-party clients — High
+testability: AUTH_HELPED
