@@ -599,3 +599,5 @@ reasoning: The `POSTMAN_COLLECTION_ID` is defined as a secret-derived env var on
 impact: Low
 verify_steps: 1) Confirm the UUID maps to a SumUp Postman collection. 2) Verify `POSTMAN_COLLECTION_ID` secret is not referenced elsewhere.
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-21 21:06:16 UTC
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
