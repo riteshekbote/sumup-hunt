@@ -893,3 +893,6 @@ www.sumup.com
 ## 2026-09-22 18:18:54 UTC
 
 ## 2026-09-22 21:30:15 UTC
+
+## 2026-09-22 23:51:17 UTC
+- NEW NO_DELTA — 24th consecutive byte-stable cycle: payment-methods `{"card"}` 200, RFC 9728 metadata 200, prod JWKS 8-kid, apple-pay GET structured 404, auth.sam-app.ro/oauth2/register POST 201, register 
