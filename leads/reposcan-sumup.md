@@ -624,3 +624,5 @@ reasoning: The OpenAPI specification used across all SumUp SDKs contains a hardc
 impact: LOW — documentation-only example; real risk only if developers copy verbatim
 verify_steps: 1. Visit https://webhook.site/e21ddbb0-42c4-4358-a981-f5a95cd86fb5 to check if the UUID endpoint is still active. 2. Search all SDK openapi.json files for "webhook.site". This finding is informational.
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-22 05:01:14 UTC
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
