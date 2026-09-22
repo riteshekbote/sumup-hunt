@@ -575,3 +575,4 @@
 - 2026-09-22 REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 24 stable cycles; only a live bearer discriminates.
 - 2026-09-22 REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 24 stable cycles, only a live bearer discriminates; re-probing has zero expected yield
 - 2026-09-22 ACCEPTED OTHER @ api.sumup.com: payment-methods stub now 404 unauthenticated (was 200), RFC 9728 metadata, apple-pay GET structured 404, prod JWKS 8-kid set — all byte-stable re-verified 2026-09-19 (19th stable cycle); passive money/auth surface genuinely exhausted
+- 2026-09-22 ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via clean file read this cycle — 79 lines present, running-count 0 header intact, auth.sam-app.ro finding marked VALID 7.5 with FILE REPORT directive; blocker remains HUMAN submission, not triage/evidence (9th consecutive cycle).
