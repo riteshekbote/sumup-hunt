@@ -553,3 +553,12 @@
 - 2026-09-21 ACCEPTED OTHER @ sumup inventory: NO_DELTA confirmed — 22nd byte-stable cycle; payment-methods `{"card"}` stub 200, RFC 9728 metadata 200, prod JWKS 8-kid, apple-pay GET structured 404 all re-verified identical; passive surface genuinely exhausted.
 - 2026-09-21 ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register GET 404 consistent with POST-only presence — no drift.
 - 2026-09-21 ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified — blocker is HUMAN submission, not triage/evidence, for the 5+th consecutive cycle.
+- 2026-09-22 ACCEPTED OTHER @ sumup inventory: NO_DELTA — 23rd byte-stable cycle; payment-methods stub 200, RFC 9728 metadata 200, prod JWKS 8-kid, apple-pay GET structured 404 all re-verified identical; passive surface genuinely exhausted.
+- 2026-09-22 ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register GET 404 consistent with POST-only presence — no drift.
+- 2026-09-22 ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified — blocker is HUMAN submission, not triage/evidence, for the 6+th consecutive cycle.
+- 2026-09-22 ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via clean `ls` this cycle — file-read ground truth, no hallucination; blocker remains submission, not triage/evidence
+- 2026-09-22 REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 21 stable cycles, only a live bearer discriminates; re-probing has zero expected yield
+- 2026-09-22 ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET is consistent with the prior POST-only confirmation — endpoint presence unchanged, no drift signal
+- 2026-09-22 ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only a live bearer can discriminate aud/iss binding vs key-level gate; re-probing is waste
+- 2026-09-22 ACCEPTED OTHER @ api.sumup.com: payment-methods stub 200, RFC 9728 metadata, apple-pay GET structured 404, prod JWKS 8-kid set — all byte-stable re-verified 2026-09-19 (19th stable cycle); passive money/auth surface genuinely exhausted
+- 2026-09-22 REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the binding control; the fileable finding is staging posture only (VALable). Retaining confidence 85 on the prod-relay leg is overstated
