@@ -601,3 +601,26 @@ verify_steps: 1) Confirm the UUID maps to a SumUp Postman collection. 2) Verify 
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
 ## REPOSCAN 2026-09-21 21:06:16 UTC
 TARGET_ORG not configured for sumup; skipping public-org deep scan.
+## REPOSCAN 2026-09-22 00:18:02 UTC
+[HYP] Hardcoded Cloudflare Account ID in MCP Worker Config
+class: MISCONFIG
+asset: sumup-mcp/wrangler.jsonc (lines 24, 49, 74)
+confidence: 20
+reasoning: The Cloudflare Workers configuration contains a hardcoded `account_id: "2037fc18a2fb8175c20d20776cac65c5"` across all three environments (dev, stage, live). While Cloudflare account IDs are not authentication secrets (they cannot be used to authenticate to the API), they are persistent identifiers that enumerate the account and could be used as part of a targeted attack chain against Cloudflare-managed resources. This is committed to a public repository.
+impact: LOW — reconnaissance value only; not an auth credential
+verify_steps: 1. Open https://github.com/sumup/sumup-mcp/blob/main/wrangler.jsonc and confirm `account_id` is present. 2. Verify the domain mcp.sumup.com resolves to Cloudflare. This finding is informational.
+[HYP] Internal Staging/Dev Infrastructure Domains Exposed in Public Repos
+class: MISCONFIG
+asset: sumup-mcp/wrangler.jsonc, sumup-mcp/src/auth.test.ts, sumup-mcp/.github/workflows/deploy.yaml, sumup-developer/src/content/docs/online-payments/apm/integration-guide.mdx
+confidence: 15
+reasoning: Internal `sam-app.ro` staging/development domains are exposed across multiple public repositories: `mcp-theta.sam-app.ro`, `api-theta.sam-app.ro`, `auth-theta.sam-app.ro`, `mcp.sam-app.ro`, `api.sam-app.ro`, `auth.sam-app.ro`, `mcp-beta.sam-app.ro`, `auth-beta.sam-app.ro`. These reveal SumUp's internal environment topology and naming conventions. The deploy workflow even includes a health-check URL for the staging environment.
+impact: LOW — informational/reconnaissance; domains are in public CI/CD config
+verify_steps: 1. Grep sumup-mcp/wrangler.jsonc for "sam-app.ro". 2. Grep sumup-mcp/.github/workflows/deploy.yaml for "sam-app.ro". 3. These are in public repos committed by SumUp engineers.
+[HYP] webhook.site Example URL in OpenAPI Spec Used Across All SDKs
+class: OTHER
+asset: sumup-developer/openapi.yaml:7706, sumup-developer/openapi.json:10253, and all SDK repos (sumup-go, sumup-ts, sumup-py, sumup-java, sumup-php, sumup-rs, sumup-dotnet, sumup-postman, sumup-cli) at line ~10275 in their respective openapi.json files, plus sumup-developer/src/codesamples/*.json
+confidence: 10
+reasoning: The OpenAPI specification used across all SumUp SDKs contains a hardcoded `return_url` value of `https://webhook.site/e21ddbb0-42c4-4358-a981-f5a95cd86fb5` in the reader checkout example payload. If developers copy-paste these API examples verbatim into production code, checkout redirect traffic would be sent to a third-party webhook inspection endpoint. However, this is in documentation/example payloads, not production code, and developers are expected to replace example values. The webhook.site UUID may or may not still be active.
+impact: LOW — documentation-only example; real risk only if developers copy verbatim
+verify_steps: 1. Visit https://webhook.site/e21ddbb0-42c4-4358-a981-f5a95cd86fb5 to check if the UUID endpoint is still active. 2. Search all SDK openapi.json files for "webhook.site". This finding is informational.
+TARGET_ORG not configured for sumup; skipping public-org deep scan.
