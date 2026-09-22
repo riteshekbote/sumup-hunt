@@ -1098,3 +1098,7 @@ https://auth.sumup.com -> HTTP 403
 ## 2026-09-22 04:45:26 UTC
 https://api.sumup.com/callback -> HTTP 404
 https://auth.sumup.com -> HTTP 403
+
+## 2026-09-22 09:50:59 UTC
+https://api.sumup.com/callback -> HTTP 404
+https://auth.sumup.com -> HTTP 403
