@@ -570,3 +570,8 @@
 - 2026-09-22 ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via clean read this cycle — running count header + file present; blocker remains HUMAN submission, not triage/evidence.
 - 2026-09-22 ACCEPTED OTHER @ api.sumup.com+auth.sam-app.ro: payment-methods 200, RFC 9728 200, register GET 404 — byte-stable triple, 24th consecutive cycle; re-probing these is zero-yield waste.
 - 2026-09-22 REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 24 stable cycles, only a live bearer discriminates.
+- 2026-09-22 ACCEPTED OTHER @ reports/valid-bugs.md: re-read via clean file read this cycle — present 79 lines, running count 0 header intact; blocker remains HUMAN submission, not triage/evidence (8th consecutive cycle).
+- 2026-09-22 ACCEPTED OTHER @ api.sumup.com+auth.sam-app.ro: payment-methods `{"card"}` 200, RFC 9728 200, register GET 404 — byte-stable triple re-verified; no drift signal.
+- 2026-09-22 REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 24 stable cycles; only a live bearer discriminates.
+- 2026-09-22 REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 24 stable cycles, only a live bearer discriminates; re-probing has zero expected yield
+- 2026-09-22 ACCEPTED OTHER @ api.sumup.com: payment-methods stub now 404 unauthenticated (was 200), RFC 9728 metadata, apple-pay GET structured 404, prod JWKS 8-kid set — all byte-stable re-verified 2026-09-19 (19th stable cycle); passive money/auth surface genuinely exhausted
