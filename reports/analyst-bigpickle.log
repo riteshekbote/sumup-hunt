@@ -38631,3 +38631,89 @@ testability: AUTH_HELPED
 
 [STEP 7 — RISK]
 [RISK] sumup: 45 — one triage-valid (7.5) staging OAuth finding unfiled across 7+ HUMAN cycles while all other surfaces sit 23-cycle byte-stable; residual unknown is claim-level aud/iss binding on prod (untestable without bearer). No active exploitation; risk driven by submission backlog, not exposure.
+===== ANALYST bigpickle 2026-09-22 14:36:38 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null; echo "---"; ls -la reports/valid-bugs.md 2>/dev/null || echo "valid-bugs.md MISSING"
+total 5428
+drwxr-xr-x  2 runner runner    4096 Sep 22 14:34 .
+drwxr-xr-x 12 runner runner    4096 Sep 22 14:34 ..
+-rw-r--r--  1 runner runner 3010228 Sep 22 14:34 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   27125 Sep 22 14:34 analyst-laguna.log
+-rw-r--r--  1 runner runner   27000 Sep 22 14:34 analyst-ling3.log
+-rw-r--r--  1 runner runner   27250 Sep 22 14:34 analyst-longcat.log
+-rw-r--r--  1 runner runner 2010430 Sep 22 14:34 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    5477 Sep 22 14:34 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 22 14:34 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 22 14:34 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 22 14:34 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner    7301 Sep 22 14:34 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  389597 Sep 22 14:34 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 22 14:34 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Sep 22 14:34 valid-bugs.md
+---
+-rw-r--r-- 1 runner runner 7384 Sep 22 14:34 reports/valid-bugs.md
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "payment-methods: %{http_code}\n" "https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods?currency=EUR" ; curl -s -o /dev/null -w "rfc9728: %{http_code}\n" "https://api.sumup.com/.well-known/oauth-protected-resource" ; curl -s -o /dev/null -w "sam-app-register-GET: %{http_code}\n" "https://auth.sam-app.ro/oauth2/register"
+payment-methods: 200
+rfc9728: 200
+sam-app-register-GET: 404
+[0m
+[0m$ [0mgrep -n -iE "running count|count|valid bug|opened|submitted" reports/valid-bugs.md | head -20
+1:# Validated findings (running count 0)
+[0m
+STEP 1 — DELTA
+NO_DELTA — 24th byte-stable cycle; ground truth re-verified this cycle: `payment-methods` unauth 200, RFC 9728 metadata 200, `auth.sam-app.ro/oauth2/register` GET 404 (POST-only presence preserved), `reports/valid-bugs.md` on disk with running count 0.
+
+STEP 2 — PRIORITIZE
+[PRIO] auth.sam-app.ro/oauth2/register, 6.75, a=5 b=4 t=8 g=10 c=6 f=4
+[PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session, 5.65, a=5 b=8 t=7 g=2 c=8 f=3
+[PRIO] api.sumup.com protected ops (RFC 9728 RS), 5.40, a=5 b=8 t=7 g=2 c=7 f=3
+
+STEP 3 — HYPOTHESES
+[HYP] Staging RFC 7591 unauthenticated dynamic client registration mints gateway-valid JWTs
+class: AUTH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: unauth POST → 201 client_id+client_secret+chosen redirect_uris, still declared in openid-configuration; client_credentials (client_secret_post) mints real JWTs valid at api.sam-app.ro gateway (structured problem+json vs plain 404 discriminator); empty scp blocks resource access; attacker-controlled aud at registration; prod auth.sumup.com /register 404 GET/POST/OPTIONS (absent); prod JWKS 8 kids / staging 11 kids, ZERO overlap → prod relay blocked at key level; triage-VALID 7.5 in reports/valid-bugs.md; GET 404 re-verified this cycle (POST-only presence, no drift)
+evidence_needed: none — complete and self-contained
+verify_steps: not applicable — PASSIVE; sole remaining action is HUMAN submission to bugs.olivermaicher.eu
+impact: attacker-registered OAuth clients + mintable staging-gateway-valid JWTs on publicly reachable staging auth — Medium (7.5)
+testability: PASSIVE
+[HYP] apple-pay-session SSRF-to-metadata with attacker-chosen target
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: official spec declares oauth2:[] (empty scope); handler fetches caller-supplied target; v0.1 twin routed identically; route OPTIONS 204, method-level unauth 404; claim-level binding unobserved across 24 cycles; GET-only probes cannot falsify
+evidence_needed: own bearer + own checkout; PUT metadata target vs Apple control URL
+verify_steps: AUTH_HELPED — PUT /v0.2/checkouts/{own}/apple-pay-session target=https://apple-pay-gateway-cert.apple.com/paymentservices/startSession (control) then http://169.254.169.254/latest/meta-data/ ≤1rps; identical 2xx/failure = no allowlist
+impact: SSRF → cloud metadata → IAM creds/instance identity — Critical
+testability: AUTH_HELPED
+[HYP] no request-level aud/iss binding on api.sumup.com JWT validation
+class: AUTH
+asset: api.sumup.com protected ops (RFC 9728 resource server)
+confidence: 65
+reasoning: RFC 9728 declares sole auth_server=auth.sumup.com, no audience field; staging JWTs carry attacker-controlled aud; observed rejection is key-level only; claim-level binding unobserved across 24 cycles
+evidence_needed: own prod bearer; aud-mutated / iss-mutated copies → same 2xx = no claim binding
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/persons ×3 ≤1rps (unmutated vs aud vs iss); compare status/body
+impact: cross-client/subject token replay across first-party clients — High
+testability: AUTH_HELPED
+
+STEP 4 — SELF-CRITIQUE
+[PARKED] apple-pay-session SSRF-to-metadata: survives critique but AUTH_HELPED-gated; no own bearer/checkout this phase — cannot advance confidence without live write.
+[PARKED] aud/iss binding on api.sumup.com: survives as AUTH class (oracle = 2xx/4xx on mutated claims) but AUTH_HELPED-gated; 24 passive cycles cannot falsify — only a live bearer discriminates.
+[FINAL] auth.sam-app.ro RFC 7591 unauth dynamic client registration — conf 85, evidence complete, no REJECTED class; prod-relay leg dropped (zero sync evidence; key-level isolation binding). Sole gap = HUMAN submission.
+[FINAL] api.sumup.com apple-pay-session SSRF — conf 65, AUTH_HELPED, concrete verify path; spec-true empty scope + attacker-controlled target.
+[FINAL] api.sumup.com aud/iss binding — conf 65, AUTH_HELPED; AUTH-class oracle, not header/banner.
+
+STEP 5 — NEXT ACTION
+[NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding (POST /oauth2/register → 201 client_id+secret; client_credentials mints staging-gateway-valid JWT with attacker-controlled aud; prod registration absent 404; cross-env JWKS isolation confines blast radius to staging) to bugs.olivermaicher.eu — evidence at reports/valid-bugs.md (triage 7.5); sole blocking deliverable, 8th consecutive cycle count 0.
+
+STEP 6 — LEARNING
+[LEARN] ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via clean read this cycle — running count header + file present; blocker remains HUMAN submission, not triage/evidence.
+[LEARN] ACCEPTED OTHER @ api.sumup.com+auth.sam-app.ro: payment-methods 200, RFC 9728 200, register GET 404 — byte-stable triple, 24th consecutive cycle; re-probing these is zero-yield waste.
+[LEARN] REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 24 stable cycles, only a live bearer discriminates.
+
+STEP 7 — RISK
+[RISK] sumup: 45 — one triage-valid (7.5) staging OAuth finding unfiled across 8+ HUMAN cycles while all other surfaces sit 24-cycle byte-stable; residual unknown is claim-level aud/iss binding on prod (untestable without bearer). No active exploitation; risk driven by submission backlog, not exposure.
