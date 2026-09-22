@@ -5831,3 +5831,4 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register GET 404 consistent with POST-only presence — no drift.
 [LEARN] ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified — blocker is HUMAN submission, not triage/evidence, for the 6+th consecutive cycle.
 [RISK] sumup: 45 — one triage-valid (7.5) staging OAuth finding unfiled across 6+ HUMAN cycles while all other surfaces sit 23-cycle-stable; residual unknown is claim-level aud/iss binding on prod (untestable without bearer). No active exploitation; risk driven by submission backlog, not exposure.
+## 2026-09-22 04:44:29 UTC [target] (model bigpickle)
