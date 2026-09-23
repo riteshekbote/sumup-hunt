@@ -6078,3 +6078,4 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OTHER @ api.sumup.com+auth.sam-app.ro: payment-methods `{"card"}` 200, RFC 9728 200, register GET 404, prod JWKS 8-kid — byte-stable quartet re-verified; 26th consecutive no-drift cycle.
 [LEARN] REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 26 stable cycles, only a live bearer discriminates; re-probing has zero expected yield.
 [RISK] sumup: 45 — one triage-VALID (7.5) staging OAuth finding unfiled across 11+ cycles while all passive surfaces sit 26-cycle byte-stable; residual unknown is prod claim-level aud/iss binding (untestable without bearer). Risk driven purely by submission backlog, not exposure creep; no active exploitation observed.
+## 2026-09-23 14:26:51 UTC [target] (model bigpickle)
