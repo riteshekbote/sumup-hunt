@@ -581,3 +581,6 @@
 - 2026-09-23 ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET is consistent with the prior POST-only confirmation — endpoint presence unchanged, no drift signal
 - 2026-09-23 ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only a live bearer can discriminate aud/iss binding vs key-level gate; re-probing is waste
 - 2026-09-23 REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the binding control; the fileable finding is staging posture only (VALable). Retaining confidence 85 on the prod-relay leg is overstated
+- 2026-09-23 ACCEPTED OTHER @ reports/valid-bugs.md: count 0 re-verified via clean file read this cycle — 79 lines present, running-count 0 header intact; blocker remains HUMAN submission, not triage/evidence (11th consecutive cycle).
+- 2026-09-23 ACCEPTED OTHER @ api.sumup.com+auth.sam-app.ro: payment-methods `{"card"}` 200, RFC 9728 200, register GET 404, prod JWKS 8-kid — byte-stable quartet re-verified; 26th consecutive no-drift cycle.
+- 2026-09-23 REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 26 stable cycles, only a live bearer discriminates; re-probing has zero expected yield.
