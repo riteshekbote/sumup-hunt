@@ -6010,3 +6010,33 @@ impact: SSRF → cloud metadata → IAM creds — Critical
 testability: AUTH_HELPED
 [NEXT] HUMAN: submit `auth.sam-app.ro` RFC 7591 unauthenticated dynamic-client-registration finding to bugs.olivermaicher.eu — POST /oauth2/register → 201 client_id+secret+chosen redirect_uris (declared in staging openid-configuration; prod /register 404); client_credentials mints staging-gateway-valid JWT (attacker aud, empty scp); prod relay blocked at key level (ZERO kid overlap). Evidence at reports/valid-bugs.md, 79 lines present, running count 0, triage VALID 7.5 FILE REPORT — 10th consecutive cycle at count 0. No further probing required; deliverable is complete.
 [RISK] sumup: 45 — one triage-VALID (7.5) staging OAuth finding unfiled across 10+ cycles while all passive surfaces sit 25-cycle byte-stable; residual unknown is prod claim-level aud/iss binding (untestable without bearer). Risk driven purely by submission backlog, not exposure creep; no active exploitation observed.
+## 2026-09-23 04:17:29 UTC [target] (model bigpickle)
+[HYP] Staging RFC 7591 unauthenticated dynamic client registration mints gateway-valid JWTs
+class: AUTH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: unauth POST → 201 client_id+secret+chosen redirect_uris (declared in staging openid-configuration); client_credentials (client_secret_post) mints JWTs valid at api.sam-app.ro (structured problem+json vs plain 404); empty scp blocks resources; attacker-controlled aud; prod /register 404 GET/POST/OPTIONS; prod 8 kids vs staging 11 kids ZERO overlap → prod relay blocked at key level; triage VALID 7.5 + FILE REPORT on disk re-read this cycle
+evidence_needed: none — complete and self-contained
+verify_steps: not applicable — PASSIVE; sole missing action is HUMAN submission
+impact: attacker-registered OAuth clients + mintable staging-gateway-valid JWTs on publicly reachable staging — Medium (7.5)
+testability: PASSIVE
+[HYP] no request-level aud/iss binding on api.sumup.com JWT validation
+class: AUTH
+asset: api.sumup.com protected ops (RFC 9728 resource server)
+confidence: 65
+reasoning: RFC 9728 declares sole auth_server=auth.sumup.com, header-only bearer, no resource_scopes/audience field; staging JWTs carry attacker-controlled aud; prod rejection across 24+ cycles indistinguishable from key-level isolation; GET probes cannot falsify claim binding
+evidence_needed: own prod bearer; aud-mutated / iss-mutated copies → same 2xx = no claim binding
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/persons ×3 ≤1rps (unmutated vs aud vs iss), compare status/body
+impact: cross-client/subject token replay across first-party clients — High
+testability: AUTH_HELPED
+[HYP] apple-pay-session SSRF-to-metadata with attacker-chosen target
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: official spec declares oauth2:[] empty scope; handler POSTs/PUTs caller-supplied target; v0.1 twin routed identically; method-level unauth 404; claim-level binding unobserved
+evidence_needed: own bearer + own checkout; PUT metadata target vs Apple control URL
+verify_steps: AUTH_HELPED — PUT /v0.2/checkouts/{own}/apple-pay-session target=https://apple-pay-gateway-cert.apple.com/paymentservices/startSession (control) vs http://169.254.169.254/latest/meta-data/ ≤1rps; identical result = no allowlist
+impact: SSRF → cloud metadata → IAM creds — Critical
+testability: AUTH_HELPED
+[NEXT] HUMAN: submit `auth.sam-app.ro` RFC 7591 unauthenticated dynamic-client-registration finding to bugs.olivermaicher.eu — POST /oauth2/register → 201 client_id+secret+chosen redirect_uris (declared in staging openid-configuration; prod /register 404 GET/POST/OPTIONS); client_credentials mints staging-gateway-valid JWT (attacker-controlled aud, empty scp); prod relay blocked at key level (prod 8 / staging 11 kids, ZERO overlap). Evidence at reports/valid-bugs.md (79 lines, count 0, triage **VALID 7.5 FILE REPORT**). Deliverable complete; no further probing required.
+[RISK] sumup: 45 — one triage-VALID (7.5) staging OAuth finding unfiled across 10+ cycles while all passive surfaces sit byte-stable; residual unknown is prod claim-level aud/iss binding (untestable without bearer, no passive fabrication possible). Risk driven purely by submission backlog, not exposure creep; no active exploitation observed.
