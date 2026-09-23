@@ -587,3 +587,4 @@
 - 2026-09-23 ACCEPTED OTHER @ reports/valid-bugs.md: clean read this cycle — 79 lines, running-count 0 header intact, auth.sam-app.ro finding flagged FILE REPORT at line 79; file ground truth confirmed (12th consecutive cycle).
 - 2026-09-23 ACCEPTED OTHER @ api.sumup.com+auth.sam-app.ro: payment-methods `{"card"}` 200, RFC 9728 200, register GET 404, prod JWKS 8-kid — byte-stable quartet; 27th consecutive no-drift cycle (no probes sent; prior-cycle verification stands).
 - 2026-09-23 REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 27 stable cycles, only a live bearer discriminates aud/iss binding; re-probing has zero expected yield.
+- 2026-09-23 REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 27 stable cycles, only a live bearer discriminates; re-probing has zero expected yield

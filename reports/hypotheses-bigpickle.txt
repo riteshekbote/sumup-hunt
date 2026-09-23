@@ -1,12 +1,9 @@
-## 2026-09-23 18:38:47 UTC [target] (model bigpickle)
-[PRIO] auth.sam-app.ro/oauth2/register,9.0, a=9 t=9 g=10 b=8 c=9 f=8
-[PRIO] api.sumup.com protected ops (RFC 9728 RS),8.0, a=8 t=9 g=2 b=9 c=7 f=7
-[PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,7.5, a=7 t=8 g=2 b=9 c=6 f=7
+## 2026-09-23 21:49:28 UTC [target] (model bigpickle)
 [HYP] Staging RFC 7591 unauthenticated dynamic client registration mints gateway-valid JWTs
 class: AUTH
 asset: auth.sam-app.ro/oauth2/register
 confidence: 85
-reasoning: unauth POST → 201 client_id+secret+chosen redirect_uris declared in staging openid-configuration; client_credentials (client_secret_post) mints JWTs valid at api.sam-app.ro (structured problem+json vs plain 404); empty scp blocks resources; attacker-controlled aud; prod /register 404 GET re-verified; prod 8 vs staging 11 kids ZERO overlap → prod relay blocked at key level; triage-VALID 7.5 FILE REPORT on disk (79 lines re-read this cycle)
+reasoning: unauth POST → 201 client_id+secret+chosen redirect_uris declared in staging openid-configuration; client_credentials (client_secret_post) mints JWTs valid at api.sam-app.ro (structured problem+json vs plain 404); empty scp blocks resources; attacker-controlled aud; prod /register 404 GET re-verified; prod 8 / staging 11 kids ZERO overlap blocks prod relay
 evidence_needed: none — complete and self-contained
 verify_steps: not applicable — PASSIVE; sole remaining action is HUMAN submission
 impact: attacker-registered OAuth clients + mintable staging-gateway-valid JWTs on publicly reachable staging — Medium (7.5)
@@ -15,7 +12,7 @@ testability: PASSIVE
 class: AUTH
 asset: api.sumup.com protected ops (RFC 9728 resource server)
 confidence: 65
-reasoning: RFC 9728 declares sole auth_server=auth.sumup.com, header-only bearer, no resource_scopes/audience field (200 static re-verified); staging JWTs carry attacker-controlled aud; prod rejection across 26 cycles indistinguishable between key-level isolation and claim binding; GET probes cannot falsify
+reasoning: RFC 9728 declares sole auth_server=auth.sumup.com, header-only bearer, no resource_scopes/audience field (200 static); staging JWTs carry attacker-controlled aud; prod rejection across 27 cycles indistinguishable between key-level isolation and claim binding; GET probes cannot falsify
 evidence_needed: own prod bearer; aud-mutated / iss-mutated copies → same 2xx = no claim binding
 verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/persons ×3 ≤1rps (unmutated vs aud vs iss), compare status/body
 impact: cross-client/subject token replay across first-party clients — High
@@ -29,10 +26,3 @@ evidence_needed: own bearer + own checkout; PUT metadata target vs Apple control
 verify_steps: AUTH_HELPED — PUT /v0.2/checkouts/{own}/apple-pay-session target=https://apple-pay-gateway-cert.apple.com/paymentservices/startSession (control) vs http://169.254.169.254/latest/meta-data/ ≤1rps; identical result = no allowlist
 impact: SSRF → cloud metadata → IAM creds — Critical
 testability: AUTH_HELPED
-[PARKED] none — all three survivors ≥65 confidence, non-REJECTED class, with concrete verify_steps.
-[FINAL] 1. auth.sam-app.ro RFC 7591 dynamic registration (85, PASSIVE, complete) 2. api.sumup.com aud/iss binding (65, AUTH_HELPED) 3. apple-pay-session SSRF (65, AUTH_HELPED)
-[NEXT] HUMAN: submit `auth.sam-app.ro` RFC 7591 unauthenticated dynamic-client-registration finding to bugs.olivermaicher.eu — POST /oauth2/register → 201 client_id+secret+chosen redirect_uris (declared in staging openid-configuration; prod /register 404 GET re-verified this cycle); client_credentials mints staging-gateway-valid JWT (attacker-controlled aud, empty scp); prod relay blocked at key level (prod 8 / staging 11 kids, ZERO overlap). Evidence re-verified at reports/valid-bugs.md (79 lines, triage VALID 7.5 FILE REPORT lines 32/64/79). No probing required; deliverable is complete and self-contained.
-[LEARN] ACCEPTED OTHER @ reports/valid-bugs.md: clean read this cycle — 79 lines, running-count 0 header intact, auth.sam-app.ro finding flagged FILE REPORT at line 79; file ground truth confirmed (12th consecutive cycle).
-[LEARN] ACCEPTED OTHER @ api.sumup.com+auth.sam-app.ro: payment-methods `{"card"}` 200, RFC 9728 200, register GET 404, prod JWKS 8-kid — byte-stable quartet; 27th consecutive no-drift cycle (no probes sent; prior-cycle verification stands).
-[LEARN] REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 27 stable cycles, only a live bearer discriminates aud/iss binding; re-probing has zero expected yield.
-[RISK] sumup: 45 — one triage-VALID (7.5) staging OAuth finding unfiled across 12+ cycles while all passive surfaces sit 27-cycle byte-stable; residual unknown is prod claim-level aud/iss binding (untestable without bearer). Risk driven purely by submission backlog, not exposure creep; no active exploitation observed.
