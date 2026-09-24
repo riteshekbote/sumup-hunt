@@ -593,3 +593,4 @@
 - 2026-09-24 ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET is consistent with the prior POST-only confirmation — endpoint presence unchanged, no drift signal
 - 2026-09-24 ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only a live bearer can discriminate aud/iss binding vs key-level gate; re-probing is waste
 - 2026-09-24 REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the binding control; the fileable finding is staging posture only (VALable). Retaining confidence 85 on the prod-relay leg is overstated
+- 2026-09-24 ACCEPTED OTHER @ reports/valid-bugs.md: ground truth re-verified via clean read this cycle — 79 lines, running count 0 header intact, auth.sam-app.ro finding flagged FILE REPORT; blocker remains HUMAN submission, not triage/evidence (13th consecutive cycle).
