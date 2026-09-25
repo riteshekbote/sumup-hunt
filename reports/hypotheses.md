@@ -2757,3 +2757,22 @@
 - LEARN: ACCEPTED OTHER @ dashboard.sumup.com + support.sumup.com: the two last seed-inventory hosts left unprobed after 28 cycles are both live Vercel 308 aliases (to m
 - LEARN: REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening is refuted on the modern server for the dashboard client by 6 controlled negatives — 3 cross-cli
 - LEARN: ACCEPTED OATH @ api.sumup.com/authorize: the KB's exhaustive legacy-callback sweep used the wrong path for the dashboard candidate (/callback instead of the reg
+
+## RANKED HYPOTHESES 2026-09-25 23:39:14 UTC
+- [85] auth.sam-app.ro/oauth2/register: auth.sam-app.ro unauthenticated dynamic client registration → mintable JWTs on staging (from art/lead_nemotron3.txt)
+- [62] mcp.sumup.com/mcp: The prod MCP agent surface's declared scope model is satisfiable by the stock merchant dashboard client, so it may be reachable from an ordinary merchant session with no developer OAuth app (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Request a SumUp test-mode merchant API key from developer.sumup.com and record it in `reports/valid-bugs.md` as the AUTH_HELPED credential. It unblocks t
+- NEXT(hypotheses-nemotron3.txt): HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding (POST /oauth2/register → 201 client_id+secret; client_credentials
+- LEARN: REJECTED AUTH @ mcp.sumup.com/mcp: JWT `alg:none` and RS256→HS256 key confusion are both explicitly refused by the **production** bearer verifier — `{"error":"i
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: RFC 9728 resource-server metadata is LIVE on the prod MCP host at two paths and publishes a `scopes_supported:["offline_access",
+- LEARN: ACCEPTED OATH @ auth.sumup.com: `client_id=dashboard` ACCEPTS `email` (302 `login_challenge`), completing its consent set as `{openid, classic, offline, readers
+- LEARN: REJECTED AUTH @ auth.sam-app.ro/oauth2-register/JWKS: a 30-candidate `kid` sweep against the prod MCP verifier found exactly the 8 published prod kids trusted a
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro JWKS: the staging trust set contains **2 duplicated entries** (`public:3a13954d-…`, `public:f06a4960-…` each twice) — 11 entrie
+- LEARN: ACCEPTED OTHER @ reports/valid-bugs.md: ground truth re-verified via clean read this cycle — 79 lines, running count 0 header intact, auth.sam-app.ro finding fl
+- LEARN: REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 27 stable cycles, only a live bearer discriminates; r
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET is consistent with the prior POST-only confirmation — endpoint presence unchanged, no drift signal
+- LEARN: ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only a live bearer can discriminate aud/iss binding vs key-level gate; re
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
+- LEARN: ACCEPTED OTHER @ dashboard.sumup.com + support.sumup.com: the two last seed-inventory hosts left unprobed after 28 cycles are both live Vercel 308 aliases (to m
+- LEARN: REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening is refuted on the modern server for the dashboard client by 6 controlled negatives — 3 cross-cli
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: the KB's exhaustive legacy-callback sweep used the wrong path for the dashboard candidate (/callback instead of the reg

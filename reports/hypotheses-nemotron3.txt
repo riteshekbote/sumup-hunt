@@ -1,5 +1,5 @@
-## 2026-09-25 20:34:14 UTC [target] (model nemotron3)
-[NEW] api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway now requires bearer token even for spec-declared `oauth2:[]` operations
+## 2026-09-25 23:33:58 UTC [target] (model nemotron3)
+[NEW] api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway requires bearer token even for spec-declared `oauth2:[]` operations
 [NEW] auth.sam-app.ro/oauth2/register: POST 201 unauthenticated RFC 7591 registration confirmed LIVE; mints JWTs with empty `scp`, attacker-controlled `aud`; cross-env JWKS isolation (prod 8 keys, staging 11 keys, ZERO kid overlap) confirmed
 [NEW] dashboard.sumup.com — 308 permanent alias → https://me.sumup.com/ (Vercel, CNAME cname.vercel-dns.com, 76.76.21.22). FIRST PROBE IN 28 CYCLES
 [NEW] support.sumup.com — 308 permanent alias → https://help.sumup.com/ (Vercel). FIRST PROBE IN 28 CYCLES
@@ -13,10 +13,10 @@
 [CHANGED] JWKS prod vs staging: 8 vs 11 keys, ZERO kid overlap confirmed; cross-env key isolation holds (mcp.sumup.com rejects staging tokens)
 [PRIO] auth.sam-app.ro/oauth2/register,9.55,attack_surface=10,business_value=9,tech_exposure=10,gate_ease=10,cloud_surface=9,freshness=9
 [PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,7.65,attack_surface=7,business_value=9,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
-[PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,7.40,attack_surface=6,business_value=9,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
 [PRIO] api.sumup.com (RFC 9728 resource server),7.15,attack_surface=6,business_value=8,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
 [PRIO] dashboard.sumup.com (Vercel 308 alias → me.sumup.com),6.80,attack_surface=7,business_value=7,tech_exposure=7,gate_ease=10,cloud_surface=8,freshness=10
 [PRIO] support.sumup.com (Vercel 308 alias → help.sumup.com),6.55,attack_surface=6,business_value=7,tech_exposure=7,gate_ease=10,cloud_surface=8,freshness=10
+[PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,6.40,attack_surface=5,business_value=8,tech_exposure=7,gate_ease=5,cloud_surface=8,freshness=9
 [HYP] auth.sam-app.ro unauthenticated dynamic client registration → mintable JWTs on staging
 class: AUTH
 asset: auth.sam-app.ro/oauth2/register

@@ -1192,3 +1192,16 @@ https://help.sumup.com/ -> 200 len=167450
 https://dashboard.sumup.com/api/sso/callback -> HTTP 403
 https://auth.sumup.com -> HTTP 403
 https://api.sumup.com/callback -> HTTP 404
+
+## 2026-09-25 23:39:32 UTC
+https://me.sumup.com/ -> HTTP 403
+https://help.sumup.com/ -> 200 len=167450
+https://dashboard.sumup.com/api/sso/callback -> HTTP 403
+https://auth.sumup.com -> HTTP 403
+https://api.sumup.com/callback -> HTTP 404
+https://mcp.sumup.com/mcp -> HTTP 401
+https://developer.sumup.com/tools/llms -> 200 len=?
+https://mcp.sumup.com/mcp` -> HTTP 404
+https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=teststate12345&scope=email -> HTTP 405
+https://auth.sumup.com/flows/auth-callback?login_challenge=…` -> ERR 'ascii' codec can't encode character '\u2026' in p
+https://developer.sumup.com/tools/llms` -> HTTP 404
