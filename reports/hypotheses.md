@@ -2718,3 +2718,17 @@
 - LEARN: ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET is consistent with the prior POST-only confirmation — endpoint presence unchanged, no drift signal
 - LEARN: ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only a live bearer can discriminate aud/iss binding vs key-level gate; re
 - LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
+
+## RANKED HYPOTHESES 2026-09-25 12:03:55 UTC
+- [85] auth.sam-app.ro/oauth2/register: auth.sam-app.ro unauthenticated dynamic client registration → mintable JWTs on staging (from art/lead_nemotron3.txt)
+- [45] dashboard.sumup.com/api/sso/callback: dashboard OAuth client trusts a redundant second redirect host whose HTTP routing is delegated to a Vercel project binding (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Submit the auth.sam-app.ro RFC 7591 finding to bugs.olivermaicher.eu. Evidence is complete and self-contained (unauth POST /oauth2/register -> 201 client
+- NEXT(hypotheses-nemotron3.txt): HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding (POST /oauth2/register → 201 client_id+secret; client_credentials
+- LEARN: ACCEPTED OTHER @ dashboard.sumup.com + support.sumup.com: the two last seed-inventory hosts left unprobed after 28 cycles are both live Vercel 308 aliases (to m
+- LEARN: REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening is refuted on the modern server for the dashboard client by 6 controlled negatives — 3 cross-cli
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: the KB's exhaustive legacy-callback sweep used the wrong path for the dashboard candidate (/callback instead of the reg
+- LEARN: ACCEPTED OTHER @ reports/valid-bugs.md: ground truth re-verified via clean read this cycle — 79 lines, running count 0 header intact, auth.sam-app.ro finding fl
+- LEARN: REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 27 stable cycles, only a live bearer discriminates; r
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET is consistent with the prior POST-only confirmation — endpoint presence unchanged, no drift signal
+- LEARN: ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only a live bearer can discriminate aud/iss binding vs key-level gate; re
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi

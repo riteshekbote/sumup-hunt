@@ -6375,3 +6375,50 @@ evidence_needed: own bearer + own checkout; PUT metadata target vs Apple control
 verify_steps: AUTH_HELPED — PUT /v0.2/checkouts/{own}/apple-pay-session target=https://apple-pay-gateway-cert.apple.com/paymentservices/startSession (control) vs http://169.254.169.254/latest/meta-data/ ≤1rps; identical result = no allowlist
 impact: SSRF → cloud metadata → IAM creds — Critical
 testability: AUTH_HELPED
+## 2026-09-25 12:03:45 UTC [target] (model bigpickle)
+[NEW] dashboard.sumup.com — 308 permanent alias -> https://me.sumup.com/ (Vercel, CNAME cname.vercel-dns.com, 76.76.21.22). FIRST PROBE IN 28 CYCLES. Flagged unprobed in own lead-bigpickle.md:1480 for 13+ cycles.
+[NEW] support.sumup.com — 308 permanent alias -> https://help.sumup.com/ (Vercel). FIRST PROBE IN 28 CYCLES.
+[NEW] OATH: redirect_uri=https://dashboard.sumup.com/api/sso/callback is ACCEPTED (302 -> flows/auth-callback?login_challenge=b8cf91af...) for client_id=dashboard on modern auth.sumup.com. Side-by-side controlled vs me.sumup.com control (302, challenge=46973b26...). The dashboard client therefore has TWO accepted redirect hosts, not the single host recorded in 28 cycles of KB.
+[NEW] BUSLOGIC: dashboard.sumup.com 308 preserves BOTH path and query string (verified: /api/sso/callback?code=TESTCODE123&state=teststate1234 -> me.sumup.com/api/sso/callback?code=TESTCODE123&state=teststate1234). Transparent alias, not a redirect-to-root.
+[NEW] OATH: dashboard allowlist is strict EXACT host+path match. 3 path variants on the accepted host ALL rejected invalid_request: trailing-slash /api/sso/callback/, host-root /, and /api/sso/callback/../callback. Host-root rejection proves matching is not host-wide.
+[NEW] OATH: no cross-client widening. 3 controlled swaps ALL rejected invalid_request ("does not match any of the OAuth 2.0 Client's pre-registered redirect urls"): support_centre->dashboard host, support_chat->dashboard host, dashboard->support host.
+[CHANGED] Closed a real gap in the KB's ~200-combo legacy sweep: it tested dashboard.sumup.com/callback (WRONG path). The actually-registered modern path /api/sso/callback was never sent to the legacy gateway. Now tested -> invalid_request. Legacy redirect-set divergence for `dashboard` is confirmed with correct-path evidence; legacy allowlist host remains unrecoverable.
+[CHANGED] support_centre on legacy api.sumup.com/authorize -> invalid_client ("Client does not exist"), independently re-confirming modern-only registration.
+[CHANGED] Inventory breadth gap CLOSED: all 9 seed-inventory hosts (admin, api, auth, dashboard, portal, sumup.com, support, web, www) now probed. No host remains at seed-recon-only status.
+[PRIO] dashboard.sumup.com alias + dashboard-client redirect allowlist,7.1,attack_surface:5 business_value:8 tech_exposure:8 gate_ease:7 cloud_surface:6 freshness:10
+[PRIO] auth.sam-app.ro/oauth2/register,6.9,attack_surface:7 business_value:6 tech_exposure:9 gate_ease:10 cloud_surface:5 freshness:3
+[PRIO] api.sumup.com (RFC 9728 aud binding + legacy /authorize),5.85,attack_surface:6 business_value:9 tech_exposure:8 gate_ease:2 cloud_surface:4 freshness:2
+[HYP] dashboard OAuth client trusts a redundant second redirect host whose HTTP routing is delegated to a Vercel project binding
+class: OATH
+asset: dashboard.sumup.com/api/sso/callback (client_id=dashboard on auth.sumup.com)
+confidence: 45
+reasoning: 302 login_challenge proves dashboard.sumup.com/api/sso/callback is pre-registered alongside me.sumup.com/api/sso/callback. The host is a CNAME into Vercel's SHARED apex cname.vercel-dns.com and answers 308 preserving path+query, so its content is determined by a Vercel domain binding, not by the auth server's own registration. 6 controlled negatives prove matching is exact host+path (trailing-slash, host-root, ../, and 3 cross-client swaps all invalid_request), so this is a trust-duplication/chain-step observation, not a redirect bypass.
+evidence_needed: proof the alias host is attacker-servable by removing/rebinding its Vercel domain binding, then completing an authorization_code flow to show code delivery to the rebound host
+verify_steps: PASSIVE, already complete — (1) GET https://dashboard.sumup.com/api/sso/callback?code=TESTCODE123&state=teststate1234 -> 308, location preserves path+query; (2) GET auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https%3A%2F%2Fdashboard.sumup.com%2Fapi%2Fsso%2Fcallback&... -> 302 login_challenge (accepted) vs same with me.sumup.com (control, also 302); (3) host-root and trailing-slash variants -> 302 invalid_request. NOT independently exploitable: CNAME targets Vercel's shared apex, so there is no dangling-record takeover precondition.
+impact: Low / informational. Corrects the dashboard redirect-allowlist map from 1 host to 2 and establishes that redirect trust is duplicated across two hosts, one under third-party hosting control. No code theft without a separate compromise of the Vercel binding.
+testability: PASSIVE
+[HYP] Staging RFC 7591 unauthenticated dynamic client registration mints gateway-valid JWTs
+class: AUTH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: unauth POST /oauth2/register -> 201 client_id+client_secret+chosen redirect_uris, declared in staging openid-configuration; client_credentials (client_secret_post) mints a real JWT accepted at api.sam-app.ro (structured problem+json vs plain 404). Bounded: empty scp blocks resources, per-client redirect allowlist enforced, and prod JWKS (8 kids) vs staging (11 kids) have ZERO kid overlap. Prod /register 404. Evidence complete and self-contained; triage-VALID 7.5 at valid-bugs.md:64/79.
+evidence_needed: none — no further passive or active test adds information
+verify_steps: not applicable — PASSIVE; sole remaining action is HUMAN submission to bugs.olivermaicher.eu
+impact: attacker-registered OAuth clients and mintable staging-gateway-valid JWTs on publicly reachable staging — Medium (7.5)
+testability: PASSIVE
+[HYP] api.sumup.com apple-pay-session accepts a caller-supplied outbound target with no host allowlist
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 60
+reasoning: official SumUp OpenAPI spec declares oauth2:[] (empty scope) for this op; v0.1 twin routes identically; gateway is origin-echo CORS with identity.svc operation header. Method-level unauthenticated access is gated (404), so this cannot be tested passively. RFC 9728 metadata declares no resource_scopes, so the empty-scope declaration is untested against a live gateway.
+evidence_needed: own sandbox bearer + own checkout_id; PUT with Apple control URL vs http://169.254.169.254/latest/meta-data/ and compare
+verify_steps: AUTH_HELPED — PUT /v0.2/checkouts/{own_checkout}/apple-pay-session with target=https://apple-pay-gateway-cert.apple.com/paymentservices/startSession (control) then target=http://169.254.169.254/latest/meta-data/, <=1rps, own sandbox merchant only; identical response = no allowlist
+impact: SSRF to cloud metadata -> IAM credentials — Critical if the allowlist is absent
+testability: AUTH_HELPED
+[PARKED] dashboard-client redundant redirect host: survives at 45 but is a map correction, not a bounty claim — no exploit precondition exists while the Vercel binding is intact, and 6 controlled negatives prove the allowlist cannot be widened.
+[FINAL] 1) auth.sam-app.ro dynamic registration (85, PASSIVE, complete — blocked only on HUMAN submission); 2) api.sumup.com apple-pay SSRF (60, AUTH_HELPED, Critical if true); 3) dashboard redirect-allowlist map correction (45, PASSIVE, informational).
+[NEXT] HUMAN: Submit the auth.sam-app.ro RFC 7591 finding to bugs.olivermaicher.eu. Evidence is complete and self-contained (unauth POST /oauth2/register -> 201 client_id+secret; client_credentials -> real JWT accepted at api.sam-app.ro; empty scp and zero prod/staging JWKS kid overlap bounding the blast radius). This is the 14th cycle it has been the binding constraint; no probe I can run changes it, and I am not filing it myself.
+[LEARN] ACCEPTED OTHER @ dashboard.sumup.com + support.sumup.com: the two last seed-inventory hosts left unprobed after 28 cycles are both live Vercel 308 aliases (to me.sumup.com and help.sumup.com). Breadth, not depth, was the actual gap — 13 cycles of re-verifying a byte-stable quartet while my own lead file named the unexplored hosts. Future cycles should clear named-unprobed assets before re-probing stable ones.
+[LEARN] REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening is refuted on the modern server for the dashboard client by 6 controlled negatives — 3 cross-client/cross-asset swaps and 3 same-host path variants (trailing slash, host root, ../ traversal) all return invalid_request, with host-root rejection proving matching is exact URI and not host-wide.
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: the KB's exhaustive legacy-callback sweep used the wrong path for the dashboard candidate (/callback instead of the registered /api/sso/callback), so its "0 HITs, not recoverable" conclusion rested on an untested combination. Re-tested with the correct path: still invalid_request. Lesson: an exhaustive sweep is only exhaustive over the values actually sent.
+[RISK] sumup: 44. No exploitable finding this cycle. The prior 13 cycles produced zero delta by re-probing a byte-stable surface; this cycle cleared a named inventory gap and refuted the redirect-widening class, which is real negative value but not bounty value. Standing exposure is unchanged: auth.sam-app.ro dynamic registration is complete and unsubmitted for the 14th cycle, and the two highest-impact prod leads (apple-pay SSRF, api.sumup.com aud binding) both require a merchant bearer that no agent cycle can obtain. Risk is dominated by the submission/credential bottleneck, not by undiscovered attack surface.
