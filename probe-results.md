@@ -1178,3 +1178,10 @@ https://me.sumup.com/ -> HTTP 403
 https://help.sumup.com/ -> 200 len=167450
 https://dashboard.sumup.com/api/sso/callback -> HTTP 403
 https://dashboard.sumup.com/api/sso/callback?code=TESTCODE123&state=teststate1234 -> HTTP 403
+
+## 2026-09-25 17:08:38 UTC
+https://me.sumup.com/ -> HTTP 403
+https://help.sumup.com/ -> 200 len=167450
+https://dashboard.sumup.com/api/sso/callback -> HTTP 403
+https://auth.sumup.com -> HTTP 403
+https://api.sumup.com/callback -> HTTP 404

@@ -1,7 +1,12 @@
-## 2026-09-25 12:00:52 UTC [target] (model nemotron3)
-[NEW] api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway now requires bearer token even for spec-declared `oauth2:[]` operations (2026-09-17/18 flapping, re-verified 200 static 2026-09-18+)
+## 2026-09-25 17:05:47 UTC [target] (model nemotron3)
+[NEW] api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway now requires bearer token even for spec-declared `oauth2:[]` operations
 [NEW] auth.sam-app.ro/oauth2/register: POST 201 unauthenticated RFC 7591 registration confirmed LIVE; mints JWTs with empty `scp`, attacker-controlled `aud`; cross-env JWKS isolation (prod 8 keys, staging 11 keys, ZERO kid overlap) confirmed
-[CHANGED] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session: OPTIONS 204 (origin-echo CORS, identity.svc op header) — route ROUTED, method-level unauth 404; SSRF gate remains AUTH_HELPED
+[NEW] dashboard.sumup.com — 308 permanent alias -> https://me.sumup.com/ (Vercel, CNAME cname.vercel-dns.com, 76.76.21.22). FIRST PROBE IN 28 CYCLES
+[NEW] support.sumup.com — 308 permanent alias -> https://help.sumup.com/ (Vercel). FIRST PROBE IN 28 CYCLES
+[NEW] OATH: redirect_uri=https://dashboard.sumup.com/api/sso/callback is ACCEPTED (302 -> flows/auth-callback?login_challenge=...) for client_id=dashboard on modern auth.sumup.com
+[NEW] OATH: redirect_uri allowlist widening refuted on modern server for dashboard client by 6 controlled negatives — all `invalid_request`
+[CHANGED] Legacy callback sweep used wrong path for dashboard candidate (/callback instead of registered /api/sso/callback) — "0 HITs" conclusion invalid
+[CHANGED] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session: OPTIONS 204 (origin-echo CORS, identity.svc op header) — route ROUTED, method-level unauth 404
 [CHANGED] api.sumup.com/token: OPTIONS 204 (origin-echo CORS, identity.svc op header) — route ROUTED, legacy token endpoint live per spec
 [CHANGED] api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static 200 — sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; recon surface exhausted
 [CHANGED] auth.sumup.com/oauth2/auth: scope-acceptance oracle confirmed — dashboard allows only `readers.read`/`terminals.read`; support_centre/support_chat allow only `openid+classic+offline`; all 13 REST spec scopes rejected
@@ -46,4 +51,7 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET is consistent with the prior POST-only confirmation — endpoint presence unchanged, no drift signal
 [LEARN] ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only a live bearer can discriminate aud/iss binding vs key-level gate; re-probing is waste
 [LEARN] REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the binding control; the fileable finding is staging posture only (VALable). Retaining confidence 85 on the prod-relay leg is overstated
+[LEARN] ACCEPTED OTHER @ dashboard.sumup.com + support.sumup.com: the two last seed-inventory hosts left unprobed after 28 cycles are both live Vercel 308 aliases (to me.sumup.com and help.sumup.com). Breadth, not depth, was the actual gap — 13 cycles of re-verifying a byte-stable quartet while my own lead file named the unexplored hosts.
+[LEARN] REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening is refuted on the modern server for the dashboard client by 6 controlled negatives — 3 cross-client/cross-asset swaps and 3 same-host path variants (trailing slash, host root, ../ traversal) all return invalid_request, with host-root rejection proving matching is exact URI and not host-wide.
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: the KB's exhaustive legacy-callback sweep used the wrong path for the dashboard candidate (/callback instead of the registered /api/sso/callback), so its "0 HITs, not recoverable" conclusion rested on an untested combination. Re-tested with the correct path: still invalid_request. Lesson: an exhaustive sweep is only exhaustive over the values actually sent.
 [RISK] sumup: 45 — one triage-valid (7.5) staging OAuth finding unfiled across 13+ HUMAN cycles while all other surfaces sit 27-cycle-stable; residual unknown is claim-level aud/iss binding on prod (untestable without bearer). No active exploitation; risk driven by submission backlog, not exposure.

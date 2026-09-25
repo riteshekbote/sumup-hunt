@@ -953,3 +953,17 @@ www.sumup.com
 - CHANGED api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static 200 — sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; recon surface exhausted
 - CHANGED auth.sumup.com/oauth2/auth: scope-acceptance oracle confirmed — dashboard allows only `readers.read`/`terminals.read`; support_centre/support_chat allow only `openid+classic+offline`; all 13 REST spec
 - CHANGED JWKS prod vs staging: 8 vs 11 keys, ZERO kid overlap confirmed; cross-env key isolation holds (mcp.sumup.com rejects staging tokens)
+
+## 2026-09-25 17:08:28 UTC
+- NEW api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway now requires bearer token even for spec-declared `oauth2:[]` operations
+- NEW auth.sam-app.ro/oauth2/register: POST 201 unauthenticated RFC 7591 registration confirmed LIVE; mints JWTs with empty `scp`, attacker-controlled `aud`; cross-env JWKS isolation (prod 8 keys, staging 1
+- NEW dashboard.sumup.com — 308 permanent alias -> https://me.sumup.com/ (Vercel, CNAME cname.vercel-dns.com, 76.76.21.22). FIRST PROBE IN 28 CYCLES
+- NEW support.sumup.com — 308 permanent alias -> https://help.sumup.com/ (Vercel). FIRST PROBE IN 28 CYCLES
+- NEW OATH: redirect_uri=https://dashboard.sumup.com/api/sso/callback is ACCEPTED (302 -> flows/auth-callback?login_challenge=...) for client_id=dashboard on modern auth.sumup.com
+- NEW OATH: redirect_uri allowlist widening refuted on modern server for dashboard client by 6 controlled negatives — all `invalid_request`
+- CHANGED Legacy callback sweep used wrong path for dashboard candidate (/callback instead of registered /api/sso/callback) — "0 HITs" conclusion invalid
+- CHANGED api.sumup.com/v0.2/checkouts/{id}/apple-pay-session: OPTIONS 204 (origin-echo CORS, identity.svc op header) — route ROUTED, method-level unauth 404
+- CHANGED api.sumup.com/token: OPTIONS 204 (origin-echo CORS, identity.svc op header) — route ROUTED, legacy token endpoint live per spec
+- CHANGED api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static 200 — sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; recon surface exhausted
+- CHANGED auth.sumup.com/oauth2/auth: scope-acceptance oracle confirmed — dashboard allows only `readers.read`/`terminals.read`; support_centre/support_chat allow only `openid+classic+offline`; all 13 REST spec
+- CHANGED JWKS prod vs staging: 8 vs 11 keys, ZERO kid overlap confirmed; cross-env key isolation holds (mcp.sumup.com rejects staging tokens)
