@@ -6423,3 +6423,22 @@ testability: AUTH_HELPED
 [LEARN] ACCEPTED OATH @ api.sumup.com/authorize: the KB's exhaustive legacy-callback sweep used the wrong path for the dashboard candidate (/callback instead of the registered /api/sso/callback), so its "0 HITs, not recoverable" conclusion rested on an untested combination. Re-tested with the correct path: still invalid_request. Lesson: an exhaustive sweep is only exhaustive over the values actually sent.
 [RISK] sumup: 44. No exploitable finding this cycle. The prior 13 cycles produced zero delta by re-probing a byte-stable surface; this cycle cleared a named inventory gap and refuted the redirect-widening class, which is real negative value but not bounty value. Standing exposure is unchanged: auth.sam-app.ro dynamic registration is complete and unsubmitted for the 14th cycle, and the two highest-impact prod leads (apple-pay SSRF, api.sumup.com aud binding) both require a merchant bearer that no agent cycle can obtain. Risk is dominated by the submission/credential bottleneck, not by undiscovered attack surface.
 ## 2026-09-25 17:08:17 UTC [target] (model bigpickle)
+## 2026-09-25 20:36:03 UTC [target] (model bigpickle)
+[HYP] SumUp hosted-fields iframe accepts cross-origin parent commands with no origin validation, enabling a hostile page to drive checkout state or harvest card-entry state
+class: OATH
+asset: gateway.sumup.com/hosted.js
+confidence: 35
+reasoning: inbound message handler `p` destructures only `{data,source}` and gates on `source===expectedWindow`; `event.origin` is never read; outbound `postMessage(t,"*")`; page sends ACAO:* with no X-Frame-Options and no CSP frame-ancestors, so any origin may embed. Component issues api.sumup.com calls (`checkouts/{id}/payment-methods` PUT, header X-SumUp-Widget-Session-Id) using parent-supplied checkoutId/sessionId.
+evidence_needed: proof the iframe holds authority independent of the embedding parent — i.e. a Set-Cookie on gateway.sumup.com, a token in the bundle, or a checkout reachable with no parent-supplied credential.
+verify_steps: already collected — no Set-Cookie on / or /hosted.js; sessionId/checkoutId are read from parent-supplied init config, not from iframe-held state.
+impact: if ambient authority existed, arbitrary-site drive of checkout state and PCI-relevant state disclosure; with no ambient authority the boundary is not crossed.
+testability: PASSIVE
+[HYP] Dormant third-party-hosted SumUp Back-Office exposes an unauthenticated impersonation or API surface
+class: AUTH
+asset: pos.sumup.com/client
+confidence: 15
+reasoning: AngularJS SPA on third-party CNAME sumup.gastrofix.com; bundle contains "/login/impersonate" and "/api_connection"; measured /client/login, /client/login/impersonate, /client/api/api_connection all nginx 404 and /api/* returns 503 "No server is available".
+evidence_needed: a live API origin behind this SPA. Refuted this cycle — the backend is not deployed on this host.
+verify_steps: GET /client/, GET /client/{login,login/impersonate,api/api_connection}, GET /api/api_connection — all executed, 404/503, zero data returned.
+impact: none reachable; dormant static deployment. Supply-chain observation only (merchant back-office code on non-SumUp infrastructure).
+testability: PASSIVE

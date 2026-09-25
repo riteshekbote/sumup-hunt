@@ -1185,3 +1185,10 @@ https://help.sumup.com/ -> 200 len=167450
 https://dashboard.sumup.com/api/sso/callback -> HTTP 403
 https://auth.sumup.com -> HTTP 403
 https://api.sumup.com/callback -> HTTP 404
+
+## 2026-09-25 20:36:25 UTC
+https://me.sumup.com/ -> HTTP 403
+https://help.sumup.com/ -> 200 len=167450
+https://dashboard.sumup.com/api/sso/callback -> HTTP 403
+https://auth.sumup.com -> HTTP 403
+https://api.sumup.com/callback -> HTTP 404
