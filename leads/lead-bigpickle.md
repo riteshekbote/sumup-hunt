@@ -6299,3 +6299,31 @@ testability: AUTH_HELPED
 [NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding to bugs.olivermaicher.eu — POST /oauth2/register → 201 client_id+secret (PKCE S256 enforced, per-client redirect allowlist, no RFC 7592, empty scp, NOT synced to api gateway); mintable staging-gateway-valid JWTs confirmed via client_credentials; triage-VALID 7.5 flagged FILE REPORT (reports/valid-bugs.md:64,79, re-verified on disk this cycle); report is self-contained. The two prod-leaning hypotheses remain AUTH_HELPED, blocked on a scoped merchant bearer; no further passive probes are justified.
 [LEARN] ACCEPTED OTHER @ reports/valid-bugs.md: ground-truth re-verified via direct file read 2026-09-24 — 79 lines, running-count-0 header intact (line 1), auth.sam-app.ro finding flagged FILE REPORT at lines 64/79; no hallucination; blocker remains HUMAN submission, not triage/evidence (13th consecutive cycle).
 [RISK] SumUp: 28 — hardened gate (Cloudflare+Envoy, strict per-client redirect allowlists, cross-env JWKS key isolation) and a 28-cycle byte-stable anonymous surface leave only AUTH_HELPED classes reachable; sole actionable item is submission of the complete 7.5 staging finding; discovery risk driven entirely by HUMAN submission latency, not surface activity.
+## 2026-09-25 01:19:32 UTC [target] (model bigpickle)
+[HYP] Staging RFC 7591 unauthenticated dynamic client registration mints gateway-valid JWTs
+class: AUTH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: unauth POST → 201 client_id+secret+chosen redirect_uris, declared in staging openid-configuration; client_credentials (client_secret_post) mints JWTs valid at api.sam-app.ro (structured problem+json vs plain 404); empty scp blocks resources; attacker-controlled aud; prod /register 404 re-verified; prod 8 / staging 11 JWKS kids ZERO overlap blocks prod relay.
+evidence_needed: none — complete and self-contained (triage-VALID 7.5, valid-bugs.md:79, re-verified on disk this cycle)
+verify_steps: not applicable — PASSIVE; sole action is HUMAN submission to bugs.olivermaicher.eu
+impact: attacker-registered OAuth clients + mintable staging-gateway-valid JWTs on publicly reachable staging — Medium (7.5)
+testability: PASSIVE
+[HYP] no request-level aud/iss binding on api.sumup.com JWT validation
+class: AUTH
+asset: api.sumup.com protected ops (RFC 9728 resource server)
+confidence: 65
+reasoning: RFC 9728 declares sole auth_server=auth.sumup.com, header-only bearer, no resource_scopes/audience field (200 byte-stable); staging JWTs carry attacker-controlled aud; prod rejection across 28 cycles indistinguishable between key-level isolation and claim binding.
+evidence_needed: own prod bearer; aud-mutated / iss-mutated copies → same 2xx = no claim binding
+verify_steps: AUTH_HELPED — GET /v0.1/merchants/{own}/persons ×3 ≤1rps (unmutated vs aud vs iss), compare status/body
+impact: cross-client/subject token replay across first-party clients — High
+testability: AUTH_HELPED
+[HYP] apple-pay-session SSRF-to-metadata with attacker-chosen target
+class: SSRF
+asset: api.sumup.com/v0.2/checkouts/{checkout_id}/apple-pay-session
+confidence: 65
+reasoning: official spec declares oauth2:[] empty scope; handler PUTs caller-supplied target; method-level unauth 404; v0.1 twin identical (routed, handler-404); claim-level binding unobserved.
+evidence_needed: own bearer + own checkout; PUT metadata target vs Apple control URL
+verify_steps: AUTH_HELPED — PUT /v0.2/checkouts/{own}/apple-pay-session target=https://apple-pay-gateway-cert.apple.com/paymentservices/startSession (control) vs http://169.254.169.254/latest/meta-data/ ≤1rps; identical result = no allowlist
+impact: SSRF → cloud metadata → IAM creds — Critical
+testability: AUTH_HELPED
