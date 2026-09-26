@@ -1098,3 +1098,27 @@ www.sumup.com
 - CHANGED redirect_uri allowlist widening refuted on modern auth.sumup.com for dashboard client by 6 controlled negatives — all invalid_request (exact URI match proven by host-root rejection)
 - CHANGED Legacy callback sweep used wrong path for dashboard candidate (/callback instead of registered /api/sso/callback) — "0 HITs" conclusion invalid; re-tested with correct path: still invalid_request
 - CHANGED reports/gateway-hostedfields-cross-origin-messenger.md claimed created in prior cycle but NOT ON DISK (verified via ls) — deliverable gap confirmed mechanical
+
+## 2026-09-26 16:48:44 UTC
+- NEW `reports/gateway-hostedfields-cross-origin-messenger.md` GENUINELY on disk — 198 lines, 8,532 B, sha256 `12bdc51a13b523110819d91fcaaf397a52c9672e2127ff13494cd7f5e854a3a8`, verified by `ls`+`wc`+`sha25
+- CHANGED `reports/valid-bugs.md` 79 → 92 lines / 10,621 B, sha256 `fe2de6ab38e71b1f303a54c07503af3ff83313a3aab8a9bc356e2d98c2987cec`, gateway finding appended with the report's path, line count and hash inline
+- CHANGED The "UUID-shape regex as the remaining gate" claim from prior cycles did **not** reproduce on the current bundle (`grep` for UUID-shaped literals → 0 hits) and has been removed from the report rather 
+- CHANGED `pos-payment.sumup.com` now resolves to `108.132.234.197, 34.249.73.228, 54.229.56.57` and `staging.pos-payment.sumup.com` to `52.30.123.95, 54.216.36.235, 54.77.206.131` — last cycle's hardcoded `46.
+- CHANGED `gateway.sumup.com` defect re-verified LIVE and byte-identical: `/hosted.js` 26,839 B, sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`; origin-comparison grep → 0; framing-he
+- NEW `iso20022.sumup.com` + `iso20022-edge.sumup.com` — absent from 31 cycles of inventory. Both resolve to the same AWS eu-west-1 triple `52.19.224.211, 54.155.143.33, 63.33.227.130` but serve **different
+- NEW `iso20022.sumup.com` returns `x-envoy-decorator-operation: iso20022-edge-libcluster-headless.br-terminals.svc.cluster.local:3000/*` — the public name fronts a `libcluster` namespace edge service proxy
+- NEW ISO-20022 gateway CORS probed with `Origin: https://evil.example` → 400 with **zero** `access-control-*` headers. CORS is not the defect class here; the class is "WAF-less mesh gateway on a payment ra
+- NEW `magicpay.sumup.com` — absent from inventory. CloudFront 302 → `https://sumup.co.uk/orderandpay/` (UK order-and-pay alias), raw CloudFront IPs.
+- NEW `3dsecure.sumup.com` — absent from inventory. `awselb/2.0` 403, 118 B AWS default body, on `185.120.93.145/17/81` — **Deutsche Telekom/T-Systems** space, i.e. a non-SumUp-owned netblock on an auth-nam
+- NEW `accounting.sumup.com` — absent from inventory, 4 raw AWS IPs (`15.197.129.158, 75.2.43.161, 99.83.217.1, 76.223.11.49`), AWS Global Accelerator shape.
+- NEW Three S3 buckets on SumUp-operated namespaces: `sumup-embedded-build.s3.dev.solo.sumup.com`, `hardware-shared.s3.dev.solo.sumup.com`, `sumup-angelwatch-tms-live.s3.live.solo.sumup.com` (18.165.x / 18.
+- NEW **Five hostnames publish RFC1918 private addresses in public DNS**: `social-media-presence-api.sumup.com` → `10.59.128.36/10.59.134.23/10.59.137.168`, `klocwork.dev.solo.sumup.com` → `10.86.212.167`, 
+- NEW CT breadth executed, not just extracted: 224 unique names → 72 money/auth-pattern → **38 NXDOMAIN, 21 resolving to non-Cloudflare/non-Vercel** space. The ~190 unmapped names are now triaged, not merel
+- NEW gateway.sumup.com hosted-fields iframe discovered: PCI card-entry frame with postMessage API lacking event.origin validation, no X-Frame-Options/CSP/frame-ancestors, framable by any origin; form--subm
+- NEW mcp.sumup.com/.well-known/oauth-protected-resource → 200 at two paths (prod, never fetched in 29 cycles); publishes scopes_supported:["offline_access","email"]; kid-optional try-all on /mcp (RFC 8725 
+- NEW js.sumup.com (live Vercel, "SumUp JS SDK" doc page, referenced as apiBFF origin in gateway code), circuit.sumup.com (200, 4.1KB logo origin) — two new hosts absent from 30-cycle inventory
+- CHANGED api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now 404 (was 200 static {"card"}) — gateway requires bearer even for spec-declared oauth2:[] operations
+- CHANGED dashboard.sumup.com / support.sumup.com probed first time in 28 cycles — both 308 permanent aliases to me.sumup.com / help.sumup.com (Vercel)
+- CHANGED redirect_uri allowlist widening refuted on modern auth.sumup.com for dashboard client by 6 controlled negatives — all invalid_request (exact URI match proven by host-root rejection)
+- CHANGED Legacy callback sweep used wrong path for dashboard candidate (/callback instead of registered /api/sso/callback) — "0 HITs" conclusion invalid; re-tested with correct path: still invalid_request
+- CHANGED reports/gateway-hostedfields-cross-origin-messenger.md claimed created in prior cycle but NOT ON DISK (verified via ls) — deliverable gap confirmed mechanical

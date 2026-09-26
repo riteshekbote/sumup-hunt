@@ -1244,3 +1244,17 @@ https://gateway.sumup.com/` -> HTTP 404
 https://pos-payment.sumup.com/pay/11111111-2222-4333-8444-555555555555` -> HTTP 400
 https://pos-payment.sumup.com/ping` -> HTTP 400
 https://support-centre.sumup.com/` -> ERR <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] ce
+
+## 2026-09-26 16:49:00 UTC
+https://api.sumup.com -> HTTP 404
+https://gateway.sumup.com -> 200 len=546
+https://sumup.com -> 200 len=?
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://api.sumup.com/callback -> HTTP 404
+https://api.sumup.com/v0.2/checkouts/{attacker-chosen-id -> HTTP 404
+https://pos-payment.sumup.com/ -> HTTP 403
+https://pos-payment.sumup.com/ping -> HTTP 403
+https://iso20022.sumup.com/ -> HTTP 400
+https://iso20022.sumup.com/messages` -> HTTP 400
+https://iso20022.sumup.com/` -> HTTP 400
