@@ -1231,3 +1231,16 @@ https://auth.sumup.com -> HTTP 403
 https://developer.sumup.com/tools/llms -> 200 len=?
 https://mcp.sumup.com/mcp` -> HTTP 404
 https://auth.sumup.com/oauth2/auth?client_id=dashboard&redirect_uri=https%3A%2F%2Fme.sumup.com%2Fapi%2Fsso%2Fcallback&response_type=code&state=teststate12345&scope=email -> HTTP 405
+
+## 2026-09-26 12:36:05 UTC
+https://api.sumup.com -> HTTP 404
+https://gateway.sumup.com -> 200 len=546
+https://sumup.com -> 200 len=?
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://api.sumup.com/callback -> HTTP 404
+https://api.sumup.com/v0.2/checkouts/{attacker-chosen-id -> HTTP 404
+https://gateway.sumup.com/` -> HTTP 404
+https://pos-payment.sumup.com/pay/11111111-2222-4333-8444-555555555555` -> HTTP 400
+https://pos-payment.sumup.com/ping` -> HTTP 400
+https://support-centre.sumup.com/` -> ERR <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] ce
