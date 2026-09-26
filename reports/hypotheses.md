@@ -2798,3 +2798,38 @@
 - LEARN: ACCEPTED OTHER @ dashboard.sumup.com + support.sumup.com: two last seed-inventory hosts unprobed after 28 cycles are both live Vercel 308 aliases (to me.sumup.c
 - LEARN: REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening refuted on modern server for dashboard client by 6 controlled negatives — all `invalid_request`;
 - LEARN: ACCEPTED OATH @ api.sumup.com/authorize: KB's exhaustive legacy-callback sweep used wrong path for dashboard candidate (`/callback` instead of registered `/api/
+
+## RANKED HYPOTHESES 2026-09-26 07:37:29 UTC
+- [88] gateway.sumup.com: gateway.sumup.com hosted-fields frame accepts and acts on form--submit from any web origin, issuing an authenticated PUT to the production payments API with attacker-supplied checkout id, session id and payment payload (from art/lead_nemotron3.txt)
+- [15] pos.sumup.com/client: Dormant third-party-hosted SumUp Back-Office exposes an unauthenticated impersonation or API surface (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: Request a SumUp test-mode merchant API key from developer.sumup.com and record it in `reports/valid-bugs.md` as the AUTH_HELPED credential. It unblocks t
+- NEXT(hypotheses-nemotron3.txt): HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` to bugs.olivermaicher.eu (evidence complete: PoC pages, netlog, served bundle). Second pr
+- LEARN: REJECTED AUTH @ mcp.sumup.com/mcp: JWT `alg:none` and RS256→HS256 key confusion are both explicitly refused by the **production** bearer verifier — `{"error":"i
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: RFC 9728 resource-server metadata is LIVE on the prod MCP host at two paths and publishes a `scopes_supported:["offline_access",
+- LEARN: ACCEPTED OATH @ auth.sumup.com: `client_id=dashboard` ACCEPTS `email` (302 `login_challenge`), completing its consent set as `{openid, classic, offline, readers
+- LEARN: REJECTED AUTH @ auth.sam-app.ro/oauth2-register/JWKS: a 30-candidate `kid` sweep against the prod MCP verifier found exactly the 8 published prod kids trusted a
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro JWKS: the staging trust set contains **2 duplicated entries** (`public:3a13954d-…`, `public:f06a4960-…` each twice) — 11 entrie
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com: hosted-fields postMessage API performs no `event.origin` validation and the frame ships no `X-Frame-Options`/`frame-ance
+- LEARN: ACCEPTED OTHER @ gateway.sumup.com: the asset the KB dismissed as a "non-Next 404" one cycle earlier is the program's highest-value surface — a PCI card-entry f
+- LEARN: REJECTED MISCONFIG @ gateway.sumup.com: response exfiltration via the postMessage API. Two candidate outbound channels tested directly, neither delivered; `send
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com: the `payment_type !== "card"` branch skips the frame-access gate (`Ce(r.frames)` / `if(!d.length) return`) completely, s
+- LEARN: REJECTED AUTH @ gateway.sumup.com: widget-session replay as a High-impact finding. Reading the first-party SDK instead of assuming showed `sessionId` is parsed 
+- LEARN: ACCEPTED OTHER @ gateway.sumup.com: the outbound direction is blocked by a bug, not a control — the container messenger passes `origin: document.referrer` (a fu
+- LEARN: ACCEPTED OTHER @ gateway/js/circuit .sumup.com: breadth-first path enumeration on a single host again beat re-verification — `/gateway/ecom/card/v2/locales/*.js
+- LEARN: ACCEPTED OTHER @ reports/: the deliverable gap is real and mechanical — three consecutive cycles asserted a report file existed when `ls` showed it did not. The
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com: hosted-fields postMessage API performs no event.origin validation and the frame ships no X-Frame-Options/frame-ancestors
+- LEARN: ACCEPTED OTHER @ gateway.sumup.com: the asset the KB dismissed as a "non-Next 404" one cycle earlier is the program's highest-value surface — a PCI card-entry f
+- LEARN: REJECTED MISCONFIG @ gateway.sumup.com: response exfiltration via the postMessage API. Two candidate outbound channels tested directly, neither delivered; send(
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: RFC 9728 resource-server metadata LIVE on prod MCP host at two paths (/.well-known/oauth-protected-resource and /mcp/.well-known
+- LEARN: REJECTED AUTH @ mcp.sumup.com/mcp: JWT alg:none and RS256→HS256 key confusion both explicitly refused by production bearer verifier — {"error":"invalid_token","
+- LEARN: ACCEPTED OATH @ auth.sumup.com: client_id=dashboard ACCEPTS email (302 login_challenge), completing its consent set as {openid, classic, offline, readers.read, 
+- LEARN: REJECTED AUTH @ auth.sam-app.ro/oauth2-register/JWKS: 30-candidate kid sweep against prod MCP verifier found exactly 8 published prod kids trusted, 0 undeclared
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro JWKS: staging trust set contains 2 duplicated entries (public:3a13954d-…, public:f06a4960-… each twice) — 11 entries = 9 unique
+- LEARN: ACCEPTED OTHER @ reports/valid-bugs.md: ground truth re-verified via clean read — 79 lines, running count 0 header intact, auth.sam-app.ro finding flagged FILE 
+- LEARN: REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across byte-stable surface is waste — 27 stable cycles, only live bearer discriminates; re-prob
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET consistent with prior POST-only confirmation — endpoint presence unchanged, no drift signal
+- LEARN: ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only live bearer can discriminate aud/iss binding vs key-level gate; re-p
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is binding c
+- LEARN: ACCEPTED OTHER @ dashboard.sumup.com + support.sumup.com: two last seed-inventory hosts unprobed after 28 cycles are both live Vercel 308 aliases (to me.sumup.c
+- LEARN: REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening refuted on modern server for dashboard client by 6 controlled negatives — all invalid_request; h
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: KB's exhaustive legacy-callback sweep used wrong path for dashboard candidate (/callback instead of registered /api/sso

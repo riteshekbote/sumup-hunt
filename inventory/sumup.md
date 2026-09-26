@@ -1036,3 +1036,44 @@ www.sumup.com
 - CHANGED dashboard.sumup.com / support.sumup.com probed for first time in 28 cycles — both 308 permanent aliases to me.sumup.com / help.sumup.com (Vercel)
 - CHANGED redirect_uri allowlist widening refuted on modern auth.sumup.com for dashboard client by 6 controlled negatives — all `invalid_request` (exact URI match proven by host-root rejection)
 - CHANGED Legacy callback sweep used wrong path for dashboard candidate (`/callback` instead of registered `/api/sso/callback`) — "0 HITs" conclusion invalid; re-tested with correct path: still `invalid_request
+
+## 2026-09-26 07:37:29 UTC
+- NEW `mcp.sumup.com/.well-known/oauth-protected-resource` → **200** (prod, never fetched in 29 cycles — KB only recorded `/.well-known/mcp.json` 404 on 2026-09-07). Body: `{"resource":"https://mcp.sumup.co
+- NEW `mcp.sam-app.ro` publishes the same RFC 9728 document bound to `https://auth.sam-app.ro/` (trailing slash) at both paths (200, 272 B) — per-environment authorization-server binding confirmed; the fiel
+- NEW `mcp.sumup.com/mcp` bearer verifier exposes a **4-class unauthenticated kid/alg oracle**: `no applicable key found in the JSON Web Key Set` (kid absent from trust store) vs `signature verification fai
+- NEW RFC 8725 §3.11 deviation, prod only: `kid` is **not mandatory** on `mcp.sumup.com/mcp`. Omitting it puts the verifier on a try-all path (`multiple matching keys found in the JSON Web Key Set`), wideni
+- NEW Prod trust-store sweep, 30 `kid` candidates: exactly the **8 published prod kids trusted, 22 absent, 0 undeclared** (all 9 staging kids absent, incl. `loadtesting`; 11 name-guesses absent). No stale, 
+- NEW `mcp.sumup.com/mcp` enforces a 2-value alg allowlist `{RS256, EdDSA}`: RS384/RS512/PS256/ES256 → `no applicable key`; HS256 and `none` → `Unsupported "alg" value`. RS256→HS256 confusion and `alg:none`
+- NEW `client_id=dashboard` **can obtain `email`** (302 `login_challenge`) — `email` is one of the two scopes `mcp.sumup.com` declares in its RFC 9728 `scopes_supported`.
+- CHANGED `dashboard` consent set measured in full this cycle: ALLOWED `{openid, classic, offline, readers.read, terminals.read, email}` (combinations `email readers.read`, `email openid` also allowed); REJECTE
+- CHANGED Staging JWKS carries **2 duplicated key entries** — `public:3a13954d-…` and `public:f06a4960-…` each appear twice; 11 entries = **9 unique keys**. KB's "staging 11 keys" is 9 unique (zero-overlap vs p
+- CHANGED `api.sam-app.ro` gateway: **no bearer-validation discriminator is reproducible.** 7 paths (`/`, `/zzzz`, `/v0.1/transactions`, `/v0.1/merchants/{code}/transactions?limit=1`, `/v0.1/merchants/{code}/ac
+- CHANGED `mcp.sam-app.ro/mcp` has a **2-class** oracle (`Invalid access token` = token parsed, `Authentication required` = absent/unparsed), accepts all 6 alg values into the parser including `HS256` and `none
+- CHANGED Prod vs staging MCP bearer rejection are different implementations: prod = RFC 6750 `{"error":"invalid_token","error_description":…}`; staging = JSON-RPC `-32010` envelope. `api.sam-app.ro/v0.1/mercha
+- CHANGED RFC 9728 absent on the app hosts: `chat.sumup.com` (Next 404 shell, despite a real authenticated API), `me.sumup.com`, `help.sumup.com` (Next shells); `checkout.sumup.com` + `pay.sumup.com` → Vercel `
+- NEW `gateway.sumup.com` is the SumUp **hosted-fields / card-entry iframe** — 546 B shell titled `hostedfields`, `HostedForm.init(window, window.parent || window.top)`, plus `hosted.js` (26,839 B, sha256 `
+- NEW **No framing protection** on the card-entry frame: no `X-Frame-Options`, no `Content-Security-Policy` (no `frame-ancestors`), no `Referrer-Policy` on `/` or `/hosted.js`. Framable by any origin.
+- NEW **The defect** — the `postMessage` handler never reads `event.origin`. It destructures `{data, source}` only, gates on `data.type==="SumUpCard"` (an attacker-controlled JSON string) plus a self-echo `
+- NEW Full message protocol recovered: `input--initialize`, `input--change`, `input--recognize`, `input--focus`, `input--blur`, `form--submit`, `form--submit-sent`, `form--on-result`, `form--on-error`, `for
+- NEW **Live PoC 1** — cross-origin dispatch. Attacker page on `https://127.0.0.1:8443` framing the shell, one `postMessage {type:"SumUpCard",message:"form--submit"}`. SumUp's own iframe console (`source: h
+- NEW **Live PoC 2** — live state-changing API call. `checkoutId` is read from `payment.checkoutId` (not top level). Chrome netlog: `PUT /v0.2/checkouts/11111111-2222-4333-8444-555555555555 HTTP/1.1`, `init
+- CHANGED `checkout.sumup.com/pay/{uuid}` = 403 (Vercel WAF) externally, so the real checkout page cannot be framed; `gateway.sumup.com/pay/{uuid}` = 404.
+- CHANGED Response direction **not** exploitable as implemented — `send()` does `t.postMessage(e, n||"*")` with `n = document.referrer` (a full URL), which throws. Tested with and without referrer suppression; 
+- CHANGED `web.sumup.com` still connection-timeout on 443, A 77.246.42.130, no CNAME — the 21-day-old Rackspace takeover lead is unchanged and dormant.
+- CHANGED `api.sumup.com` / `auth.sam-app.ro` not re-probed; prior verification stands per the 27-cycle zero-yield lesson.
+- NEW `reports/gateway-hostedfields-cross-origin-messenger.md` **created and verified on disk** (410 lines, 18,590 B) — last cycle's `[NEXT]` directed a human to submit a file that did not exist, repeating 
+- NEW **`payment_type !== "card"` bypasses the frame-access gate entirely.** `if("card"===a.payment_type){ if(d=Ce(r.frames), !d.length) return; … }` — omit `payment_type` and `Ce()` is never called, `d` st
+- NEW **Exfiltration is blocked by an accident, not a control.** Three messengers are built from one `send`; only the container sets `origin: document.referrer`, and a full URL is an invalid `targetOrigin` 
+- NEW **`js.sumup.com` — host absent from 30 cycles of inventory.** Live Vercel, `GET /` → 200/811 B "SumUp JS SDK" doc landing page. Referenced as `apiBFF: zi("https://js.sumup.com/api", sessionId)` in the
+- NEW **`circuit.sumup.com` → 200/4,121 B** (logo origin, referenced from the new `js.sumup.com` page). `static.sumup.com` root 404 but serves `/favicons/*`.
+- NEW **`gateway.sumup.com` surface is now closed at 4 files + 1 asset family**: `/` (546 B), `/hosted.js` (26,839 B), `/sdk.js` (291,877 B), `/favicon.ico`, and `/gateway/ecom/card/v2/locales/{en,en-US}.js
+- CHANGED `hosted.js` re-verified byte-identical: sha256 `1302f1d6…f220873`, 26,839 B, so every code citation in the report is the code actually served. `Le` is `e=>!!e`, a null check — the `"WARNING: blocked a
+- CHANGED **`X-SumUp-Widget-Session-Id` is not a secret.** The first-party SDK derives it as `Ai(href)` → `checkout.sumup.com/pay/{id}` → `{origin:"Hosted Checkout", sessionId:<id>}`. It is the checkout id from
+- CHANGED No re-probe of the byte-stable `api.sumup.com` quartet or `auth.sam-app.ro`, per the 27-cycle zero-yield lesson.
+- NEW gateway.sumup.com hosted-fields iframe discovered: PCI card-entry frame with postMessage API lacking event.origin validation, no X-Frame-Options/CSP/frame-ancestors, framable by any origin; form--subm
+- NEW mcp.sumup.com/.well-known/oauth-protected-resource → 200 at two paths (prod, never fetched in 29 cycles); publishes scopes_supported:["offline_access","email"]; kid-optional try-all on /mcp (RFC 8725 
+- CHANGED api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now 404 (was 200 static {"card"}) — gateway requires bearer even for spec-declared oauth2:[] operations
+- CHANGED auth.sam-app.ro/oauth2/register: POST 201 unauthenticated RFC 7591 confirmed LIVE; mints JWTs with empty scp, attacker-controlled aud; cross-env JWKS isolation holds (prod 8 keys, staging 9 unique, ZE
+- CHANGED dashboard.sumup.com / support.sumup.com probed first time in 28 cycles — both 308 permanent aliases to me.sumup.com / help.sumup.com (Vercel)
+- CHANGED redirect_uri allowlist widening refuted on modern auth.sumup.com for dashboard client by 6 controlled negatives — all invalid_request (exact URI match proven by host-root rejection)
+- CHANGED Legacy callback sweep used wrong path for dashboard candidate (/callback instead of registered /api/sso/callback) — "0 HITs" conclusion invalid; re-tested with correct path: still invalid_request
