@@ -1008,3 +1008,31 @@ www.sumup.com
 - CHANGED api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static 200 — sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; recon surface exhausted
 - CHANGED auth.sumup.com/oauth2/auth: scope-acceptance oracle confirmed — dashboard allows only `readers.read`/`terminals.read`; support_centre/support_chat allow only `openid+classic+offline`; all 13 REST spec
 - CHANGED JWKS prod vs staging: 8 vs 11 keys, ZERO kid overlap confirmed; cross-env key isolation holds (mcp.sumup.com rejects staging tokens)
+
+## 2026-09-26 02:09:23 UTC
+- NEW `gateway.sumup.com` is the SumUp **hosted-fields / card-entry iframe** — 546 B shell titled `hostedfields`, `HostedForm.init(window, window.parent || window.top)`, plus `hosted.js` (26,839 B, sha256 `
+- NEW **No framing protection** on the card-entry frame: no `X-Frame-Options`, no `Content-Security-Policy` (no `frame-ancestors`), no `Referrer-Policy` on `/` or `/hosted.js`. Framable by any origin.
+- NEW **The defect** — the `postMessage` handler never reads `event.origin`. It destructures `{data, source}` only, gates on `data.type==="SumUpCard"` (an attacker-controlled JSON string) plus a self-echo `
+- NEW Full message protocol recovered: `input--initialize`, `input--change`, `input--recognize`, `input--focus`, `input--blur`, `form--submit`, `form--submit-sent`, `form--on-result`, `form--on-error`, `for
+- NEW **Live PoC 1** — cross-origin dispatch. Attacker page on `https://127.0.0.1:8443` framing the shell, one `postMessage {type:"SumUpCard",message:"form--submit"}`. SumUp's own iframe console (`source: h
+- NEW **Live PoC 2** — live state-changing API call. `checkoutId` is read from `payment.checkoutId` (not top level). Chrome netlog: `PUT /v0.2/checkouts/11111111-2222-4333-8444-555555555555 HTTP/1.1`, `init
+- CHANGED `checkout.sumup.com/pay/{uuid}` = 403 (Vercel WAF) externally, so the real checkout page cannot be framed; `gateway.sumup.com/pay/{uuid}` = 404.
+- CHANGED Response direction **not** exploitable as implemented — `send()` does `t.postMessage(e, n||"*")` with `n = document.referrer` (a full URL), which throws. Tested with and without referrer suppression; 
+- CHANGED `web.sumup.com` still connection-timeout on 443, A 77.246.42.130, no CNAME — the 21-day-old Rackspace takeover lead is unchanged and dormant.
+- CHANGED `api.sumup.com` / `auth.sam-app.ro` not re-probed; prior verification stands per the 27-cycle zero-yield lesson.
+- NEW mcp.sumup.com/.well-known/oauth-protected-resource → 200 (prod, RFC 9728 metadata never fetched in 29 cycles; KB only had `/.well-known/mcp.json` 404)
+- NEW mcp.sumup.com/mcp bearer verifier exposes 4-class unauthenticated kid/alg oracle: `no applicable key` (kid absent) vs `signature verification failed` (kid present, bad sig) vs `Unsupported "alg" value
+- NEW RFC 8725 §3.11 deviation on prod: `kid` not mandatory on mcp.sumup.com/mcp — omission triggers try-all across 8 keys
+- NEW Prod trust-store sweep (30 kid candidates): exactly 8 published prod kids trusted, 22 absent, 0 undeclared (all 9 staging kids absent incl. `loadtesting`; 11 name-guesses absent)
+- NEW mcp.sumup.com/mcp enforces strict 2-value alg allowlist `{RS256, EdDSA}`: RS384/RS512/PS256/ES256 → `no applicable key`; HS256/none → `Unsupported "alg" value` — RS256→HS256 confusion and alg:none bot
+- NEW `client_id=dashboard` accepts `email` scope (302 `login_challenge`) — `email` is one of two scopes mcp.sumup.com declares in RFC 9728 `scopes_supported:["offline_access","email"]`
+- NEW Staging JWKS carries 2 duplicated key entries (`public:3a13954d-…`, `public:f06a4960-…` each twice) — 11 entries = 9 unique keys (KB "staging 11 keys" overstated)
+- NEW api.sam-app.ro gateway: no bearer-validation discriminator reproducible across 7 paths (all return identical structured 404 with/without token)
+- NEW mcp.sam-app.ro/mcp has 2-class oracle (`Invalid access token` = parsed, `Authentication required` = absent/unparsed), accepts all 6 alg values including HS256 and none into parser
+- NEW Prod vs staging MCP bearer rejection are different implementations: prod = RFC 6750 `{"error":"invalid_token",...}`, staging = JSON-RPC `-32010` envelope
+- NEW RFC 9728 absent on app hosts: chat.sumup.com (Next 404 shell), me.sumup.com, help.sumup.com (Next shells), checkout.sumup.com + pay.sumup.com (Vercel 403)
+- CHANGED api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now 404 (was 200 static `{"card"}`) — gateway requires bearer even for spec-declared `oauth2:[]`
+- CHANGED auth.sam-app.ro/oauth2/register: POST 201 unauthenticated RFC 7591 confirmed LIVE; mints JWTs with empty `scp`, attacker-controlled `aud`; cross-env JWKS isolation holds (prod 8 keys, staging 9 unique
+- CHANGED dashboard.sumup.com / support.sumup.com probed for first time in 28 cycles — both 308 permanent aliases to me.sumup.com / help.sumup.com (Vercel)
+- CHANGED redirect_uri allowlist widening refuted on modern auth.sumup.com for dashboard client by 6 controlled negatives — all `invalid_request` (exact URI match proven by host-root rejection)
+- CHANGED Legacy callback sweep used wrong path for dashboard candidate (`/callback` instead of registered `/api/sso/callback`) — "0 HITs" conclusion invalid; re-tested with correct path: still `invalid_request

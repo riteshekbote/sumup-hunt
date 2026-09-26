@@ -1,27 +1,42 @@
-## 2026-09-25 23:33:58 UTC [target] (model nemotron3)
-[NEW] api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway requires bearer token even for spec-declared `oauth2:[]` operations
-[NEW] auth.sam-app.ro/oauth2/register: POST 201 unauthenticated RFC 7591 registration confirmed LIVE; mints JWTs with empty `scp`, attacker-controlled `aud`; cross-env JWKS isolation (prod 8 keys, staging 11 keys, ZERO kid overlap) confirmed
-[NEW] dashboard.sumup.com — 308 permanent alias → https://me.sumup.com/ (Vercel, CNAME cname.vercel-dns.com, 76.76.21.22). FIRST PROBE IN 28 CYCLES
-[NEW] support.sumup.com — 308 permanent alias → https://help.sumup.com/ (Vercel). FIRST PROBE IN 28 CYCLES
-[NEW] OATH: redirect_uri=https://dashboard.sumup.com/api/sso/callback ACCEPTED (302 → flows/auth-callback?login_challenge=...) for client_id=dashboard on modern auth.sumup.com
-[NEW] OATH: redirect_uri allowlist widening refuted on modern server for dashboard client by 6 controlled negatives — all `invalid_request`
-[CHANGED] Legacy callback sweep used wrong path for dashboard candidate (/callback instead of registered /api/sso/callback) — "0 HITs" conclusion invalid
-[CHANGED] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session: OPTIONS 204 (origin-echo CORS, identity.svc op header) — route ROUTED, method-level unauth 404
-[CHANGED] api.sumup.com/token: OPTIONS 204 (origin-echo CORS, identity.svc op header) — route ROUTED, legacy token endpoint live per spec
-[CHANGED] api.sumup.com/.well-known/oauth-protected-resource: RFC 9728 metadata static 200 — sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; recon surface exhausted
-[CHANGED] auth.sumup.com/oauth2/auth: scope-acceptance oracle confirmed — dashboard allows only `readers.read`/`terminals.read`; support_centre/support_chat allow only `openid+classic+offline`; all 13 REST spec scopes rejected
-[CHANGED] JWKS prod vs staging: 8 vs 11 keys, ZERO kid overlap confirmed; cross-env key isolation holds (mcp.sumup.com rejects staging tokens)
-[PRIO] auth.sam-app.ro/oauth2/register,9.55,attack_surface=10,business_value=9,tech_exposure=10,gate_ease=10,cloud_surface=9,freshness=9
+## 2026-09-26 02:04:29 UTC [target] (model nemotron3)
+[NEW] mcp.sumup.com/.well-known/oauth-protected-resource → 200 (prod, RFC 9728 metadata never fetched in 29 cycles; KB only had `/.well-known/mcp.json` 404)
+[NEW] mcp.sumup.com/mcp bearer verifier exposes 4-class unauthenticated kid/alg oracle: `no applicable key` (kid absent) vs `signature verification failed` (kid present, bad sig) vs `Unsupported "alg" value` (HS256/none) vs `multiple matching keys` (kid omitted → try-all)
+[NEW] RFC 8725 §3.11 deviation on prod: `kid` not mandatory on mcp.sumup.com/mcp — omission triggers try-all across 8 keys
+[NEW] Prod trust-store sweep (30 kid candidates): exactly 8 published prod kids trusted, 22 absent, 0 undeclared (all 9 staging kids absent incl. `loadtesting`; 11 name-guesses absent)
+[NEW] mcp.sumup.com/mcp enforces strict 2-value alg allowlist `{RS256, EdDSA}`: RS384/RS512/PS256/ES256 → `no applicable key`; HS256/none → `Unsupported "alg" value` — RS256→HS256 confusion and alg:none both explicitly refused
+[NEW] `client_id=dashboard` accepts `email` scope (302 `login_challenge`) — `email` is one of two scopes mcp.sumup.com declares in RFC 9728 `scopes_supported:["offline_access","email"]`
+[NEW] Staging JWKS carries 2 duplicated key entries (`public:3a13954d-…`, `public:f06a4960-…` each twice) — 11 entries = 9 unique keys (KB "staging 11 keys" overstated)
+[NEW] api.sam-app.ro gateway: no bearer-validation discriminator reproducible across 7 paths (all return identical structured 404 with/without token)
+[NEW] mcp.sam-app.ro/mcp has 2-class oracle (`Invalid access token` = parsed, `Authentication required` = absent/unparsed), accepts all 6 alg values including HS256 and none into parser
+[NEW] Prod vs staging MCP bearer rejection are different implementations: prod = RFC 6750 `{"error":"invalid_token",...}`, staging = JSON-RPC `-32010` envelope
+[NEW] RFC 9728 absent on app hosts: chat.sumup.com (Next 404 shell), me.sumup.com, help.sumup.com (Next shells), checkout.sumup.com + pay.sumup.com (Vercel 403)
+[CHANGED] api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now 404 (was 200 static `{"card"}`) — gateway requires bearer even for spec-declared `oauth2:[]`
+[CHANGED] auth.sam-app.ro/oauth2/register: POST 201 unauthenticated RFC 7591 confirmed LIVE; mints JWTs with empty `scp`, attacker-controlled `aud`; cross-env JWKS isolation holds (prod 8 keys, staging 9 unique, ZERO kid overlap)
+[CHANGED] dashboard.sumup.com / support.sumup.com probed for first time in 28 cycles — both 308 permanent aliases to me.sumup.com / help.sumup.com (Vercel)
+[CHANGED] redirect_uri allowlist widening refuted on modern auth.sumup.com for dashboard client by 6 controlled negatives — all `invalid_request` (exact URI match proven by host-root rejection)
+[CHANGED] Legacy callback sweep used wrong path for dashboard candidate (`/callback` instead of registered `/api/sso/callback`) — "0 HITs" conclusion invalid; re-tested with correct path: still `invalid_request`
+[PRIO] mcp.sumup.com/mcp,9.10,attack_surface=10,business_value=9,tech_exposure=10,gate_ease=10,cloud_surface=9,freshness=10
+[PRIO] auth.sam-app.ro/oauth2/register,8.55,attack_surface=10,business_value=8,tech_exposure=10,gate_ease=10,cloud_surface=9,freshness=8
 [PRIO] api.sumup.com/v0.2/checkouts/{id}/apple-pay-session,7.65,attack_surface=7,business_value=9,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
 [PRIO] api.sumup.com (RFC 9728 resource server),7.15,attack_surface=6,business_value=8,tech_exposure=8,gate_ease=5,cloud_surface=8,freshness=9
-[PRIO] dashboard.sumup.com (Vercel 308 alias → me.sumup.com),6.80,attack_surface=7,business_value=7,tech_exposure=7,gate_ease=10,cloud_surface=8,freshness=10
-[PRIO] support.sumup.com (Vercel 308 alias → help.sumup.com),6.55,attack_surface=6,business_value=7,tech_exposure=7,gate_ease=10,cloud_surface=8,freshness=10
+[PRIO] mcp.sam-app.ro/mcp,6.80,attack_surface=8,business_value=7,tech_exposure=9,gate_ease=10,cloud_surface=7,freshness=10
+[PRIO] dashboard.sumup.com (308→me.sumup.com),6.80,attack_surface=7,business_value=7,tech_exposure=7,gate_ease=10,cloud_surface=8,freshness=10
+[PRIO] support.sumup.com (308→help.sumup.com),6.55,attack_surface=6,business_value=7,tech_exposure=7,gate_ease=10,cloud_surface=8,freshness=10
 [PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,6.40,attack_surface=5,business_value=8,tech_exposure=7,gate_ease=5,cloud_surface=8,freshness=9
-[HYP] auth.sam-app.ro unauthenticated dynamic client registration → mintable JWTs on staging
+[HYP] mcp.sumup.com/mcp kid-optional try-all widens alg=none/HS256 attack surface
+class: AUTH
+asset: mcp.sumup.com/mcp
+confidence: 75
+reasoning: RFC 8725 §3.11 requires kid be mandatory; prod MCP verifier omits this — omitting kid triggers try-all across 8 keys. While HS256/none are explicitly rejected with "Unsupported alg", the try-all path combined with 8-key trust store creates a theoretical key-confusion surface if a trusted key were ever rotatable to symmetric or if JWKS pollution occurred. Prod trust-store sweep confirmed 0 undeclared keys, but the deviation itself is a hardening gap.
+evidence_needed: Demonstration that try-all path can be exploited (e.g., JWKS injection, key rotation to symmetric, or cross-env key reuse) — currently theoretical only
+verify_steps: PASSIVE: POST mcp.sumup.com/mcp with JWT omitting kid header, alg=RS256 signed with staging private key (if obtainable) → observe "multiple matching keys" vs "no applicable key"; POST with alg=HS256/none → confirm "Unsupported alg" (already verified)
+impact: Theoretical key-confusion/alg-downgrade if trust store ever polluted; currently hardening deviation only — MEDIUM if exploitable, LOW as-is
+testability: PASSIVE (oracle confirmed); exploitation requires AUTH_HELPED or JWKS pollution vector
+[HYP] auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration → mintable staging JWTs with attacker-controlled aud
 class: AUTH
 asset: auth.sam-app.ro/oauth2/register
 confidence: 85
-reasoning: RFC 7591 dynamic registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris+grant_types=["client_credentials"]); mints real JWT access_tokens via client_credentials (empty scp, aud fixed to staging api.sam-app.ro/mcp.sam-app.ro); api.sam-app.ro gateway validates JWT structure (structured problem+json vs plain 404); cross-env JWKS isolation (prod 8 keys, staging 11 keys, ZERO kid overlap) blocks prod relay; client-level sync to prod provenance DB untested but architecturally possible
+reasoning: RFC 7591 dynamic registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris+grant_types=["client_credentials"]); mints real JWT access_tokens via client_credentials (empty scp, aud fixed to staging api.sam-app.ro/mcp.sam-app.ro); api.sam-app.ro gateway validates JWT structure (structured problem+json vs plain 404); cross-env JWKS isolation (prod 8 keys, staging 9 unique, ZERO kid overlap) blocks prod relay; client-level sync to prod provenance DB untested but architecturally possible
 evidence_needed: Staging-registered client accepted by prod auth.sumup.com token endpoint or api.sumup.com gateway (aud validation bypass or client sync)
 verify_steps: PASSIVE: POST https://auth.sam-app.ro/oauth2/register with body {"client_name":"poc","redirect_uris":["https://api.sumup.com/callback"],"token_endpoint_auth_method":"client_secret_post","scope":"","grant_types":["client_credentials"]} → capture client_id/client_secret; POST https://auth.sam-app.ro/oauth2/token with grant_type=client_credentials&client_id={id}&client_secret={secret} → capture JWT; GET https://api.sam-app.ro/.well-known/oauth-protected-resource with Authorization: Bearer {staging_jwt} → observe structured error vs 404
 impact: Staging OAuth client registration with mintable JWTs — valid finding per program triage (7.5); prod pivot unproven but architectural risk
@@ -35,25 +50,21 @@ evidence_needed: Valid token (any scope) + crafted target parameter reaching int
 verify_steps: AUTH_HELPED: obtain merchant token via dashboard OAuth; create checkout via API; PUT /v0.2/checkouts/{checkout_id}/apple-pay-session with validationURL=http://169.254.169.254/latest/meta-data/iam/security-credentials/ → observe response
 impact: SSRF to cloud metadata → IAM credentials, instance identity, internal service enumeration — CRITICAL
 testability: AUTH_HELPED
-[HYP] RFC 9728 token validation on api.sumup.com lacks audience/claim binding
-class: AUTH
-asset: api.sumup.com (payment API gateway)
-confidence: 60
-reasoning: RFC 9728 metadata declares sole auth_server=https://auth.sumup.com, header-only bearer, JWKS URI; no resource_scopes/audiences field published. Gateway validates JWT structure (structured problem+json vs plain 404) but per-operation scope enforcement untested for non-empty-scope ops. Payment-methods and apple-pay-session declared oauth2:[] in spec but return identical responses with/without token — token validation not enforced for empty-scope ops. Staging JWTs with attacker-controlled aud were accepted pre-token on oauth2:[] routes
-evidence_needed: Valid merchant token (any scope) accepted on api.sumup.com for a resource the token was not issued for (aud mismatch) or with empty scp reaching oauth2:[] operations
-verify_steps: AUTH_HELPED: Obtain merchant OAuth token via dashboard; replay against GET /v0.1/merchants/{other_merchant}/payment-methods (oauth2:[]) and PUT /v0.2/checkouts/{owned}/apple-pay-session (oauth2:[]) with crafted aud/claims; observe 200 vs 403/404
-impact: Cross-tenant read of merchant payment-method metadata (BOLA) or SSRF via Apple Pay session endpoint — CRITICAL
-testability: AUTH_HELPED
+[PARKED] mcp.sumup.com/mcp kid-optional try-all widens alg=none/HS256 attack surface: confidence 75 but exploitation purely theoretical — no JWKS pollution vector, no cross-env key reuse (ZERO kid overlap confirmed), HS256/none explicitly rejected; hardening deviation only, not a bypass
 [PARKED] PUT /v0.2/checkouts/{checkout_id}/apple-pay-session SSRF: confidence 65 but requires AUTH_HELPED (valid merchant token + owned checkout_id); no passive path to checkout creation or token acquisition
-[PARKED] RFC 9728 audience/claim confusion: confidence 60 but requires AUTH_HELPED (valid merchant token); no passive path to token acquisition; claim-level binding never observed passively
 [FINAL] 1. auth.sam-app.ro/oauth2/register: auth.sam-app.ro unauthenticated dynamic client registration → mintable JWTs on staging (85, PASSIVE) — live registration confirmed, staging posture finding fileable per triage (7.5); prod pivot architectural but unproven
 [NEXT] HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding (POST /oauth2/register → 201 client_id+secret; client_credentials mints real JWTs, empty scp, attacker-controlled aud; staging-only; JWKS cross-env isolation = no prod pivot as-is; repro/evidence at `reports/hypotheses-nemotron3.txt` + triage runs in `reports/valid-bugs.md`) to bugs.olivermaicher.eu, then append the ticket to `reports/valid-bugs.md` (running count 0 → 1)
-[LEARN] ACCEPTED OTHER @ reports/valid-bugs.md: ground truth re-verified via clean read this cycle — 79 lines, running count 0 header intact, auth.sam-app.ro finding flagged FILE REPORT; blocker remains HUMAN submission, not triage/evidence (13th consecutive cycle)
-[LEARN] REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across the byte-stable surface is waste — 27 stable cycles, only a live bearer discriminates; re-probing has zero expected yield
-[LEARN] ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET is consistent with the prior POST-only confirmation — endpoint presence unchanged, no drift signal
-[LEARN] ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only a live bearer can discriminate aud/iss binding vs key-level gate; re-probing is waste
-[LEARN] REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the binding control; the fileable finding is staging posture only (VALable). Retaining confidence 85 on the prod-relay leg is overstated
-[LEARN] ACCEPTED OTHER @ dashboard.sumup.com + support.sumup.com: the two last seed-inventory hosts left unprobed after 28 cycles are both live Vercel 308 aliases (to me.sumup.com and help.sumup.com). Breadth, not depth, was the actual gap — 13 cycles of re-verifying a byte-stable quartet while my own lead file named the unexplored hosts.
-[LEARN] REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening is refuted on the modern server for the dashboard client by 6 controlled negatives — 3 cross-client/cross-asset swaps and 3 same-host path variants (trailing slash, host root, ../ traversal) all return invalid_request, with host-root rejection proving matching is exact URI and not host-wide.
-[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: the KB's exhaustive legacy-callback sweep used the wrong path for the dashboard candidate (/callback instead of the registered /api/sso/callback), so its "0 HITs, not recoverable" conclusion rested on an untested combination. Re-tested with the correct path: still invalid_request. Lesson: an exhaustive sweep is only exhaustive over the values actually sent.
+[LEARN] ACCEPTED OTHER @ mcp.sumup.com: RFC 9728 resource-server metadata LIVE on prod MCP host at two paths (/.well-known/oauth-protected-resource and /mcp/.well-known/oauth-protected-resource) publishing `scopes_supported:["offline_access","email"]` — KB had only probed `/.well-known/mcp.json` 404
+[LEARN] REJECTED AUTH @ mcp.sumup.com/mcp: JWT `alg:none` and RS256→HS256 key confusion both explicitly refused by production bearer verifier — `{"error":"invalid_token","error_description":"Unsupported \"alg\" value for a JSON Web Key Set"}` for both; allowlist exactly `{RS256, EdDSA}` (RS384/RS512/PS256/ES256 → `no applicable key`)
+[LEARN] ACCEPTED OATH @ auth.sumup.com: `client_id=dashboard` ACCEPTS `email` (302 `login_challenge`), completing its consent set as `{openid, classic, offline, readers.read, terminals.read, email}` while `offline_access` rejected (303 `invalid_scope`) — KB's "readers.read/terminals.read are the ONLY scopes" was a measurement gap
+[LEARN] REJECTED AUTH @ auth.sam-app.ro/oauth2-register/JWKS: 30-candidate `kid` sweep against prod MCP verifier found exactly 8 published prod kids trusted, 0 undeclared — no stale/rotated-but-trusted/rogue signing key in prod trust store; staging `loadtesting` key absent
+[LEARN] ACCEPTED OTHER @ auth.sam-app.ro JWKS: staging trust set contains 2 duplicated entries (`public:3a13954d-…`, `public:f06a4960-…` each twice) — 11 entries = 9 unique keys; KB "staging 11 keys" overstates real key count
+[LEARN] ACCEPTED OTHER @ reports/valid-bugs.md: ground truth re-verified via clean read — 79 lines, running count 0 header intact, auth.sam-app.ro finding flagged FILE REPORT; blocker remains HUMAN submission, not triage/evidence (13th consecutive cycle)
+[LEARN] REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across byte-stable surface is waste — 27 stable cycles, only live bearer discriminates; re-probing has zero expected yield
+[LEARN] ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET consistent with prior POST-only confirmation — endpoint presence unchanged, no drift signal
+[LEARN] ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only live bearer can discriminate aud/iss binding vs key-level gate; re-probing is waste
+[LEARN] REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is binding control; fileable finding is staging posture only (VALable)
+[LEARN] ACCEPTED OTHER @ dashboard.sumup.com + support.sumup.com: two last seed-inventory hosts unprobed after 28 cycles are both live Vercel 308 aliases (to me.sumup.com and help.sumup.com); breadth was the actual gap
+[LEARN] REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening refuted on modern server for dashboard client by 6 controlled negatives — all `invalid_request`; host-root rejection proves exact URI match
+[LEARN] ACCEPTED OATH @ api.sumup.com/authorize: KB's exhaustive legacy-callback sweep used wrong path for dashboard candidate (`/callback` instead of registered `/api/sso/callback`) — "0 HITs" conclusion invalid; re-tested with correct path: still `invalid_request`
 [RISK] sumup: 45 — one triage-valid (7.5) staging OAuth finding unfiled across 13+ HUMAN cycles while all other surfaces sit 27-cycle-stable; residual unknown is claim-level aud/iss binding on prod (untestable without bearer). No active exploitation; risk driven by submission backlog, not exposure.

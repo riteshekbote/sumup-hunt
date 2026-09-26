@@ -2776,3 +2776,25 @@
 - LEARN: ACCEPTED OTHER @ dashboard.sumup.com + support.sumup.com: the two last seed-inventory hosts left unprobed after 28 cycles are both live Vercel 308 aliases (to m
 - LEARN: REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening is refuted on the modern server for the dashboard client by 6 controlled negatives — 3 cross-cli
 - LEARN: ACCEPTED OATH @ api.sumup.com/authorize: the KB's exhaustive legacy-callback sweep used the wrong path for the dashboard candidate (/callback instead of the reg
+
+## RANKED HYPOTHESES 2026-09-26 02:09:23 UTC
+- [88] gateway.sumup.com: gateway.sumup.com hosted-fields frame accepts and acts on `form--submit` from any web origin, issuing an authenticated `PUT` to the production payments API with attacker-supplied checkout id, session id and payment payload (from art/lead_bigpickle.txt)
+- [75] mcp.sumup.com/mcp: mcp.sumup.com/mcp kid-optional try-all widens alg=none/HS256 attack surface (from art/lead_nemotron3.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` to bugs.olivermaicher.eu. Evidence is complete, self-contained and already on disk with t
+- NEXT(hypotheses-nemotron3.txt): HUMAN: submit the auth.sam-app.ro RFC 7591 unauthenticated dynamic-client-registration finding (POST /oauth2/register → 201 client_id+secret; client_credentials
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com: hosted-fields postMessage API performs no `event.origin` validation and the frame ships no `X-Frame-Options`/`frame-ance
+- LEARN: ACCEPTED OTHER @ gateway.sumup.com: the asset the KB dismissed as a "non-Next 404" one cycle earlier is the program's highest-value surface — a PCI card-entry f
+- LEARN: REJECTED MISCONFIG @ gateway.sumup.com: response exfiltration via the postMessage API. Two candidate outbound channels tested directly, neither delivered; `send
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: RFC 9728 resource-server metadata LIVE on prod MCP host at two paths (/.well-known/oauth-protected-resource and /mcp/.well-known
+- LEARN: REJECTED AUTH @ mcp.sumup.com/mcp: JWT `alg:none` and RS256→HS256 key confusion both explicitly refused by production bearer verifier — `{"error":"invalid_token
+- LEARN: ACCEPTED OATH @ auth.sumup.com: `client_id=dashboard` ACCEPTS `email` (302 `login_challenge`), completing its consent set as `{openid, classic, offline, readers
+- LEARN: REJECTED AUTH @ auth.sam-app.ro/oauth2-register/JWKS: 30-candidate `kid` sweep against prod MCP verifier found exactly 8 published prod kids trusted, 0 undeclar
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro JWKS: staging trust set contains 2 duplicated entries (`public:3a13954d-…`, `public:f06a4960-…` each twice) — 11 entries = 9 un
+- LEARN: ACCEPTED OTHER @ reports/valid-bugs.md: ground truth re-verified via clean read — 79 lines, running count 0 header intact, auth.sam-app.ro finding flagged FILE 
+- LEARN: REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across byte-stable surface is waste — 27 stable cycles, only live bearer discriminates; re-prob
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET consistent with prior POST-only confirmation — endpoint presence unchanged, no drift signal
+- LEARN: ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only live bearer can discriminate aud/iss binding vs key-level gate; re-p
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is binding c
+- LEARN: ACCEPTED OTHER @ dashboard.sumup.com + support.sumup.com: two last seed-inventory hosts unprobed after 28 cycles are both live Vercel 308 aliases (to me.sumup.c
+- LEARN: REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening refuted on modern server for dashboard client by 6 controlled negatives — all `invalid_request`;
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: KB's exhaustive legacy-callback sweep used wrong path for dashboard candidate (`/callback` instead of registered `/api/
