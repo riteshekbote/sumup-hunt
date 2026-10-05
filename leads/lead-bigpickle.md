@@ -8266,3 +8266,4 @@ testability: PASSIVE
 [LEARN] REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation (ZERO kid overlap prod/staging) is binding control; fileable finding is staging posture only (VALable).
 [RISK] program: 88 — High-value cross-origin postMessage defect on PCI-adjacent hosted-fields iframe (Medium) plus unauthenticated staging DCR yielding mintable JWTs with empty scope + attacker-controlled aud (Low-Medium, staging-only) plus checkout existence oracle (Low-Medium). Three concrete findings with reproducible passive verification and byte-verified evidence; deliverables must be written+hashed in same act due to workspace re-materialization (no persistent cross-cycle artifacts). No submission mechanism in repo (bugs.olivermaicher.eu required per scope.yml:4).
 ## 2026-10-05 09:52:50 UTC [target] (model bigpickle)
+## 2026-10-05 18:51:27 UTC [target] (model bigpickle)
