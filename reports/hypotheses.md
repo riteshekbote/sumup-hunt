@@ -3881,3 +3881,21 @@
 - LEARN: REJECTED IDOR @ api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods: application-routed is not the same as exploitable. Two response classes on one host genui
 - LEARN: REJECTED OATH @ js.sumup.com/api/checkouts/{id}: an id echoed into a 404 detail field is a reflector; 4/4 credential differential checks failed; endpoint return
 - LEARN: REJECTED BUSLOGIC @ pos-payment.sumup.com: a path-shape sweep with no negative control cannot distinguish "this route is gated" from "no such route exists". Six
+
+## RANKED HYPOTHESES 2026-10-06 19:55:31 UTC
+- [90] gateway.sumup.com/hosted.js: gateway.sumup.com/hosted.js cross-origin postMessage checkout-write (from art/lead_nemotron3.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: persist then submit — run `git add reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md reports/valid-b
+- NEXT(hypotheses-nemotron3.txt): HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` (reconstruct from served bytes: GET https://gateway.sumup.com/hosted.js → sha256 `1302f1d
+- LEARN: ACCEPTED OATH @ auth.sumup.com: modern dashboard client registered redirect confirmed live — https://me.sumup.com/api/sso/callback yields 303 invalid_state (sta
+- LEARN: ACCEPTED OATH @ auth.sumup.com: modern dashboard client registered redirect confirmed live — https://me.sumup.com/api/sso/callback returns 303 invalid_state obj
+- LEARN: ACCEPTED OATH @ auth.sumup.com: modern dashboard client registered redirect confirmed live — https://me.sumup.com/api/sso/callback returns 303 invalid_state obj
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound ha
+- LEARN: REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retrac
+- LEARN: ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT mat
+- LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodi
+- LEARN: ACCEPTED OTHER @ workspace: 43 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
+- LEARN: ACCEPTED IDOR @ api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods: a "uniformly gated host" claim is falsified by a control pair, not by a longer enumeratio
+- LEARN: REJECTED IDOR @ api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods: application-routed is not the same as exploitable. Two response classes on one host genui
+- LEARN: REJECTED OATH @ js.sumup.com/api/checkouts/{id}: an id echoed into a 404 detail field is a reflector; 4/4 credential differential checks failed; endpoint return
+- LEARN: REJECTED BUSLOGIC @ pos-payment.sumup.com: a path-shape sweep with no negative control cannot distinguish "this route is gated" from "no such route exists". Six
