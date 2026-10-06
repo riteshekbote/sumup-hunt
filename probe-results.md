@@ -1671,3 +1671,8 @@ https://mcp.sumup.com/mcp -> HTTP 401
 https://me.sumup.com/api/sso/callback -> HTTP 403
 https://me.sumup.com/api/sso/callback` -> HTTP 404
 https://mcp.sumup.com/.well-known/oauth-protected-resource -> HTTP 404
+
+## 2026-10-06 23:46:00 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/mcp -> HTTP 401

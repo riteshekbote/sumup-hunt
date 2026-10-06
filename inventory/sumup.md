@@ -1984,3 +1984,17 @@ www.sumup.com
 - NEW mcp.sam-app.ro rejects empty-scope tokens: `401 "Invalid access token"` (MCP validates scope/claims beyond JWT validity).
 - NEW mcp.sumup.com (prod) rejects staging tokens: `401 "no applicable key found in the JSON Web Key Set"` — cross-environment JWKS key isolation confirmed (staging keys not in prod trust store).
 - CHANGED Auth method enforcement: registration defaults to `client_secret_basic` but token endpoint only accepts `client_secret_post` — server stores preference but doesn't enforce.
+
+## 2026-10-06 23:45:56 UTC
+- NEW gateway.sumup.com/hosted.js cross-origin postMessage checkout-write confirmed LIVE and byte-identical (sha256 1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873); origin-validation greps
+- NEW auth.sam-app.ro/oauth2/register unauthenticated RFC 7591 dynamic client registration confirmed LIVE → minted JWT (empty scp, attacker-controlled aud); cross-env JWKS isolation holds (prod 8 keys, stag
+- NEW mcp.sumup.com/.well-known/oauth-protected-resource → 200 at two paths (prod, never fetched in 29 cycles); publishes scopes_supported:["offline_access","email"]; kid-optional try-all on /mcp (RFC 8725 
+- NEW api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now returns 404 (was 200 static {"card"}) — gateway requires bearer even for spec-declared oauth2:[] operations
+- NEW iso20022.sumup.com dual-upstream routing confirmed: case-sensitive substring "metrics" → 503 on awselb/2.0 (no x-envoy-*, no HSTS); all other paths → 400 on istio-envoy. Rule proven by control
+- NEW pos-payment.sumup.com route-level enum REFUTED by negative control — nonsense path returns identical 403 IAM; no route discrimination
+- NEW js.sumup.com/api/checkouts/{id} BFF existence-oracle REFUTED — 4/4 credential differential checks failed; endpoint returns 68B Vercel platform 404, not application-routed
+- NEW api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods IDOR RETIRED — credential matrix (7 shapes × 5 IDs) all return byte-identical 404/58B; param-invariant AND credential-invariant stub
+- NEW Workspace re-materialized 43rd consecutive cycle — reports/ holds only logs + hypotheses + valid-bugs.md at exact 79-line/7,384-B/282390f8 pre-append state; artifacts written in cycle N do not persist
+- NEW Both final reports confirmed on disk via ls+sha256sum this cycle but will NOT persist to next cycle — gateway-hostedfields-cross-origin-messenger.md (239 L / 10,083 B / 41ec5aabbfb36fb9460d8cc18d955cd
+- CHANGED No submission mechanism exists in repo — scope.yml:4 declares disclosure via bugs.olivermaicher.eu (private program); scripts/sync-issues.py + .github/workflows/sync-issues.yml mirror leads only
+- CHANGED valid-bugs.md running count 0 — auth.sam-app.ro finding marked VALID 7.5 with FILE REPORT directive but submission blocked on HUMAN step
