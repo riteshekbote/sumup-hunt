@@ -1644,3 +1644,10 @@ https://mcp.sumup.com/mcp -> HTTP 401
 https://gateway.sumup.com/ -> 200 len=546
 https://gateway.sumup.com/hosted.js -> 200 len=26839
 https://mcp.sumup.com/mcp -> HTTP 401
+
+## 2026-10-06 00:46:05 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/mcp -> HTTP 401
+https://api.sumup.com` -> ERR <urlopen error [Errno -2] Name or service not know
+https://api.sumup.com/v0.2/checkouts/11111111-2222-4333-8444-555555555555` -> HTTP 404

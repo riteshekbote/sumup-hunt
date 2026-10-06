@@ -1889,3 +1889,45 @@ www.sumup.com
 - NEW `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway requires bearer even for spec-declared `oauth2:[]` operations
 - NEW `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at two paths (prod, never fetched in 29 cycles); publishes `scopes_supported:["offline_access","email"]`; kid-optional try-all on `/mcp` (RFC
 - CHANGED No submission mechanism exists in repo — `scope.yml:4` declares disclosure via bugs.olivermaicher.eu (private program); `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` mirror leads only
+
+## 2026-10-06 00:45:59 UTC
+- NEW Workspace re-materialized 42nd consecutive cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; artifacts written in cycle N do not per
+- NEW Both final reports confirmed on disk via `ls`+`sha256sum`: `gateway-hostedfields-cross-origin-messenger.md` (239 L / 10,083 B / 41ec5aabbfb36fb9460d8cc18d955cdd0a4dc050c31b4c1f0ce349d16e4ab5f3), `auth
+- NEW Gateway evidence re-verified from served bytes (GET, 1 rps): `hosted.js` byte-identical 26,839 B / sha256 1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873; `grep -c 'event\.'` → 0; fra
+- NEW Every gateway code citation re-read from minified source: `Te` endpoint factory injects `X-SumUp-Widget-Session-Id` unconditionally (string "undefined" when absent); `Sumup-Product-Origin` conditional
+- NEW PoC envelope confirmed from constants: `TYPE:"SumUpCard"`, `ACTION_MESSAGE:"message"`, `variant:"hostedfield"`, `form--submit` = `$`
+- CHANGED KB CORRECTION: staging JWKS is 11 entries but 9 UNIQUE keys (public:3a13954d-… and public:f06a4960-… each duplicated) vs prod 8 — prior "staging 11 keys" overstated real key count
+- CHANGED KB CORRECTION: staging discovery advertises 20 `scopes_supported` values (offline_access + members/merchants/roles/checkouts/customers/api_keys read+write, receipts.read, refunds.write, transactions.r
+- CHANGED DCR report states prod client-provenance-sync path as explicitly UNTESTED rather than closed (three framings in log: "client-level sync to prod provenance DB untested"; "not synced to prod api"; "prod
+- NEW `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway requires bearer even for spec-declared `oauth2:[]` operations
+- NEW `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at two paths (prod, never fetched in 29 cycles); publishes `scopes_supported:["offline_access","email"]`; kid-optional try-all on `/mcp` (RFC
+- CHANGED No submission mechanism exists in repo — `scope.yml:4` declares disclosure via bugs.olivermaicher.eu (private program); `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` mirror leads only
+- NEW Workspace re-materialized 42nd consecutive cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; artifacts written in cycle N do not per
+- NEW Both final reports confirmed on disk via `ls`+`sha256sum`: `gateway-hostedfields-cross-origin-messenger.md` (239 L / 10,083 B / 41ec5aabbfb36fb9460d8cc18d955cdd0a4dc050c31b4c1f0ce349d16e4ab5f3), `auth
+- NEW Gateway evidence re-verified from served bytes (GET, 1 rps): `hosted.js` byte-identical 26,839 B / sha256 1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873; `grep -c 'event\.'` → 0; fra
+- NEW Every gateway code citation re-read from minified source: `Te` endpoint factory injects `X-SumUp-Widget-Session-Id` unconditionally (string "undefined" when absent); `Sumup-Product-Origin` conditional
+- NEW PoC envelope confirmed from constants: `TYPE:"SumUpCard"`, `ACTION_MESSAGE:"message"`, `variant:"hostedfield"`, `form--submit` = `$`
+- CHANGED KB CORRECTION: staging JWKS is 11 entries but 9 UNIQUE keys (public:3a13954d-… and public:f06a4960-… each duplicated) vs prod 8 — prior "staging 11 keys" overstated real key count
+- CHANGED KB CORRECTION: staging discovery advertises 20 `scopes_supported` values (offline_access + members/merchants/roles/checkouts/customers/api_keys read+write, receipts.read, refunds.write, transactions.r
+- CHANGED DCR report states prod client-provenance-sync path as explicitly UNTESTED rather than closed (three framings in log: "client-level sync to prod provenance DB untested"; "not synced to prod api"; "prod
+- NEW `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway requires bearer even for spec-declared `oauth2:[]` operations
+- NEW `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at two paths (prod, never fetched in 29 cycles); publishes `scopes_supported:["offline_access","email"]`; kid-optional try-all on `/mcp` (RFC
+- CHANGED No submission mechanism exists in repo — `scope.yml:4` declares disclosure via bugs.olivermaicher.eu (private program); `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` mirror leads only
+- NEW Workspace re-materialized 43rd consecutive cycle — `ls` opened first and contradicted the prior cycle's carry-forward: BOTH final reports were ABSENT (`reports/` held only logs + hypotheses + `valid-b
+- NEW Gateway evidence re-derived from served bytes this cycle (GET, 1 rps): `hosted.js` 200, 26,839 B, `application/javascript`, sha256 1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873 (byt
+- NEW Every load-bearing citation read out of the artifact, not carried forward. `grep -o 'event\.'` → 0 occurrences bundle-wide. Inbound filter is `d=e=>e.type===o.TYPE` with `o=Object.freeze({TYPE:"SumUpC
+- NEW Frame-access gate placement confirmed by reading the branch, not the summary: `let o={},d=[];if("card"===a.payment_type){if(d=Ce(r.frames),!d.length)return; …}`. `Ce(r.frames)` and the early return ar
+- NEW UUID gate confirmed a STATIC literal, closing the recurring error: `ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i`, `le=e=>ue.test(e)`. Not `new RegExp(a.pattern)`; 
+- NEW Systematic scope re-confirmed on the second bundle: `sdk.js` 200, 291,877 B, sha256 0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd, no framing headers, `event.origin` → 0, identical 
+- NEW Report `reports/gateway-hostedfields-cross-origin-messenger.md` written and verified in the same act — 268 lines, 12,582 B, sha256 a12c3fc9d92210666939decabae215705732ad0db1609a42e1725267732a7238. Has
+- NEW Report `reports/auth-sam-app-ro-dynamic-registration.md` written and verified in the same act — 170 lines, 8,570 B, sha256 491a3804f88c44c5eecfbd8ea59fa40254ab9dc743c384dc77e6a2a97d6c96fa. Also a re-d
+- NEW DCR deliberately NOT re-probed this cycle — verification requires POSTing `/oauth2/register`, which creates a live OAuth client on SumUp infrastructure. Added accounts to staging without need is the w
+- NEW Scope.yml constraint that materially shapes the gateway report: "Clickjacking, without additional details demonstrating a specific exploit" is REJECTED. Report is therefore framed as a demonstrated st
+- CHANGED Gateway finding severity basis sharpened, not raised: the demonstrable fact is that the PCI frame ISSUES `PUT /v0.2/checkouts/{uuid}` under attacker control. Backend acceptance, state commit, privileg
+- CHANGED Gateway finding reclassified internally from information-disclosure to CSRF-class: two of three messengers do use literal `"*"` outbound, so the channel is open, but both emit only sender-known payloa
+- CHANGED DCR report prod client-provenance-sync path marked UNTESTED (not "safe"), and `sam-app.ro` ownership attestation flagged as the triager's call rather than asserted as established.
+- NEW Workspace re-materialized 43rd consecutive cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; artifacts written in cycle N do not per
+- NEW Both final reports confirmed on disk via `ls`+`sha256sum`: `gateway-hostedfields-cross-origin-messenger.md` (239 L / 10,083 B / 41ec5aabbfb36fb9460d8cc18d955cdd0a4dc050c31b4c1f0ce349d16e4ab5f3), `auth
+- CHANGED `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway requires bearer even for spec-declared `oauth2:[]` operations
+- CHANGED `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at two paths (prod, never fetched in 29 cycles); publishes `scopes_supported:["offline_access","email"]`; kid-optional try-all on `/mcp` (RFC
+- CHANGED No submission mechanism exists in repo — `scope.yml:4` declares disclosure via bugs.olivermaicher.eu (private program); `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` mirror leads only

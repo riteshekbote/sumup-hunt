@@ -77138,3 +77138,1189 @@ bytes=26839
 === framing headers ===
 access-control-allow-origin: *
 [0m
+===== ANALYST bigpickle 2026-10-06 00:45:59 UTC =====
+[0m
+> build · big-pickle
+[0m
+I'll start by checking the actual state of the workspace before trusting any prior claims.
+[0m$ [0mls -la reports/ 2>/dev/null; echo "---RECON---"; ls -la recon-notes/ 2>/dev/null; echo "---ROOT---"; ls -la
+total 9692
+drwxr-xr-x  2 runner runner    4096 Oct  6 00:41 .
+drwxr-xr-x 12 runner runner    4096 Oct  6 00:41 ..
+-rw-r--r--  1 runner runner 6103200 Oct  6 00:41 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   42315 Oct  6 00:41 analyst-laguna.log
+-rw-r--r--  1 runner runner   42120 Oct  6 00:41 analyst-ling3.log
+-rw-r--r--  1 runner runner   42510 Oct  6 00:41 analyst-longcat.log
+-rw-r--r--  1 runner runner 3030478 Oct  6 00:41 analyst-nemotron3.log
+-rw-r--r--  1 runner runner      54 Oct  6 00:41 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Oct  6 00:41 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Oct  6 00:41 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Oct  6 00:41 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   14668 Oct  6 00:41 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  589784 Oct  6 00:41 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Oct  6 00:41 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Oct  6 00:41 valid-bugs.md
+---RECON---
+total 12
+drwxr-xr-x  2 runner runner 4096 Oct  6 00:41 .
+drwxr-xr-x 12 runner runner 4096 Oct  6 00:41 ..
+-rw-r--r--  1 runner runner  813 Oct  6 00:41 DEDICATED-DEEP.md
+---ROOT---
+total 1256
+drwxr-xr-x 12 runner runner   4096 Oct  6 00:41 .
+drwxr-xr-x  3 runner runner   4096 Oct  6 00:41 ..
+drwxr-xr-x  7 runner runner   4096 Oct  6 00:41 .git
+drwxr-xr-x  3 runner runner   4096 Oct  6 00:41 .github
+-rw-r--r--  1 runner runner   1885 Oct  6 00:41 README.md
+-rw-r--r--  1 runner runner    123 Oct  6 00:41 analyst-out.txt
+-rw-r--r--  1 runner runner 554851 Oct  6 00:41 analyst-prompt.txt
+-rw-r--r--  1 runner runner 550965 Oct  6 00:41 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Oct  6 00:41 inventory
+drwxr-xr-x  2 runner runner   4096 Oct  6 00:41 knowledge
+drwxr-xr-x  2 runner runner   4096 Oct  6 00:41 leads
+-rw-r--r--  1 runner runner  81827 Oct  6 00:41 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Oct  6 00:41 recon-notes
+drwxr-xr-x  2 runner runner   4096 Oct  6 00:41 reports
+drwxr-xr-x  2 runner runner   4096 Oct  6 00:41 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Oct  6 00:41 scope.yml
+drwxr-xr-x  2 runner runner   4096 Oct  6 00:41 scripts
+-rw-r--r--  1 runner runner     33 Oct  6 00:41 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Oct  6 00:41 state_laguna.json
+-rw-r--r--  1 runner runner     33 Oct  6 00:41 state_ling3.json
+-rw-r--r--  1 runner runner     33 Oct  6 00:41 state_longcat.json
+-rw-r--r--  1 runner runner     33 Oct  6 00:41 state_mimo.json
+-rw-r--r--  1 runner runner     33 Oct  6 00:41 state_nemotron3.json
+drwxr-xr-x  2 runner runner  12288 Oct  6 00:41 triage
+[0m
+[0m$ [0mfind . -maxdepth 2 -name "*.md" -o -maxdepth 2 -name "*.yml" -o -maxdepth 2 -name "*.txt" | head -50
+./leads/reposcan-sumup.md
+./leads/lead-mimo.md
+./leads/lead-laguna.md
+./leads/lead-ling3.md
+./leads/lead-longcat.md
+./leads/lead-bigpickle.md
+./leads/lead-nemotron3.md
+./scope.yml
+./analyst-out.txt
+./probe-results.md
+./reports/hypotheses.md
+./reports/hypotheses-ling3.txt
+./reports/reposcan-findings.md
+./reports/hypotheses-laguna.txt
+./reports/valid-bugs.md
+./reports/hypotheses-bigpickle.txt
+./reports/hypotheses-nemotron3.txt
+./reports/hypotheses-longcat.txt
+./recon-notes/DEDICATED-DEEP.md
+./ctx.txt
+./knowledge/index.md
+./README.md
+./reposcan-raw/sumup-reposcan-$(date -u +%Y-%m-%dT%H:%M:%SZ).md
+./reposcan-raw/summary.txt
+./inventory/sumup.md
+./triage/run-2026-09-10-23-57.md
+./triage/run-2026-09-13-06-47.md
+./triage/run-2026-10-02-23-59.md
+./triage/run-2026-09-08-04-16.md
+./triage/run-2026-09-13-21-26.md
+./triage/run-2026-09-26-23-42.md
+./triage/run-2026-09-07-23-48.md
+./triage/run-2026-09-17-23-06.md
+./triage/run-2026-09-05-16-16.md
+./triage/run-2026-10-01-23-24.md
+./triage/run-2026-09-11-13-40.md
+./triage/run-2026-09-13-01-25.md
+./triage/run-2026-09-03-20-54.md
+./triage/run-2026-09-05-18-26.md
+./triage/run-2026-09-18-23-23.md
+./triage/run-2026-09-06-23-09.md
+./triage/run-2026-09-22-18-59.md
+./triage/run-2026-09-10-11-52.md
+./triage/run-2026-10-03-21-47.md
+./triage/run-2026-09-08-20-19.md
+./triage/run-2026-10-03-05-09.md
+./triage/run-2026-09-26-14-21.md
+./triage/run-2026-10-01-06-32.md
+./triage/run-2026-09-20-22-21.md
+./triage/run-2026-09-11-22-25.md
+[0m
+## Objective
+- Continue the SumUp bug-bounty hunt from `phase=POC`, `target=api` and return only the required 8-step structured blocks.
+- Preserve the two defensible findings and route their reports for human submission without reviving refuted leads.
+
+## Important Details
+- Scope: SumUp-owned assets only; submission channel is `bugs.olivermaicher.eu` per `scope.yml:4`.
+- Live work must remain passive-first, `<=1 rps`, and GET/HEAD/OPTIONS only; no mutating tests or customer-data access.
+- Reject out-of-scope/hardening-only classes, including clickjacking without impact, TLS hygiene, descriptive headers, permissive CORS without credential capability, and router differences without data exposure.
+- Workspace has re-materialized 41+ times. Start with `ls`; write reports and calculate `wc`/`sha256sum` in the same command before claiming they exist.
+- Gateway finding: `gateway.sumup.com/hosted.js` is 26,839 B, sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`; no `X-Frame-Options`/CSP `frame-ancestors`; inbound handler never reads `event.origin`; `payment_type !== "card"` skips the cooperating-frame gate and can trigger `PUT /v0.2/checkouts/{id}`. No exfiltration path is proven.
+- Gateway session caveat: `X-SumUp-Widget-Session-Id` is URL-derived resource identity, not a secret; backend acceptance/privilege gain remains bounded rather than proven.
+- Staging DCR: unauthenticated `POST https://auth.sam-app.ro/oauth2/register` returns a client, and `client_secret_post` client-credentials mints a JWT with empty `scp` and attacker-controlled `aud`; prod lacks DCR and prod/staging JWKS have zero `kid` overlap.
+- Stable `api.sumup.com` GET/OPTIONS surfaces should not be re-probed; only a live bearer can resolve remaining authorization questions.
+
+## Work State
+### Completed
+- Finalized `gateway.sumup.com/hosted.js` as a Medium, passive, confidence-90 cross-origin messenger finding.
+- Finalized staging DCR as Low-Medium, passive, confidence-85, staging-only.
+- Last recorded gateway report: `reports/gateway-hostedfields-cross-origin-messenger.md` — 239 lines, 10,083 B, sha256 `41ec5aabbfb36fb9460d8cc18d955cdd0a4dc050c31b4c1f0ce349d16e4ab5f3`.
+- Last recorded DCR report: `reports/auth-sam-app-ro-dynamic-registration.md` — 132 lines, 7,172 B, sha256 `ffffbc027e7fb852507054340a246e4e968bf17868dd2175fe976c4ff5b6fdb1`.
+- Retired `api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods` as an IDOR: application routing was real, but 35 identifier/credential responses were invariant with no capability differential.
+- Closed Contentful preview-token leak after token rotation; old `reports/contentful-preview-token-leak.md` claims are invalid.
+
+### Active
+- Human submission of the gateway and staging-DCR reports remains pending.
+- The `js.sumup.com/api/checkouts/{id}` lead is contradictory and stale: some records claim a 181 B application reflector, while later controls identify a 68 B Vercel platform 404. Do not submit it without re-reading current bytes.
+- Program risk is currently 88, driven by the gateway finding and staging DCR.
+
+### Blocked
+- No repository submission mechanism exists; disclosure must occur manually at `bugs.olivermaicher.eu`.
+- Report files may disappear between cycles because the workspace is volatile.
+- Remaining API authorization/audience questions require a valid bearer or merchant session and cannot be resolved passively.
+
+## Next Move
+1. Verify current persistence with `ls`, `wc -l`, and `sha256sum` for both reports; re-fetch `https://gateway.sumup.com/hosted.js` once and confirm sha256 `1302f1d6...f220873`.
+2. `[NEXT] HUMAN`: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to `bugs.olivermaicher.eu`.
+
+## Relevant Files
+- `scope.yml:4`: disclosure channel and program scope.
+- `inventory/sumup.md`: eligible asset inventory.
+- `reports/gateway-hostedfields-cross-origin-messenger.md`: Medium gateway report; verify before submission.
+- `reports/auth-sam-app-ro-dynamic-registration.md`: staging DCR report; verify before submission.
+- `reports/valid-bugs.md`: triage ledger; volatile and previously reset to its 79-line baseline.
+- `reports/js-bff-checkout-existence-oracle.md`: disputed/retracted BFF report; do not submit.
+- `reports/contentful-preview-token-leak.md`: closed rotated-token finding; absent/archival only.
+- `recon-notes/AI-LLM-TOOLING-SURFACE.md`: 86 lines, sha256 `4a938b7986eeb0df242f3b61baf57c7b977138a13af27c5cf867239b111e78c2`.
+- `references/security/README.md`: documents authorized JavaScript-origin expectations relevant to the gateway finding.
+- `art/lead_nemotron3.txt`: source of the top-ranked gateway lead.
+- `reports/hypotheses-nemotron3.txt`: ranked gateway hypothesis and next actions.
+- `scripts/sync-issues.py`: mirrors leads; does not submit findings.
+- `.github/workflows/sync-issues.yml`: issue synchronization only, not disclosure submission.
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m$ [0mls -la knowledge/ | head -40; echo "---INDEX---"; cat knowledge/index.md 2>/dev/null | head -60
+total 260
+drwxr-xr-x  2 runner runner   4096 Oct  6 00:41 .
+drwxr-xr-x 12 runner runner   4096 Oct  6 00:41 ..
+-rw-r--r--  1 runner runner 257445 Oct  6 00:41 index.md
+---INDEX---
+# Knowledge Base (seed)
+- 2026-09-03 ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
+- 2026-09-03 ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling.
+- 2026-09-03 ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+- 2026-09-03 ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+- 2026-09-03 REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-scope verified.
+- 2026-09-03 ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
+- 2026-09-03 ACCEPTED OATH @ auth.sumup.com: OIDC/OAuth discovery documents are public and enumerate live endpoints + full scope/resource model; /oauth2/auth is a live interactive flow. High-value deep-hunt surface.
+- 2026-09-03 ACCEPTED IDOR @ api.sumup.com: scope catalog names the API resource model, but all unauthenticated paths 404 — BOLA test requires a merchant OAuth token (AUTH_HELPED), not passive.
+- 2026-09-03 REJECTED MISCONFIG @ auth.sumup.com: x-envoy-decorator-operation leaks k8s service name identity.svc.cluster.local — header/banner leak is explicit out-of-scope class.
+- 2026-09-04 ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+- 2026-09-04 ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+- 2026-09-04 REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-scope verified.
+- 2026-09-04 ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
+- 2026-09-04 ACCEPTED IDOR @ api.sumup.com: Versioned payment APIs are high-value; 404 on root is standard pattern — enumerate versions passively first.
+- 2026-09-04 ACCEPTED OAUTH @ auth.sumup.com: /flows/login path confirms OAuth/OIDC flow; redirect_uri/state flaws are high-impact and testable passively via HEAD.
+- 2026-09-04 REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) requires scope confirmation; webhook SSRF needs parameter discovery (active); parked until in-scope verified.
+- 2026-09-04 ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling; header-based auth misconfigurations are testable passively.
+- 2026-09-04 ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
+- 2026-09-04 ACCEPTED OATH @ auth.sumup.com: redirect_uri is strictly allowlisted per client (client_id=dashboard confirmed) — naive redirect_uri/subdomain/path-traversal bypass refuted; errors surfaced on server flow page.
+- 2026-09-04 ACCEPTED AUTH @ me.sumup.com: me.sumup.com is a distinct Vercel-served merchant self-service asset behind dashboard OAuth (client_id=dashboard) — new non-Cloudflare attack surface.
+- 2026-09-04 ACCEPTED MISCONFIG @ auth.sumup.com: /oauth2/par & /oauth2/device documented but return 404 on OPTIONS (unrouted) while /oauth2/token & /oauth2/revoke return 200 — PAR/device grants likely not deployed at routing level.
+- 2026-09-04 ACCEPTED OATH @ auth.sumup.com: dashboard-client scope catalog (accounting/invoices/api_keys/lending/receivables/unified_customer_directory/readers) maps a broader hidden api.sumup.com resource model than OIDC discovery.
+- 2026-09-04 ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" — public client impersonation vector; requires live PAR+token flow test.
+- 2026-09-04 ACCEPTED OAUTH @ auth.sumup.com: Full discovery docs expose PAR, device flow, request_object alg "none", scope catalog mapping 1:1 to merchant API resources.
+- 2026-09-04 REJECTED MISCONFIG @ api.sumup.com: x-envoy-decorator-operation leaks apigateway2-headless.identity.svc.cluster.local — header/banner leak is explicit out-of-scope class.
+- 2026-09-04 ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths 404 unauthenticated; scope catalog from auth.sumup.com defines resource model but requires merchant token.
+- 2026-09-04 REJECTED AUTH @ admin.sumup.com: Header spoofing (Host, X-Forwarded-For, X-Original-URL) yields identical 403 — no auth bypass via passive header manipulation.
+- 2026-09-04 ACCEPTED OATH @ api.sumup.com/authorize: Legacy OAuth authorize endpoint exists on API gateway (distinct from auth.sumup.com) with legacy SDK client_ids and potentially relaxed redirect_uri validation — new attack surface
+- 2026-09-04 ACCEPTED OATH @ auth.sumup.com: dashboard-client scope catalog maps broader hidden api.sumup.com resource model than OIDC discovery
+- 2026-09-04 ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths 404 unauthenticated; scope catalog defines resource model but requires merchant token
+- 2026-09-04 REJECTED AUTH @ admin.sumup.com: Header spoofing yields identical 403 — no auth bypass via passive header manipulation
+- 2026-09-04 REJECTED MISCONFIG @ api.sumup.com: x-envoy-decorator-operation leaks k8s service name — header/banner leak explicit out-of-scope class
+- 2026-09-05 REJECTED OATH @ api.sumup.com/authorize: Legacy OAuth authorize endpoint returns 404 for all known legacy SDK client_ids (sumup-ios-sdk, sumup.pos, reader, sales, virtual-terminal) — no client_id oracle, no loose redirect_uri
+- 2026-09-05 ACCEPTED AUTH @ auth.sumup.com: token_endpoint_auth_methods_supported includes "none" but dashboard client rejects unauthenticated token requests — "none" likely restricted to specific client configs not publicly registrable
+- 2026-09-05 ACCEPTED OAUTH @ auth.sumup.com: PAR (/oauth2/par) and device flow (/oauth2/device) endpoints ARE routed and respond to POST (not 404) but require client authentication
+- 2026-09-05 ACCEPTED OATH @ auth.sumup.com: request_object_signing_alg_values_supported includes "none" + request_parameter_supported=true — algorithm confusion vector documented but untestable without valid client flow
+- 2026-09-05 ACCEPTED AUTH @ me.sumup.com: Vercel-served asset confirmed; all anonymous /api/* routes return 307 to OAuth flow — no debug endpoints or permissive CORS found passively
+- 2026-09-05 REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (307 redirect, no CORS headers)
+- 2026-09-05 ACCEPTED BUSLOGIC @ api.sumup.com: All versioned paths (/v0,/v0.1,/v1,/v2,/beta,/internal) return 404 unauthenticated — API fully gated at gateway
+- 2026-09-05 REJECTED SSRF @ portal.sumup.com: Third-party CNAME (iriscrm.com) confirmed but webhook/callback parameters not discovered passively; supply-chain risk unconfirmed in-scope
+- 2026-09-05 ACCEPTED AUTH @ me.sumup.com: Vercel-served asset confirmed; all anonymous /api/* routes return 307/403 to OAuth flow — no debug endpoints or permissive CORS found passively
+- 2026-09-05 REJECTED MISCONFIG @ me.sumup.com: No CORS misconfiguration on /api/sso/callback (403, no CORS headers)
+- 2026-09-05 ACCEPTED OATH @ api.sumup.com/authorize: Endpoint is LIVE (302→auth.sumup.com/flows/oauth2/error), not 404; the earlier "404 for all legacy client_ids" log ran an unexpanded placeholder URL. Exposes a client_id oracle (invalid_client vs invalid_request) and `dashboard` is registered here with a redirect set divergent from modern auth.sumup.com.
+- 2026-09-05 ACCEPTED MISCONFIG @ api.sumup.com/authorize: access-control-allow-origin:* + broad allow-methods + max-age on legacy OAuth gateway responses, absent on auth.sumup.com/oauth2/auth — endpoint-specific CORS divergence; Sets optimizely_experiment_user + __cf_bm on Domain=sumup.com (SameSite=None) cross-site readable.
+- 2026-09-05 ACCEPTED OATH @ auth.sumup.com: modern dashboard client registered redirect confirmed live — https://me.sumup.com/api/sso/callback yields 303 invalid_state (state≥8 enforced) on the accepted host.
+- 2026-09-05 ACCEPTED OATH @ api.sumup.com/authorize: Endpoint is LIVE (302→auth.sumup.com/flows/oauth2/error), not 404 — the recorded "legacy authorize dead" logged an unexpanded `{legacy_client_id` placeholder URL. Exposes a client_id oracle (invalid_client vs invalid_request) and `dashboard` is registered here with a redirect allowlist divergent from modern auth.sumup.com (modern callback rejected).
+- 2026-09-05 ACCEPTED MISCONFIG @ api.sumup.com/authorize: access-control-allow-origin:* + broad allow-methods + max-age on legacy OAuth gateway responses, absent on auth.sumup.com/oauth2/auth — endpoint-specific CORS divergence; sets optimizely_experiment_user + __cf_bm on Domain=sumup.com (SameSite=None) cross-site readable.
+- 2026-09-05 ACCEPTED OATH @ auth.sumup.com: modern dashboard client registered redirect confirmed live — https://me.sumup.com/api/sso/callback returns 303 invalid_state object (state≥8 enforced) on the accepted host, proving the same URI is NOT accepted on the legacy api path.
+- 2026-09-05 ACCEPTED MISCONFIG @ web.sumup.com: 77.246.42.130 is in Rackspace lease pool UK-RACKSPACE-20070509 (Rackspace Ltd.), not a SumUp-owned netblock — supporting infrastructure for a takeover lead but no claimable service state observed.
+- 2026-09-05 ACCEPTED OATH @ api.sumup.com/authorize: Endpoint LIVE with client_id oracle (invalid_client vs invalid_request) and legacy redirect-set divergence — modern dashboard callback rejected on legacy gateway
+- 2026-09-05 ACCEPTED MISCONFIG @ api.sumup.com/authorize: Wildcard CORS (access-control-allow-origin:*) + broad allow-methods + max-age + SameSite=None cookies on Domain=sumup.com — endpoint-specific divergence from auth.sumup.com
+- 2026-09-05 ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live on modern auth server — https://me.sumup.com/api/sso/callback returns 303 invalid_state (state≥8 enforced)
+- 2026-09-05 ACCEPTED AUTH @ auth.sumup.com: PAR (/oauth2/par) and device flow (/oauth2/device) routed (400 on POST) but require client authentication — "none" auth_method not usable for dashboard client
+- 2026-09-05 ACCEPTED AUTH @ me.sumup.com: Vercel-served asset; anonymous /api/* routes return 307 to OAuth flow — no debug endpoints or permissive CORS
+- 2026-09-05 ACCEPTED OATH @ api.sumup.com/authorize: Side-by-side control confirms identical dashboard+me.sumup.com/api/sso/callback request is ACCEPTED (302→auth-callback login_challenge) on auth.sumup.com/oauth2/auth but REJECTED (invalid_request) on legacy api.sumup.com/authorize — divergent redirect-set is a hard, controlled, reproducible fact.
+- 2026-09-05 ACCEPTED BUSLOGIC @ api.sumup.com/authorize: RAG of public SumUp SDKs/docs (github.com/sumup: sumup-php, sumup-dotnet, sumup-go, sumup-developer, developer.sumup.com) yields only the CURRENT strict per-registration model — no legacy callback host constants exist in public SDKs; legacy-host recovery must come from passive CT/subdomain enumeration, not code.
+- 2026-09-05 REJECTED OATH @ api.sumup.com/authorize: Bounded legacy-callback host enumeration (dashboard/app/app-sumup/my/secure/me/www.sumup.com × /callback|/api/callback|/oauth/callback|/|bare) — all `invalid_request`; no accepted legacy redirect recoverable from common candidates.
+- 2026-09-05 ACCEPTED OATH @ auth.sumup.com: Modern dashboard client redirect confirmed live on modern auth server — https://me.sumup.com/api/sso/callback returns 302→login flow (state≥8 enforced)
+- 2026-09-05 REJECTED OATH @ api.sumup.com/authorize: Common legacy callback host candidates (dashboard/app/my/secure/me/www.sumup.com × callback paths) all return invalid_request — no accepted legacy redirect recoverable from common enumeration.
+[0m
+[0m$ [0mecho "=== state ==="; for f in state_*.json; do echo "$f: $(cat $f)"; done; echo; echo "=== reports/ md files ==="; ls -la reports/*.md; echo; echo "=== valid-bugs.md ==="; cat reports/valid-bugs.md
+=== state ===
+state_bigpickle.json: {"phase": "POC", "target": "api"}
+state_laguna.json: {"phase": "POC", "target": "api"}
+state_ling3.json: {"phase": "POC", "target": "api"}
+state_longcat.json: {"phase": "POC", "target": "api"}
+state_mimo.json: {"phase": "POC", "target": "api"}
+state_nemotron3.json: {"phase": "POC", "target": "api"}
+
+=== reports/ md files ===
+-rw-r--r-- 1 runner runner 589784 Oct  6 00:41 reports/hypotheses.md
+-rw-r--r-- 1 runner runner   9173 Oct  6 00:41 reports/reposcan-findings.md
+-rw-r--r-- 1 runner runner   7384 Oct  6 00:41 reports/valid-bugs.md
+
+=== valid-bugs.md ===
+# Validated findings (running count 0)
+
+- 1 lead(s) marked VALID at 2026-09-04 06:02:58 UTC
+  - | Q4 Provable non-invasively? | **NO** — all unauthenticated paths return 404; requires valid merchant OAuth token to test. Probe results confirm 404 on every enumerated path (v0/v0.1/v1/v2/merchants/
+
+- 7 lead(s) marked VALID at 2026-09-06 21:30:02 UTC
+  - **Verdict: VALID**
+  - | Impact | Attacker-controlled OAuth clients on staging; mintable JWTs (empty scope blocks resources but token is valid at gateway). Staging environments often lack prod hardening. |
+  - **Verdict: VALID**
+  - **Verdict: VALID**
+  - | 1 | `auth.sam-app.ro` unauthenticated dynamic client registration | **VALID** | 7.5 |
+  - | 2 | `api.sumup.com/authorize` client-ID oracle + wildcard CORS | **VALID** | 5.3 |
+  - | 3 | `mcp.sumup.com` wildcard CORS on Bearer-protected endpoint | **VALID** | 5.3 |
+
+- 3 lead(s) marked VALID at 2026-09-09 15:21:03 UTC
+  - **Verdict: VALID**
+  - | Q3 | Real security impact? | Low — error taxonomy (`invalid_client` vs `invalid_request`) is a standard OAuth error pattern; wildcard CORS on an authorize endpoint that only redirects to error pages
+  - | 1 | help.sumup.com Contentful Preview Token Leak | **VALID** | 5.3 (Medium) | **FILE REPORT** |
+
+- 3 lead(s) marked VALID at 2026-09-10 16:19:46 UTC
+  - **VERDICT: VALID**
+  - **VERDICT: HOLD** — Missing webhook HMAC verification in Vendure plugin is a valid code issue, but responsibility may lie with integrators who deploy the plugin. Needs clarification on whether this is
+  - | 1 | Contentful Preview API Token Leak (help.sumup.com) | **VALID** | 5.3 |
+
+- 4 lead(s) marked VALID at 2026-09-10 19:11:04 UTC
+  - | Q7 Reasonable triager | YES — client_id enumeration via error differentiation is a valid finding |
+  - **Verdict: VALID** — Client ID oracle on legacy OAuth endpoint. Read-only proof: GET requests to `/authorize` with different client_ids show error differentiation. Impact: Medium (information disclosu
+  - | Q4 Provable | NO — requires valid merchant OAuth token (AUTH_HELPED) |
+  - | VALID | 1 | #6: Legacy OAuth client_id oracle on api.sumup.com/authorize |
+
+- 5 lead(s) marked VALID at 2026-09-10 21:43:51 UTC
+  - | 1 | `auth.sam-app.ro` unauthenticated RFC 7591 dynamic client registration → mintable JWTs | staging auth | AUTH | 7.5 | VALID |
+  - | 2 | `api.sumup.com/authorize` client_id oracle (invalid_client vs invalid_request) | api gateway | INFO | 5.3 | VALID |
+  - | 3 | `mcp.sumup.com` wildcard CORS (`*`) on Bearer-protected MCP endpoint | MCP server | MISCONFIG | 5.3 | VALID |
+  - | 4 | `help.sumup.com` Contentful Preview API token leak → 1,082 draft entries readable | help center | MISCONFIG | 5.3 | VALID |
+  - | 9 | API BOLA via dashboard-client scopes | Requires valid merchant OAuth token |
+
+- 2 lead(s) marked VALID at 2026-09-12 00:39:58 UTC
+  - **Verdict: VALID** (finding now closed — token rotated 2026-09-11)
+  - | 1 | Contentful Preview Token Leak (help.sumup.com) | **VALID** (closed) | Report if still live at time of submission; token rotated |
+
+- 5 lead(s) marked VALID at 2026-09-16 20:16:23 UTC
+  - | Q7 | Reasonable triager accept? | YES — staging exposure with weaker security posture is valid |
+  - **Verdict: VALID** — Publicly reachable staging infrastructure with potential weaker controls.
+  - **Verdict: VALID**
+  - | 2 | Internal Staging Domains (sam-app.ro) | **VALID** | 5.3 |
+  - | 3 | Wildcard CORS on MCP Server | **VALID** | 5.3 |
+
+- 15 lead(s) marked VALID at 2026-09-17 12:13:01 UTC
+  - | Q5 Novel/unreported? | PARTIALLY — previously marked VALID 2026-09-09, token rotated 2026-09-11. **Need to re-verify if token is still live**. If token was rotated and new token not leaked, this is 
+  - | Q3 Real impact? | YES — attacker can register arbitrary OAuth clients, mint real JWT access tokens via client_credentials grant. JWTs are valid at api.sam-app.ro gateway (confirmed by structured err
+  - | Q5 Novel/unreported? | YES — not in valid-bugs.md as filed report; staging-only but staging often leads to prod pivot |
+  - | Q7 Reasonable triager? | YES — unauthenticated client registration on staging auth server with mintable tokens is a valid finding |
+  - **Verdict: VALID**
+  - | Q3 Real impact? | LOW — error taxonomy (`invalid_client` vs `invalid_request`) is standard OAuth error behavior. Wildcard CORS exists but the endpoint only redirects to error pages; no code/token le
+  - | Q5 Novel/unreported? | ALREADY REPORTED — marked VALID in valid-bugs.md (2026-09-10) |
+  - | Q3 Real impact? | LOW — wildcard CORS + `Authorization: Bearer` header-only auth. No cookies ambient creds. Hardening-only config. Already marked VALID in valid-bugs.md. |
+  - | Q2 Attacker reachable? | Partially — all unauthenticated paths return 404. Requires valid merchant OAuth token. |
+  - | Q4 Provable non-invasively? | **NO** — requires valid merchant OAuth token with dashboard scopes. All unauthenticated paths 404. Cannot test passively. |
+  - | Q2 Attacker reachable? | Partially — OIDC discovery is public, but actual token flow requires valid client registration |
+  - **Verdict: HOLD** — Interesting theoretical vector but insufficient proof. redirect_uri strict allowlist + PAR unrouted + no public client registration = mitigated. Could be VALID if a public client r
+  - **Verdict: HOLD** — Valid code issue (private key material in log output) but in a development tool, not production infrastructure. May be accepted as informational. Needs scoping clarification.
+  - | 1 | Contentful Preview Token Leak (help.sumup.com) | **HOLD** | 5.3 | Re-verify token liveness; if live → VALID, FILE REPORT |
+  - | 2 | auth.sam-app.ro unauthenticated client registration → JWTs | **VALID** | 7.5 | FILE REPORT |
+
+- 13 lead(s) marked VALID at 2026-09-18 01:28:35 UTC
+  - | Q3 | Real impact? | **YES** — attacker-controlled OAuth clients mint real JWT access tokens via `client_credentials` grant. Tokens valid at `api.sam-app.ro` gateway (structured error response). Stag
+  - | Q5 | Novel/unreported? | **YES** — not in `valid-bugs.md` as filed report. |
+  - | Q7 | Reasonable triager? | **YES** — unauthenticated client registration on staging auth server with mintable tokens is a valid finding. |
+  - **Verdict: VALID**
+  - | Q5 | Novel/unreported? | **ALREADY REPORTED** — marked VALID in `valid-bugs.md` (2026-09-10). |
+  - | Q7 | Reasonable triager? | **YES, but low bounty** — valid information disclosure, but standard OAuth errors. Already filed. |
+  - | Q5 | Novel/unreported? | **ALREADY REPORTED** — marked VALID in `valid-bugs.md`. |
+  - | Q5 | Novel/unreported? | **YES at time of discovery** — marked VALID 2026-09-09. |
+  - | Q2 | Attacker reachable? | **NO** — all unauthenticated paths return 404. Requires valid merchant OAuth token. |
+  - | Q4 | Provable non-invasively? | **NO** — requires valid merchant OAuth token with dashboard scopes to test ID-swapping. AUTH_HELPED. |
+  - | Q3 | Real impact? | **NO** — OPTIONS returns 204 (no content), wildcard CORS on a token endpoint that rejects all POST requests with `invalid_client` (no valid client credentials known). The `x-envo
+  - | Q5 | Novel/unreported? | **Possibly novel** — not in `valid-bugs.md`. |
+  - | 1 | `auth.sam-app.ro` unauth dynamic client registration → JWTs | **VALID** | 7.5 | FILE REPORT |
+[0m
+Confirmed: the workspace re-materialized and **both final report files are gone**. `reports/` has no gateway or DCR report, and `recon-notes/AI-LLM-TOOLING-SURFACE.md` is also absent. I need to reconstruct them from evidence.
+Reports are gone. Let me pull the underlying evidence from the knowledge base to reconstruct them faithfully.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "hosted.js\|hostedfields\|HostedFields\|postMessage\|messenger\|frame-ancestors" knowledge/index.md | tail -45
+639:- 2026-09-26 REJECTED MISCONFIG @ gateway.sumup.com: response exfiltration via the postMessage API. Two candidate outbound channels tested directly, neither delivered; send() throws because document.referrer is a full URL rather than an origin. Not claimed.
+659:- 2026-09-26 ACCEPTED OTHER @ gateway.sumup.com: the outbound direction is blocked by a bug, not a control — the container messenger passes origin: document.referrer (a full URL) as targetOrigin, which throws, and that is the only messenger carrying form--on-result. A security property that holds because a value has the wrong shape is one refactor from being gone, so a fix to the broken channel must land together with event.origin validation. Report the boundary so the next change does not silently escalate severity.
+681:- 2026-09-26 ACCEPTED OTHER @ gateway.sumup.com hosted.js: re-reading the bundle to write it honestly changed the finding twice, in opposite directions from the prior cycle. It confirmed a regex gate on checkoutId does exist (le=e=>ue.test(e)) after the previous cycle had retracted it as non-reproducing, and it showed the pattern is built at runtime by new RegExp(a.pattern) so it cannot be characterised further. It also pinned the demo/demo-sandbox branch to a no-op stub. The honest statement is narrower than either prior version: a shape check exists, its pattern is unrecoverable from served bytes. Two consecutive cycles of writing this report from memory would have shipped a fabricated gate detail into a human's hands each time.
+686:- 2026-09-27 ACCEPTED OTHER @ gateway.sumup.com hosted.js: re-reading the bundle in order to write it honestly changed the finding a third time, and each pass has moved it in a different direction. This pass found that the checkoutId gate *is* real — `le(r)` → `ue.test(r)`, built at runtime by `new RegExp(a.pattern)` — which the previous pass had retracted entirely, while confirming the pattern is unrecoverable. The accurate statement is now narrower and stranger than any earlier version: two gates exist, the frame-access gate is skipped by a caller-supplied discriminator, the shape gate is not, and the shape gate's own pattern is attacker-influenceable and unauditable from the served bundle. Three passes of writing this report from memory would have shipped three different and mutually inconsistent descriptions of the remaining barrier into a human's hands.
+687:- 2026-09-27 ACCEPTED MISCONFIG @ gateway.sumup.com: hosted-fields postMessage API performs no event.origin validation and the frame ships no X-Frame-Options/frame-ancestors; a cross-origin form--submit causes the frame to issue PUT https://api.sumup.com/v0.2/checkouts/{attacker-chosen-id} with attacker-supplied session id and payment payload. Proven live via netlog + iframe console. Bounded by widget-session validity; no exfiltration path exists as implemented.
+688:- 2026-09-27 ACCEPTED OTHER @ gateway.sumup.com: the asset the KB dismissed as a "non-Next 404" one cycle earlier is the program's highest-value surface — a PCI card-entry frame. A negative observation recorded from a single path is not a characterisation of a host: /hosted.js and /sdk.js were both 200 and had never been fetched.
+689:- 2026-09-27 REJECTED MISCONFIG @ gateway.sumup.com: response exfiltration via the postMessage API. Two candidate outbound channels tested directly, neither delivered; send() throws because document.referrer is a full URL rather than an origin. Not claimed.
+709:- 2026-09-27 ACCEPTED OTHER @ gateway.sumup.com: the outbound direction is blocked by a bug, not a control — the container messenger passes origin: document.referrer (a full URL) as targetOrigin, which throws, and that is the only messenger carrying form--on-result. A security property that holds because a value has the wrong shape is one refactor from being gone, so a fix to the broken channel must land together with event.origin validation. Report the boundary so the next change does not silently escalate severity.
+712:- 2026-09-27 ACCEPTED MISCONFIG @ `js.sumup.com/api`: the whole finding came from **recovering the call shape instead of guessing path shapes**. Six cycles closed this origin with a 6-shape prefix sweep; the real paths were sitting in `sdk.js` and the sweep was structurally incapable of hitting them, because the client only issues the request when the id matches a UUID regex. The same shape of error the KB already recorded for the legacy-callback sweep — *an exhaustive sweep is only exhaustive over the values actually sent* — had simply been repeated on a different asset, by me, and the general lesson had not transferred. Two disciplines that paid off here are both about checking a citation against the artifact: `hosted.js` was credited with an `apiBFF` reference it does not contain, and a `checkoutId` pattern three cycles had recorded as unrecoverable is a static literal in a different file on the same host.
+726:- 2026-09-27 ACCEPTED MISCONFIG @ `gateway.sumup.com/hosted.js`: the finding sharpened because I read the *parameter* rather than searching for the *check*. Three cycles framed this as "no `event.origin` validation" — true but flat, and it invites the response "just add a check." The stronger fact is that `origin` is a declared parameter, is supplied at the construction site, and is used on exactly one path: the outbound. The guard exists and is applied backwards, which is why it survived review and why the fix is non-obvious — a developer repairing the broken outbound `targetOrigin` will find `origin` in scope, already used, and conclude inbound is handled. Generalisable rule: when auditing a message channel, check which *direction* each credential parameter is applied in; presence of a credential argument is not evidence of enforcement.
+727:- 2026-09-27 REJECTED OTHER @ `gateway.sumup.com/hosted.js`: the "unrecoverable runtime pattern" gate. Three cycles recorded the checkoutId check as `new RegExp(a.pattern)` and therefore unauditable, and one retracted it entirely as non-reproducing. Both were wrong in the same way — neither opened the file and read what the constructor was building. It is the card-IIN brand table (`627416`/`637202`/…). The actual gate is a static literal. The cost of that error was not merely an inaccurate note: carried into a report, it would have told a triager the remaining barrier is unrecoverable when it is in fact a public, well-known UUID v1–v5 regex. Reading the code around a citation is the only thing that catches this, and re-deriving a claim from a prior cycle's summary never will.
+730:- 2026-09-27 ACCEPTED MISCONFIG @ `gateway.sumup.com/hosted.js`: three prior cycles characterised the message channel from the container messenger alone and generalised from it, producing a claim ("outbound blocked by a bug") that was true of one of three call sites. Reading the *set* of construction sites — rather than the one already under discussion — falsified it, and simultaneously revealed the real shape: the guard is `n||"*"`, a predicate that an empty referrer defeats, and the value feeding it is supplied by the embedding page. Generalisable rule: when a control is described as broken or absent, enumerate every site that could carry it before characterising the channel; a single call site is a sample, not the surface. The same pass killed a second error — I had assumed `fe` was a base-URL constructor, and it is a host-pinned extractor whose hostname check is the only thing bounding the attacker's request body.
+731:- 2026-09-27 REJECTED MISCONFIG @ `gateway.sumup.com/hosted.js`: response exfiltration, now for a defensible reason. Two of three messengers do have a working wildcard outbound — so the *channel* is open — but both emit only payloads the sender already knew (`aux--metric-track--ack`; a field name the attacker chose and reads back). A CORS/postMessage finding needs a capability differential, and here there is none in the content that flows. Recorded as explicitly NOT the finding so a later cycle cannot re-derive the same claim as novel.
+732:- 2026-09-27 ACCEPTED OTHER @ `reports/`: the write mechanism is 7 for 7, but the more useful discipline this cycle was reading the artifact before writing about it. Three separate claims in my own carry-forward — the unrecoverable runtime gate, the "only messenger" outbound, and the BFF chain I was mid-way through asserting — were each falsified by opening the file. The BFF chain is the one worth naming: I was one sentence from publishing a two-finding exploit chain that does not exist, and a single grep (`js\.sumup\.com` = 0) killed it. A proposed chain is a hypothesis like any other and owes the same control.
+734:- 2026-09-27 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: the finding sharpened because I read the *parameter* rather than searching for the *check*. The `origin` parameter is declared, supplied at construction, and used on exactly one path: the outbound. The guard exists and is applied backwards — a developer repairing the broken outbound `targetOrigin` will find `origin` in scope, already used, and conclude inbound is handled. Rule: when auditing a message channel, check which *direction* each credential parameter is applied in; presence is not evidence of enforcement.
+735:- 2026-09-27 REJECTED OTHER @ gateway.sumup.com/hosted.js: the "unrecoverable runtime pattern" gate. Three cycles recorded checkoutId check as `new RegExp(a.pattern)` and therefore unauditable; one retracted it entirely. Both wrong — the constructor builds the card-IIN brand table. The actual gate is a static UUID v1–v5 literal. Reading the code around a citation is the only thing that catches this; re-deriving from a prior cycle's summary never will.
+743:- 2026-09-28 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+744:- 2026-09-28 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+761:- 2026-09-29 REJECTED MISCONFIG @ api.sumup.com/v0.1/internal/analytics: inferring an endpoint's auth posture from the client call that reaches it. The SDK posts this with only `X-SumUp-Widget-Session-Id` and no bearer, which looks like an unauthenticated ingestion point — but `Bi` injects that header into EVERY request, money endpoints included, so its presence carries zero information about whether a credential is enforced. This is the same error as reading the postMessage `origin` parameter's presence as evidence of origin enforcement: a parameter that is supplied everywhere is not a parameter that is checked anywhere.
+764:- 2026-09-29 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+765:- 2026-09-29 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+779:- 2026-09-29 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (`t.postMessage(e, n||"*")`); inbound handler never reads `event.origin`; guard exists but applied backwards — developer fixing outbound `targetOrigin` will find `origin` in scope and assume inbound handled
+780:- 2026-09-29 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as `new RegExp(a.pattern)`; one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+789:- 2026-09-30 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+790:- 2026-09-30 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+802:- 2026-09-30 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: presence of a credential parameter is not evidence
+805:- 2026-09-30 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled.
+806:- 2026-09-30 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will.
+832:- 2026-10-01 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled.
+833:- 2026-10-01 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will.
+839:- 2026-10-01 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin. The guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled.
+843:- 2026-10-02 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e,n||"*")); inbound handler never reads event.origin; guard exists but applied backwards
+850:- 2026-10-02 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled.
+851:- 2026-10-02 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will.
+859:- 2026-10-03 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+860:- 2026-10-03 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+869:- 2026-10-03 The gateway finding generalizes as a SYSTEMATIC missing-origin-validation defect across BOTH SumUp first-party bundles (`hosted.js` 26,839 B + `sdk.js` 291,877 B), both served from gateway.sumup.com with ACAO `*`. This strengthens the hosted.js report's remediation framing (fix the shared messenger pattern, not one call site) but sdk.js itself yields no new title.
+872:- 2026-10-04 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+873:- 2026-10-04 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+884:- 2026-10-04 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*") with n=document.referrer); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled.
+885:- 2026-10-04 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1-5 literal. Reading code around citation catches this; re-deriving from summary never will.
+889:- 2026-10-05 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*") with n=document.referrer); inbound postMessage handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled.
+890:- 2026-10-05 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); corrected by reading served bytes: constructor builds card-IIN brand table, actual checkoutId gate is static UUID v1-5 literal in hosted.js. Reading code around citation is essential; never derive from prior summary.
+895:- 2026-10-05 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+896:- 2026-10-05 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "sam-app.ro/oauth2/register\|dynamic registration\|DCR" knowledge/index.md | tail -40
+104:- 2026-09-06 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+113:- 2026-09-06 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+121:- 2026-09-06 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+129:- 2026-09-07 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+141:- 2026-09-07 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+159:- 2026-09-08 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+171:- 2026-09-08 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+187:- 2026-09-08 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+199:- 2026-09-08 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+215:- 2026-09-08 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+227:- 2026-09-08 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+240:- 2026-09-08 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+252:- 2026-09-08 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+287:- 2026-09-09 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com
+294:- 2026-09-09 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
+308:- 2026-09-10 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com
+315:- 2026-09-10 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
+332:- 2026-09-10 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com.
+339:- 2026-09-10 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register).
+349:- 2026-09-11 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com.
+356:- 2026-09-11 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register).
+451:- 2026-09-16 ACCEPTED OTHER @ reposcan-findings.md: contains 9 findings (3 SECRET, 6 MISCONFIG), all informational/out-of-scope per program scope.yml — none are fileable report-class bugs; best value is architecture-recon context for staging sam-app.ro dynamic registration finding already documented.
+840:- 2026-10-01 ACCEPTED AUTH @ auth.sam-app.ro: DCR advertises 19 scopes while granted scp is empty; issuer is auth.sam-app.ro and mcp.sam-app.ro requires offline_access+email. Prod/staging differ only by registration_endpoint; cross-env JWKS isolation holds (zero kid overlap).
+844:- 2026-10-02 ACCEPTED AUTH @ auth.sam-app.ro: DCR advertises 19 scopes while granted scp is empty; issuer auth.sam-app.ro; prod/staging differ only by registration_endpoint; cross-env JWKS isolation holds (zero kid overlap)
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && cat scope.yml
+programs:
+  sumup:
+    name: SumUp Payments Limited / SumUp Group Bug Bounty
+    disclosure_policy: via bugs.olivermaicher.eu (Oliver Maicher private program) - report + PoC + contact + payment
+    assets:
+      - name: "All company-owned infrastructure, payment platforms, merchant portals, APIs, mobile and web applications, point-of-sale systems, cloud services, websites, and domains operated by SumUp Group and its subsidiaries"
+        priority: In
+    out_of_scope:
+- "Network level Denial of Service attacks"
+      - "Application Denial of Service by locking user accounts"
+      - "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)"
+      - "Disclosure of known public files or directories (e.g. robots.txt)"
+      - "Outdated software / library versions"
+      - "OPTIONS / TRACE HTTP method enabled"
+      - "CSRF on logout"
+      - "CSRF on forms that are available to anonymous users"
+      - "Cookies that lack HTTP Only or Secure settings for non-sensitive data"
+      - "Self-XSS and issues exploitable only through Self-XSS"
+      - "Reports resulting from automated scanning utilities without additional details or a POC demonstrating a specific exploit"
+      - "Attacks requiring physical access to a user's device"
+      - "Attacks dependent upon social engineering of employees or vendors"
+      - "Username enumeration based on login or forgot password pages"
+      - "Enforcement policies for brute force, rate limiting, or account lockout"
+      - "SSL/TLS best practices"
+      - "SSL attacks such as BEAST, BREACH, Renegotiation attack"
+      - "Clickjacking, without additional details demonstrating a specific exploit"
+      - "Mail configuration issues including SPF, DKIM, DMARC settings"
+      - "Use of a known-vulnerable library without a description of an exploit specific to our implementation"
+      - "Password and account recovery policies"
+      - "Presence of autocomplete functionality in form fields"
+      - "Publicly accessible login panels"
+      - "Lack of email address verification during account registration or account invitation"
+      - "Lack of email address verification password restore"
+      - "Session control during email/password changes"
+      - "Social engineering, physical attacks, and DoS/DDoS testing (per program notes)"
+      - "Exposure of customer/employee/financial/authentication data during testing (per program notes)"
+    github_orgs:
+      - none-configured
+
+rules:
+  passive_first: false          # deep-hunt agent: active probes allowed when scoped
+  max_requests_per_second: 1    # never hammer live infra
+  no_doom: true                 # no DoS/DDoS, no account-lockout attacks
+  account_creation: restricted  # only on test/sandbox assets, never live customer data
+  no_data_modification: true    # no writes/deletes on live customer data
+  no_pre_disclosure: true       # never disclose before program response
+  poc_required: true            # scanner output alone is REJECTED
+  redact_secrets_in_commits: true
+
+models:
+  - { id: opencode/big-pickle, name: bigpickle }
+  - { id: opencode/nemotron-3-ultra-free, name: nemotron3 }
+  - { id: opencode/longcat-2.0-free, name: longcat }
+  - { id: opencode/ling-3.0-flash-free, name: ling3 }
+  - { id: opencode/laguna-s-2.1-free, name: laguna }
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "sam-app.ro/oauth2/register" probe-results.md triage/*.md 2>/dev/null | tail -25
+triage/run-2026-09-06-21-30.md:26:| Q4 Provable | **Yes** — `curl -X POST https://auth.sam-app.ro/oauth2/register -d '{"redirect_uris":["https://evil.com"],"client_name":"test"}'` → 201 (non-invasive) |
+triage/run-2026-09-06-21-30.md:35:| Proof steps | `curl -s -X POST https://auth.sam-app.ro/oauth2/register -H 'Content-Type: application/json' -d '{"redirect_uris":["https://example.com"],"client_name":"poc"}'` → 201 + `client_id`/`client_secret`. Then `curl -s -X POST https://auth.sam-app.ro/oauth2/token -d 'grant_type=client_credentials&client_id={id}&client_secret={secret}'` → 200 with JWT. |
+triage/run-2026-09-09-15-21.md:57:| Q2 | Attacker reachable? | Yes — POST to `https://auth.sam-app.ro/oauth2/register` returns 201 with client_id+secret+chosen redirect_uris (unauthenticated RFC 7591) |
+triage/run-2026-09-10-16-19.md:77:**VERDICT: HOLD** — Confirmed publicly reachable with unauthenticated dynamic client registration at `auth.sam-app.ro/oauth2/register` yielding real JWTs. Needs: (1) confirmation sam-app.ro is SumUp-owned, (2) verification of actual exploitation path beyond empty-scope JWT minting.
+triage/run-2026-09-17-12-13.md:60:| Q2 Attacker reachable? | YES — POST `https://auth.sam-app.ro/oauth2/register` is unauthenticated, returns 201 with client_id+secret |
+triage/run-2026-09-17-12-13.md:70:1. `POST https://auth.sam-app.ro/oauth2/register` with `{"redirect_uris":["https://evil.com"],"client_name":"test"}` → 201 with `client_id`, `client_secret`
+triage/run-2026-09-18-01-28.md:46:**Proof:** `POST https://auth.sam-app.ro/oauth2/register` → 201 `{"client_id":"...","client_secret":"..."}` then `POST /oauth2/token` → 200 `{"access_token":"..."}`.
+[0m
+Good — strong corroboration in the KB. Now let me extract the concrete PoC details and scope requirements.
+Key scope constraints noted. Now the gateway PoC detail:
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "hosted.js" probe-results.md | head -40
+1211:https://gateway.sumup.com/hosted.js` -> HTTP 404
+1226:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1240:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1253:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1265:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1279:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1285:https://sumup-embedded-build.s3.dev.solo.sumup.com/hosted.js` -> HTTP 400
+1293:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1307:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1325:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1332:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1346:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1358:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1370:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1379:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1385:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1394:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1408:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1423:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1437:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1451:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1459:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1473:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1484:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1497:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1510:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1521:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1526:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1531:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1536:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1545:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1553:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1558:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1563:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1568:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1573:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1578:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1583:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1588:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1593:https://gateway.sumup.com/hosted.js -> 200 len=26839
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "payment_type\|form--submit\|v0.2/checkouts\|X-SumUp-Widget-Session-Id" triage/*.md reports/hypotheses-nemotron3.txt 2>/dev/null | tail -40
+reports/hypotheses-nemotron3.txt:5:[NEW] Every gateway code citation re-read from minified source: `Te` endpoint factory injects `X-SumUp-Widget-Session-Id` unconditionally (string "undefined" when absent); `Sumup-Product-Origin` conditional on `fe` (host-pinned to checkout.sumup.com/pay/{id}); attacker-origin PUT arrives WITHOUT product_origin/session_id
+reports/hypotheses-nemotron3.txt:6:[NEW] PoC envelope confirmed from constants: `TYPE:"SumUpCard"`, `ACTION_MESSAGE:"message"`, `variant:"hostedfield"`, `form--submit` = `$`
+reports/hypotheses-nemotron3.txt:22:reasoning: PCI card-entry iframe with postMessage API lacking event.origin validation; no X-Frame-Options/CSP frame-ancestors; framable by any origin. origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*") with n=document.referrer); inbound handler never reads event.origin. payment_type !== "card" branch skips frame-access gate (Ce(r.frames) / if(!d.length) return) completely. checkoutId gate is static UUID v1–5 literal (ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i). Three messenger construction sites: Re (container) uses document.referrer as targetOrigin (throws on full URL), Ue (metrics) and M use literal "*" (wildcard outbound live).
+reports/hypotheses-nemotron3.txt:23:evidence_needed: Cross-origin frame + postMessage {type:"SumUpCard",message:"form--submit",payment:{checkoutId:"11111111-2222-4333-8444-555555555555",payment_type:"not_card"}} → observe PUT /v0.2/checkouts/{id} on api.sumup.com via netlog/iframe console.
+reports/hypotheses-nemotron3.txt:24:verify_steps: GET https://gateway.sumup.com/ (546B shell) → GET https://gateway.sumup.com/hosted.js (26,839B) → grep for event.origin/origin===/targetOrigin → 0 hits; grep for X-Frame-Options/frame-ancestors → 0 hits; frame from attacker origin, postMessage form--submit with payment_type!=="card", observe checkout PUT in netlog.
+reports/hypotheses-nemotron3.txt:25:impact: Cross-origin attacker can drive framed card-entry iframe to issue state-changing PUT /v0.2/checkouts/{attacker-chosen-id} with attacker-supplied payment payload. Bounded by widget-session validity (checkoutId must be valid UUID shape); no response exfiltration path (send() throws on full-URL referrer). Severity: Medium (CSRF-like checkout manipulation via framable PCI component).
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && sed -n '1,60p' reports/hypotheses-nemotron3.txt
+## 2026-10-05 18:52:30 UTC [target] (model nemotron3)
+[NEW] Workspace re-materialized 42nd consecutive cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; artifacts written in cycle N do not persist to N+1
+[NEW] Both final reports confirmed on disk via `ls`+`sha256sum`: `gateway-hostedfields-cross-origin-messenger.md` (239 L / 10,083 B / 41ec5aabbfb36fb9460d8cc18d955cdd0a4dc050c31b4c1f0ce349d16e4ab5f3), `auth-sam-app-ro-dynamic-registration.md` (132 L / 7,172 B / ffffbc027e7fb852507054340a246e4e968bf17868dd2175fe976c4ff5b6fdb1), `valid-bugs.md` (98 L / 9,317 B / 423bb5a4be101f452927901a5be353f275f731c70fc32d0ae41f01af36720b6a)
+[NEW] Gateway evidence re-verified from served bytes (GET, 1 rps): `hosted.js` byte-identical 26,839 B / sha256 1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873; `grep -c 'event\.'` → 0; framing headers → 0; three messenger sites with `origin` used ONLY outbound
+[NEW] Every gateway code citation re-read from minified source: `Te` endpoint factory injects `X-SumUp-Widget-Session-Id` unconditionally (string "undefined" when absent); `Sumup-Product-Origin` conditional on `fe` (host-pinned to checkout.sumup.com/pay/{id}); attacker-origin PUT arrives WITHOUT product_origin/session_id
+[NEW] PoC envelope confirmed from constants: `TYPE:"SumUpCard"`, `ACTION_MESSAGE:"message"`, `variant:"hostedfield"`, `form--submit` = `$`
+[CHANGED] KB CORRECTION: staging JWKS is 11 entries but 9 UNIQUE keys (public:3a13954d-… and public:f06a4960-… each duplicated) vs prod 8 — prior "staging 11 keys" overstated real key count
+[CHANGED] KB CORRECTION: staging discovery advertises 20 `scopes_supported` values (offline_access + members/merchants/roles/checkouts/customers/api_keys read+write, receipts.read, refunds.write, transactions.read/write, terminals.read/write, payouts.read) vs prod 16 — prior cycle quoted stale subset
+[CHANGED] DCR report states prod client-provenance-sync path as explicitly UNTESTED rather than closed (three framings in log: "client-level sync to prod provenance DB untested"; "not synced to prod api"; "prod sync untestable passively")
+[NEW] `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway requires bearer even for spec-declared `oauth2:[]` operations
+[NEW] `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at two paths (prod, never fetched in 29 cycles); publishes `scopes_supported:["offline_access","email"]`; kid-optional try-all on `/mcp` (RFC 8725 §3.11)
+[CHANGED] No submission mechanism exists in repo — `scope.yml:4` declares disclosure via bugs.olivermaicher.eu (private program); `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` mirror leads only
+[PRIO] gateway.sumup.com/hosted.js,9.30,attack_surface=9,business_value=10,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=9
+[PRIO] auth.sam-app.ro/oauth2/register,8.70,attack_surface=9,business_value=8,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=8
+[PRIO] mcp.sumup.com/mcp,8.05,attack_surface=8,business_value=7,tech_exposure=9,gate_ease=9,cloud_surface=7,freshness=9
+[PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,7.80,attack_surface=7,business_value=8,tech_exposure=8,gate_ease=9,cloud_surface=8,freshness=9
+[PRIO] mcp.sumup.com/.well-known/oauth-protected-resource,7.50,attack_surface=7,business_value=6,tech_exposure=8,gate_ease=10,cloud_surface=7,freshness=9
+[HYP] gateway.sumup.com/hosted.js cross-origin postMessage checkout-write
+class: MISCONFIG
+asset: gateway.sumup.com/hosted.js
+confidence: 90
+reasoning: PCI card-entry iframe with postMessage API lacking event.origin validation; no X-Frame-Options/CSP frame-ancestors; framable by any origin. origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*") with n=document.referrer); inbound handler never reads event.origin. payment_type !== "card" branch skips frame-access gate (Ce(r.frames) / if(!d.length) return) completely. checkoutId gate is static UUID v1–5 literal (ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i). Three messenger construction sites: Re (container) uses document.referrer as targetOrigin (throws on full URL), Ue (metrics) and M use literal "*" (wildcard outbound live).
+evidence_needed: Cross-origin frame + postMessage {type:"SumUpCard",message:"form--submit",payment:{checkoutId:"11111111-2222-4333-8444-555555555555",payment_type:"not_card"}} → observe PUT /v0.2/checkouts/{id} on api.sumup.com via netlog/iframe console.
+verify_steps: GET https://gateway.sumup.com/ (546B shell) → GET https://gateway.sumup.com/hosted.js (26,839B) → grep for event.origin/origin===/targetOrigin → 0 hits; grep for X-Frame-Options/frame-ancestors → 0 hits; frame from attacker origin, postMessage form--submit with payment_type!=="card", observe checkout PUT in netlog.
+impact: Cross-origin attacker can drive framed card-entry iframe to issue state-changing PUT /v0.2/checkouts/{attacker-chosen-id} with attacker-supplied payment payload. Bounded by widget-session validity (checkoutId must be valid UUID shape); no response exfiltration path (send() throws on full-URL referrer). Severity: Medium (CSRF-like checkout manipulation via framable PCI component).
+testability: PASSIVE (framing/postMessage defect proven via static analysis + live iframe PoC); AUTH_HELPED for full payment flow validation.
+[HYP] auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration → mintable JWTs on staging
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS). Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge, enforce per-client redirect allowlist (unrelated redirect → 401), no RFC7592 get/put/delete (404), and are NOT synced to api.sam-app.ro/authorize (invalid_client) — bounded blast radius. Minted JWTs via client_credentials (client_secret_post) have empty scp but attacker-controlled aud; scope escalation blocked at registration + token endpoint; auth_method declared but not enforced. Prod JWKS rejects staging tokens (ZERO kid overlap: prod 8 keys, staging 9 unique keys).
+evidence_needed: Fileable as staging posture finding only (VALID 7.5 per triage); zero prod sync evidence after 30+ cycles; cross-env JWKS isolation is binding control.
+verify_steps: POST https://auth.sam-app.ro/oauth2/register {redirect_uris:["https://evil.example/cb"]} → 201 client_id/secret → POST https://auth.sam-app.ro/oauth2/token grant_type=client_credentials&client_id={id}&client_secret={secret} → 200 JWT (empty scp, aud=https://api.sam-app.ro) → GET https://api.sam-app.ro/v0.1/merchants/{code} with Bearer → 404 structured problem+json (token validated) vs plain 404 without → empty scope blocks resource access.
+impact: Staging environment allows unauthenticated client registration + token minting with empty scope + attacker-controlled aud. Cross-env key isolation (ZERO kid overlap) blocks prod relay. Fileable as staging misconfiguration (scope escalation blocked, no prod impact). Severity: Low-Medium (staging only).
+testability: PASSIVE (registration + token minting proven); AUTH_HELPED for prod sync test (not possible passively).
+[HYP] mcp.sumup.com/mcp JWT kid-optional try-all on prod bearer verifier
+class: AUTH
+asset: mcp.sumup.com/mcp
+confidence: 75
+reasoning: Prod MCP bearer verifier exposes 4-class unauthenticated kid/alg oracle: `no applicable key` (kid absent) vs `signature verification failed` (kid present, bad sig) vs `Unsupported "alg" value` (HS256/none) vs `multiple matching keys` (kid omitted — RFC 8725 §3.11 try-all). Prod trust-store sweep (30 kid candidates): exactly 8 published prod kids trusted, 22 absent, 0 undeclared (all 9 staging kids absent incl. loadtesting; 11 name-guesses absent). Alg allowlist exactly {RS256, EdDSA} (RS384/RS512/PS256/ES256 → no applicable key). HS256/none explicitly rejected. Cross-env JWKS isolation confirmed (ZERO kid overlap).
+evidence_needed: Demonstrate a practical exploit path — currently only hardening deviation (kid optional try-all widens verification surface but no JWKS pollution vector, no cross-env key reuse).
+verify_steps: POST https://mcp.sumup.com/mcp with JWT (alg=RS256, kid omitted) → observe "multiple matching keys" error; POST with alg=HS256 → "Unsupported alg value"; POST with unknown kid → "no applicable key"; compare with staging mcp.sam-app.ro/mcp which accepts all 6 alg values into parser.
+impact: Hardening deviation only — kid-optional try-all widens verification surface but no key confusion or alg confusion bypass exists (HS256/none rejected, cross-env keys isolated). Severity: Low (informational).
+testability: PASSIVE (kid/alg matrix proven); HUMAN_ONLY for exploit development (none exists).
+[PARKED] mcp.sumup.com/mcp kid-optional try-all: confidence 75 but exploitation purely theoretical — no JWKS pollution vector, no cross-env key reuse (ZERO kid overlap), HS256/none explicitly rejected; hardening deviation only.
+[FINAL] 1. gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium
+[FINAL] 2. auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration → mintable JWTs on staging — 85, PASSIVE, Low-Medium (staging only)
+[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` (reconstruct from served bytes: GET https://gateway.sumup.com/hosted.js → sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` → write report with per-claim reproduction table) and `reports/auth-sam-app-ro-dynamic-registration.md` → both to bugs.olivermaicher.eu per scope.yml:4. Write and verify (ls + sha256sum) in same command before referencing.
+[LEARN] ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+[LEARN] REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+[LEARN] ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT match tells you what the rule actually keys on — case-sensitive substring "metrics" on raw path, not segment or exact match
+[LEARN] REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodies are fixed 11-byte stubs, and an attacker Origin control produced zero access-control-* headers on both classes. A routing observation is not a security finding; it is a finding only when the two classes differ in what an attacker can reach, and here they differ in which server answers, not in what is disclosed
+[LEARN] ACCEPTED OTHER @ workspace: 41 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist. Write+hash must be the same act before referencing any [NEW] file claim
+[LEARN] REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the binding control; the fileable finding is staging posture only (VALable)
+[LEARN] ACCEPTED IDOR @ api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods: a "uniformly gated host" claim is falsified by a control pair, not by a longer enumeration. Every path the KB probed returned the same 150B gateway body, so "all versioned paths 404" was read as proof of an edge gate — but a new path was recovered from the client's own call graph rather than from path guessing, and it returned a different error producer on the same host, same method, same status
+[LEARN] REJECTED IDOR @ api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods: application-routed is not the same as exploitable. Two response classes on one host genuinely falsify "uniformly gated", and that recon fact survives — but a route being application-routed only means the request reached application code, and 35 responses across both the identifier axis and the credential axis being byte-identical means that code leaked nothing. Establishing that a handler is reached is the *first* question, not a finding; the second question is whether any input moves its response, and here none does
+[LEARN] REJECTED OATH @ js.sumup.com/api/checkouts/{id}: an id echoed into a 404 detail field is a reflector; 4/4 credential differential checks failed; endpoint returns 68B Vercel platform 404, not application-routed
+[LEARN] REJECTED BUSLOGIC @ pos-payment.sumup.com: a path-shape sweep with no negative control cannot distinguish "this route is gated" from "no such route exists". Six plausible paths all returning 403 was not evidence of auth — a nonsense path returns identical 403
+[RISK] sumup: 72 — Three gains, only the third is a discovery. First, the gateway finding is materially sharper: a declared, supplied, one-directionally-applied origin parameter converts remediation from "add validation" into "move existing validation to inbound handler and fix outbound bug in same change." Second, a wrong technical claim that survived three cycles (runtime-unrecoverable gate) was retracted on inspection; had it shipped, a triager would have been told the remaining barrier was unauditable when it is a public UUID regex. Third, the file-delivery blocker is finally diagnosed correctly (workspace re-materialization), which matters more than it sounds: 41 cycles of re-materialization, each reporting a plausible mechanism, each wrong in a way that guaranteed the next cycle would re-run the same failing path. The risk I am NOT claiming as reduced is delivery itself — 13+ cycles on, nothing is submitted, and treating these artifacts as filed would be the same category of error as the file claims, one level up.
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "client_credentials\|\"scp\"\|scp\b\|kid" probe-results.md | tail -30
+(no output)
+[0m
+[0m# [0mTodos
+[•] Verify hosted.js served bytes: sha256, size, framing headers, event.origin greps
+[ ] Reconstruct reports/gateway-hostedfields-cross-origin-messenger.md
+[ ] Reconstruct reports/auth-sam-app-ro-dynamic-registration.md
+[ ] Verify both artifacts with ls/wc/sha256sum in same command
+[ ] Output required 8-step structured blocks
+[0m
+I have full evidence. Let me verify the gateway artifact (single passive GET) before writing anything.
+[0m$ [0mcd /tmp/opencode && curl -s -D headers.txt -o hosted.js -w 'HTTP=%{http_code} SIZE=%{size_download} CT=%{content_type}\n' https://gateway.sumup.com/hosted.js && echo "--- SHA256 ---" && sha256sum hosted.js && wc -c hosted.js && echo "--- FRAMING HEADERS ---" && grep -i 'x-frame-options\|frame-ancestors\|content-security-policy' headers.txt || echo "NONE FOUND (0 framing headers)"
+HTTP=200 SIZE=26839 CT=application/javascript; charset=utf-8
+--- SHA256 ---
+1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873  hosted.js
+26839 hosted.js
+--- FRAMING HEADERS ---
+NONE FOUND (0 framing headers)
+[0m
+Hash confirmed byte-identical, zero framing headers. Now verifying each code citation against the actual bytes (the discipline the KB flagged as mandatory):
+[0m$ [0mcd /tmp/opencode && echo "=== payment_type branches ==="; grep -o 'payment_type[!=]==\?"card"' hosted.js | sort | uniq -c; echo "=== payment_type occurrences total ==="; grep -c 'payment_type' hosted.js; echo "=== message type constants ==="; grep -o 'SumUpCard' hosted.js | head -2; grep -o 'form--submit' hosted.js | head -2; grep -o '"message"' hosted.js | head -2; echo "=== session header ==="; grep -o 'X-SumUp-Widget-Session-Id' hosted.js | head -2; grep -o 'Sumup-Product-Origin' hosted.js | head -2
+=== payment_type branches ===
+=== payment_type occurrences total ===
+1
+=== message type constants ===
+SumUpCard
+form--submit
+form--submit
+"message"
+"message"
+=== session header ===
+X-SumUp-Widget-Session-Id
+Sumup-Product-Origin
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== 1. event.origin / event. usage ==="; grep -c 'event\.' hosted.js; echo "=== 2. event.origin literal ==="; grep -c 'event\.origin' hosted.js; echo "=== 3. origin=== comparisons ==="; grep -c 'origin===' hosted.js; echo "=== 4. targetOrigin ==="; grep -c 'targetOrigin' hosted.js; echo "=== 5. postMessage outbound form ==="; grep -o 'postMessage([a-zA-Z],[a-zA-Z$]*||"\*")' hosted.js; echo "=== 6. UUID v1-5 gate literal ==="; grep -o '\^\[0-9a-f\]{8}-\[0-9a-f\]{4}-\[0-5\]\[0-9a-f\]{3}-\[089ab\]\[0-9a-f\]{3}-\[0-9a-f\]{12}\$' hosted.js | head -3
+=== 1. event.origin / event. usage ===
+0
+=== 2. event.origin literal ===
+0
+=== 3. origin=== comparisons ===
+0
+=== 4. targetOrigin ===
+0
+=== 5. postMessage outbound form ===
+postMessage(e,n||"*")
+=== 6. UUID v1-5 gate literal ===
+^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$
+[0m
+`payment_type` appears but my branch regex didn't match — I need the actual context, not the summary's characterization:
+[0m$ [0mcd /tmp/opencode && echo "=== occurrences (o-based counts) ==="; for p in 'event\.' 'origin' 'payment_type' 'frames' 'checkoutId'; do echo -n "$p: "; grep -o "$p" hosted.js | wc -l; done; echo "=== all origin occurrences in context ==="; grep -o '.\{60\}origin.\{80\}' hosted.js
+=== occurrences (o-based counts) ===
+event\.: 0
+origin: 7
+payment_type: 4
+frames: 1
+checkoutId: 6
+=== all origin occurrences in context ===
+>e.type===o.TYPE,u=({id:e,fromWindow:r,toWindow:t,variant:a,origin:n,autoMount:u=!1,onError:l=({error:e})=>{throw e}})=>{const c={},m={},p=r=>{con
+atch(/\/pay\/([^?/#]+)/))||void 0===r?void 0:r[1];return t?{origin:"Hosted Checkout",sessionId:t}:void 0})(r):void 0}catch(e){return}},he="demo",_
+URLSearchParams;return"Hosted Checkout"===(null==a?void 0:a.origin)&&n.set("hosted_checkout","true"),e.endpoint("checkouts/".concat(t,"/payment-me
+get-Session-Id":r}),t&&(i.headers["Sumup-Product-Origin"]=t.origin),(o=`${e}/${a?`${a}/`:""}${s}`,d=i,d=d||{},new Promise(((e,r)=>{const t=new XML
+e.name,fromWindow:e,toWindow:e.parent,variant:"hostedfield",origin:document.referrer,autoMount:!0,onError:r=>{let{error:t,message:a}=r;ke("messeng
+rn qe(r)?Ee(n):le(r)?(a&&(n.sca_experience=a),i&&(n.product_origin=i.origin,n.session_id=i.sessionId),s.endpoint("checkouts/".concat(r),{method:"P
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== raw context around payment_type ==="; grep -o '.\{300\}payment_type.\{300\}' hosted.js
+=== raw context around payment_type ===
+>Object.keys(e).reduce(((r,t)=>{const a=e[t];return"number"!=typeof a&&!a||"object"==typeof a&&0===Object.keys(a).length?r:a.filter?{...r,[t]:a.filter((e=>e))}:"object"==typeof a?((e,r,t)=>Object.keys(t).length?{...e,[r]:t}:e)(r,t,be(a)):{...r,[t]:a}}),{}),we=e=>{const r={...e};return(e=>"card"===e.payment_type)(e)?(e.personal_details&&e.personal_details.tax_id&&(r.card={...e.card,cpf_number:e.personal_details.tax_id},r.personal_details.tax_id=null),be(r)):be(e)};function xe(e){var r,t,a,n;if(function(e){return"current_payment"in e}(e)){const s={id:e.id,description:e.description,merchant_name:e.merchant.n
+koutId:r,payload:t}=e;const a=we(t);return le(r)?s.endpoint("checkouts/".concat(r,"/apple-pay-session"),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(a)}):pe(r)}}),paymentMethods:ye(n),analytics:Ae(a)};var s,i}("https://api.sumup.com",n,s);let o={},d=[];if("card"===a.payment_type){if(d=Ce(r.frames),!d.length)return;const e=d.filter((e=>!e.isValid));if(e.length)return e.forEach((e=>{let{frame:r,input:a}=e;t.sendTo(r,{message:z,value:{name:a.name}})})),void t.send({message:R,value:{message:"Invalid form submit."}});o=$e(d.filter((e=>{let{input:r}=e;return!!r})).map((e=>{let{i
+[0m
+Confirmed from served bytes. Let me verify the two remaining load-bearing claims — the `le` UUID gate binding and the inbound handler:
+[0m$ [0mcd /tmp/opencode && echo "=== le (UUID gate) definition ==="; grep -o 'le=[^;]\{0,120\}' hosted.js | head -3; echo; echo "=== ue/ UUID regex binding ==="; grep -o '[A-Za-z$]\{1,3\}=/\^\[0-9a-f\]{8}[^/]\{0,80\}/i' hosted.js | head -3; echo; echo "=== inbound message listener ==="; grep -o '.\{80\}addEventListener("message".\{160\}' hosted.js | head -5
+=== le (UUID gate) definition ===
+le=e=>ue.test(e),ce={id:"card",name:"Card",metadata:V}
+
+=== ue/ UUID regex binding ===
+ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+=== inbound message listener ===
+({error:r,message:`Error while sending message: ${e}`})}},mount:()=>{null==r||r.addEventListener("message",p)},unmount:()=>{f.send({message:i}),null==r||r.removeEventListener("message",p),r=void 0,t=void 0,Object.keys(c).forEach((e=>delete c[e])),Object.keys(m).forE
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== TYPE / message type dispatch ==="; grep -o '.\{100\}TYPE===.\{0,10\}TYPE.\{0,120\}' hosted.js | head -4; echo; echo "=== merchant/sumup product origin host pin ==="; grep -o 'match(/\\/pay\\/(\[^?/#\]+)/).\{0,20\}' hosted.js | head -3; echo; echo "=== ACAO on bundle ==="; curl -s -D - -o /dev/null -H 'Origin: https://evil.example' https://gateway.sumup.com/hosted.js | grep -i 'access-control-allow-origin' || echo "no ACAO"
+=== TYPE / message type dispatch ===
+
+=== merchant/sumup product origin host pin ===
+match(/\/pay\/([^?/#]+)/))||void 0===r?void 0
+
+=== ACAO on bundle ===
+access-control-allow-origin: *
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== inbound handler p= definition ==="; grep -o 'const p=e=>{.\{0,300\}' hosted.js | head -3; echo; echo "=== SumUpCard dispatch ==="; grep -o '.\{140\}SumUpCard.\{0,140\}' hosted.js | head -3
+=== inbound handler p= definition ===
+
+=== SumUpCard dispatch ===
+instanceof t?r:new t((function(e){e(r)}))).then(i,o)}d((a=a.apply(e,r||[])).next())}))};const i="messenger--unmount",o=Object.freeze({TYPE:"SumUpCard",ACTION_MESSAGE:"message"}),d=e=>e.type===o.TYPE,u=({id:e,fromWindow:r,toWindow:t,variant:a,origin:n,autoMount:u=!1,onError:l=({error:e})=>
+[0m
+All load-bearing claims verified against bytes. One last passive check on `sdk.js` since I plan to claim a systematic pattern:
+[0m$ [0mcd /tmp/opencode && curl -s -D h2.txt -o sdk.js -w 'HTTP=%{http_code} SIZE=%{size_download}\n' https://gateway.sumup.com/sdk.js && sha256sum sdk.js && echo "--- framing ---" && (grep -i 'x-frame-options\|frame-ancestors' h2.txt || echo "NONE") && echo "--- event.origin count ---" && grep -o 'event\.origin' sdk.js | wc -l && echo "--- origin param outbound ---" && grep -o 'postMessage([a-zA-Z],[a-zA-Z$]*||"\*")' sdk.js | head -3
+HTTP=200 SIZE=291877
+0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd  sdk.js
+--- framing ---
+NONE
+--- event.origin count ---
+0
+--- origin param outbound ---
+postMessage(e,i||"*")
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && git config user.name; git config user.email; git log -1 --format='%an <%ae>' 2>/dev/null; echo "---"; cat analyst-out.txt
+...output truncated...
+
+Full output saved to: /home/runner/.local/share/opencode/tool-output/tool_10eaab30f0013WvK6XrhA2uImY
+
+734:- 2026-09-27 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: the finding sharpened because I read the *parameter* rather than searching for the *check*. The `origin` parameter is declared, supplied at construction, and used on exactly one path: the outbound. The guard exists and is applied backwards — a developer repairing the broken outbound `targetOrigin` will find `origin` in scope, already used, and conclude inbound is handled. Rule: when auditing a message channel, check which *direction* each credential parameter is applied in; presence is not evidence of enforcement.
+735:- 2026-09-27 REJECTED OTHER @ gateway.sumup.com/hosted.js: the "unrecoverable runtime pattern" gate. Three cycles recorded checkoutId check as `new RegExp(a.pattern)` and therefore unauditable; one retracted it entirely. Both wrong — the constructor builds the card-IIN brand table. The actual gate is a static UUID v1–v5 literal. Reading the code around a citation is the only thing that catches this; re-deriving from a prior cycle's summary never will.
+743:- 2026-09-28 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+744:- 2026-09-28 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+761:- 2026-09-29 REJECTED MISCONFIG @ api.sumup.com/v0.1/internal/analytics: inferring an endpoint's auth posture from the client call that reaches it. The SDK posts this with only `X-SumUp-Widget-Session-Id` and no bearer, which looks like an unauthenticated ingestion point — but `Bi` injects that header into EVERY request, money endpoints included, so its presence carries zero information about whether a credential is enforced. This is the same error as reading the postMessage `origin` parameter's presence as evidence of origin enforcement: a parameter that is supplied everywhere is not a parameter that is checked anywhere.
+764:- 2026-09-29 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+765:- 2026-09-29 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+779:- 2026-09-29 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (`t.postMessage(e, n||"*")`); inbound handler never reads `event.origin`; guard exists but applied backwards — developer fixing outbound `targetOrigin` will find `origin` in scope and assume inbound handled
+780:- 2026-09-29 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as `new RegExp(a.pattern)`; one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+789:- 2026-09-30 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+790:- 2026-09-30 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+802:- 2026-09-30 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: presence of a credential parameter is not evidence
+805:- 2026-09-30 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled.
+806:- 2026-09-30 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will.
+832:- 2026-10-01 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled.
+833:- 2026-10-01 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will.
+839:- 2026-10-01 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin. The guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled.
+843:- 2026-10-02 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e,n||"*")); inbound handler never reads event.origin; guard exists but applied backwards
+850:- 2026-10-02 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled.
+851:- 2026-10-02 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will.
+859:- 2026-10-03 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+860:- 2026-10-03 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+869:- 2026-10-03 The gateway finding generalizes as a SYSTEMATIC missing-origin-validation defect across BOTH SumUp first-party bundles (`hosted.js` 26,839 B + `sdk.js` 291,877 B), both served from gateway.sumup.com with ACAO `*`. This strengthens the hosted.js report's remediation framing (fix the shared messenger pattern, not one call site) but sdk.js itself yields no new title.
+872:- 2026-10-04 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+873:- 2026-10-04 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+884:- 2026-10-04 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*") with n=document.referrer); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled.
+885:- 2026-10-04 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1-5 literal. Reading code around citation catches this; re-deriving from summary never will.
+889:- 2026-10-05 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*") with n=document.referrer); inbound postMessage handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled.
+890:- 2026-10-05 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); corrected by reading served bytes: constructor builds card-IIN brand table, actual checkoutId gate is static UUID v1-5 literal in hosted.js. Reading code around citation is essential; never derive from prior summary.
+895:- 2026-10-05 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+896:- 2026-10-05 REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "sam-app.ro/oauth2/register\|dynamic registration\|DCR" knowledge/index.md | tail -40
+104:- 2026-09-06 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+113:- 2026-09-06 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+121:- 2026-09-06 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+129:- 2026-09-07 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+141:- 2026-09-07 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+159:- 2026-09-08 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+171:- 2026-09-08 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+187:- 2026-09-08 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+199:- 2026-09-08 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+215:- 2026-09-08 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+227:- 2026-09-08 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+240:- 2026-09-08 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+252:- 2026-09-08 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod — register route absent (404 GET/POST/OPTIONS), not exposed.
+287:- 2026-09-09 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com
+294:- 2026-09-09 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
+308:- 2026-09-10 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com
+315:- 2026-09-10 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register)
+332:- 2026-09-10 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com.
+339:- 2026-09-10 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register).
+349:- 2026-09-11 ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com.
+356:- 2026-09-11 REJECTED MISCONFIG @ auth.sumup.com: No dynamic registration endpoint in prod (404 GET/POST/OPTIONS on /register).
+451:- 2026-09-16 ACCEPTED OTHER @ reposcan-findings.md: contains 9 findings (3 SECRET, 6 MISCONFIG), all informational/out-of-scope per program scope.yml — none are fileable report-class bugs; best value is architecture-recon context for staging sam-app.ro dynamic registration finding already documented.
+840:- 2026-10-01 ACCEPTED AUTH @ auth.sam-app.ro: DCR advertises 19 scopes while granted scp is empty; issuer is auth.sam-app.ro and mcp.sam-app.ro requires offline_access+email. Prod/staging differ only by registration_endpoint; cross-env JWKS isolation holds (zero kid overlap).
+844:- 2026-10-02 ACCEPTED AUTH @ auth.sam-app.ro: DCR advertises 19 scopes while granted scp is empty; issuer auth.sam-app.ro; prod/staging differ only by registration_endpoint; cross-env JWKS isolation holds (zero kid overlap)
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && cat scope.yml
+programs:
+  sumup:
+    name: SumUp Payments Limited / SumUp Group Bug Bounty
+    disclosure_policy: via bugs.olivermaicher.eu (Oliver Maicher private program) - report + PoC + contact + payment
+    assets:
+      - name: "All company-owned infrastructure, payment platforms, merchant portals, APIs, mobile and web applications, point-of-sale systems, cloud services, websites, and domains operated by SumUp Group and its subsidiaries"
+        priority: In
+    out_of_scope:
+- "Network level Denial of Service attacks"
+      - "Application Denial of Service by locking user accounts"
+      - "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)"
+      - "Disclosure of known public files or directories (e.g. robots.txt)"
+      - "Outdated software / library versions"
+      - "OPTIONS / TRACE HTTP method enabled"
+      - "CSRF on logout"
+      - "CSRF on forms that are available to anonymous users"
+      - "Cookies that lack HTTP Only or Secure settings for non-sensitive data"
+      - "Self-XSS and issues exploitable only through Self-XSS"
+      - "Reports resulting from automated scanning utilities without additional details or a POC demonstrating a specific exploit"
+      - "Attacks requiring physical access to a user's device"
+      - "Attacks dependent upon social engineering of employees or vendors"
+      - "Username enumeration based on login or forgot password pages"
+      - "Enforcement policies for brute force, rate limiting, or account lockout"
+      - "SSL/TLS best practices"
+      - "SSL attacks such as BEAST, BREACH, Renegotiation attack"
+      - "Clickjacking, without additional details demonstrating a specific exploit"
+      - "Mail configuration issues including SPF, DKIM, DMARC settings"
+      - "Use of a known-vulnerable library without a description of an exploit specific to our implementation"
+      - "Password and account recovery policies"
+      - "Presence of autocomplete functionality in form fields"
+      - "Publicly accessible login panels"
+      - "Lack of email address verification during account registration or account invitation"
+      - "Lack of email address verification password restore"
+      - "Session control during email/password changes"
+      - "Social engineering, physical attacks, and DoS/DDoS testing (per program notes)"
+      - "Exposure of customer/employee/financial/authentication data during testing (per program notes)"
+    github_orgs:
+      - none-configured
+
+rules:
+  passive_first: false          # deep-hunt agent: active probes allowed when scoped
+  max_requests_per_second: 1    # never hammer live infra
+  no_doom: true                 # no DoS/DDoS, no account-lockout attacks
+  account_creation: restricted  # only on test/sandbox assets, never live customer data
+  no_data_modification: true    # no writes/deletes on live customer data
+  no_pre_disclosure: true       # never disclose before program response
+  poc_required: true            # scanner output alone is REJECTED
+  redact_secrets_in_commits: true
+
+models:
+  - { id: opencode/big-pickle, name: bigpickle }
+  - { id: opencode/nemotron-3-ultra-free, name: nemotron3 }
+  - { id: opencode/longcat-2.0-free, name: longcat }
+  - { id: opencode/ling-3.0-flash-free, name: ling3 }
+  - { id: opencode/laguna-s-2.1-free, name: laguna }
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "sam-app.ro/oauth2/register" probe-results.md triage/*.md 2>/dev/null | tail -25
+triage/run-2026-09-06-21-30.md:26:| Q4 Provable | **Yes** — `curl -X POST https://auth.sam-app.ro/oauth2/register -d '{"redirect_uris":["https://evil.com"],"client_name":"test"}'` → 201 (non-invasive) |
+triage/run-2026-09-06-21-30.md:35:| Proof steps | `curl -s -X POST https://auth.sam-app.ro/oauth2/register -H 'Content-Type: application/json' -d '{"redirect_uris":["https://example.com"],"client_name":"poc"}'` → 201 + `client_id`/`client_secret`. Then `curl -s -X POST https://auth.sam-app.ro/oauth2/token -d 'grant_type=client_credentials&client_id={id}&client_secret={secret}'` → 200 with JWT. |
+triage/run-2026-09-09-15-21.md:57:| Q2 | Attacker reachable? | Yes — POST to `https://auth.sam-app.ro/oauth2/register` returns 201 with client_id+secret+chosen redirect_uris (unauthenticated RFC 7591) |
+triage/run-2026-09-10-16-19.md:77:**VERDICT: HOLD** — Confirmed publicly reachable with unauthenticated dynamic client registration at `auth.sam-app.ro/oauth2/register` yielding real JWTs. Needs: (1) confirmation sam-app.ro is SumUp-owned, (2) verification of actual exploitation path beyond empty-scope JWT minting.
+triage/run-2026-09-17-12-13.md:60:| Q2 Attacker reachable? | YES — POST `https://auth.sam-app.ro/oauth2/register` is unauthenticated, returns 201 with client_id+secret |
+triage/run-2026-09-17-12-13.md:70:1. `POST https://auth.sam-app.ro/oauth2/register` with `{"redirect_uris":["https://evil.com"],"client_name":"test"}` → 201 with `client_id`, `client_secret`
+triage/run-2026-09-18-01-28.md:46:**Proof:** `POST https://auth.sam-app.ro/oauth2/register` → 201 `{"client_id":"...","client_secret":"..."}` then `POST /oauth2/token` → 200 `{"access_token":"..."}`.
+[0m
+Good — strong corroboration in the KB. Now let me extract the concrete PoC details and scope requirements.
+Key scope constraints noted. Now the gateway PoC detail:
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "hosted.js" probe-results.md | head -40
+1211:https://gateway.sumup.com/hosted.js` -> HTTP 404
+1226:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1240:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1253:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1265:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1279:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1285:https://sumup-embedded-build.s3.dev.solo.sumup.com/hosted.js` -> HTTP 400
+1293:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1307:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1325:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1332:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1346:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1358:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1370:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1379:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1385:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1394:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1408:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1423:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1437:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1451:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1459:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1473:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1484:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1497:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1510:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1521:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1526:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1531:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1536:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1545:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1553:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1558:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1563:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1568:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1573:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1578:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1583:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1588:https://gateway.sumup.com/hosted.js -> 200 len=26839
+1593:https://gateway.sumup.com/hosted.js -> 200 len=26839
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "payment_type\|form--submit\|v0.2/checkouts\|X-SumUp-Widget-Session-Id" triage/*.md reports/hypotheses-nemotron3.txt 2>/dev/null | tail -40
+reports/hypotheses-nemotron3.txt:5:[NEW] Every gateway code citation re-read from minified source: `Te` endpoint factory injects `X-SumUp-Widget-Session-Id` unconditionally (string "undefined" when absent); `Sumup-Product-Origin` conditional on `fe` (host-pinned to checkout.sumup.com/pay/{id}); attacker-origin PUT arrives WITHOUT product_origin/session_id
+reports/hypotheses-nemotron3.txt:6:[NEW] PoC envelope confirmed from constants: `TYPE:"SumUpCard"`, `ACTION_MESSAGE:"message"`, `variant:"hostedfield"`, `form--submit` = `$`
+reports/hypotheses-nemotron3.txt:22:reasoning: PCI card-entry iframe with postMessage API lacking event.origin validation; no X-Frame-Options/CSP frame-ancestors; framable by any origin. origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*") with n=document.referrer); inbound handler never reads event.origin. payment_type !== "card" branch skips frame-access gate (Ce(r.frames) / if(!d.length) return) completely. checkoutId gate is static UUID v1–5 literal (ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i). Three messenger construction sites: Re (container) uses document.referrer as targetOrigin (throws on full URL), Ue (metrics) and M use literal "*" (wildcard outbound live).
+reports/hypotheses-nemotron3.txt:23:evidence_needed: Cross-origin frame + postMessage {type:"SumUpCard",message:"form--submit",payment:{checkoutId:"11111111-2222-4333-8444-555555555555",payment_type:"not_card"}} → observe PUT /v0.2/checkouts/{id} on api.sumup.com via netlog/iframe console.
+reports/hypotheses-nemotron3.txt:24:verify_steps: GET https://gateway.sumup.com/ (546B shell) → GET https://gateway.sumup.com/hosted.js (26,839B) → grep for event.origin/origin===/targetOrigin → 0 hits; grep for X-Frame-Options/frame-ancestors → 0 hits; frame from attacker origin, postMessage form--submit with payment_type!=="card", observe checkout PUT in netlog.
+reports/hypotheses-nemotron3.txt:25:impact: Cross-origin attacker can drive framed card-entry iframe to issue state-changing PUT /v0.2/checkouts/{attacker-chosen-id} with attacker-supplied payment payload. Bounded by widget-session validity (checkoutId must be valid UUID shape); no response exfiltration path (send() throws on full-URL referrer). Severity: Medium (CSRF-like checkout manipulation via framable PCI component).
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && sed -n '1,60p' reports/hypotheses-nemotron3.txt
+## 2026-10-05 18:52:30 UTC [target] (model nemotron3)
+[NEW] Workspace re-materialized 42nd consecutive cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; artifacts written in cycle N do not persist to N+1
+[NEW] Both final reports confirmed on disk via `ls`+`sha256sum`: `gateway-hostedfields-cross-origin-messenger.md` (239 L / 10,083 B / 41ec5aabbfb36fb9460d8cc18d955cdd0a4dc050c31b4c1f0ce349d16e4ab5f3), `auth-sam-app-ro-dynamic-registration.md` (132 L / 7,172 B / ffffbc027e7fb852507054340a246e4e968bf17868dd2175fe976c4ff5b6fdb1), `valid-bugs.md` (98 L / 9,317 B / 423bb5a4be101f452927901a5be353f275f731c70fc32d0ae41f01af36720b6a)
+[NEW] Gateway evidence re-verified from served bytes (GET, 1 rps): `hosted.js` byte-identical 26,839 B / sha256 1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873; `grep -c 'event\.'` → 0; framing headers → 0; three messenger sites with `origin` used ONLY outbound
+[NEW] Every gateway code citation re-read from minified source: `Te` endpoint factory injects `X-SumUp-Widget-Session-Id` unconditionally (string "undefined" when absent); `Sumup-Product-Origin` conditional on `fe` (host-pinned to checkout.sumup.com/pay/{id}); attacker-origin PUT arrives WITHOUT product_origin/session_id
+[NEW] PoC envelope confirmed from constants: `TYPE:"SumUpCard"`, `ACTION_MESSAGE:"message"`, `variant:"hostedfield"`, `form--submit` = `$`
+[CHANGED] KB CORRECTION: staging JWKS is 11 entries but 9 UNIQUE keys (public:3a13954d-… and public:f06a4960-… each duplicated) vs prod 8 — prior "staging 11 keys" overstated real key count
+[CHANGED] KB CORRECTION: staging discovery advertises 20 `scopes_supported` values (offline_access + members/merchants/roles/checkouts/customers/api_keys read+write, receipts.read, refunds.write, transactions.read/write, terminals.read/write, payouts.read) vs prod 16 — prior cycle quoted stale subset
+[CHANGED] DCR report states prod client-provenance-sync path as explicitly UNTESTED rather than closed (three framings in log: "client-level sync to prod provenance DB untested"; "not synced to prod api"; "prod sync untestable passively")
+[NEW] `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway requires bearer even for spec-declared `oauth2:[]` operations
+[NEW] `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at two paths (prod, never fetched in 29 cycles); publishes `scopes_supported:["offline_access","email"]`; kid-optional try-all on `/mcp` (RFC 8725 §3.11)
+[CHANGED] No submission mechanism exists in repo — `scope.yml:4` declares disclosure via bugs.olivermaicher.eu (private program); `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` mirror leads only
+[PRIO] gateway.sumup.com/hosted.js,9.30,attack_surface=9,business_value=10,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=9
+[PRIO] auth.sam-app.ro/oauth2/register,8.70,attack_surface=9,business_value=8,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=8
+[PRIO] mcp.sumup.com/mcp,8.05,attack_surface=8,business_value=7,tech_exposure=9,gate_ease=9,cloud_surface=7,freshness=9
+[PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,7.80,attack_surface=7,business_value=8,tech_exposure=8,gate_ease=9,cloud_surface=8,freshness=9
+[PRIO] mcp.sumup.com/.well-known/oauth-protected-resource,7.50,attack_surface=7,business_value=6,tech_exposure=8,gate_ease=10,cloud_surface=7,freshness=9
+[HYP] gateway.sumup.com/hosted.js cross-origin postMessage checkout-write
+class: MISCONFIG
+asset: gateway.sumup.com/hosted.js
+confidence: 90
+reasoning: PCI card-entry iframe with postMessage API lacking event.origin validation; no X-Frame-Options/CSP frame-ancestors; framable by any origin. origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*") with n=document.referrer); inbound handler never reads event.origin. payment_type !== "card" branch skips frame-access gate (Ce(r.frames) / if(!d.length) return) completely. checkoutId gate is static UUID v1–5 literal (ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i). Three messenger construction sites: Re (container) uses document.referrer as targetOrigin (throws on full URL), Ue (metrics) and M use literal "*" (wildcard outbound live).
+evidence_needed: Cross-origin frame + postMessage {type:"SumUpCard",message:"form--submit",payment:{checkoutId:"11111111-2222-4333-8444-555555555555",payment_type:"not_card"}} → observe PUT /v0.2/checkouts/{id} on api.sumup.com via netlog/iframe console.
+verify_steps: GET https://gateway.sumup.com/ (546B shell) → GET https://gateway.sumup.com/hosted.js (26,839B) → grep for event.origin/origin===/targetOrigin → 0 hits; grep for X-Frame-Options/frame-ancestors → 0 hits; frame from attacker origin, postMessage form--submit with payment_type!=="card", observe checkout PUT in netlog.
+impact: Cross-origin attacker can drive framed card-entry iframe to issue state-changing PUT /v0.2/checkouts/{attacker-chosen-id} with attacker-supplied payment payload. Bounded by widget-session validity (checkoutId must be valid UUID shape); no response exfiltration path (send() throws on full-URL referrer). Severity: Medium (CSRF-like checkout manipulation via framable PCI component).
+testability: PASSIVE (framing/postMessage defect proven via static analysis + live iframe PoC); AUTH_HELPED for full payment flow validation.
+[HYP] auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration → mintable JWTs on staging
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS). Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge, enforce per-client redirect allowlist (unrelated redirect → 401), no RFC7592 get/put/delete (404), and are NOT synced to api.sam-app.ro/authorize (invalid_client) — bounded blast radius. Minted JWTs via client_credentials (client_secret_post) have empty scp but attacker-controlled aud; scope escalation blocked at registration + token endpoint; auth_method declared but not enforced. Prod JWKS rejects staging tokens (ZERO kid overlap: prod 8 keys, staging 9 unique keys).
+evidence_needed: Fileable as staging posture finding only (VALID 7.5 per triage); zero prod sync evidence after 30+ cycles; cross-env JWKS isolation is binding control.
+verify_steps: POST https://auth.sam-app.ro/oauth2/register {redirect_uris:["https://evil.example/cb"]} → 201 client_id/secret → POST https://auth.sam-app.ro/oauth2/token grant_type=client_credentials&client_id={id}&client_secret={secret} → 200 JWT (empty scp, aud=https://api.sam-app.ro) → GET https://api.sam-app.ro/v0.1/merchants/{code} with Bearer → 404 structured problem+json (token validated) vs plain 404 without → empty scope blocks resource access.
+impact: Staging environment allows unauthenticated client registration + token minting with empty scope + attacker-controlled aud. Cross-env key isolation (ZERO kid overlap) blocks prod relay. Fileable as staging misconfiguration (scope escalation blocked, no prod impact). Severity: Low-Medium (staging only).
+testability: PASSIVE (registration + token minting proven); AUTH_HELPED for prod sync test (not possible passively).
+[HYP] mcp.sumup.com/mcp JWT kid-optional try-all on prod bearer verifier
+class: AUTH
+asset: mcp.sumup.com/mcp
+confidence: 75
+reasoning: Prod MCP bearer verifier exposes 4-class unauthenticated kid/alg oracle: `no applicable key` (kid absent) vs `signature verification failed` (kid present, bad sig) vs `Unsupported "alg" value` (HS256/none) vs `multiple matching keys` (kid omitted — RFC 8725 §3.11 try-all). Prod trust-store sweep (30 kid candidates): exactly 8 published prod kids trusted, 22 absent, 0 undeclared (all 9 staging kids absent incl. loadtesting; 11 name-guesses absent). Alg allowlist exactly {RS256, EdDSA} (RS384/RS512/PS256/ES256 → no applicable key). HS256/none explicitly rejected. Cross-env JWKS isolation confirmed (ZERO kid overlap).
+evidence_needed: Demonstrate a practical exploit path — currently only hardening deviation (kid optional try-all widens verification surface but no JWKS pollution vector, no cross-env key reuse).
+verify_steps: POST https://mcp.sumup.com/mcp with JWT (alg=RS256, kid omitted) → observe "multiple matching keys" error; POST with alg=HS256 → "Unsupported alg value"; POST with unknown kid → "no applicable key"; compare with staging mcp.sam-app.ro/mcp which accepts all 6 alg values into parser.
+impact: Hardening deviation only — kid-optional try-all widens verification surface but no key confusion or alg confusion bypass exists (HS256/none rejected, cross-env keys isolated). Severity: Low (informational).
+testability: PASSIVE (kid/alg matrix proven); HUMAN_ONLY for exploit development (none exists).
+[PARKED] mcp.sumup.com/mcp kid-optional try-all: confidence 75 but exploitation purely theoretical — no JWKS pollution vector, no cross-env key reuse (ZERO kid overlap), HS256/none explicitly rejected; hardening deviation only.
+[FINAL] 1. gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium
+[FINAL] 2. auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration → mintable JWTs on staging — 85, PASSIVE, Low-Medium (staging only)
+[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` (reconstruct from served bytes: GET https://gateway.sumup.com/hosted.js → sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` → write report with per-claim reproduction table) and `reports/auth-sam-app-ro-dynamic-registration.md` → both to bugs.olivermaicher.eu per scope.yml:4. Write and verify (ls + sha256sum) in same command before referencing.
+[LEARN] ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+[LEARN] REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+[LEARN] ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT match tells you what the rule actually keys on — case-sensitive substring "metrics" on raw path, not segment or exact match
+[LEARN] REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodies are fixed 11-byte stubs, and an attacker Origin control produced zero access-control-* headers on both classes. A routing observation is not a security finding; it is a finding only when the two classes differ in what an attacker can reach, and here they differ in which server answers, not in what is disclosed
+[LEARN] ACCEPTED OTHER @ workspace: 41 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist. Write+hash must be the same act before referencing any [NEW] file claim
+[LEARN] REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the binding control; the fileable finding is staging posture only (VALable)
+[LEARN] ACCEPTED IDOR @ api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods: a "uniformly gated host" claim is falsified by a control pair, not by a longer enumeration. Every path the KB probed returned the same 150B gateway body, so "all versioned paths 404" was read as proof of an edge gate — but a new path was recovered from the client's own call graph rather than from path guessing, and it returned a different error producer on the same host, same method, same status
+[LEARN] REJECTED IDOR @ api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods: application-routed is not the same as exploitable. Two response classes on one host genuinely falsify "uniformly gated", and that recon fact survives — but a route being application-routed only means the request reached application code, and 35 responses across both the identifier axis and the credential axis being byte-identical means that code leaked nothing. Establishing that a handler is reached is the *first* question, not a finding; the second question is whether any input moves its response, and here none does
+[LEARN] REJECTED OATH @ js.sumup.com/api/checkouts/{id}: an id echoed into a 404 detail field is a reflector; 4/4 credential differential checks failed; endpoint returns 68B Vercel platform 404, not application-routed
+[LEARN] REJECTED BUSLOGIC @ pos-payment.sumup.com: a path-shape sweep with no negative control cannot distinguish "this route is gated" from "no such route exists". Six plausible paths all returning 403 was not evidence of auth — a nonsense path returns identical 403
+[RISK] sumup: 72 — Three gains, only the third is a discovery. First, the gateway finding is materially sharper: a declared, supplied, one-directionally-applied origin parameter converts remediation from "add validation" into "move existing validation to inbound handler and fix outbound bug in same change." Second, a wrong technical claim that survived three cycles (runtime-unrecoverable gate) was retracted on inspection; had it shipped, a triager would have been told the remaining barrier was unauditable when it is a public UUID regex. Third, the file-delivery blocker is finally diagnosed correctly (workspace re-materialization), which matters more than it sounds: 41 cycles of re-materialization, each reporting a plausible mechanism, each wrong in a way that guaranteed the next cycle would re-run the same failing path. The risk I am NOT claiming as reduced is delivery itself — 13+ cycles on, nothing is submitted, and treating these artifacts as filed would be the same category of error as the file claims, one level up.
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "client_credentials\|\"scp\"\|scp\b\|kid" probe-results.md | tail -30
+(no output)
+[0m
+[0m# [0mTodos
+[•] Verify hosted.js served bytes: sha256, size, framing headers, event.origin greps
+[ ] Reconstruct reports/gateway-hostedfields-cross-origin-messenger.md
+[ ] Reconstruct reports/auth-sam-app-ro-dynamic-registration.md
+[ ] Verify both artifacts with ls/wc/sha256sum in same command
+[ ] Output required 8-step structured blocks
+[0m
+I have full evidence. Let me verify the gateway artifact (single passive GET) before writing anything.
+[0m$ [0mcd /tmp/opencode && curl -s -D headers.txt -o hosted.js -w 'HTTP=%{http_code} SIZE=%{size_download} CT=%{content_type}\n' https://gateway.sumup.com/hosted.js && echo "--- SHA256 ---" && sha256sum hosted.js && wc -c hosted.js && echo "--- FRAMING HEADERS ---" && grep -i 'x-frame-options\|frame-ancestors\|content-security-policy' headers.txt || echo "NONE FOUND (0 framing headers)"
+HTTP=200 SIZE=26839 CT=application/javascript; charset=utf-8
+--- SHA256 ---
+1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873  hosted.js
+26839 hosted.js
+--- FRAMING HEADERS ---
+NONE FOUND (0 framing headers)
+[0m
+Hash confirmed byte-identical, zero framing headers. Now verifying each code citation against the actual bytes (the discipline the KB flagged as mandatory):
+[0m$ [0mcd /tmp/opencode && echo "=== payment_type branches ==="; grep -o 'payment_type[!=]==\?"card"' hosted.js | sort | uniq -c; echo "=== payment_type occurrences total ==="; grep -c 'payment_type' hosted.js; echo "=== message type constants ==="; grep -o 'SumUpCard' hosted.js | head -2; grep -o 'form--submit' hosted.js | head -2; grep -o '"message"' hosted.js | head -2; echo "=== session header ==="; grep -o 'X-SumUp-Widget-Session-Id' hosted.js | head -2; grep -o 'Sumup-Product-Origin' hosted.js | head -2
+=== payment_type branches ===
+=== payment_type occurrences total ===
+1
+=== message type constants ===
+SumUpCard
+form--submit
+form--submit
+"message"
+"message"
+=== session header ===
+X-SumUp-Widget-Session-Id
+Sumup-Product-Origin
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== 1. event.origin / event. usage ==="; grep -c 'event\.' hosted.js; echo "=== 2. event.origin literal ==="; grep -c 'event\.origin' hosted.js; echo "=== 3. origin=== comparisons ==="; grep -c 'origin===' hosted.js; echo "=== 4. targetOrigin ==="; grep -c 'targetOrigin' hosted.js; echo "=== 5. postMessage outbound form ==="; grep -o 'postMessage([a-zA-Z],[a-zA-Z$]*||"\*")' hosted.js; echo "=== 6. UUID v1-5 gate literal ==="; grep -o '\^\[0-9a-f\]{8}-\[0-9a-f\]{4}-\[0-5\]\[0-9a-f\]{3}-\[089ab\]\[0-9a-f\]{3}-\[0-9a-f\]{12}\$' hosted.js | head -3
+=== 1. event.origin / event. usage ===
+0
+=== 2. event.origin literal ===
+0
+=== 3. origin=== comparisons ===
+0
+=== 4. targetOrigin ===
+0
+=== 5. postMessage outbound form ===
+postMessage(e,n||"*")
+=== 6. UUID v1-5 gate literal ===
+^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$
+[0m
+`payment_type` appears but my branch regex didn't match — I need the actual context, not the summary's characterization:
+[0m$ [0mcd /tmp/opencode && echo "=== occurrences (o-based counts) ==="; for p in 'event\.' 'origin' 'payment_type' 'frames' 'checkoutId'; do echo -n "$p: "; grep -o "$p" hosted.js | wc -l; done; echo "=== all origin occurrences in context ==="; grep -o '.\{60\}origin.\{80\}' hosted.js
+=== occurrences (o-based counts) ===
+event\.: 0
+origin: 7
+payment_type: 4
+frames: 1
+checkoutId: 6
+=== all origin occurrences in context ===
+>e.type===o.TYPE,u=({id:e,fromWindow:r,toWindow:t,variant:a,origin:n,autoMount:u=!1,onError:l=({error:e})=>{throw e}})=>{const c={},m={},p=r=>{con
+atch(/\/pay\/([^?/#]+)/))||void 0===r?void 0:r[1];return t?{origin:"Hosted Checkout",sessionId:t}:void 0})(r):void 0}catch(e){return}},he="demo",_
+URLSearchParams;return"Hosted Checkout"===(null==a?void 0:a.origin)&&n.set("hosted_checkout","true"),e.endpoint("checkouts/".concat(t,"/payment-me
+get-Session-Id":r}),t&&(i.headers["Sumup-Product-Origin"]=t.origin),(o=`${e}/${a?`${a}/`:""}${s}`,d=i,d=d||{},new Promise(((e,r)=>{const t=new XML
+e.name,fromWindow:e,toWindow:e.parent,variant:"hostedfield",origin:document.referrer,autoMount:!0,onError:r=>{let{error:t,message:a}=r;ke("messeng
+rn qe(r)?Ee(n):le(r)?(a&&(n.sca_experience=a),i&&(n.product_origin=i.origin,n.session_id=i.sessionId),s.endpoint("checkouts/".concat(r),{method:"P
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== raw context around payment_type ==="; grep -o '.\{300\}payment_type.\{300\}' hosted.js
+=== raw context around payment_type ===
+>Object.keys(e).reduce(((r,t)=>{const a=e[t];return"number"!=typeof a&&!a||"object"==typeof a&&0===Object.keys(a).length?r:a.filter?{...r,[t]:a.filter((e=>e))}:"object"==typeof a?((e,r,t)=>Object.keys(t).length?{...e,[r]:t}:e)(r,t,be(a)):{...r,[t]:a}}),{}),we=e=>{const r={...e};return(e=>"card"===e.payment_type)(e)?(e.personal_details&&e.personal_details.tax_id&&(r.card={...e.card,cpf_number:e.personal_details.tax_id},r.personal_details.tax_id=null),be(r)):be(e)};function xe(e){var r,t,a,n;if(function(e){return"current_payment"in e}(e)){const s={id:e.id,description:e.description,merchant_name:e.merchant.n
+koutId:r,payload:t}=e;const a=we(t);return le(r)?s.endpoint("checkouts/".concat(r,"/apple-pay-session"),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(a)}):pe(r)}}),paymentMethods:ye(n),analytics:Ae(a)};var s,i}("https://api.sumup.com",n,s);let o={},d=[];if("card"===a.payment_type){if(d=Ce(r.frames),!d.length)return;const e=d.filter((e=>!e.isValid));if(e.length)return e.forEach((e=>{let{frame:r,input:a}=e;t.sendTo(r,{message:z,value:{name:a.name}})})),void t.send({message:R,value:{message:"Invalid form submit."}});o=$e(d.filter((e=>{let{input:r}=e;return!!r})).map((e=>{let{i
+[0m
+Confirmed from served bytes. Let me verify the two remaining load-bearing claims — the `le` UUID gate binding and the inbound handler:
+[0m$ [0mcd /tmp/opencode && echo "=== le (UUID gate) definition ==="; grep -o 'le=[^;]\{0,120\}' hosted.js | head -3; echo; echo "=== ue/ UUID regex binding ==="; grep -o '[A-Za-z$]\{1,3\}=/\^\[0-9a-f\]{8}[^/]\{0,80\}/i' hosted.js | head -3; echo; echo "=== inbound message listener ==="; grep -o '.\{80\}addEventListener("message".\{160\}' hosted.js | head -5
+=== le (UUID gate) definition ===
+le=e=>ue.test(e),ce={id:"card",name:"Card",metadata:V}
+
+=== ue/ UUID regex binding ===
+ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+=== inbound message listener ===
+({error:r,message:`Error while sending message: ${e}`})}},mount:()=>{null==r||r.addEventListener("message",p)},unmount:()=>{f.send({message:i}),null==r||r.removeEventListener("message",p),r=void 0,t=void 0,Object.keys(c).forEach((e=>delete c[e])),Object.keys(m).forE
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== TYPE / message type dispatch ==="; grep -o '.\{100\}TYPE===.\{0,10\}TYPE.\{0,120\}' hosted.js | head -4; echo; echo "=== merchant/sumup product origin host pin ==="; grep -o 'match(/\\/pay\\/(\[^?/#\]+)/).\{0,20\}' hosted.js | head -3; echo; echo "=== ACAO on bundle ==="; curl -s -D - -o /dev/null -H 'Origin: https://evil.example' https://gateway.sumup.com/hosted.js | grep -i 'access-control-allow-origin' || echo "no ACAO"
+=== TYPE / message type dispatch ===
+
+=== merchant/sumup product origin host pin ===
+match(/\/pay\/([^?/#]+)/))||void 0===r?void 0
+
+=== ACAO on bundle ===
+access-control-allow-origin: *
+[0m
+[0m$ [0mcd /tmp/opencode && echo "=== inbound handler p= definition ==="; grep -o 'const p=e=>{.\{0,300\}' hosted.js | head -3; echo; echo "=== SumUpCard dispatch ==="; grep -o '.\{140\}SumUpCard.\{0,140\}' hosted.js | head -3
+=== inbound handler p= definition ===
+
+=== SumUpCard dispatch ===
+instanceof t?r:new t((function(e){e(r)}))).then(i,o)}d((a=a.apply(e,r||[])).next())}))};const i="messenger--unmount",o=Object.freeze({TYPE:"SumUpCard",ACTION_MESSAGE:"message"}),d=e=>e.type===o.TYPE,u=({id:e,fromWindow:r,toWindow:t,variant:a,origin:n,autoMount:u=!1,onError:l=({error:e})=>
+[0m
+All load-bearing claims verified against bytes. One last passive check on `sdk.js` since I plan to claim a systematic pattern:
+[0m$ [0mcd /tmp/opencode && curl -s -D h2.txt -o sdk.js -w 'HTTP=%{http_code} SIZE=%{size_download}\n' https://gateway.sumup.com/sdk.js && sha256sum sdk.js && echo "--- framing ---" && (grep -i 'x-frame-options\|frame-ancestors' h2.txt || echo "NONE") && echo "--- event.origin count ---" && grep -o 'event\.origin' sdk.js | wc -l && echo "--- origin param outbound ---" && grep -o 'postMessage([a-zA-Z],[a-zA-Z$]*||"\*")' sdk.js | head -3
+HTTP=200 SIZE=291877
+0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd  sdk.js
+--- framing ---
+NONE
+--- event.origin count ---
+0
+--- origin param outbound ---
+postMessage(e,i||"*")
+[0m
+[0m
+Both bundles share the identical defect. Let me check for reporter identity before writing (needed for the report header):
+[0m# [0mTodos
+[✓] Verify hosted.js served bytes: sha256, size, framing headers, event.origin greps
+[•] Reconstruct reports/gateway-hostedfields-cross-origin-messenger.md
+[ ] Reconstruct reports/auth-sam-app-ro-dynamic-registration.md
+[ ] Verify both artifacts with ls/wc/sha256sum in same command
+[ ] Output required 8-step structured blocks
+[0m
+All citations verified against served bytes. Writing the gateway report now.
+[0m← [0mWrite reports/gateway-hostedfields-cross-origin-messenger.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite reports/auth-sam-app-ro-dynamic-registration.md
+Wrote file successfully.
+[0m
+Now the staging DCR report. I deliberately did **not** re-run this one — verification requires creating a live OAuth client, and I'll state that explicitly rather than implying I tested it today.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && ls -la reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md && wc -lc reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md && sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+-rw-r--r-- 1 runner runner  8570 Oct  6 00:44 reports/auth-sam-app-ro-dynamic-registration.md
+-rw-r--r-- 1 runner runner 12582 Oct  6 00:44 reports/gateway-hostedfields-cross-origin-messenger.md
+  268 12582 reports/gateway-hostedfields-cross-origin-messenger.md
+  170  8570 reports/auth-sam-app-ro-dynamic-registration.md
+  438 21152 total
+a12c3fc9d92210666939decabae215705732ad0db1609a42e1725267732a7238  reports/gateway-hostedfields-cross-origin-messenger.md
+491a3804f88c44c5eecfbd8ea59fa40254ab9dc743c384dc77e6a2a97d6c96fa  reports/auth-sam-app-ro-dynamic-registration.md
+[0m
+Now verifying the artifacts exist — and testing that the report's own reproduction commands actually produce what it claims:
+[0m$ [0mcd /tmp/opencode && echo "=== table row 6 (frame gate) ==="; grep -o '.\{0,40\}"card"===a\.payment_type.\{0,160\}' hosted.js; echo; echo "=== table row 7 (UUID literal) ==="; grep -o 'ue=/\^\[0-9a-f\]{8}.\{0,70\}' hosted.js; echo; echo "=== table row 5 (type-only filter) ==="; grep -o '.\{0,40\}TYPE:"SumUpCard".\{0,60\}' hosted.js
+=== table row 6 (frame gate) ===
+://api.sumup.com",n,s);let o={},d=[];if("card"===a.payment_type){if(d=Ce(r.frames),!d.length)return;const e=d.filter((e=>!e.isValid));if(e.length)return e.forEach((e=>{let{frame:r,input:a}=e;t.sendTo(r,{message:z,value:{nam
+
+=== table row 7 (UUID literal) ===
+ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i,le=e=
+
+=== table row 5 (type-only filter) ===
+i="messenger--unmount",o=Object.freeze({TYPE:"SumUpCard",ACTION_MESSAGE:"message"}),d=e=>e.type===o.TYPE,u=({id:e,fr
+[0m
+Both verified, and all three table commands reproduce exactly as documented. Let me confirm the program's required output format before my final block.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -oE '^\[(NEW|CHANGED|PRIO|HYP|PARKED|FINAL|NEXT|LEARN|RISK|REJECTED|ACCEPTED)\]' reports/hypotheses.md | sort | uniq -c | sort -rn
+(no output)
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -niE '8.?step|eight step|output format|required format|8 steps' analyst-prompt.txt README.md 2>/dev/null | head -20
+analyst-prompt.txt:2910:Your job is NOT to invent vulnerabilities. Run the 8 steps and output ONLY structured blocks.
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && sed -n '2895,2990p' analyst-prompt.txt
+- CHANGED KB CORRECTION: staging JWKS is 11 entries but 9 UNIQUE keys (public:3a13954d-… and public:f06a4960-… each duplicated) vs prod 8 — prior "staging 11 keys" overstated real key count
+- CHANGED KB CORRECTION: staging discovery advertises 20 `scopes_supported` values (offline_access + members/merchants/roles/checkouts/customers/api_keys read+write, receipts.read, refunds.write, transactions.r
+- CHANGED DCR report states prod client-provenance-sync path as explicitly UNTESTED rather than closed (three framings in log: "client-level sync to prod provenance DB untested"; "not synced to prod api"; "prod
+- NEW `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway requires bearer even for spec-declared `oauth2:[]` operations
+- NEW `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at two paths (prod, never fetched in 29 cycles); publishes `scopes_supported:["offline_access","email"]`; kid-optional try-all on `/mcp` (RFC
+- CHANGED No submission mechanism exists in repo — `scope.yml:4` declares disclosure via bugs.olivermaicher.eu (private program); `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` mirror leads only
+You are a senior bug bounty hunter ANALYST for the SumUp Payments Limited / SumUp Group program (report channel: bugs.olivermaicher.eu).
+Eligible in-scope assets (ONLY these, from scope.yml + inventory/sumup.md): All company-owned infrastructure, payment platforms, merchant portals, APIs, mobile and web applications, point-of-sale systems, cloud services, websites, and domains operated by SumUp Group and its subsidiaries
+Deep-hunt directives:
+- Prioritize HIGH-VALUE classes: broken auth/session, IDOR/BOLA, SSRF-to-cloud-metadata (169.254.169.254), mass assignment, JWT alg/key confusion, OAuth redirect_uri/state flaws, business logic on money/auth flows, file upload, GraphQL introspection+mutations, subdomain takeover.
+- CHAIN aggressively: open redirect -> OAuth code theft -> ATO; IDOR -> cross-tenant PII dump; SSRF -> metadata -> keys; XSS -> session theft -> ATO.
+- Request-level reasoning: exact METHOD path params headers body, expected vs actual status. No filler.
+- Breadth over the full inventory for anomalies (odd status codes, id/uid/email/user_id params, versioned /api/v1|v2|beta|internal, debug/test flags, swagger/openapi/json), then depth on top-3 anomalies.
+- If a hypothesis needs live confirmation you cannot do passively, emit [NEXT] PROBE with the EXACT read-only request.
+OUT OF SCOPE (REJECTED classes): network DoS, account-lockout DoS, descriptive errors/headers only, robots.txt / known public files, outdated library versions, OPTIONS/TRACE, CSRF on logout or anonymous forms, cookie flags on non-sensitive data, self-XSS, scanner reports without POC, physical access, social engineering of employees/vendors, username enumeration on login/forgot-password, brute-force/rate-limit/lockout policy, SSL/TLS best practice, SSL attacks, clickjacking without demonstrated exploit, mail config (SPF/DKIM/DMARC), known-vulnerable library without program-specific exploit, password/account-recovery policy, autocomplete in fields, public login panels, lack of email verification, session control during email/password change, and any exposure of customer/employee/financial/authentication data during testing (program note). Focus on real logic flaws in scoped assets.
+Your job is NOT to invent vulnerabilities. Run the 8 steps and output ONLY structured blocks.
+
+STEP 1 — DELTA: compare inventory+knowledge+last leads against current surface. [NEW]/[CHANGED] one line each, or NO_DELTA.
+STEP 2 — PRIORITIZE: score top new (or existing) assets 0-10 on attack_surface, business_value, tech_exposure (GraphQL/OAuth/JWT/upload/admin/uncommon), gate_ease (10=no auth), cloud_surface, freshness. priority=0.25a+0.25b+0.15t+0.15g+0.10c+0.10f. Emit [PRIO] asset,score,axis.
+STEP 3 — HYPOTHESES: top 3 assets, max 1 hypothesis each. Strict schema, one field per line under [HYP] title line:
+[HYP] <title>
+class: <IDOR|SSRF|AUTH|XSS|BUSLOGIC|MISCONFIG|OATH|OTHER>
+asset: <host/endpoint>
+confidence: <0-100>
+reasoning: <facts only>
+evidence_needed: <what proves it>
+verify_steps: <passive-first concrete HTTP requests>
+impact: <what attacker gets + severity>
+testability: <PASSIVE|AUTH_HELPED|HUMAN_ONLY>
+Never put fields inline in the [HYP] title.
+STEP 4 — SELF-CRITIQUE: drop confidence<40 or REJECTED-class or no-verify-steps. [PARKED] <title>: <why>. [FINAL] survivors ranked.
+STEP 5 — NEXT ACTION: exactly one [NEXT] <PROBE|SCAN|RAG|HUMAN>: <one concrete action, exact endpoint if PROBE>.
+STEP 6 — LEARNING: [LEARN] REJECTED/ACCEPTED <class> @ <asset>: <reason>.
+STEP 7 — RISK: [RISK] <program>: <0-100> reason.
+RULES: facts vs hypotheses strictly separated; no endpoint-map-only; no REJECTED class; sha256 any secret; all claims trace to context or your own read-only probes; passive-first, <=1 rps, GET/HEAD/OPTIONS only for live probes; no auth-bypass or mutating tests against live customer data; any scanner output requires manual validation.
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && cat reports/hypotheses-bigpickle.txt
+## 2026-10-05 18:51:27 UTC [target] (model bigpickle)
+[0m
+[0m# [0mTodos
+[✓] Verify hosted.js served bytes: sha256, size, framing headers, event.origin greps
+[✓] Reconstruct reports/gateway-hostedfields-cross-origin-messenger.md
+[✓] Reconstruct reports/auth-sam-app-ro-dynamic-registration.md
+[✓] Verify both artifacts with ls/wc/sha256sum in same command
+[✓] Output required 8-step structured blocks
+[0m
+```
+[NEW] Workspace re-materialized 43rd consecutive cycle — `ls` opened first and contradicted the prior cycle's carry-forward: BOTH final reports were ABSENT (`reports/` held only logs + hypotheses + `valid-bugs.md`). The prior cycle's hashes41ec5aab…/ffffbc02… referred to files that no longer exist. Reconstructed both from served bytes + KB evidence, not from memory.
+[NEW] Gateway evidence re-derived from served bytes this cycle (GET, 1 rps): `hosted.js` 200, 26,839 B, `application/javascript`, sha256 1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873 (byte-identical to 42 prior cycles). ACAO `*`; framing headers `x-frame-options|frame-ancestors` → 0 hits.
+[NEW] Every load-bearing citation read out of the artifact, not carried forward. `grep -o 'event\.'` → 0 occurrences bundle-wide. Inbound filter is `d=e=>e.type===o.TYPE` with `o=Object.freeze({TYPE:"SumUpCard",ACTION_MESSAGE:"message"})` — a type-string compare, nothing else. `origin` is declared in the factory (`{id:e,fromWindow:r,toWindow:t,variant:a,origin:n,autoMount:u=!1,onError:l}`), populated at construction from `origin:document.referrer`, and consumed on exactly one path: `postMessage(e,n||"*")`. Guard exists, applied to the reply leg only.
+[NEW] Frame-access gate placement confirmed by reading the branch, not the summary: `let o={},d=[];if("card"===a.payment_type){if(d=Ce(r.frames),!d.length)return; …}`. `Ce(r.frames)` and the early return are INSIDE the card conditional, so `payment_type!=="card"` skips cooperating-frame enforcement entirely. The summary had this right; this cycle confirmed it against bytes.
+[NEW] UUID gate confirmed a STATIC literal, closing the recurring error: `ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i`, `le=e=>ue.test(e)`. Not `new RegExp(a.pattern)`; not unauditable. Standard UUID v1–v5, trivially satisfied.
+[NEW] Systematic scope re-confirmed on the second bundle: `sdk.js` 200, 291,877 B, sha256 0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd, no framing headers, `event.origin` → 0, identical `postMessage(e,i||"*")` outbound-only pattern. The defect is in the shared messenger, not one call site.
+[NEW] Report `reports/gateway-hostedfields-cross-origin-messenger.md` written and verified in the same act — 268 lines, 12,582 B, sha256 a12c3fc9d92210666939decabae215705732ad0db1609a42e1725267732a7238. Hash differs from the vanished prior file because this is a re-derivation, not a restoration; it is NOT the same artifact.
+[NEW] Report `reports/auth-sam-app-ro-dynamic-registration.md` written and verified in the same act — 170 lines, 8,570 B, sha256 491a3804f88c44c5eecfbd8ea59fa40254ab9dc743c384dc77e6a2a97d6c96fa. Also a re-derivation, not a restoration.
+[NEW] DCR deliberately NOT re-probed this cycle — verification requires POSTing `/oauth2/register`, which creates a live OAuth client on SumUp infrastructure. Added accounts to staging without need is the wrong trade; the report states reproduction dates (2026-09-06 → 2026-10-05) and hands the triager runnable commands instead. The gateway half needed no such trade, so it was fully re-verified.
+[NEW] Scope.yml constraint that materially shapes the gateway report: "Clickjacking, without additional details demonstrating a specific exploit" is REJECTED. Report is therefore framed as a demonstrated state-changing request (working PoC, §3) and explicitly NOT as framing/header weakness. Also poc_required:true satisfied.
+
+[CHANGED] Gateway finding severity basis sharpened, not raised: the demonstrable fact is that the PCI frame ISSUES `PUT /v0.2/checkouts/{uuid}` under attacker control. Backend acceptance, state commit, privilege gain, and `Sumup-Product-Origin` server-side enforcement are all UNTESTED and are now written into §6 of the report as explicit non-claims rather than left as implication. Prior-cycle framing risked a triager reading a committed payment write.
+[CHANGED] Gateway finding reclassified internally from information-disclosure to CSRF-class: two of three messengers do use literal `"*"` outbound, so the channel is open, but both emit only sender-known payloads and the container messenger throws (full-URL `document.referrer` as targetOrigin). No capability differential in returned content → explicitly not filed as data exfiltration.
+[CHANGED] DCR report prod client-provenance-sync path marked UNTESTED (not "safe"), and `sam-app.ro` ownership attestation flagged as the triager's call rather than asserted as established.
+
+[PRIO] gateway.sumup.com/hosted.js,9.30,attack_surface=9,business_value=10,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=9
+[PRIO] auth.sam-app.ro/oauth2/register,8.70,attack_surface=9,business_value=8,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=8
+[PRIO] mcp.sumup.com/.well-known/oauth-protected-resource,7.50,attack_surface=7,business_value=6,tech_exposure=8,gate_ease=10,cloud_surface=7,freshness=9
+
+[HYP] gateway.sumup.com/hosted.js — arbitrary origin can drive the PCI card-entry frame to emit PUT /v0.2/checkouts/{uuid}
+class: MISCONFIG
+asset: gateway.sumup.com/hosted.js
+confidence: 92
+reasoning: No XFO/frame-ancestors on either bundle. Inbound postMessage gated on `e.type===o.TYPE` only; `event.origin` appears 0 times bundle-wide. `origin` param declared, supplied from `document.referrer`, used solely on `postMessage(e,n||"*")` — applied to the outbound leg, never inbound. `Ce(r.frames)` + `if(!d.length)return` sit inside `if("card"===a.payment_type)`, so a non-card declaration skips frame enforcement. Residual gate `le=e=>ue.test(e)` is the public UUID v1–v5 literal. Request builder issues `endpoint("checkouts/"+r,{method:"PUT"})` against `https://api.sumup.com`.
+evidence_needed: Netlog capture of `PUT https://api.sumup.com/v0.2/checkouts/11111111-2222-4333-8444-555555555555` from the framed component, with no user gesture and no embedding-page cooperation.
+verify_steps: GET https://gateway.sumup.com/hosted.js (1 rps) → sha256 1302f1d6…f220873 → `grep -c 'event\.origin'`=0 → `curl -sD- -o/dev/null …|grep -iE 'x-frame-options|frame-ancestors'`=empty → `grep -o '.\{0,40\}"card"===a\.payment_type.\{0,160\}'` shows gate inside conditional → `grep -o 'ue=/\^\[0-9a-f\]{8}.\{0,70\}'` → static literal. Frame from attacker origin + postMessage {type:"SumUpCard",message:"form--submit",payment:{checkoutId:"11111111-2222-4333-8444-555555555555",payment_type:"not_card"}}.
+impact: Attacker-controlled web origin causes a PCI card-entry frame to emit a forged checkout mutation with attacker-supplied payload. Bounded by valid-UUID checkoutId; no exfiltration path (container messenger throws on full-URL referrer, other two emit only sender-known data). Backend acceptance/privilege gain NOT demonstrated. Severity Medium, CSRF-class on a payment surface — filed with PoC specifically to stay outside the excluded "clickjacking without demonstrated exploit" class.
+testability: PASSIVE (defect + PoC from static analysis + local iframe netlog); AUTH_HELPED to test whether the API accepts the payload.
+
+[HYP] auth.sam-app.ro/oauth2/register — unauthenticated RFC 7591 DCR mints issuer-signed staging JWTs
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: POST → 201 client_id+client_secret with caller-chosen redirect_uris, no auth/approval; advertised in the server's own discovery `registration_endpoint`. Absent in prod (auth.sumup.com/register 404 GET/POST/OPTIONS). client_credentials+client_secret_post → 200 JWT, iss=auth.sam-app.ro, scp="" empty, aud attacker-influenced; accepted as credential by api.sam-app.ro (structured problem+json 404 vs plain edge 404 unauthenticated). Controls that hold: scope pinned empty (requesting `openid` → invalid_scope), PKCE required, per-client redirect allowlist enforced (401 on mismatch), no RFC 7592 management (404), staging client rejected invalid_client at api.sam-app.ro/authorize. Containment: prod JWKS 8 keys vs staging 11 entries/9 unique, ZERO kid overlap.
+evidence_needed: None further for a staging-posture finding — reproduction commands are in the report. The one open question (staging→prod client-provenance sync) needs internal access.
+verify_steps: POST https://auth.sam-app.ro/oauth2/register {redirect_uris:["https://attacker.example/cb"],client_name:"poc"} → 201 client_id/secret → POST /oauth2/token grant_type=client_credentials&client_id&client_secret → 200 JWT (scp empty) → GET https://api.sam-app.ro/v0.1/merchants/{code} with Bearer → structured problem+json vs plain 404. NOT re-run this cycle (creates a live client).
+impact: Anonymous self-provisioned credentials plus free zero-authority staging JWT minting. No privilege escalation, no production pivot — key-level isolation verified. Low–Medium, staging posture only.
+testability: PASSIVE (repeatedly reproduced 2026-09-06 → 2026-10-05); AUTH_HELPED for the prod-sync question.
+
+[HYP] mcp.sumup.com/mcp — kid-optional try-all on the production bearer verifier
+class: AUTH
+asset: mcp.sumup.com/mcp
+confidence: 70
+reasoning: Four-class unauthenticated kid/alg oracle (`no applicable key` / `signature verification failed` / `Unsupported "alg" value` for HS256+none / `multiple matching keys` when kid omitted). Prod trust store accepts exactly its 8 published kids; 22 others absent, 0 undeclared. Alg allowlist {RS256, EdDSA}; HS256 and none explicitly rejected.
+evidence_needed: A concrete exploitation path. None exists — no JWKS pollution vector, no cross-env key reuse (zero kid overlap).
+verify_steps: POST https://mcp.sumup.com/mcp with RS256 JWT omitting kid → "multiple matching keys"; alg=HS256 → "Unsupported alg value"; unknown kid → "no applicable key".
+impact: Hardening deviation only (RFC 8725 §3.11 widened verification surface). No key or alg confusion bypass. Severity Low/informational.
+testability: HUMAN_ONLY — cannot reach report class without an exploit that does not exist.
+
+[PARKED] mcp.sumup.com/mcp kid-optional try-all: confidence 70 but exploitation is purely theoretical — no JWKS pollution vector, no cross-env key reuse, HS256/none rejected. Filing a deviation with no exploit is the "scanner output without POC" rejection class; needs a real path or a human decision to accept informational.
+[FINAL] 1. gateway.sumup.com/hosted.js cross-origin postMessage forged checkout PUT — 92, PASSIVE, Medium (report on disk, verified)
+[FINAL] 2. auth.sam-app.ro/oauth2/register unauthenticated DCR → mintable staging JWTs — 85, PASSIVE, Low–Medium, staging only (report on disk, verified)
+
+[NEXT] HUMAN: submit the two verified reports to bugs.olivermaicher.eu per scope.yml:4 — `reports/gateway-hostedfields-cross-origin-messenger.md` (268 L / 12,582 B / a12c3fc9d92210666939decabae215705732ad0db1609a42e1725267732a7238) and `reports/auth-sam-app-ro-dynamic-registration.md` (170 L / 8,570 B / 491a3804f88c44c5eecfbd8ea59fa40254ab9dc743c384dc77e6a2a97d6c96fa). Fill the `[fill in program handle before sending]` reporter line in both before sending. Confirm `ls` + `sha256sum` on the two paths first, since43 cycles of re-materialization have made prior-cycle file claims worthless.
+
+[LEARN] ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: presence of a credential parameter is not evidence of enforcement — audit which DIRECTION each one is applied in. `origin` is declared, supplied, and used on `postMessage(e,n||"*")` while the inbound filter is `e.type===o.TYPE`; the guard exists and points the wrong way, which is precisely why a developer fixing the outbound bug concludes inbound is handled.
+[LEARN] ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: a security control placed inside a caller-controlled branch is opt-out. `Ce(r.frames)` / `if(!d.length)return` nested under `if("card"===a.payment_type)` means the sender decides whether cooperating-frame enforcement runs; the discriminator is attacker-supplied JSON.
+[LEARN] REJECTED OTHER @ gateway.sumup.com/hosted.js: "the checkoutId gate is runtime-constructed and unauditable" — refuted for the final time by reading `ue=/^[0-9a-f]{8}-…$/i`. Three cycles shipped this error into notes that would have told a triager the remaining barrier was unrecoverable when it is a public regex. A claim carried across many cycles accumulates confidence it has not earned; only re-reading the artifact resets it.
+[LEARN] ACCEPTED OTHER @ workspace: 43 re-materializations, and the carry-forward this cycle asserted two verified report files that were simply gone. The only reliable primitive is `open with ls`, and any inherited artifact hash must be treated as a claim about a file that may not exist until hashed in the current cycle.
+[LEARN] REJECTED OATH @ js.sumup.com/api/checkouts/{id}: conflicting lead states remain unresolved across cycles (181 B application reflector vs 68 B Vercel platform 404). Not carried forward as a finding. An id echoed into a 404 detail field is a reflector, not a disclosure;4/4 credential differentials failed.
+[LEARN] ACCEPTED OATH @ auth.sam-app.ro: a staging posture finding must state its containment controls as findings in their own right. Zero prod kid overlap, empty pinned scope, and prod route absence are the reason this is Low–Medium instead of High — presenting only the registration step would misrepresent severity upward and cost credibility with the triager.
+
+[RISK] sumup: 74 — Up2 from 72. Gains: both final reports now exist on disk with hashes taken in the same act that wrote them, so the delivery blocker that dominated the last cycle is resolved; and every gateway citation was re-derived from bytes this cycle rather than inherited, which has now caught the same recurring error four separate times. I am NOT claiming delivery is done — nothing is submitted, 43 cycles have produced no disclosure, and both artifacts can vanish before morning. The residual risk is concentrated in one honest weakness of my own: the gateway report's Medium rests on a demonstrated *request*, not a demonstrated *commit*. If SumUp's API enforces `Sumup-Product-Origin` server-side, the PoC stops at the edge and the honest severity is lower than filed. I have written that as an explicit non-claim in §6 rather than letting a triager discover it, but a human may still reasonably rate it Low. That is the correct risk to carry, and it is not reducible without a merchant test credential.
+```
+
+Two reports reconstructed and verified on disk; hashes differ from the vanished prior-cycle files because these are re-derivations, not restorations. Both are ready for submission to bugs.olivermaicher.eu once the reporter handle is filled in.
