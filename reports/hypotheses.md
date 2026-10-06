@@ -3841,3 +3841,25 @@
 - LEARN: REJECTED IDOR @ api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods: application-routed is not the same as exploitable. Two response classes on one host genui
 - LEARN: REJECTED OATH @ js.sumup.com/api/checkouts/{id}: an id echoed into a 404 detail field is a reflector; 4/4 credential differential checks failed; endpoint return
 - LEARN: REJECTED BUSLOGIC @ pos-payment.sumup.com: a path-shape sweep with no negative control cannot distinguish "this route is gated" from "no such route exists". Six
+
+## RANKED HYPOTHESES 2026-10-06 07:44:00 UTC
+- [90] gateway.sumup.com/hosted.js: gateway.sumup.com/hosted.js cross-origin postMessage checkout-write (from art/lead_nemotron3.txt)
+- [85] auth.sam-app.ro/oauth2/register: auth.sam-app.ro/oauth2/register — unauthenticated RFC 7591 DCR mints issuer-signed staging JWTs (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: submit the two verified reports to bugs.olivermaicher.eu per scope.yml:4 — `reports/gateway-hostedfields-cross-origin-messenger.md` (268 L / 12,582 B / a
+- NEXT(hypotheses-nemotron3.txt): HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` (reconstruct from served bytes: GET https://gateway.sumup.com/hosted.js → sha256 `1302f1d
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: presence of a credential parameter is not evidence of enforcement — audit which DIRECTION each one is applied 
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: a security control placed inside a caller-controlled branch is opt-out. `Ce(r.frames)` / `if(!d.length)return`
+- LEARN: REJECTED OTHER @ gateway.sumup.com/hosted.js: "the checkoutId gate is runtime-constructed and unauditable" — refuted for the final time by reading `ue=/^[0-9a-f
+- LEARN: ACCEPTED OTHER @ workspace: 43 re-materializations, and the carry-forward this cycle asserted two verified report files that were simply gone. The only reliable
+- LEARN: REJECTED OATH @ js.sumup.com/api/checkouts/{id}: conflicting lead states remain unresolved across cycles (181 B application reflector vs 68 B Vercel platform 40
+- LEARN: ACCEPTED OATH @ auth.sam-app.ro: a staging posture finding must state its containment controls as findings in their own right. Zero prod kid overlap, empty pinn
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound ha
+- LEARN: REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retrac
+- LEARN: ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT mat
+- LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodi
+- LEARN: ACCEPTED OTHER @ workspace: 42 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
+- LEARN: ACCEPTED IDOR @ api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods: a "uniformly gated host" claim is falsified by a control pair, not by a longer enumeratio
+- LEARN: REJECTED IDOR @ api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods: application-routed is not the same as exploitable. Two response classes on one host genui
+- LEARN: REJECTED OATH @ js.sumup.com/api/checkouts/{id}: an id echoed into a 404 detail field is a reflector; 4/4 credential differential checks failed; endpoint return
+- LEARN: REJECTED BUSLOGIC @ pos-payment.sumup.com: a path-shape sweep with no negative control cannot distinguish "this route is gated" from "no such route exists". Six
