@@ -1656,3 +1656,10 @@ https://api.sumup.com/v0.2/checkouts/11111111-2222-4333-8444-555555555555` -> HT
 https://gateway.sumup.com/ -> 200 len=546
 https://gateway.sumup.com/hosted.js -> 200 len=26839
 https://mcp.sumup.com/mcp -> HTTP 401
+
+## 2026-10-06 14:48:02 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/mcp -> HTTP 401
+https://me.sumup.com/api/sso/callback -> HTTP 403
+https://me.sumup.com/api/sso/callback` -> HTTP 404
