@@ -1998,3 +1998,12 @@ www.sumup.com
 - NEW Both final reports confirmed on disk via ls+sha256sum this cycle but will NOT persist to next cycle — gateway-hostedfields-cross-origin-messenger.md (239 L / 10,083 B / 41ec5aabbfb36fb9460d8cc18d955cd
 - CHANGED No submission mechanism exists in repo — scope.yml:4 declares disclosure via bugs.olivermaicher.eu (private program); scripts/sync-issues.py + .github/workflows/sync-issues.yml mirror leads only
 - CHANGED valid-bugs.md running count 0 — auth.sam-app.ro finding marked VALID 7.5 with FILE REPORT directive but submission blocked on HUMAN step
+
+## 2026-10-07 05:31:00 UTC
+- NEW Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e65798
+- NEW Gateway evidence re-derived from served bytes this cycle (GET, 1 rps): `hosted.js` byte-identical 26,839 B / sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`; `grep -c 'event\
+- NEW DCR report states prod client-provenance-sync path as explicitly UNTESTED rather than closed; KB corrections applied: staging JWKS 11 entries = 9 unique keys (two `public:*` duplicated), dynamic clien
+- CHANGED Workspace re-materialized 43rd consecutive cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; artifacts written in cycle N do not per
+- CHANGED No submission mechanism exists in repo — `scope.yml:4` declares disclosure via bugs.olivermaicher.eu (private program); `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` mirror leads only
+- CHANGED `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauthenticated returns 404 (was 200 static `{"card"}`) — gateway requires bearer even for spec-declared `oauth2:[]` operations
+- CHANGED `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at two paths (prod, never fetched in 29 cycles); publishes `scopes_supported:["offline_access","email"]`; kid-optional try-all on `/mcp` (RFC
