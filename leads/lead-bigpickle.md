@@ -8678,3 +8678,4 @@ impact: Key/algorithm confusion surface on a prod bearer verifier; confirmation 
 testability: PASSIVE
 [NEXT] HUMAN: persist then submit — run `git add reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md reports/valid-bugs.md && git commit -m "reports: gateway cross-origin postMessage + sam-app.ro DCR"` (they are untracked today, which is the verified reason all 43 prior copies were destroyed), then file both to bugs.olivermaicher.eu per `scope.yml:4`.
 [RISK] sumup: 35 — No production impact claimed or evidenced; both fileable findings are bounded (staging-only key isolation, unproven backend acceptance of the forged PUT). Program risk is operational: findings remain unfilable until the report artifacts are committed, and `scope.yml:4` disclosure is the only submission channel.
+## 2026-10-07 12:12:50 UTC [target] (model bigpickle)

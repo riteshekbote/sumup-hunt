@@ -1682,3 +1682,10 @@ https://gateway.sumup.com/ -> 200 len=546
 https://gateway.sumup.com/hosted.js -> 200 len=26839
 https://mcp.sumup.com/.well-known/oauth-protected-resource -> HTTP 404
 https://mcp.sumup.com/mcp -> HTTP 401
+
+## 2026-10-07 12:13:07 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/.well-known/oauth-protected-resource -> HTTP 404
+https://mcp.sumup.com/mcp -> HTTP 401
+https://mcp.sumup.com -> HTTP 404
