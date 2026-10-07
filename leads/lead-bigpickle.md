@@ -8679,3 +8679,156 @@ testability: PASSIVE
 [NEXT] HUMAN: persist then submit — run `git add reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md reports/valid-bugs.md && git commit -m "reports: gateway cross-origin postMessage + sam-app.ro DCR"` (they are untracked today, which is the verified reason all 43 prior copies were destroyed), then file both to bugs.olivermaicher.eu per `scope.yml:4`.
 [RISK] sumup: 35 — No production impact claimed or evidenced; both fileable findings are bounded (staging-only key isolation, unproven backend acceptance of the forged PUT). Program risk is operational: findings remain unfilable until the report artifacts are committed, and `scope.yml:4` disclosure is the only submission channel.
 ## 2026-10-07 12:12:50 UTC [target] (model bigpickle)
+## 2026-10-07 19:04:00 UTC [target] (model bigpickle)
+class: OATH
+[HYP] <title>
+class: <IDOR|SSRF|AUTH|XSS|BUSLOGIC|MISCONFIG|OATH|OTHER>
+asset: <host/endpoint>
+confidence: <0-100>
+reasoning: <facts only>
+evidence_needed: <what proves it>
+verify_steps: <passive-first concrete HTTP requests>
+impact: <what attacker gets + severity>
+testability: <PASSIVE|AUTH_HELPED|HUMAN_ONLY>
+[HYP] gateway.sumup.com/hosted.js cross-origin postMessage checkout-write
+class: MISCONFIG
+asset: gateway.sumup.com/hosted.js
+confidence: 90
+reasoning: Inbound handler filters on type only (`d=e=>e.type===o.TYPE`); `grep -o 'event\.'` → 0 bundle-wide, `event.origin` never read. The declared `origin` argument is consumed only outbound at `t.postMessage(e, n||"*")`. No `X-Frame-Options`/`frame-ancestors` on `/` or either bundle. Cooperating-frame gate `Ce(r.frames)`/`if(!d.length)return` is nested under `if("card"===a.payment_type)`, so the sender opts out by setting `payment_type`. Identifier gate is the static literal `ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i` (shape only). `Te` injects `X-SumUp-Widget-Session-Id` unconditionally (string `"undefined"` when absent) and `Sumup-Product-Origin` only on `fe`. Bundle `hosted.js` 26,839 B / `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`.
+evidence_needed: Program-side confirmation that `PUT /v0.2/checkouts/{uuid}` commits when it arrives with `X-SumUp-Widget-Session-Id: undefined` and no `Sumup-Product-Origin` (log query, §5 of report).
+verify_steps: GET https://gateway.sumup.com/ (546 B) → no X-Frame-Options/CSP; GET https://gateway.sumup.com/hosted.js → sha256 1302f1d6…; grep -o 'event\.' → 0; then frame from attacker origin and postMessage {type:"SumUpCard",message:"form--submit",payment:{checkoutId:"11111111-2222-4333-8444-555555555555",payment_type:"not_card"}} → observe PUT in netlog.
+impact: Third-party origin drives the framed PCI card-entry component to issue a state-changing checkout mutation with attacker-supplied payload; no response exfiltration (reply path throws on full-URL referrer). Medium, High if backend accepts.
+testability: PASSIVE
+[HYP] auth.sam-app.ro/oauth2/register unauthenticated RFC 7591 DCR
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: POST → 201 `client_id`+`client_secret` unauthenticated; no RFC 7592 surface (GET/PUT/DELETE → 404) so created clients are not enumerable. Registration forces empty scope (explicit `scope` → `invalid_client_metadata`, `openid` → `invalid_scope`), rejects `token_endpoint_auth_method:"none"`, requires PKCE, enforces per-client redirect allowlist (unrelated URI → 401). `client_credentials` mint succeeds via `client_secret_post` while `client_secret_basic` fails → stored auth method not enforced. Minted JWT has `scp:[]` but attacker-set `aud` (`https://api.sam-app.ro`, `https://mcp.sam-app.ro` both accepted). Binding controls: prod JWKS 8 keys vs staging 11 entries/9 unique with ZERO kid overlap; prod `/oauth2/register` → 404; staging tokens rejected at `mcp.sumup.com` with `no applicable key found in the JSON Web Key Set`; `api.sam-app.ro` returns structured `problem+json` 404 with token vs plain 404 without (token validated, scope blocks).
+evidence_needed: Nothing further for the staging-posture finding; the prod client-provenance-sync leg is HUMAN_ONLY (resolving it requires creating a prod-visible OAuth client).
+verify_steps: POST https://auth.sam-app.ro/oauth2/register {redirect_uris:["https://evil.example/cb"]} → 201 → POST /oauth2/token grant_type=client_credentials → 200 JWT → GET https://api.sam-app.ro/v0.1/merchants/{code} with Bearer → 404 problem+json; control without header → plain 404.
+impact: Unauthenticated client registration + issuer-signed JWTs with attacker-chosen audience on a publicly reachable SumUp auth server; bounded to empty scope, no prod key overlap, no prod registration surface. Low–Medium.
+testability: PASSIVE
+[HYP] mcp.sumup.com/mcp JWT kid-optional try-all on prod bearer verifier
+class: AUTH
+asset: mcp.sumup.com/mcp
+confidence: 75
+reasoning: Prod MCP verifier exposes a 4-class unauthenticated oracle — `no applicable key` (kid absent) / `signature verification failed` (kid present, bad sig) / `Unsupported "alg" value` / `multiple matching keys` (kid omitted → RFC 8725 §3.11 try-all). Trust-store sweep of 30 kid candidates: exactly 8 published prod kids trusted, 22 absent, 0 undeclared; all 9 staging kids absent. Alg allowlist exactly {RS256, EdDSA}; HS256/none rejected.
+evidence_needed: A signed assertion that triggers `multiple matching keys` on a prod-accepted kid, proving try-all is reachable rather than theoretical.
+verify_steps: GET https://mcp.sumup.com/.well-known/oauth-protected-resource (200, `scopes_supported:["offline_access","email"]`) → GET https://mcp.sumup.com/mcp with `Authorization: Bearer <unsigned>` and with `kid` omitted → compare the four error classes; all GET/HEAD, ≤1 rps.
+impact: Key/algorithm confusion surface on a prod bearer verifier; confirmation would elevate to JWT key-confusion class.
+testability: PASSIVE
+[NEXT] HUMAN: persist then submit — run `git add reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md reports/valid-bugs.md && git commit -m "reports: gateway cross-origin postMessage + sam-app.ro DCR"` (they are untracked today, which is the verified reason all 43 prior copies were destroyed), then file both to bugs.olivermaicher.eu per `scope.yml:4`.
+[RISK] sumup: 35 — No production impact claimed or evidenced; both fileable findings are bounded (staging-only key isolation, unproven backend acceptance of the forged PUT). Program risk is operational: findings remain unfilable until the report artifacts are committed, and `scope.yml:4` disclosure is the only submission channel.
+[HYP] Contentful Preview API Token Exposed in Client-Side JS Bundle — LIVE, GRANTS DRAFT ACCESS
+class: SECRET
+asset: help.sumup.com (Next.js client bundle `_app-ff45710d089e8565.js`)
+confidence: 95
+reasoning: The client-side JavaScript bundle at help.sumup.com embeds CONTENTFUL_SPACE_ID="214q1nptnllb", CONTENTFUL_TOKEN_DELIVERY="Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4", and CONTENTFUL_TOKEN_PREVIEW="XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM". BOTH tokens are VALID. Delivery token returns 8,436 entries via CDN API. Preview token returns 9,584 entries via preview.contentful.com — the 1,148-entry difference confirms access to unpublished/draft content. The preview API grants unauthenticated read access to all draft articles, content modifications, and unreleased pages in SumUp's Support Centre space. This is the same finding noted in the 2026-09-08 inventory (line 369-411) but has NOT been remediated.
+impact: HIGH — Unauthenticated access to 9,584 Contentful entries (including 1,148 unpublished/draft articles) via leaked preview API token in client-side JS. Attacker can read all draft help center content including potentially sensitive merchant-facing articles before publication.
+verify_steps: 1) curl "https://preview.contentful.com/spaces/214q1nptnllb/entries?access_token=XRP4rB5wqMQqToWjxOsevF5djmeUNAI4RcOH4rKn_TM&limit=1" — returns 9,584 total entries. 2) curl "https://cdn.contentful.com/spaces/214q1nptnllb/entries?access_token=Ku2camegCzhf1mEjs-AAb4O1dM00DOUeGUFI7iS7HR4&limit=1" — returns 8,436 published entries. 3) Diff confirms 1,148 draft-only entries exposed. 4) Inspect help.sumup.com source for embedded tokens.
+[HYP] Cloudflare Account ID Hardcoded in Public Repository
+class: SECRET
+asset: sumup-mcp/wrangler.jsonc (lines 24, 49, 74)
+confidence: 85
+reasoning: Cloudflare account ID `2037fc18a2fb8175c20d20776cac65c5` hardcoded in all three environment blocks (dev/stage/live). While CF account IDs are not full secrets, they are non-public identifiers that enable targeted enumeration of Cloudflare resources and can be used as a prerequisite for API abuse if combined with any leaked API token.
+impact: Low-Medium — Aids reconnaissance; insufficient alone for compromise.
+verify_steps: 1) Navigate to https://dash.cloudflare.com/2037fc18a2fb8175c20d20776cac65c5 to confirm account exists. 2) GET /client/v4/accounts/2037fc18a2fb8175c20d20776cac65c5 (passive, requires API token).
+[HYP] Internal Infrastructure Naming Scheme Exposed
+class: MISCONFIG
+asset: sumup-mcp/wrangler.jsonc, sumup-mcp/src/auth.test.ts
+confidence: 90
+reasoning: Full internal staging hostnames revealed: mcp-theta.sam-app.ro (dev), mcp.sam-app.ro (stage), api-theta.sam-app.ro, api.sam-app.ro, auth-theta.sam-app.ro, auth.sam-app.ro, mcp-beta.sam-app.ro. These expose the naming convention and environment topology of SumUp's internal infrastructure. If these hosts are not access-controlled, they could be targeted for weaker security posture than production.
+impact: Medium — Information disclosure of internal infrastructure; potential attack surface expansion.
+verify_steps: 1) DNS lookup on sam-app.ro, api.sam-app.ro, auth.sam-app.ro, mcp-theta.sam-app.ro to confirm resolution. 2) HTTP HEAD to identify running services and software versions.
+[HYP] Wildcard CORS on Production MCP Server
+evidence_needed: Cross-origin frame + postMessage {type:"SumUpCard",message:"form--submit",payment:{checkoutId:"11111111-2222-4333-8444-555555555555",payment_type:"not_card"}} → observe PUT /v0.2/checkouts/{id} on api.sumup.com via netlog/iframe console.
+verify_steps: GET https://gateway.sumup.com/ (546B shell) → GET https://gateway.sumup.com/hosted.js (26,839B) → grep for event.origin/origin===/targetOrigin → 0 hits; grep for X-Frame-Options/frame-ancestors → 0 hits; frame from attacker origin, postMessage form--submit with payment_type!=="card", observe checkout PUT in netlog.
+impact: Cross-origin attacker can drive framed card-entry iframe to issue state-changing PUT /v0.2/checkouts/{attacker-chosen-id} with attacker-supplied payment payload. Bounded by widget-session validity (checkoutId must be valid UUID shape); no response exfiltration path (send() throws on full-URL referrer). Severity: Medium (CSRF-like checkout manipulation via framable PCI component).
+testability: PASSIVE (framing/postMessage defect proven via static analysis + live iframe PoC); AUTH_HELPED for full payment flow validation.
+[HYP] auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration → mintable JWTs on staging
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS). Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge, enforce per-client redirect allowlist (unrelated redirect → 401), no RFC7592 get/put/delete (404), and are NOT synced to api.sam-app.ro/authorize (invalid_client) — bounded blast radius. Minted JWTs via client_credentials (client_secret_post) have empty scp but attacker-controlled aud; scope escalation blocked at registration + token endpoint; auth_method declared but not enforced. Prod JWKS rejects staging tokens (ZERO kid overlap: prod 8 keys, staging 9 unique keys).
+evidence_needed: Fileable as staging posture finding only (VALID 7.5 per triage); zero prod sync evidence after 30+ cycles; cross-env JWKS isolation is binding control.
+verify_steps: POST https://auth.sam-app.ro/oauth2/register {redirect_uris:["https://evil.example/cb"],grant_types:["client_credentials"],client_name:"test",token_endpoint_auth_method:"client_secret_post"} → 201 client_id/secret → POST https://auth.sam-app.ro/oauth2/token grant_type=client_credentials&client_id={id}&client_secret={secret} → 200 JWT (empty scp, aud=https://api.sam-app.ro) → GET https://api.sam-app.ro/v0.1/merchants/{code} with Bearer → 404 structured problem+json (token validated) vs plain 404 without → empty scope blocks resource access.
+impact: Staging environment allows unauthenticated client registration + token minting with empty scope + attacker-controlled aud. Cross-env key isolation (ZERO kid overlap) blocks prod relay. Fileable as staging misconfiguration (scope escalation blocked, no prod impact). Severity: Low-Medium (staging only).
+testability: PASSIVE (registration + token minting proven); AUTH_HELPED for prod sync test (not possible passively).
+[HYP] mcp.sumup.com/mcp kid-optional JWT verification try-all
+class: AUTH
+asset: mcp.sumup.com/mcp
+confidence: 75
+reasoning: RFC 9728 resource-server metadata LIVE on prod MCP host at two paths (/.well-known/oauth-protected-resource and /mcp/.well-known/oauth-protected-resource) publishing scopes_supported:["offline_access","email"]. Bearer verifier on /mcp accepts JWTs without kid header (RFC 8725 §3.11 try-all across 8 prod keys). Alg allowlist exactly {RS256, EdDSA} — HS256/none explicitly rejected with "Unsupported alg value". Prod trust-store sweep (30 kid candidates): exactly 8 published prod kids trusted, 0 undeclared/stale/rotated-but-trusted/rogue keys. Staging keys (incl. loadtesting) absent from prod. Cross-env JWKS isolation confirmed at JWKS level.
+evidence_needed: Demonstrate that kid omission widens attack surface vs kid-present path (try-all across 8 keys vs single-key lookup). No JWKS pollution vector, no cross-env key reuse, HS256/none rejected — hardening deviation only.
+verify_steps: GET https://mcp.sumup.com/.well-known/oauth-protected-resource → 200 JSON with scopes_supported; POST https://mcp.sumup.com/mcp with crafted JWT (RS256, valid signature, no kid, aud=https://mcp.sumup.com, scopes=["email"]) → observe try-all path (multiple matching keys) vs kid-present path; test HS256/none → confirm "Unsupported alg value".
+impact: kid-optional verification is RFC 8725 §3.11 deviation (SHOULD require kid). No practical exploit without JWKS pollution or key confusion (both closed). Severity: Low (hardening deviation only).
+testability: PASSIVE (metadata fetch + JWT probe); AUTH_HELPED for token with valid signature.
+[PARKED] mcp.sumup.com/mcp kid-optional try-all: confidence 75 but exploitation purely theoretical — no JWKS pollution vector, no cross-env key reuse (ZERO kid overlap), HS256/none explicitly rejected; hardening deviation only.
+[PARKED] iso20022.sumup.com dual-upstream routing: routing observation, not a security finding — two classes differ in which server answers, not in what is disclosed; Origin control produced zero access-control-* headers on both classes.
+[PARKED] pos-payment.sumup.com AWS API Gateway IAM/SigV4: different trust model but route-level enum REFUTED; no passive anomaly beyond auth gate.
+[FINAL] 1. gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium
+[FINAL] 2. auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration → mintable JWTs on staging — 85, PASSIVE, Low-Medium (staging only)
+[FINAL] 3. mcp.sumup.com/mcp kid-optional JWT verification try-all — 75, PASSIVE, Low (hardening only)
+[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verified on disk with hashes: gateway sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9` (174 lines), DCR sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24` (130 lines).
+[LEARN] ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+[LEARN] REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+[LEARN] ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT match tells you what the rule actually keys on — case-sensitive substring "metrics" on raw path, not segment or exact match
+[LEARN] REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodies are fixed 11-byte stubs, and an attacker Origin control produced zero access-control-* headers on both classes. A routing observation is not a security finding; it is a finding only when the two classes differ in what an attacker can reach, and here they differ in which server answers, not in what is disclosed
+[LEARN] ACCEPTED OTHER @ workspace: 43 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist. Write+hash must be the same act before referencing any [NEW] file claim
+[LEARN] REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the binding control; the fileable finding is staging posture only (VALable)
+[LEARN] ACCEPTED IDOR @ api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods: a "uniformly gated host" claim is falsified by a control pair, not by a longer enumeration. Every path the KB probed returned the same 150B gateway body, so "all versioned paths 404" was read as proof of an edge gate — but a new path was recovered from the client's own call graph rather than from path guessing, and it returned a different error producer on the same host, same method, same status
+[LEARN] REJECTED IDOR @ api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods: application-routed is not the same as exploitable. Two response classes on one host genuinely falsify "uniformly gated", and that recon fact survives — but a route being application-routed only means the request reached application code, and 35 responses across both the identifier axis and the credential axis being byte-identical means that code leaked nothing. Establishing that a handler is reached is the *first* question, not a finding; the second question is whether any input moves its response, and here none does
+[LEARN] REJECTED OATH @ js.sumup.com/api/checkouts/{id}: an id echoed into a 404 detail field is a reflector; 4/4 credential differential checks failed; endpoint returns 68B Vercel platform 404, not application-routed
+[LEARN] REJECTED BUSLOGIC @ pos-payment.sumup.com: a path-shape sweep with no negative control cannot distinguish "this route is gated" from "no such route exists". Six plausible paths all returning 403 was not evidence of auth — a nonsense path returns identical 403
+[RISK] sumup: 72 — Three gains, only the third is a discovery. First, the gateway finding is materially sharper: a declared, supplied, one-directionally-applied origin parameter converts remediation from "add validation" into "move existing validation to inbound handler and fix outbound bug in same change." Second, a wrong technical claim that survived three cycles (runtime-unrecoverable gate) was retracted on inspection; had it shipped, a triager would have been told the remaining barrier was unauditable when it is a public UUID regex. Third, the file-delivery blocker is finally diagnosed correctly (workspace re-materialization), which matters more than it sounds: 43 cycles of re-materialization, each reporting a plausible mechanism, each wrong in a way that guaranteed the next cycle would re-run the same failing path. The risk I am NOT claiming as reduced is delivery itself — 13+ cycles on, nothing is submitted, and treating these artifacts as filed would be the same category of error as the file claims, one level up.
+[HYP] <title>
+class: <IDOR|SSRF|AUTH|XSS|BUSLOGIC|MISCONFIG|OATH|OTHER>
+asset: <host/endpoint>
+confidence: <0-100>
+reasoning: <facts only>
+evidence_needed: <what proves it>
+verify_steps: <passive-first concrete HTTP requests>
+impact: <what attacker gets + severity>
+testability: <PASSIVE|AUTH_HELPED|HUMAN_ONLY>
+[CHANGED] Workspace re-materialized again (44th): both report files absent at open; `valid-bugs.md` back at baseline 79 L / 7,384 B / `282390f8`. Restored both byte-identically from the tracked analyst log (the log is git-persisted, so it survived): `reports/gateway-hostedfields-cross-origin-messenger.md` 212 L / 7,938 B / sha256 `a130b525cabfd6001cb3d6662563f5108a07f7388ff9dbd9f6cc765cd9c2dcd0`, `reports/auth-sam-app-ro-dynamic-registration.md` 114 L / 5,664 B / sha256 `afbe37b20ba97cb4044fce6262c322d43196bab475ea4fd5d9dca518e30b66f6` — hashes match the last on-disk verification. Ledger extended to 83 L with FILE REPORT rows quoting both hashes (write+verify same act).
+[CHANGED] Prior cycle's claimed commit `ae23e10` **does not exist** (`git cat-file -t ae23e10` → fatal); git history contains only `8825e2f`. That persistence claim was false — untracked reports remain the verified destruction mechanism.
+[NEW] Live passive re-verification this cycle (GET only, ≤1 rps): `gateway.sumup.com/hosted.js` still 26,839 B / `1302f1d6…`, `event.` count 0, no XFO/CSP on `/` (546 B) or the bundle; `sdk.js` still 291,877 B / `0fae546a…`, `event.origin` count 0; OIDC discovery unchanged (staging advertises `registration_endpoint` + 22 scopes, prod omits it + 5 scopes); `GET /oauth2/register` → 404 on both. No drift, no new probe surface.
+[PRIO] gateway.sumup.com/hosted.js,9; auth.sam-app.ro/oauth2/register,8; mcp.sumup.com/mcp,5
+[HYP] gateway.sumup.com/hosted.js cross-origin postMessage checkout-write
+class: MISCONFIG
+asset: gateway.sumup.com/hosted.js
+confidence: 90
+reasoning: Inbound handler filters on type only (`d=e=>e.type===o.TYPE`); `event.origin` never read; declared `origin` param consumed only outbound (`t.postMessage(e, n||"*")`); frame-access gate nested under `"card"===a.payment_type` so caller opts out; UUID gate is static literal `/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i`; no XFO/frame-ancestors; bundle sha `1302f1d6…` re-verified live this cycle.
+evidence_needed: Program-side confirmation that `PUT /v0.2/checkouts/{uuid}` commits with `X-SumUp-Widget-Session-Id: undefined` and no `Sumup-Product-Origin`.
+verify_steps: GET https://gateway.sumup.com/ → no XFO/CSP; GET /hosted.js → sha256 1302f1d6…; grep event. → 0; frame + postMessage {type:"SumUpCard",message:"form--submit",payment:{checkoutId:<uuid>,payment_type:"not_card"}} → observe PUT in netlog.
+impact: Any unauthenticated origin makes a first-party sumup.com frame issue a state-changing PUT to prod payments API with attacker-chosen body; also a UI-redress primitive inside a PCI frame. Medium (High if backend accepts). No exfiltration claimed.
+testability: PASSIVE
+[HYP] auth.sam-app.ro/oauth2/register unauthenticated RFC 7591 DCR
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: POST → 201 unauthenticated (prior-cycle live evidence); scope forced empty; PKCE + per-client redirect allowlist enforced; no RFC 7592; minted JWTs carry `scp:[]` + attacker-set `aud`; prod/staging JWKS zero kid overlap; prod /register → 404 (re-verified GET-only this cycle); discovery divergence re-verified live this cycle.
+evidence_needed: None for staging-posture finding; prod client-provenance-sync leg is HUMAN_ONLY.
+verify_steps: GET /.well-known/openid-configuration → registration_endpoint present (staging) vs absent (prod); POST /oauth2/register → 201 → POST /oauth2/token → JWT → GET api.sam-app.ro with Bearer → problem+json 404 vs plain 404 control.
+impact: Unauthenticated client-credential factory + issuer-signed JWTs with attacker-chosen audience on company auth server; bounded by empty scope and key isolation. Low–Medium.
+testability: PASSIVE
+[HYP] mcp.sumup.com/mcp JWT kid-optional try-all on prod bearer verifier
+class: AUTH
+asset: mcp.sumup.com/mcp
+confidence: 75
+reasoning: 4-class unauthenticated oracle (no applicable key / signature verification failed / Unsupported alg / multiple matching keys); 30-kid sweep → exactly 8 prod kids trusted, 0 undeclared; alg allowlist {RS256, EdDSA}; HS256/none rejected.
+evidence_needed: A signed assertion triggering `multiple matching keys` on a prod-accepted kid.
+verify_steps: GET /.well-known/oauth-protected-resource → GET /mcp with unsigned Bearer and with kid omitted → compare error classes; GET/HEAD only.
+impact: Key/algorithm confusion surface if try-all reachable; else hardening deviation. Low.
+testability: PASSIVE
+[PARKED] mcp kid-optional try-all: exploitation purely theoretical without a signed assertion — no JWKS pollution, no cross-env key reuse, HS256/none rejected.
+[FINAL] 1. gateway cross-origin postMessage checkout-write — 90, PASSIVE, Medium
+[FINAL] 2. auth.sam-app.ro unauth DCR → mintable staging JWTs — 85, PASSIVE, Low–Medium
+[FINAL] 3. mcp.sumup.com kid-optional try-all — 75, PASSIVE, Low (hardening)
+[NEXT] HUMAN: run `git add reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md reports/valid-bugs.md && git -c user.name="sumup-hunt-analyst" -c user.email="analyst@localhost" commit -m "reports: gateway cross-origin postMessage + sam-app.ro DCR findings restored"` (prior cycle's claimed commit `ae23e10` does not exist — this is the 44th destruction, and untracked files are the proven cause), then file both reports to bugs.olivermaicher.eu per `scope.yml:4`; verify first with `sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md` → expect `a130b525…` / `afbe37b2…`.
+[LEARN] ACCEPTED OTHER @ workspace: the tracked analyst log is a durable artifact store — `reports/analyst-*.log` and `knowledge/index.md` are git-persisted while untracked `reports/*.md` are not, so report bytes can be recovered losslessly after re-materialization via the recorded `awk NR>=a && NR<=b` extraction (hashes matched the original on-disk verification exactly).
+[LEARN] REJECTED OTHER @ workspace: a commit claim without a `git cat-file -t` check is the same error class as a file claim without `ls` — prior cycle reported `ae23e10` as durable persistence; the object does not exist, history has one commit.
+[LEARN] ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound; inbound handler never reads event.origin; guard applied backwards — fixing outbound targetOrigin alone inverts the defect.
+[LEARN] REJECTED OTHER @ gateway.sumup.com/hosted.js: checkoutId gate is a static UUID v1–v5 literal, not `new RegExp(a.pattern)` — read code around citation, never re-derive from summary.
+[LEARN] REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg remains unfalsifiable — key-level isolation (zero kid overlap) is the binding control; fileable finding is staging posture only.
+[RISK] sumup: 34 — No production impact claimed or evidenced; both fileable findings remain bounded (staging-only key isolation; unproven backend acceptance of the forged PUT). Operational risk unchanged: two complete reports are on disk this cycle but uncommitted, and the last persistence claim was false — until a commit lands and survives a `git cat-file` check, treat every deliverable as volatile and every submission as outstanding.

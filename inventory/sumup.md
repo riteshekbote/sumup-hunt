@@ -2015,3 +2015,14 @@ www.sumup.com
 - CHANGED `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at two paths (prod, never fetched in 29 cycles); publishes `scopes_supported:["offline_access","email"]`; kid-optional try-all on `/mcp` (RFC
 - CHANGED Workspace re-materialized 43rd consecutive cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; artifacts written in cycle N do not per
 - CHANGED No submission mechanism exists in repo — `scope.yml:4` declares disclosure via bugs.olivermaicher.eu (private program); `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` mirror leads only
+
+## 2026-10-07 19:04:10 UTC
+- CHANGED Workspace re-materialized again (44th): both report files absent at open; `valid-bugs.md` back at baseline 79 L / 7,384 B / `282390f8`. Restored both byte-identically from the tracked analyst log (the
+- CHANGED Prior cycle's claimed commit `ae23e10` **does not exist** (`git cat-file -t ae23e10` → fatal); git history contains only `8825e2f`. That persistence claim was false — untracked reports remain the veri
+- NEW Live passive re-verification this cycle (GET only, ≤1 rps): `gateway.sumup.com/hosted.js` still 26,839 B / `1302f1d6…`, `event.` count 0, no XFO/CSP on `/` (546 B) or the bundle; `sdk.js` still 291,87
+- NEW `gateway.sumup.com/hosted.js` cross-origin postMessage defect re-verified LIVE: 26,839 B, sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`, ACAO `*`, no `event.origin` validat
+- NEW `auth.sam-app.ro/oauth2/register` unauthenticated RFC 7591 dynamic client registration confirmed LIVE via discovery document; registration_endpoint advertised, mints JWTs with empty `scp`, attacker-co
+- CHANGED `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway requires bearer even for spec-declared `oauth2:[]` operations.
+- CHANGED `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at two paths (prod, never fetched in 29 cycles); publishes `scopes_supported:["offline_access","email"]`; kid-optional try-all on `/mcp` (RFC
+- CHANGED Workspace re-materialized 43rd consecutive cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; artifacts written in cycle N do not per
+- CHANGED No submission mechanism exists in repo — `scope.yml:4` declares disclosure via bugs.olivermaicher.eu (private program); `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` mirror leads only
