@@ -957,3 +957,4 @@
 - 2026-10-07 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound; inbound handler never reads event.origin; guard applied backwards — fixing outbound targetOrigin alone inverts the defect.
 - 2026-10-07 REJECTED OTHER @ gateway.sumup.com/hosted.js: checkoutId gate is a static UUID v1–v5 literal, not `new RegExp(a.pattern)` — read code around citation, never re-derive from summary.
 - 2026-10-07 REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg remains unfalsifiable — key-level isolation (zero kid overlap) is the binding control; fileable finding is staging posture only.
+- 2026-10-07 ACCEPTED OTHER @ workspace: 44 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist. Write+hash must be the same act before referencing any [NEW] file claim

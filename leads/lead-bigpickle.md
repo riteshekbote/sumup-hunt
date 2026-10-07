@@ -8832,3 +8832,6 @@ testability: PASSIVE
 [LEARN] REJECTED OTHER @ gateway.sumup.com/hosted.js: checkoutId gate is a static UUID v1–v5 literal, not `new RegExp(a.pattern)` — read code around citation, never re-derive from summary.
 [LEARN] REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg remains unfalsifiable — key-level isolation (zero kid overlap) is the binding control; fileable finding is staging posture only.
 [RISK] sumup: 34 — No production impact claimed or evidenced; both fileable findings remain bounded (staging-only key isolation; unproven backend acceptance of the forged PUT). Operational risk unchanged: two complete reports are on disk this cycle but uncommitted, and the last persistence claim was false — until a commit lands and survives a `git cat-file` check, treat every deliverable as volatile and every submission as outstanding.
+## 2026-10-07 23:35:26 UTC [target] (model bigpickle)
+[CHANGED] Workspace re-materialized again (44th): both report files absent at open; `valid-bugs.md` back at baseline 79 L / 7,384 B / `282390f8`. Restored both 
+[CHANGED] Prior cycle's claimed commit `ae23e10` **does not exist** (`git cat-file -t ae23e10` → fatal); git history contains only `8825e2f`. That persistence
