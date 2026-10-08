@@ -2038,3 +2038,5 @@ www.sumup.com
 - CHANGED `auth.sam-app.ro/oauth2/register` unauthenticated RFC 7591 dynamic client registration confirmed LIVE via discovery document; registration_endpoint advertised, mints JWTs with empty `scp`, attacker-co
 - CHANGED No submission mechanism exists in repo — `scope.yml:4` declares disclosure via bugs.olivermaicher.eu (private program); `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` mirror leads only
 - CHANGED `valid-bugs.md` running count updated from 0 → 2 with both findings marked FILE REPORT citing path/line-count/hash
+
+## 2026-10-08 03:01:01 UTC
