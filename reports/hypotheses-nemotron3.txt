@@ -1,7 +1,9 @@
-## 2026-10-08 10:22:42 UTC [target] (model nemotron3)
+## 2026-10-08 17:29:51 UTC [target] (model nemotron3)
 [NEW] Workspace re-materialized 45th cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; both final report files (`gateway-hostedfields-cross-origin-messenger.md`, `auth-sam-app-ro-dynamic-registration.md`) ABSENT despite KB claims of verified hashes — artifacts written in cycle N do not persist to N+1.
 [NEW] `valid-bugs.md` running count remains 0 — both findings (gateway cross-origin postMessage, auth.sam-app.ro DCR) marked VALID 7.5 with FILE REPORT directive in prior cycles but submission blocked on HUMAN step; no submission mechanism exists in repo (`scope.yml:4` declares disclosure via bugs.olivermaicher.eu).
 [NEW] Live passive re-verification confirms: `gateway.sumup.com/hosted.js` 26,839 B, sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`, ACAO `*`, zero `event.origin` validation, no framing headers; `auth.sam-app.ro/oauth2/register` advertised in discovery, POST → 201 mints JWTs (empty `scp`, attacker-controlled `aud`), cross-env JWKS isolation holds (prod 8 keys, staging 9 unique, ZERO overlap).
+[CHANGED] `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway requires bearer even for spec-declared `oauth2:[]` operations.
+[CHANGED] `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at two paths (prod, never fetched in 29 cycles); publishes `scopes_supported:["offline_access","email"]`; kid-optional try-all on `/mcp` (RFC 8725 §3.11).
 [PRIO] gateway.sumup.com/hosted.js,9.30,attack_surface=9,business_value=10,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=9
 [PRIO] auth.sam-app.ro/oauth2/register,8.70,attack_surface=9,business_value=8,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=8
 [PRIO] mcp.sumup.com/mcp,8.05,attack_surface=8,business_value=7,tech_exposure=9,gate_ease=9,cloud_surface=7,freshness=9
@@ -23,6 +25,15 @@ evidence_needed: Fileable as staging posture finding only (VALID 7.5 per triage)
 verify_steps: POST https://auth.sam-app.ro/oauth2/register {redirect_uris:["https://evil.example/cb"],grant_types:["client_credentials"],client_name:"test",token_endpoint_auth_method:"client_secret_post"} → 201 client_id/secret → POST https://auth.sam-app.ro/oauth2/token grant_type=client_credentials&client_id={id}&client_secret={secret} → 200 JWT (empty scp, aud=https://api.sam-app.ro) → GET https://api.sam-app.ro/v0.1/merchants/{code} with Bearer → 404 structured problem+json (token validated) vs plain 404 without → empty scope blocks resource access.
 impact: Staging environment allows unauthenticated client registration + token minting with empty scope + attacker-controlled aud. Cross-env key isolation (ZERO kid overlap) blocks prod relay. Fileable as staging misconfiguration (scope escalation blocked, no prod impact). Severity: Low-Medium (staging only).
 testability: PASSIVE (registration + token minting proven); AUTH_HELPED for prod sync test (not possible passively).
+[HYP] mcp.sumup.com/mcp kid-optional JWT try-all verification
+class: AUTH
+asset: mcp.sumup.com/mcp
+confidence: 75
+reasoning: Prod MCP bearer verifier accepts tokens without `kid` header (RFC 8725 §3.11 try-all across 8 trusted keys). `kid` omission → `multiple matching keys found`; 30 candidate `kid` sweep found exactly 8 published prod kids trusted, 0 undeclared (all 9 staging kids absent, 11 name-guesses absent). Alg allowlist strictly `{RS256, EdDSA}` — HS256/none explicitly rejected. No JWKS pollution vector, no cross-env key reuse (ZERO kid overlap). Hardening deviation only.
+evidence_needed: Demonstrable exploit chain requiring JWKS pollution or key confusion — neither exists. Theoretical hardening gap only.
+verify_steps: POST https://mcp.sumup.com/mcp with JWT missing `kid` → observe `multiple matching keys` error; RS256→HS256 confusion → `Unsupported "alg" value`; `alg:none` → same. All negative controls confirmed.
+impact: Theoretical JWT verification hardening deviation (optional kid + try-all). No exploitation path without JWKS pollution or cross-env key reuse (both absent). Severity: Informational.
+testability: PASSIVE (oracle responses confirmed); AUTH_HELPED for JWKS pollution (not possible).
 [PARKED] mcp.sumup.com/mcp kid-optional try-all: confidence 75 but exploitation purely theoretical — no JWKS pollution vector, no cross-env key reuse (ZERO kid overlap), HS256/none explicitly rejected; hardening deviation only.
 [PARKED] iso20022.sumup.com dual-upstream routing: routing observation, not a security finding — two classes differ in which server answers, not in what is disclosed; Origin control produced zero access-control-* headers on both classes.
 [PARKED] pos-payment.sumup.com AWS API Gateway IAM/SigV4: different trust model but route-level enum REFUTED; no passive anomaly beyond auth gate.

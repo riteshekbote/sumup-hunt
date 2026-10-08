@@ -1711,3 +1711,8 @@ https://gateway.sumup.com/hosted.js -> 200 len=26839
 ## 2026-10-08 10:23:54 UTC
 https://gateway.sumup.com/ -> 200 len=546
 https://gateway.sumup.com/hosted.js -> 200 len=26839
+
+## 2026-10-08 17:33:01 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/mcp -> HTTP 401
