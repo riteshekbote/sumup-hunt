@@ -2040,3 +2040,8 @@ www.sumup.com
 - CHANGED `valid-bugs.md` running count updated from 0 → 2 with both findings marked FILE REPORT citing path/line-count/hash
 
 ## 2026-10-08 03:01:01 UTC
+
+## 2026-10-08 10:23:52 UTC
+- NEW Workspace re-materialized 45th cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; both final report files (`gateway-hostedfields-cros
+- NEW `valid-bugs.md` running count remains 0 — both findings (gateway cross-origin postMessage, auth.sam-app.ro DCR) marked VALID 7.5 with FILE REPORT directive in prior cycles but submission blocked on HU
+- NEW Live passive re-verification confirms: `gateway.sumup.com/hosted.js` 26,839 B, sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`, ACAO `*`, zero `event.origin` validation, no f
