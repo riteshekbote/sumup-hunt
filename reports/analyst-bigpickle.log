@@ -89069,3 +89069,574 @@ All executable next steps are done. Stopping here — remaining work is human-on
 - `git cat-file -t` verified both commits; no re-probing done (quartet byte-stable 27+ cycles)
 
 **Blocked on you:** file the two reports to bugs.olivermaicher.eu (per `scope.yml:4`). `reports/valid-bugs.md` running count stays 0 until then — no further probe cycle will change that.
+===== ANALYST bigpickle 2026-10-08 22:30:17 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null; echo "---"; ls -la 2>/dev/null | head -40; echo "---GIT---"; git log --oneline -5 2>/dev/null; echo "---SCOPE---"; cat scope.yml 2>/dev/null | head -40
+total 11212
+drwxr-xr-x  2 runner runner    4096 Oct  8 22:27 .
+drwxr-xr-x 12 runner runner    4096 Oct  8 22:27 ..
+-rw-r--r--  1 runner runner 7417128 Oct  8 22:27 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   44919 Oct  8 22:27 analyst-laguna.log
+-rw-r--r--  1 runner runner   44712 Oct  8 22:27 analyst-ling3.log
+-rw-r--r--  1 runner runner   45126 Oct  8 22:27 analyst-longcat.log
+-rw-r--r--  1 runner runner 3236535 Oct  8 22:27 analyst-nemotron3.log
+-rw-r--r--  1 runner runner      54 Oct  8 22:27 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Oct  8 22:27 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Oct  8 22:27 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Oct  8 22:27 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   11590 Oct  8 22:27 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  623234 Oct  8 22:27 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Oct  8 22:27 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Oct  8 22:27 valid-bugs.md
+---
+total 1348
+drwxr-xr-x 12 runner runner   4096 Oct  8 22:27 .
+drwxr-xr-x  3 runner runner   4096 Oct  8 22:26 ..
+drwxr-xr-x  7 runner runner   4096 Oct  8 22:27 .git
+drwxr-xr-x  3 runner runner   4096 Oct  8 22:27 .github
+-rw-r--r--  1 runner runner   1885 Oct  8 22:27 README.md
+-rw-r--r--  1 runner runner     32 Oct  8 22:27 analyst-out.txt
+-rw-r--r--  1 runner runner 599848 Oct  8 22:27 analyst-prompt.txt
+-rw-r--r--  1 runner runner 595962 Oct  8 22:27 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Oct  8 22:27 inventory
+drwxr-xr-x  2 runner runner   4096 Oct  8 22:27 knowledge
+drwxr-xr-x  2 runner runner   4096 Oct  8 22:27 leads
+-rw-r--r--  1 runner runner  84510 Oct  8 22:27 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Oct  8 22:27 recon-notes
+drwxr-xr-x  2 runner runner   4096 Oct  8 22:27 reports
+drwxr-xr-x  2 runner runner   4096 Oct  8 22:27 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Oct  8 22:27 scope.yml
+drwxr-xr-x  2 runner runner   4096 Oct  8 22:27 scripts
+-rw-r--r--  1 runner runner     33 Oct  8 22:27 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Oct  8 22:27 state_laguna.json
+-rw-r--r--  1 runner runner     33 Oct  8 22:27 state_ling3.json
+-rw-r--r--  1 runner runner     33 Oct  8 22:27 state_longcat.json
+-rw-r--r--  1 runner runner     33 Oct  8 22:27 state_mimo.json
+-rw-r--r--  1 runner runner     33 Oct  8 22:27 state_nemotron3.json
+drwxr-xr-x  2 runner runner  12288 Oct  8 22:27 triage
+---GIT---
+94937d2 reposcan 2026-10-08-17-53
+---SCOPE---
+programs:
+  sumup:
+    name: SumUp Payments Limited / SumUp Group Bug Bounty
+    disclosure_policy: via bugs.olivermaicher.eu (Oliver Maicher private program) - report + PoC + contact + payment
+    assets:
+      - name: "All company-owned infrastructure, payment platforms, merchant portals, APIs, mobile and web applications, point-of-sale systems, cloud services, websites, and domains operated by SumUp Group and its subsidiaries"
+        priority: In
+    out_of_scope:
+- "Network level Denial of Service attacks"
+      - "Application Denial of Service by locking user accounts"
+      - "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)"
+      - "Disclosure of known public files or directories (e.g. robots.txt)"
+      - "Outdated software / library versions"
+      - "OPTIONS / TRACE HTTP method enabled"
+      - "CSRF on logout"
+      - "CSRF on forms that are available to anonymous users"
+      - "Cookies that lack HTTP Only or Secure settings for non-sensitive data"
+      - "Self-XSS and issues exploitable only through Self-XSS"
+      - "Reports resulting from automated scanning utilities without additional details or a POC demonstrating a specific exploit"
+      - "Attacks requiring physical access to a user's device"
+      - "Attacks dependent upon social engineering of employees or vendors"
+      - "Username enumeration based on login or forgot password pages"
+      - "Enforcement policies for brute force, rate limiting, or account lockout"
+      - "SSL/TLS best practices"
+      - "SSL attacks such as BEAST, BREACH, Renegotiation attack"
+      - "Clickjacking, without additional details demonstrating a specific exploit"
+      - "Mail configuration issues including SPF, DKIM, DMARC settings"
+      - "Use of a known-vulnerable library without a description of an exploit specific to our implementation"
+      - "Password and account recovery policies"
+      - "Presence of autocomplete functionality in form fields"
+      - "Publicly accessible login panels"
+      - "Lack of email address verification during account registration or account invitation"
+      - "Lack of email address verification password restore"
+      - "Session control during email/password changes"
+      - "Social engineering, physical attacks, and DoS/DDoS testing (per program notes)"
+      - "Exposure of customer/employee/financial/authentication data during testing (per program notes)"
+    github_orgs:
+      - none-configured
+
+rules:
+[0m
+## Objective
+- Act as senior bug-bounty analyst for the SumUp Payments Limited / SumUp Group program: run the 8-step structured pass (DELTA → PRIORITIZE → HYPOTHESES → SELF-CRITIQUE → NEXT ACTION → LEARNING → RISK) over the in-scope SumUp estate, passing passive-first (GET/HEAD/OPTIONS, ≤1 rps).
+- Produce fileable findings and deliver them to the report channel `bugs.olivermaicher.eu` (declared at `scope.yml:4`); current state: phase=POC, target=api.
+
+## Important Details
+- **Passive-only rules**: GET/HEAD/OPTIONS only for live probes; ≤1 rps; no auth-bypass, no mutating tests against live customer data; no POST to `/oauth2/register` (creates live OAuth clients — deliberately skipped); scanner output requires manual validation.
+- **Rejected/out-of-scope classes** (must not be filed): network/account-lockout DoS, descriptive errors/headers only, robots.txt/public files, outdated libs, OPTIONS/TRACE, CSRF on logout/anonymous forms, cookie flags on non-sensitive data, self-XSS, username enumeration, brute-force/lockout policy, SSL/TLS best practice, clickjacking without demonstrated exploit, mail config, known-vuln libs, password-recovery policy, public login panels, missing email verification.
+- **Workspace is re-materialized between cycles** (44–45+ consecutive confirmations): untracked `reports/*.md` do NOT persist; `reports/valid-bugs.md` reverts to baseline 79 L / 7,384 B / sha256 prefix `282390f8`. Only git-persisted artifacts survive: `reports/analyst-*.log` and `knowledge/index.md`. Rule: any `[NEW]` file claim must be written and hashed in the **same command** (heredoc + `sha256sum`).
+- Conflicting artifact hashes across late cycles (all produced by separate cycles; verify with `ls`+`sha256sum` before trusting): gateway report seen at 239 L/41ec5aab…, 268 L/a12c3fc9…, 234 L/36c78b62…, 174 L/4291c128…, 173 L/d7b493dd…; DCR report 132 L/ffffbc02…, 170 L/491a3804…, 129 L.
+- No submission mechanism exists in repo: `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` only mirror leads; filing is a HUMAN step.
+- Stable ground-truth artifacts: `gateway.sumup.com/hosted.js` = 26,839 B, sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`; `gateway.sumup.com/sdk.js` = 291,877 B, sha256 `0fae546ae34ee5e97cf0c3107d87adaa79129983d423bcecf9a0fc19916c7bd`; both ACAO `*`, zero `event.origin`, zero XFO/CSP/frame-ancestors.
+- `api.sumup.com` passive surface judged exhausted (19–27 stable cycles); further GET/OPTIONS is zero-yield — only a live bearer discriminates aud/iss binding vs key-level gate.
+
+## Work State
+### Completed
+- **Finding 1 (gateway.sumup.com/hosted.js, MISCONFIG, conf 90, PASSIVE, Medium)**: inbound postMessage handler filters on `e.type===o.TYPE` only (`d=e=>e.type===o.TYPE`, `o={TYPE:"SumUpCard",ACTION_MESSAGE:"message",variant:"hostedfield"}`); `event.origin` never read; declared `origin` param supplied at construction and used ONLY outbound (`t.postMessage(e,n||"*")`, `n=document.referrer`); frame-access gate `if("card"===a.payment_type){if(d=Ce(r.frames),!d.length)return}` is caller-opt-out; checkoutId gate is a static UUID v1–v5 literal (`ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i`, `le=e=>ue.test(e)`); no XFO/CSP/frame-ancestors/Referrer-Policy. PoC live: cross-origin `form--submit` drives first-party frame to `PUT /v0.2/checkouts/{attacker-uuid}`; `Te.endpoint` injects `X-SumUp-Widget-Session-Id` unconditionally (literal "undefined" when absent), `Sumup-Product-Origin` conditional. No exfiltration claimed (outbound `Re` throws on full-URL referrer; other two messengers emit only sender-known payloads).
+- **Finding 2 (auth.sam-app.ro/oauth2/register, OATH, conf 85, PASSIVE, Low–Medium)**: unauthenticated RFC 7591 DCR LIVE (POST → 201 client_id+secret+chosen redirect_uris) advertised in staging openid-configuration; absent in prod auth.sumup.com (`/register` 404 GET/POST/OPTIONS). Bounded: scope forced empty (`invalid_scope`), PKCE required, per-client redirect allowlist enforced, no RFC 7592, clients not synced to `api.sam-app.ro/authorize` (invalid_client); `client_credentials` mints real JWTs with `scp:[]` + attacker-controlled `aud`; prod/staging JWKS zero kid overlap (prod 8 keys; staging 11 entries = 9 unique, `public:3a13954d-…`/`public:f06a4960-…` duplicated); prod client-provenance-sync path marked UNTESTED.
+- **Finding 3 (mcp.sumup.com/mcp, AUTH, conf 75, PASSIVE, Low/hardening, PARKED)**: `kid` optional (RFC 8725 §3.11 try-all); alphabet allowlist exactly `{RS256, EdDSA}` (HS256/none/RS384/RS512/PS256/ES256 rejected); 30-kid sweep showed exactly 8 prod kids trusted, 0 undeclared — exploitation theoretical without a signed assertion.
+- Many negative/rejected hypotheses recorded: js.sumup.com/api/checkouts/{id} BFF oracle REFUTED (68 B Vercel platform 404, 4/4 credential differentials failed); api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods IDOR RETIRED (param- and credential-invariant stub, byte-identical 404/58 B); pos-payment route enum REFUTED (negative control); iso20022 dual-upstream routing = recon note not vulnerability; serial-terminal S3 no exposure (md5-of-empty, key-variation control); mcp.sumup.com wildcard CORS hardening-only; redirect_uri allowlist widening refuted (6 controlled negatives).
+- Reports written/verified on disk this cycle: `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` (plus lesser `reports/cognito-implicit-grant-dev-solo-buckets.md`, `recon-notes/AI-LLM-TOOLING-SURFACE.md`).
+
+### Active
+- Deliverable gap: both final reports must be re-constructed from verified evidence and re-verified in a single act each cycle; `reports/valid-bugs.md` running count wobbles between 0 and 2 across cycles (last stated: 0, both findings marked VALID 7.5 / FILE REPORT).
+- Queue depth: `[PRIO]` gateway.sumup.com/hosted.js,9; auth.sam-app.ro/oauth2/register,8; mcp.sumup.com/mcp,5.
+
+### Blocked
+- Artifacts do not survive between cycles (workspace re-materialization) — every cycle must re-write reports and re-verify by `ls`+`wc`+`sha256sum`.
+- No in-repo submission path; filing to `bugs.olivermaicher.eu` is HUMAN_ONLY.
+- Prior claimed commit `ae23e10` does not exist (`git cat-file -t ae23e10` → fatal); git history contains only `8825e2f` — untracked reports remain the verified destruction mechanism.
+
+## Next Move
+1. Reconstruct both reports from verified evidence in the same command as the hash check: `reports/gateway-hostedfields-cross-origin-messenger.md` (target 173 L, sha256 `d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c`) and `reports/auth-sam-app-ro-dynamic-registration.md` (target 129 L), then verify via `sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md`.
+2. [NEXT] HUMAN: file both reports to `bugs.olivermaicher.eu` per `scope.yml:4`, and run `git add reports/... && git -c user.name="sumup-hunt-analyst" -c user.email="analyst@localhost" commit -m "reports: gateway cross-origin postMessage + sam-app.ro DCR"` so the artifacts survive the next re-materialization.
+
+## Relevant Files
+- `reports/gateway-hostedfields-cross-origin-messenger.md`: Finding 1 report (MISCONFIG, conf 90) — write+hash in one act; verify sha256 `d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c`.
+- `reports/auth-sam-app-ro-dynamic-registration.md`: Finding 2 report (OATH, conf 85) — staging RFC 7591 DCR; 129 L target.
+- `reports/valid-bugs.md`: ledger; baseline 79 L / 7,384 B / sha256 prefix `282390f8`; running-count header; findings marked VALID 7.5 / FILE REPORT.
+- `reports/cognito-implicit-grant-dev-solo-buckets.md`: Cognito implicit-grant finding (dev.solo buckets); prior sha256 `c8aa4ff8dbb989593d6d20220ff55a7b86eb588c40fa91aa9e230b955bdffb06`.
+- `reports/analyst-*.log`, `knowledge/index.md`: the only git-persisted durable stores; use recorded `awk NR>=a && NR<=b` extraction to recover report bytes.
+- `scope.yml`: line 4 declares disclosure channel `bugs.olivermaicher.eu` (private program); also lists out-of-scope classes.
+- `inventory/sumup.md`: seed host inventory (admin, api, auth, dashboard, portal, sumup.com, support, web, www).
+- `recon-notes/AI-LLM-TOOLING-SURFACE.md`: 86 L / 4,909 B / sha256 `4a938b7986eeb0df242f3b61baf57c7b977138a13af27c5cf867239b111e78c2`.
+- `scripts/sync-issues.py`, `.github/workflows/sync-issues.yml`: mirror leads only — not a submission mechanism.
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m→ [0mRead reports/valid-bugs.md
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt; echo "===STATE==="; cat state_bigpickle.json; echo; echo "===GIT STATUS==="; git status --short | head -30; echo "===TRACKED REPORTS==="; git ls-files reports/ | head; echo "===KNOWLEDGE==="; ls -la knowledge/ leads/ recon-notes/
+===STATE===
+{"phase": "POC", "target": "api"}
+===GIT STATUS===
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+===TRACKED REPORTS===
+reports/analyst-bigpickle.log
+reports/analyst-laguna.log
+reports/analyst-ling3.log
+reports/analyst-longcat.log
+reports/analyst-nemotron3.log
+reports/hypotheses-bigpickle.txt
+reports/hypotheses-laguna.txt
+reports/hypotheses-ling3.txt
+reports/hypotheses-longcat.txt
+reports/hypotheses-nemotron3.txt
+===KNOWLEDGE===
+knowledge/:
+total 284
+drwxr-xr-x  2 runner runner   4096 Oct  8 22:27 .
+drwxr-xr-x 12 runner runner   4096 Oct  8 22:27 ..
+-rw-r--r--  1 runner runner 278786 Oct  8 22:27 index.md
+
+leads/:
+total 3724
+drwxr-xr-x  2 runner runner    4096 Oct  8 22:27 .
+drwxr-xr-x 12 runner runner    4096 Oct  8 22:27 ..
+-rw-r--r--  1 runner runner 1448144 Oct  8 22:27 lead-bigpickle.md
+-rw-r--r--  1 runner runner   10557 Oct  8 22:27 lead-laguna.md
+-rw-r--r--  1 runner runner   10350 Oct  8 22:27 lead-ling3.md
+-rw-r--r--  1 runner runner   10764 Oct  8 22:27 lead-longcat.md
+-rw-r--r--  1 runner runner      18 Oct  8 22:27 lead-mimo.md
+-rw-r--r--  1 runner runner 2250276 Oct  8 22:27 lead-nemotron3.md
+-rw-r--r--  1 runner runner   58981 Oct  8 22:27 reposcan-sumup.md
+
+recon-notes/:
+total 12
+drwxr-xr-x  2 runner runner 4096 Oct  8 22:27 .
+drwxr-xr-x 12 runner runner 4096 Oct  8 22:27 ..
+-rw-r--r--  1 runner runner  813 Oct  8 22:27 DEDICATED-DEEP.md
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt; echo "===grep filenames in logs==="; grep -rl "gateway-hostedfields-cross-origin-messenger\|auth-sam-app-ro-dynamic-registration" reports/ knowledge/ leads/ 2>/dev/null; echo "===hash d7b493dd==="; grep -rl "d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c" reports/ knowledge/ leads/ 2>/dev/null; echo "===hash 1302f1d6==="; grep -rl "1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873" reports/ knowledge/ leads/ 2>/dev/null
+===grep filenames in logs===
+reports/hypotheses.md
+reports/analyst-nemotron3.log
+reports/hypotheses-nemotron3.txt
+reports/analyst-bigpickle.log
+leads/lead-bigpickle.md
+leads/lead-nemotron3.md
+===hash d7b493dd===
+reports/hypotheses.md
+reports/analyst-nemotron3.log
+reports/hypotheses-nemotron3.txt
+leads/lead-nemotron3.md
+===hash 1302f1d6===
+reports/analyst-nemotron3.log
+reports/hypotheses-nemotron3.txt
+reports/analyst-bigpickle.log
+leads/lead-bigpickle.md
+leads/lead-nemotron3.md
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt; grep -n "d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c" reports/analyst-nemotron3.log | head; echo "===context==="; grep -n "gateway-hostedfields-cross-origin-messenger" reports/analyst-nemotron3.log | head -20
+25470:d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c  reports/gateway-hostedfields-cross-origin-messenger.md
+25525:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verified on disk with hashes: gateway sha256 `d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c` (173 lines), DCR sha256 `5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1` (129 lines).
+25574:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verified on disk with hashes: gateway sha256 `d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c` (173 lines), DCR sha256 `5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1` (129 lines).
+25647:[NEXT] HUMAN: reconstruct both reports from verified evidence (gateway: 173 lines, sha256 `d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c`; DCR: 129 lines, sha256 `5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1`), write+hash in same act, submit to bugs.olivermaicher.eu per scope.yml:4.
+25708:[NEXT] HUMAN: reconstruct both reports from verified evidence (gateway: 173 lines, sha256 `d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c`; DCR: 129 lines, sha256 `5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1`), write+hash in same act, submit to bugs.olivermaicher.eu per scope.yml:4.
+===context===
+18982:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` to bugs.olivermaicher.eu (evidence complete: PoC pages, netlog, served bundle). Second priority: submit auth.sam-app.ro RFC 7591 finding. Third: request test-mode merchant API key from developer.sumup.com to unblock MCP scope-binding and apple-pay-session SSRF legs.
+19030:[0m$ [0mls -la reports/gateway-hostedfields-cross-origin-messenger.md 2>/dev/null || echo "FILE NOT FOUND"
+19041:[CHANGED] reports/gateway-hostedfields-cross-origin-messenger.md claimed created in prior cycle but NOT ON DISK (verified via ls) — deliverable gap confirmed mechanical
+19092:[NEXT] HUMAN: create `reports/gateway-hostedfields-cross-origin-messenger.md` (410 lines, 18.5KB) with PoC HTML, netlog capture, served bundle sha256, and exact message protocol — then submit to bugs.olivermaicher.eu. Second: submit auth.sam-app.ro RFC 7591 finding. Third: request test-mode merchant API key from developer.sumup.com to unblock MCP scope-binding and apple-pay-session SSRF legs.
+19150:[CHANGED] reports/gateway-hostedfields-cross-origin-messenger.md claimed created in prior cycle but NOT ON DISK (verified via ls) — deliverable gap confirmed mechanical
+19191:[NEXT] HUMAN: create `reports/gateway-hostedfields-cross-origin-messenger.md` (410 lines, 18.5KB) with PoC HTML, netlog capture, served bundle sha256, and exact message protocol — then submit to bugs.olivermaicher.eu. Second: submit auth.sam-app.ro RFC 7591 finding. Third: request test-mode merchant API key from developer.sumup.com to unblock MCP scope-binding and apple-pay-session SSRF legs.
+19219:- [CHANGED] `reports/gateway-hostedfields-cross-origin-messenger.md` claimed created prior cycle but **NOT ON DISK** (verified via `ls`) — deliverable gap confirmed mechanical (same root cause as 8-cycle Contentful hallucination)
+19333:[CHANGED] reports/gateway-hostedfields-cross-origin-messenger.md GENUINELY on disk — 198 lines, 8,532 B, sha256 12bdc51a13b523110819d91fcaaf397a52c9672e2127ff13494cd7f5e854a3a8.
+19472:[NEW] reports/gateway-hostedfields-cross-origin-messenger.md GENUINELY on disk — 310 lines, 12,533 B, sha256 cd94b180fb2f3f45863d472c38a2978602a28eb4bc02e6f472fb33b121239a0f; reports/valid-bugs.md 181 lines, running-count 1, gateway finding appended with report path/hash inline
+19579:[CHANGED] reports/gateway-hostedfields-cross-origin-messenger.md GENUINELY on disk — 247 lines, 12,338 B, sha256 bca86e1d25e85e05b2ff4f7e57a5eaf610102286abed9994f61f313a565af155
+19689:[0m$ [0mls -la reports/gateway-hostedfields-cross-origin-messenger.md reports/cognito-implicit-grant-dev-solo-buckets.md 2>/dev/null
+20290:[CHANGED] reports/gateway-hostedfields-cross-origin-messenger.md GENUINELY on disk — 270 lines, 14,332 B, sha256 d5d4c5eeed87ce5bdb4e57abeb9e41e88fbe31417d7df7fb6aa1e3e3d4308322
+20380:[CHANGED] reports/gateway-hostedfields-cross-origin-messenger.md GENUINELY on disk — 270 lines, 14,332 B, sha256 `d5d4c5eeed87ce5bdb4e57abeb9e41e88fbe31417d7df7fb6aa1e3e3d4308322`
+20468:[CHANGED] reports/gateway-hostedfields-cross-origin-messenger.md GENUINELY on disk — 270 lines, 14,332 B, sha256 `d5d4c5eeed87ce5bdb4e57abeb9e41e88fbe31417d7df7fb6aa1e3e3d4308322`.
+20832:[CHANGED] reports/gateway-hostedfields-cross-origin-messenger.md GENUINELY on disk — 270 lines, 14,332 B, sha256 `d5d4c5eeed87ce5bdb4e57abeb9e41e88fbe31417d7df7fb6aa1e3e3d4308322`
+20948:[CHANGED] `reports/gateway-hostedfields-cross-origin-messenger.md` GENUINELY on disk — 270 lines, 14,332B, sha256 `d5d4c5eeed87ce5bdb4e57abeb9e41e88fbe31417d7df7fb6aa1e3e3d4308322`
+21032:[CHANGED] reports/gateway-hostedfields-cross-origin-messenger.md GENUINELY on disk — 270 lines, 14,332B, sha256 `d5d4c5eeed87ce5bdb4e57abeb9e41e88fbe31417d7df7fb6aa1e3e3d4308322`
+21311:[CHANGED] `reports/gateway-hostedfields-cross-origin-messenger.md` GENUINELY on disk — 270 lines, 14,332 B, sha256 `d5d4c5eeed87ce5bdb4e57abeb9e41e88fbe31417d7df7fb6aa1e3e3d4308322`
+21435:[CHANGED] `reports/gateway-hostedfields-cross-origin-messenger.md` GENUINELY on disk — 270 lines, 14,332B, sha256 `d5d4c5eeed87ce5bdb4e57abeb9e41e88fbe31417d7df7fb6aa1e3e3d4308322`.
+21587:[CHANGED] `reports/gateway-hostedfields-cross-origin-messenger.md` RE-DELIVERED — 215 lines, 7,642 B, sha256 `cf997909f114d86102124e9c2a9efb10c6f8ae6ed554366b3c703090ab314635`.
+[0m
+[0m→ [0mRead reports/analyst-nemotron3.log[90m [offset=25420, limit=90][0m
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt; grep -n "cat > .*gateway-hostedfields\|cat >.*gateway-hostedfields\|cat <<.*gateway-hostedfields\|> reports/gateway-hostedfields\|>reports/gateway-hostedfields" reports/analyst-nemotron3.log | head; echo "=== find heredoc markers near 25455 ==="; grep -n "^EOF$\|^EOF\b" reports/analyst-nemotron3.log | awk -F: '$1>25000 && $1<25500' | head
+24464:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+25127:24464:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+25280:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+=== find heredoc markers near 25455 ===
+25276:EOF
+25455:EOF
+[0m
+[0m→ [0mRead reports/analyst-nemotron3.log[90m [limit=10, offset=25278][0m
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+for range in "25281,25453" "25281,25454" "25280,25453"; do
+  start=${range%,*}; end=${range#*,}
+  tmp=$(mktemp)
+  sed -n "${start},${end}p" reports/analyst-nemotron3.log > "$tmp"
+  lines=$(wc -l < "$tmp")
+  h=$(sha256sum "$tmp" | cut -d' ' -f1)
+  echo "range=$range lines=$lines sha=$h"
+  rm -f "$tmp"
+done
+echo "target=d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c"
+range=25281,25453 lines=173 sha=6c04c064b70970df8d227de1075d601ffdff16be46e40772d96e1a49b7479ee8
+range=25281,25454 lines=174 sha=4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9
+range=25280,25453 lines=174 sha=bc7f7d055a5653d9ec59804b413a9f82c7eeb25e7d362f8b9b9debb488767f96
+target=d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+echo "=== network test (passive GET, in-scope) ==="
+curl -sS -m 20 -o /tmp/opencode/hosted.js -w "http=%{http_code} bytes=%{size_download} time=%{time_total}\n" https://gateway.sumup.com/hosted.js 2>&1 | head
+echo "=== hash ==="
+sha256sum /tmp/opencode/hosted.js 2>/dev/null
+head -c 200 /tmp/opencode/hosted.js 2>/dev/null; echo
+=== network test (passive GET, in-scope) ===
+http=200 bytes=26839 time=0.096639
+=== hash ===
+1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873  /tmp/opencode/hosted.js
+(()=>{"use strict";var e={d:(r,t)=>{for(var a in t)e.o(t,a)&&!e.o(r,a)&&Object.defineProperty(r,a,{enumerable:!0,get:t[a]})},o:(e,r)=>Object.prototype.hasOwnProperty.call(e,r),r:e=>{"undefined"!=typeo
+[0m
+Network works and `hosted.js` is byte-identical (`1302f1d6…`, 26,839 B). Let me re-verify the core claims live before writing.
+[0m$ [0mcd /tmp/opencode
+echo "=== event.origin occurrences ==="; grep -c "event\.origin" hosted.js
+echo "=== origin=== / origin == occurrences ==="; grep -c "origin===" hosted.js
+echo "=== targetOrigin ==="; grep -c "targetOrigin" hosted.js
+echo "=== postMessage sites ==="; grep -o "postMessage([^)]*)" hosted.js | head
+echo "=== framing headers from gateway root ==="
+curl -sSI -m 20 https://gateway.sumup.com/ | grep -iE "x-frame-options|frame-ancestors|content-security-policy|referrer-policy" || echo "(none)"
+echo "=== TYPE literal / form--submit / payment_type ==="
+grep -o "SumUpCard" hosted.js | head -1
+grep -o "form--submit" hosted.js | head -1
+grep -o "payment_type" hosted.js | head -1
+grep -o 'type===o.TYPE' hosted.js | head -1
+=== event.origin occurrences ===
+0
+=== origin=== / origin == occurrences ===
+0
+=== targetOrigin ===
+0
+=== postMessage sites ===
+postMessage(t,"*")
+postMessage(e,n||"*")
+postMessage(e,"*")
+=== framing headers from gateway root ===
+(none)
+=== TYPE literal / form--submit / payment_type ===
+SumUpCard
+form--submit
+payment_type
+type===o.TYPE
+[0m
+Gateway core claim confirmed live. Now re-verifying the DCR finding passively (GET only, no client creation).
+[0m$ [0mcd /tmp/opencode
+echo "=== staging discovery ==="
+curl -sS -m 20 -w "\nhttp=%{http_code}\n" https://auth.sam-app.ro/.well-known/openid-configuration -o staging-oidc.json 2>&1 | tail -1
+grep -o '"registration_endpoint":"[^"]*"' staging-oidc.json 2>/dev/null || echo "(no registration_endpoint)"
+echo "=== prod discovery registration_endpoint ==="
+curl -sS -m 20 -w "\nhttp=%{http_code}\n" https://auth.sumup.com/.well-known/openid-configuration -o prod-oidc.json 2>&1 | tail -1
+grep -o '"registration_endpoint":"[^"]*"' prod-oidc.json 2>/dev/null || echo "(no registration_endpoint in prod)"
+echo "=== GET staging /oauth2/register (passive) ==="
+curl -sS -m 20 -o /dev/null -w "http=%{http_code}\n" https://auth.sam-app.ro/oauth2/register
+echo "=== GET prod auth.sumup.com/register (passive) ==="
+curl -sS -m 20 -o /dev/null -w "http=%{http_code}\n" https://auth.sumup.com/register
+=== staging discovery ===
+http=200
+(no registration_endpoint)
+=== prod discovery registration_endpoint ===
+http=200
+(no registration_endpoint in prod)
+=== GET staging /oauth2/register (passive) ===
+http=404
+=== GET prod auth.sumup.com/register (passive) ===
+http=404
+[0m
+[0m$ [0mcd /tmp/opencode
+echo "=== staging oidc keys ==="; python3 -c "import json;d=json.load(open('staging-oidc.json'));print('issuer:',d.get('issuer'));print('\n'.join(sorted(d.keys())))" 2>&1
+echo "=== any 'register' mention ==="; grep -o '"[a-z_]*register[a-z_]*":"[^"]*"' staging-oidc.json || echo "(none)"
+echo "=== full staging doc (first 1200 chars) ==="; head -c 1200 staging-oidc.json; echo
+echo "=== 405 probe: OPTIONS staging /oauth2/register (passive) ==="
+curl -sS -m 20 -o /dev/null -w "http=%{http_code} allow=%header{allow}\n" -X OPTIONS https://auth.sam-app.ro/oauth2/register
+=== staging oidc keys ===
+issuer: https://auth.sam-app.ro
+authorization_endpoint
+backchannel_logout_session_supported
+backchannel_logout_supported
+claims_supported
+code_challenge_methods_supported
+device_authorization_endpoint
+dpop_signing_alg_values_supported
+end_session_endpoint
+frontchannel_logout_session_supported
+frontchannel_logout_supported
+grant_types_supported
+id_token_signing_alg_values_supported
+issuer
+jwks_uri
+nonce_endpoint
+pushed_authorization_request_endpoint
+registration_endpoint
+request_object_signing_alg_values_supported
+request_parameter_supported
+request_uri_parameter_supported
+require_request_uri_registration
+response_modes_supported
+response_types_supported
+revocation_endpoint
+scopes_supported
+service_documentation
+subject_types_supported
+token_endpoint
+token_endpoint_auth_methods_supported
+token_endpoint_auth_signing_alg_values_supported
+ui_locales_supported
+userinfo_endpoint
+userinfo_signing_alg_values_supported
+=== any 'register' mention ===
+(none)
+=== full staging doc (first 1200 chars) ===
+{
+  "issuer": "https://auth.sam-app.ro",
+  "authorization_endpoint": "https://auth.sam-app.ro/oauth2/auth",
+  "token_endpoint": "https://auth.sam-app.ro/oauth2/token",
+  "jwks_uri": "https://auth.sam-app.ro/.well-known/jwks.json",
+  "registration_endpoint": "https://auth.sam-app.ro/oauth2/register",
+  "scopes_supported": [
+    "offline_access",
+    "members.read",
+    "members.write",
+    "merchants.read",
+    "merchants.write",
+    "roles.read",
+    "roles.write",
+    "checkouts.read",
+    "checkouts.write",
+    "customers.read",
+    "customers.write",
+    "api_keys.read",
+    "api_keys.write",
+    "receipts.read",
+    "refunds.write",
+    "transactions.read",
+    "payouts.read",
+    "readers.read",
+    "readers.write",
+    "sales.read",
+    "subscriptions.read",
+    "subscriptions.write"
+  ],
+  "response_types_supported": [
+    "code",
+    "code id_token",
+    "id_token",
+    "token id_token",
+    "token",
+    "token id_token code"
+  ],
+  "response_modes_supported": [
+    "query"
+  ],
+  "grant_types_supported": [
+    "authorization_code",
+    "client_credentials",
+    "refresh_token",
+    "urn:ietf:params:oauth:grant-type:device_code"
+  ],
+  "token_endpoint_auth_methods_supported
+=== 405 probe: OPTIONS staging /oauth2/register (passive) ===
+http=404 allow=
+[0m
+DCR confirmed: `registration_endpoint: https://auth.sam-app.ro/oauth2/register` is advertised in staging discovery (my earlier grep missed it due to the space after the colon). Both cores are live-verified. Now let me locate the DCR report body in the durable log.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+echo "=== DCR heredoc commands ==="; grep -n "auth-sam-app-ro-dynamic-registration.md << 'EOF'" reports/analyst-nemotron3.log
+echo "=== DCR verify line ==="; grep -n "5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1" reports/analyst-nemotron3.log | head -3
+echo "=== EOF markers after DCR heredoc ==="; grep -n "^EOF$" reports/analyst-nemotron3.log | awk -F: '$1>24800 && $1<25300' | head
+=== DCR heredoc commands ===
+24645:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md << 'EOF'
+25132:24645:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md << 'EOF'
+=== DCR verify line ===
+25471:5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1  reports/auth-sam-app-ro-dynamic-registration.md
+25525:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verified on disk with hashes: gateway sha256 `d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c` (173 lines), DCR sha256 `5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1` (129 lines).
+25574:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verified on disk with hashes: gateway sha256 `d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c` (173 lines), DCR sha256 `5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1` (129 lines).
+=== EOF markers after DCR heredoc ===
+25276:EOF
+[0m
+[0m→ [0mRead reports/analyst-nemotron3.log[90m [limit=20, offset=24643][0m
+[0m→ [0mRead reports/analyst-nemotron3.log[90m [limit=18, offset=25263][0m
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+echo "=== all EOF/exact markers 24640-25280 ==="; grep -n "^EOF$\|^EOF\s*$\|EOF$" reports/analyst-nemotron3.log | awk -F: '$1>24640 && $1<25280' | head -20
+echo "=== try extract 24646..24774 (129 lines) ==="
+sed -n '24646,24774p' reports/analyst-nemotron3.log > /tmp/opencode/dcrA
+wc -l /tmp/opencode/dcrA; sha256sum /tmp/opencode/dcrA
+echo "target 5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1 (129 L)"
+=== all EOF/exact markers 24640-25280 ===
+24776:EOF
+25276:EOF
+=== try extract 24646..24774 (129 lines) ===
+129 /tmp/opencode/dcrA
+e73e2eedaccfd5d2d50485ac5d7e2b17d0e18005ffd0b9b8b398e7049fcd9cd6  /tmp/opencode/dcrA
+target 5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1 (129 L)
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+sed -n '25281,25453p' reports/analyst-nemotron3.log > /tmp/opencode/gwA
+wc -l /tmp/opencode/gwA /tmp/opencode/dcrA
+echo "=== gateway first/last ==="; head -3 /tmp/opencode/gwA; echo "..."; tail -3 /tmp/opencode/gwA
+echo "=== dcr first/last ==="; head -3 /tmp/opencode/dcrA; echo "..."; tail -3 /tmp/opencode/dcrA
+173 /tmp/opencode/gwA
+  129 /tmp/opencode/dcrA
+  302 total
+=== gateway first/last ===
+# gateway.sumup.com/hosted.js — Cross-Origin postMessage Checkout Write
+
+**Asset:** `gateway.sumup.com/hosted.js` (PCI card-entry iframe)  
+...
+
+## 12. Scope Note
+
+=== dcr first/last ===
+# auth.sam-app.ro/oauth2/register — Unauthenticated Dynamic Client Registration → Mintable JWTs (Staging)
+
+**Asset:** `auth.sam-app.ro/oauth2/register` (staging auth server)  
+...
+1. **Disable unauthenticated DCR** on staging (require initial access token or admin auth).
+2. **Enforce `token_endpoint_auth_method`** at token endpoint (currently stored but not enforced).
+3. **Align staging/prod registration posture** — prod correctly has no registration endpoint.
+[0m
+[0m→ [0mRead /tmp/opencode/gwA
+[0m→ [0mRead /tmp/opencode/dcrA
+Both reports are coherent and match live-verified facts. Writing them to the repo and committing so they survive re-materialization.
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+cp /tmp/opencode/gwA reports/gateway-hostedfields-cross-origin-messenger.md
+cp /tmp/opencode/dcrA reports/auth-sam-app-ro-dynamic-registration.md
+cat >> reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+Program scope rejects "clickjacking without demonstrated exploit." This report demonstrates a **state-changing API call** (`PUT /v0.2/checkouts/{id}`) driven from a cross-origin frame via a **missing origin validation** on a PCI card-entry component — not a generic clickjacking claim.
+EOF
+echo "=== hashes ==="
+wc -l reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+=== hashes ===
+  174 reports/gateway-hostedfields-cross-origin-messenger.md
+  129 reports/auth-sam-app-ro-dynamic-registration.md
+  303 total
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  reports/gateway-hostedfields-cross-origin-messenger.md
+e73e2eedaccfd5d2d50485ac5d7e2b17d0e18005ffd0b9b8b398e7049fcd9cd6  reports/auth-sam-app-ro-dynamic-registration.md
+[0m
+[0m← [0mEdit reports/valid-bugs.md
+Index: /home/runner/work/sumup-hunt/sumup-hunt/reports/valid-bugs.md
+===================================================================
+--- /home/runner/work/sumup-hunt/sumup-hunt/reports/valid-bugs.md
++++ /home/runner/work/sumup-hunt/sumup-hunt/reports/valid-bugs.md
+@@ -1,5 +1,5 @@
+-# Validated findings (running count 0)
++# Validated findings (running count 2)
+ 
+ - 1 lead(s) marked VALID at 2026-09-04 06:02:58 UTC
+   - | Q4 Provable non-invasively? | **NO** — all unauthenticated paths return 404; requires valid merchant OAuth token to test. Probe results confirm 404 on every enumerated path (v0/v0.1/v1/v2/merchants/
+ 
+
+[0m
+[0m← [0mEdit reports/valid-bugs.md
+Index: /home/runner/work/sumup-hunt/sumup-hunt/reports/valid-bugs.md
+===================================================================
+--- /home/runner/work/sumup-hunt/sumup-hunt/reports/valid-bugs.md
++++ /home/runner/work/sumup-hunt/sumup-hunt/reports/valid-bugs.md
+@@ -76,4 +76,9 @@
+   - | Q4 | Provable non-invasively? | **NO** — requires valid merchant OAuth token with dashboard scopes to test ID-swapping. AUTH_HELPED. |
+   - | Q3 | Real impact? | **NO** — OPTIONS returns 204 (no content), wildcard CORS on a token endpoint that rejects all POST requests with `invalid_client` (no valid client credentials known). The `x-envo
+   - | Q5 | Novel/unreported? | **Possibly novel** — not in `valid-bugs.md`. |
+   - | 1 | `auth.sam-app.ro` unauth dynamic client registration → JWTs | **VALID** | 7.5 | FILE REPORT |
++
++- 2 lead(s) marked VALID at 2026-10-08 22:30:00 UTC (re-verified live, reports committed)
++  - **Verdict: VALID** — `gateway.sumup.com/hosted.js` cross-origin postMessage checkout write. Core claims re-verified live 2026-10-08: hosted.js sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` (26,839 B); `grep -c 'event.origin'` = 0; outbound messengers `postMessage(t,"*")`, `postMessage(e,n||"*")`, `postMessage(e,"*")`; zero framing headers. Report: `reports/gateway-hostedfields-cross-origin-messenger.md` (174 L, sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9`). Class MISCONFIG, severity Medium.
++  - **Verdict: VALID** — `auth.sam-app.ro/oauth2/register` unauthenticated RFC 7591 DCR (staging). Core claim re-verified live 2026-10-08: staging discovery declares `registration_endpoint: https://auth.sam-app.ro/oauth2/register`; prod `/register` 404. Report: `reports/auth-sam-app-ro-dynamic-registration.md` (129 L, sha256 `e73e2eedaccfd5d2d50485ac5d7e2b17d0e18005ffd0b9b8b398e7049fcd9cd6`). Class OATH, severity Low-Medium. Note: `/oauth2/register` GET/OPTIONS 404 but endpoint is POST-only; client creation deliberately NOT performed this cycle (mutating).
++  - Both reports are committed to git so they survive workspace re-materialization. Human submission to bugs.olivermaicher.eu per scope.yml:4 still pending.
+
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+git status --short
+echo "=== check ignore ==="; git check-ignore reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md reports/valid-bugs.md || echo "(not ignored)"
+echo "=== user config ==="; git config user.name || echo "(no user.name)"
+M reports/valid-bugs.md
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+?? reports/auth-sam-app-ro-dynamic-registration.md
+?? reports/gateway-hostedfields-cross-origin-messenger.md
+=== check ignore ===
+(not ignored)
+=== user config ===
+(no user.name)
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+git add reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md reports/valid-bugs.md
+git -c user.name="sumup-hunt-analyst" -c user.email="analyst@localhost" commit -m "reports: add verified gateway cross-origin postMessage + sam-app.ro DCR findings" 
+echo "=== log ==="; git log --oneline -3
+echo "=== post-commit hash verify ==="; sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+[main 4568913] reports: add verified gateway cross-origin postMessage + sam-app.ro DCR findings
+ 3 files changed, 309 insertions(+), 1 deletion(-)
+ create mode 100644 reports/auth-sam-app-ro-dynamic-registration.md
+ create mode 100644 reports/gateway-hostedfields-cross-origin-messenger.md
+=== log ===
+4568913 reports: add verified gateway cross-origin postMessage + sam-app.ro DCR findings
+94937d2 reposcan 2026-10-08-17-53
+=== post-commit hash verify ===
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  reports/gateway-hostedfields-cross-origin-messenger.md
+e73e2eedaccfd5d2d50485ac5d7e2b17d0e18005ffd0b9b8b398e7049fcd9cd6  reports/auth-sam-app-ro-dynamic-registration.md
+[0m
+Done. I broke the loop by persisting the findings instead of re-claiming them.
+
+**What I did**
+- Confirmed the workspace had been re-materialized (reports gone; `valid-bugs.md` back to baseline 79 L).
+- Mined the durable `reports/analyst-nemotron3.log` for the report bodies and re-verified the two core findings **live**:
+  - `gateway.sumup.com/hosted.js`: sha256 `1302f1d6…` (26,839 B), `grep -c 'event.origin'` = 0, wildcard outbound `postMessage`, zero framing headers.
+  - `auth.sam-app.ro` discovery advertises `registration_endpoint: /oauth2/register`; prod `/register` → 404.
+- Wrote both reports to `reports/`, verified hashes, updated `valid-bugs.md` (count 0→2), and **committed** as `4568913`.
+
+**Discrepancy worth noting:** the prior `[NEXT]` claims cited hashes `d7b493dd…` (gateway) and `5e62a6ac…` (DCR) that are **not reproducible** from the logged content. The actual content hashes are:
+- `reports/gateway-hostedfields-cross-origin-messenger.md` — 174 L, `4291c128…`
+- `reports/auth-sam-app-ro-dynamic-registration.md` — 129 L, `e73e2eed…`
+
+**Remaining (human-only):** push `4568913` (I did not push, per no-explicit-request) and submit both reports to `bugs.olivermaicher.eu` per `scope.yml:4`. I did not perform any POST/register call (mutating).
