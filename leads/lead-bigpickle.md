@@ -8939,3 +8939,4 @@ impact: anonymous staging credentials + free zero-authority token minting; bound
 [LEARN] ACCEPTED OTHER @ workspace: canonical report bytes are recoverable losslessly from the durable tracked log via `sed -n 'a,bp'`; recorded hashes are authoritative over churned line/byte counts.
 [LEARN] REJECTED MISCONFIG @ mcp.sumup.com: kid-optional try-all is standards-permitted hardening, not a finding.
 [RISK] sumup: 78 — mature edge (Cloudflare/Vercel/OIDC, JWKS/env isolation); residual value is the two already-characterized staging/gateway findings awaiting human submission.
+## 2026-10-09 16:37:58 UTC [target] (model bigpickle)

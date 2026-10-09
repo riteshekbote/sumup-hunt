@@ -1742,3 +1742,8 @@ https://api.sumup.com/health -> HTTP 404
 https://api.sumup.com/v2/ -> HTTP 404
 https://api.sumup.com/graphql -> HTTP 404
 https://admin.sumup.com/admin -> HTTP 403
+
+## 2026-10-09 16:38:15 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/mcp -> HTTP 401
