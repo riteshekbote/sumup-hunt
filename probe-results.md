@@ -1747,3 +1747,8 @@ https://admin.sumup.com/admin -> HTTP 403
 https://gateway.sumup.com/ -> 200 len=546
 https://gateway.sumup.com/hosted.js -> 200 len=26839
 https://mcp.sumup.com/mcp -> HTTP 401
+
+## 2026-10-09 21:36:44 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods -> HTTP 404

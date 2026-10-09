@@ -8940,3 +8940,4 @@ impact: anonymous staging credentials + free zero-authority token minting; bound
 [LEARN] REJECTED MISCONFIG @ mcp.sumup.com: kid-optional try-all is standards-permitted hardening, not a finding.
 [RISK] sumup: 78 — mature edge (Cloudflare/Vercel/OIDC, JWKS/env isolation); residual value is the two already-characterized staging/gateway findings awaiting human submission.
 ## 2026-10-09 16:37:58 UTC [target] (model bigpickle)
+## 2026-10-09 21:36:30 UTC [target] (model bigpickle)

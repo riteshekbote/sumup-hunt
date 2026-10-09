@@ -1,4 +1,4 @@
-## 2026-10-09 16:37:57 UTC [target] (model nemotron3)
+## 2026-10-09 21:18:04 UTC [target] (model nemotron3)
 [NEW] `api.sumup.com/v0.1/merchants/{code}/payment-methods`: GET returns 200 static `{"available_payment_methods":[{"id":"card"}]}` but HEAD returns 404 — method-level discrepancy; KB claimed "now 404" was flapping/transient, handler remains unauth-reachable param-invariant stub
 [NEW] `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at `/mcp/.well-known/oauth-protected-resource` (third path, self-advertised in WWW-Authenticate) — publishes `scopes_supported:["offline_access","email"]`; kid-optional try-all on `/mcp` (RFC 8725 §3.11)
 [CHANGED] Workspace re-materialized 46th consecutive cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; both final report files absent despite prior-cycle verified hashes
@@ -27,21 +27,22 @@ evidence_needed: Fileable as staging posture finding only (VALID 7.5 per triage)
 verify_steps: POST https://auth.sam-app.ro/oauth2/register {redirect_uris:["https://evil.example/cb"],grant_types:["client_credentials"],client_name:"test",token_endpoint_auth_method:"client_secret_post"} → 201 client_id/secret → POST https://auth.sam-app.ro/oauth2/token grant_type=client_credentials&client_id={id}&client_secret={secret} → 200 JWT (empty scp, aud=https://api.sam-app.ro) → GET https://api.sam-app.ro/v0.1/merchants/{code} with Bearer → 404 structured problem+json (token validated) vs plain 404 without → empty scope blocks resource access.
 impact: Staging environment allows unauthenticated client registration + token minting with empty scope + attacker-controlled aud. Cross-env key isolation (ZERO kid overlap) blocks prod relay. Fileable as staging misconfiguration (scope escalation blocked, no prod impact). Severity: Low-Medium (staging only).
 testability: PASSIVE (registration + token minting proven); AUTH_HELPED for prod sync test (not possible passively).
-[HYP] mcp.sumup.com/mcp kid-optional JWT try-all verification
+[HYP] api.sumup.com/v0.1/merchants/{code}/payment-methods method-level auth discrepancy
 class: AUTH
-asset: mcp.sumup.com/mcp
-confidence: 75
-reasoning: Prod MCP bearer verifier accepts tokens without `kid` header (RFC 8725 §3.11 try-all across 8 trusted keys). `kid` omission → `multiple matching keys found`; 30 candidate `kid` sweep found exactly 8 published prod kids trusted, 0 undeclared (all 9 staging kids absent, 11 name-guesses absent). Alg allowlist strictly `{RS256, EdDSA}` — HS256/none explicitly rejected. No JWKS pollution vector, no cross-env key reuse (ZERO kid overlap). Hardening deviation only.
-evidence_needed: Demonstrable exploit chain requiring JWKS pollution or key confusion — neither exists. Theoretical hardening gap only.
-verify_steps: POST https://mcp.sumup.com/mcp with JWT missing `kid` → observe `multiple matching keys` error; RS256→HS256 confusion → `Unsupported "alg" value`; `alg:none` → same. All negative controls confirmed.
-impact: Theoretical JWT verification hardening deviation (optional kid + try-all). No exploitation path without JWKS pollution or cross-env key reuse (both absent). Severity: Informational.
-testability: PASSIVE (oracle responses confirmed); AUTH_HELPED for JWKS pollution (not possible).
+asset: api.sumup.com/v0.1/merchants/{code}/payment-methods
+confidence: 65
+reasoning: GET returns 200 static `{"available_payment_methods":[{"id":"card"}]}` unauthenticated; HEAD returns 404. KB claimed gateway now requires bearer for oauth2:[] ops but GET remains reachable. Handler is param-invariant stub (merchant_code/currency/amount ignored). Discrepancy suggests method-level routing divergence at gateway layer.
+evidence_needed: Confirm GET/HEAD response class difference is stable across multiple merchant codes; verify no other methods (POST/PUT/DELETE) expose handler.
+verify_steps: GET https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods → 200; HEAD same → 404; OPTIONS same → 204; test 4 merchant codes × 3 currencies × {GET,HEAD,OPTIONS}.
+impact: If GET bypasses auth gate while other methods enforce it, partial BOLA/SSRF surface on declared oauth2:[] operation. Severity: Low (read-only stub, param-invariant).
+testability: PASSIVE.
 [PARKED] mcp.sumup.com/mcp kid-optional try-all: confidence 75 but exploitation purely theoretical — no JWKS pollution vector, no cross-env key reuse (ZERO kid overlap), HS256/none explicitly rejected; hardening deviation only.
 [PARKED] iso20022.sumup.com dual-upstream routing: routing observation, not a security finding — two classes differ in which server answers, not in what is disclosed; Origin control produced zero access-control-* headers on both classes.
 [PARKED] pos-payment.sumup.com AWS API Gateway IAM/SigV4: different trust model but route-level enum REFUTED; no passive anomaly beyond auth gate.
 [PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods: param-invariant stub (amount/currency/bogus-code/negative → identical 200; spec-declared 400 never fires) — no unauth oracle, no BOLA without bearer.
 [FINAL] 1. gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium
 [FINAL] 2. auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration → mintable JWTs on staging — 85, PASSIVE, Low-Medium (staging only)
+[FINAL] 3. api.sumup.com/v0.1/merchants/{code}/payment-methods method-level auth discrepancy — 65, PASSIVE, Low
 [NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
 [LEARN] ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
 [LEARN] REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
