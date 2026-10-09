@@ -980,3 +980,7 @@
 - 2026-10-09 REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodies are fixed 11-byte stubs, and an attacker Origin control produced zero access-control-* headers on both classes. A routing observation is not a security finding; it is a finding only when the two classes differ in what an attacker can reach, and here they differ in which server answers, not in what is disclosed
 - 2026-10-09 ACCEPTED OTHER @ workspace: 45 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist. Write+hash must be the same act before referencing any [NEW] file claim
 - 2026-10-09 REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the binding control; the fileable finding is staging posture only (VALable)
+- 2026-10-09 ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
+- 2026-10-09 ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling.
+- 2026-10-09 ACCEPTED OTHER @ workspace: canonical report bytes are recoverable losslessly from the durable tracked log via `sed -n 'a,bp'`; recorded hashes are authoritative over churned line/byte counts.
+- 2026-10-09 REJECTED MISCONFIG @ mcp.sumup.com: kid-optional try-all is standards-permitted hardening, not a finding.

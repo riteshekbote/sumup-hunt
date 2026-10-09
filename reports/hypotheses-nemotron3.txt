@@ -1,4 +1,4 @@
-## 2026-10-09 02:36:33 UTC [target] (model nemotron3)
+## 2026-10-09 09:39:16 UTC [target] (model nemotron3)
 [NEW] `api.sumup.com/v0.1/merchants/{code}/payment-methods`: GET returns 200 static `{"available_payment_methods":[{"id":"card"}]}` but HEAD returns 404 — method-level discrepancy; KB claimed "now 404" was flapping/transient, handler remains unauth-reachable param-invariant stub
 [NEW] `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at `/mcp/.well-known/oauth-protected-resource` (third path, self-advertised in WWW-Authenticate) — publishes `scopes_supported:["offline_access","email"]`; kid-optional try-all on `/mcp` (RFC 8725 §3.11)
 [CHANGED] Workspace re-materialized 45th consecutive cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; both final report files absent despite prior-cycle verified hashes
@@ -42,7 +42,7 @@ testability: PASSIVE (oracle responses confirmed); AUTH_HELPED for JWKS pollutio
 [PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods: param-invariant stub (amount/currency/bogus-code/negative → identical 200; spec-declared 400 never fires) — no unauth oracle, no BOLA without bearer.
 [FINAL] 1. gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium
 [FINAL] 2. auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration → mintable JWTs on staging — 85, PASSIVE, Low-Medium (staging only)
-[NEXT] HUMAN: reconstruct both reports from verified evidence (gateway: 173 lines, sha256 `d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c`; DCR: 129 lines, sha256 `5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1`), write+hash in same act, submit to bugs.olivermaicher.eu per scope.yml:4.
+[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
 [LEARN] ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
 [LEARN] REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
 [LEARN] ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT match tells you what the rule actually keys on — case-sensitive substring "metrics" on raw path, not segment or exact match

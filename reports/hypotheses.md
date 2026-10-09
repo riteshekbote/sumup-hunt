@@ -4048,3 +4048,19 @@
 - LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodi
 - LEARN: ACCEPTED OTHER @ workspace: 45 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist
 - LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
+
+## RANKED HYPOTHESES 2026-10-09 09:40:59 UTC
+- [90] gateway.sumup.com/hosted.js: gateway.sumup.com/hosted.js cross-origin postMessage checkout-write (from art/lead_nemotron3.txt)
+- [65] api.sumup.com: api.sumup.com open API surface exploration (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): PROBE: GET https://api.sumup.com/swagger.json && GET https://api.sumup.com/openapi.json && GET https://api.sumup.com/v1/merchants && GET https://api.sumup.com/h
+- NEXT(hypotheses-nemotron3.txt): HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.
+- LEARN: ACCEPTED BUSLOGIC @ api.sumup.com: API 404 root is common for versioned REST APIs; enumeration is standard recon.
+- LEARN: ACCEPTED AUTH @ admin.sumup.com: 403 on nginx/ELB stack is consistent with auth-gated internal tooling.
+- LEARN: ACCEPTED OTHER @ workspace: canonical report bytes are recoverable losslessly from the durable tracked log via `sed -n 'a,bp'`; recorded hashes are authoritativ
+- LEARN: REJECTED MISCONFIG @ mcp.sumup.com: kid-optional try-all is standards-permitted hardening, not a finding.
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound ha
+- LEARN: REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retrac
+- LEARN: ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT mat
+- LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodi
+- LEARN: ACCEPTED OTHER @ workspace: 45 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi

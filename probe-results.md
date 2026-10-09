@@ -1728,3 +1728,17 @@ https://gateway.sumup.com/hosted.js -> 200 len=26839
 https://mcp.sumup.com/mcp -> HTTP 401
 https://auth.sumup.com/oauth2/par -> HTTP 404
 https://auth.sumup.com/oauth2/token -> HTTP 405
+
+## 2026-10-09 09:41:16 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/mcp -> HTTP 401
+https://api.sumup.com/v1/merchants -> HTTP 404
+https://api.sumup.com/v1/payments -> HTTP 404
+https://api.sumup.com/swagger.json -> HTTP 404
+https://api.sumup.com/openapi.json -> HTTP 404
+https://api.sumup.com/api-docs -> HTTP 404
+https://api.sumup.com/health -> HTTP 404
+https://api.sumup.com/v2/ -> HTTP 404
+https://api.sumup.com/graphql -> HTTP 404
+https://admin.sumup.com/admin -> HTTP 403
