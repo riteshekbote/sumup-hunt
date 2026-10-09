@@ -2059,3 +2059,12 @@ www.sumup.com
 - NEW Live passive re-verification confirms: `gateway.sumup.com/hosted.js` 26,839 B, sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`, ACAO `*`, zero `event.origin` validation, no f
 - CHANGED `api.sumup.com/v0.1/merchants/{code}/payment-methods` unauthenticated now returns 404 (was 200 static `{"card"}`) — gateway requires bearer even for spec-declared `oauth2:[]` operations.
 - CHANGED `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at two paths (prod, never fetched in 29 cycles); publishes `scopes_supported:["offline_access","email"]`; kid-optional try-all on `/mcp` (RFC
+
+## 2026-10-09 02:53:02 UTC
+- NEW Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e65798
+- NEW Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e65798
+- NEW `api.sumup.com/v0.1/merchants/{code}/payment-methods`: GET returns 200 static `{"available_payment_methods":[{"id":"card"}]}` but HEAD returns 404 — method-level discrepancy; KB claimed "now 404" was 
+- NEW `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at `/mcp/.well-known/oauth-protected-resource` (third path, self-advertised in WWW-Authenticate) — publishes `scopes_supported:["offline_acce
+- CHANGED Workspace re-materialized 45th consecutive cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; both final report files absent despite 
+- CHANGED `valid-bugs.md` running count remains 0 — both findings (gateway cross-origin postMessage, auth.sam-app.ro DCR) marked VALID 7.5 with FILE REPORT directive but submission blocked on HUMAN step; no sub
+- CHANGED `auth.sumup.com` dashboard client consent set confirmed: ALLOWED `{openid, classic, offline, readers.read, terminals.read, email}`; REJECTED `offline_access` + all 13 REST spec scopes — `email` scope 

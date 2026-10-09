@@ -1721,3 +1721,10 @@ https://mcp.sumup.com/mcp -> HTTP 401
 https://gateway.sumup.com/ -> 200 len=546
 https://gateway.sumup.com/hosted.js -> 200 len=26839
 https://mcp.sumup.com/mcp -> HTTP 401
+
+## 2026-10-09 02:53:08 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/mcp -> HTTP 401
+https://auth.sumup.com/oauth2/par -> HTTP 404
+https://auth.sumup.com/oauth2/token -> HTTP 405
