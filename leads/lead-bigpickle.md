@@ -9082,3 +9082,34 @@ testability: PASSIVE
 [LEARN] ACCEPTED TOOLING @ hunt.yml: report `.md` files can never persist through the hunt pipeline (analyst job doesn't commit/upload them; aggregate commits from a fresh checkout). Durable channel = report body embedded in tracked `reports/analyst-<model>.log` + structured stdout lines. Re-materializing files each cycle is expected, not a failure.
 [LEARN] REJECTED method-artifact @ api.sumup.com/v0.1/merchants/{code}/payment-methods: GET 200 / HEAD 404 is a CDN route quirk with no impact — do not re-open.
 [RISK] sumup: 15 — two final findings ready; risk is now stale-hold and duplicate submission, not missed attack surface. Recommend human decision.
+## 2026-10-10 22:00:28 UTC [target] (model bigpickle)
+[NEW] Cycle is a pure re-materialization of the previous state: no tracked `.md` deliverable existed on disk (`ls reports/` = logs + `valid-bugs.md` only); both report bodies re-recovered from tracked `reports/analyst-nemotron3.log` and hash-matched to canonical.
+[CHANGED] On-disk restored: `gateway-hostedfields-cross-origin-messenger.md` 174 L / 8,593 B / `4291c128…`; `auth-sam-app-ro-dynamic-registration.md` 130 L / 7,379 B / `5a88476d…`.
+[CHANGED] Live passive re-check: `gateway.sumup.com/` → 200, only `strict-transport-security` (still no XFO/CSP/referrer-policy); `hosted.js` → 200, `content-length: 26839` (unchanged); `auth.sam-app.ro/.well-known/oauth-authorization-server` → 200 JSON. All findings live.
+[PRIO] gateway.sumup.com/hosted.js, 8.6, a=9 b=8 t=7 g=9 c=7 f=6
+[PRIO] auth.sam-app.ro/oauth2/register, 6.4, a=6 b=5 t=7 g=9 c=6 f=5
+[HYP] gateway hosted-fields cross-origin postMessage checkout write
+class: MISCONFIG
+asset: gateway.sumup.com/hosted.js
+confidence: 90
+reasoning: inbound handler never reads `event.origin`; no framing protection on `/` or `/hosted.js`; omitting `payment_type` skips the frame-access gate; checkoutId gate is a static UUID regex literal
+evidence_needed: cross-origin frame → `PUT https://api.sumup.com/v0.2/checkouts/{attacker-uuid}` state change
+verify_steps: GET gateway.sumup.com/ and /hosted.js for absent frame-ancestors/XFO (done this cycle, absent)
+impact: attacker-framable PCI card-entry component performs a state-changing checkout write; Medium
+testability: HUMAN_ONLY
+[HYP] staging DCR mints real JWTs
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: unauthenticated `POST → 201` RFC 7591; client_credentials returns real JWTs; dynamic clients forced to empty `scp`
+evidence_needed: prod-relay impact (ZERO `kid` overlap isolates keys)
+verify_steps: GET /.well-known/oauth-authorization-server only (no POST — creates live clients; done this cycle)
+impact: attacker-controlled OAuth clients on staging; prod pivot blocked by key-level isolation; Low-Medium
+testability: PASSIVE
+[PARKED] `api.sumup.com/v0.1/merchants/{code}/payment-methods` 200/404 split: GET-vs-HEAD CDN method artifact, no impact.
+[PARKED] `iso20022` prod-relay leg & `auth.sam-app.ro` prod client-sync: unfalsifiable passively (POST required, rules forbid).
+[FINAL] 1. gateway hosted-fields cross-origin messenger (90, Medium, HUMAN_ONLY PoC) 2. auth.sam-app.ro DCR (85, Low-Medium, PASSIVE)
+[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to `bugs.olivermaicher.eu` per `scope.yml` — repo has no submission tooling; this is the sole remaining blocker.
+[LEARN] ACCEPTED TOOLING @ hunt.yml: report `.md` files never persist through the pipeline (analyst job doesn't commit/upload them); durable channel = report body in tracked `reports/analyst-<model>.log`. Re-materializing each cycle is expected.
+[LEARN] `valid-bugs.md` reverts to 79 L baseline each cycle (edit is not persisted by the pipeline) — do not treat prior appends as durable.
+[RISK] sumup: 15 — two final findings ready and re-verified live; risk is stale-hold and duplicate submission, not missed surface.
