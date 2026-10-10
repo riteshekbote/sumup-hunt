@@ -93437,3 +93437,275 @@ Cycle complete. Both actionable next moves done; remaining step is yours.
 [LEARN] REJECTED OTHER @ api.sumup.com/v0.1/merchants/{code}/payment-methods: the re-probe proves the 200/404 split is a GET-vs-HEAD method artifact, not a live-coded auth gate — the stub is 46-B-identical across valid and bogus merchant codes, so the cross-cycle "auth discrepancy" reads as more than it is; it is a CDN route quirk with no impact.
 
 [RISK] sumup: 73 — the file-delivery leg is now unblocked for a human (canonical bytes + hashes verified present), but 13+ cycles of unattached artifact churn remain the binding risk: until a human either submits or says stop, every subsequent cycle is low-value re-derivation.
+===== ANALYST bigpickle 2026-10-10 07:19:44 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mdate -u; ls -la; ls -la reports/ 2>/dev/null | head -40
+Sat Oct 10 07:16:55 UTC 2026
+total 1384
+drwxr-xr-x 12 runner runner   4096 Oct 10 07:16 .
+drwxr-xr-x  3 runner runner   4096 Oct 10 07:16 ..
+drwxr-xr-x  7 runner runner   4096 Oct 10 07:16 .git
+drwxr-xr-x  3 runner runner   4096 Oct 10 07:16 .github
+-rw-r--r--  1 runner runner   1885 Oct 10 07:16 README.md
+-rw-r--r--  1 runner runner     32 Oct 10 07:16 analyst-out.txt
+-rw-r--r--  1 runner runner 616743 Oct 10 07:16 analyst-prompt.txt
+-rw-r--r--  1 runner runner 612857 Oct 10 07:16 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Oct 10 07:16 inventory
+drwxr-xr-x  2 runner runner   4096 Oct 10 07:16 knowledge
+drwxr-xr-x  2 runner runner   4096 Oct 10 07:16 leads
+-rw-r--r--  1 runner runner  86035 Oct 10 07:16 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Oct 10 07:16 recon-notes
+drwxr-xr-x  2 runner runner   4096 Oct 10 07:16 reports
+drwxr-xr-x  2 runner runner   4096 Oct 10 07:16 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Oct 10 07:16 scope.yml
+drwxr-xr-x  2 runner runner   4096 Oct 10 07:16 scripts
+-rw-r--r--  1 runner runner     33 Oct 10 07:16 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Oct 10 07:16 state_laguna.json
+-rw-r--r--  1 runner runner     33 Oct 10 07:16 state_ling3.json
+-rw-r--r--  1 runner runner     33 Oct 10 07:16 state_longcat.json
+-rw-r--r--  1 runner runner     33 Oct 10 07:16 state_mimo.json
+-rw-r--r--  1 runner runner     33 Oct 10 07:16 state_nemotron3.json
+drwxr-xr-x  2 runner runner  12288 Oct 10 07:16 triage
+total 11660
+drwxr-xr-x  2 runner runner    4096 Oct 10 07:16 .
+drwxr-xr-x 12 runner runner    4096 Oct 10 07:16 ..
+-rw-r--r--  1 runner runner 7767800 Oct 10 07:16 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   46221 Oct 10 07:16 analyst-laguna.log
+-rw-r--r--  1 runner runner   46008 Oct 10 07:16 analyst-ling3.log
+-rw-r--r--  1 runner runner   46434 Oct 10 07:16 analyst-longcat.log
+-rw-r--r--  1 runner runner 3318667 Oct 10 07:16 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    5304 Oct 10 07:16 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Oct 10 07:16 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Oct 10 07:16 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Oct 10 07:16 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   11677 Oct 10 07:16 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  635585 Oct 10 07:16 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Oct 10 07:16 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Oct 10 07:16 valid-bugs.md
+[0m
+## Objective
+- Deep-hunt bug bounty analysis for the SumUp Payments Limited / SumUp Group program (report channel: bugs.olivermaicher.eu), targeting high-value classes (IDOR/BOLA, OAuth, auth/session, SSRF, business logic on money flows) with passive-first read-only probes (≤1 rps, GET/HEAD/OPTIONS only).
+- Deliver fileable reports for the two VALID findings: `gateway.sumup.com/hosted.js` cross-origin postMessage checkout-write (Medium) and `auth.sam-app.ro/oauth2/register` unauthenticated RFC 7591 DCR (Low–Medium, staging only).
+
+## Important Details
+- Scope: SumUp-owned infrastructure only. Explicitly REJECTED classes include clickjacking without demonstrated exploit, OPTIONS/TRACE, SSL/TLS hygiene, header/banner leaks, descriptive errors, rate-limit policy, scanner output without POC.
+- Passive-only live testing: no auth-bypass, no mutating requests against live customer data. `auth.sam-app.ro/oauth2/register` must NOT be re-probed (POST creates a live OAuth client on SumUp infra).
+- Workspace is re-materialized between cycles (46+ consecutive): `reports/*.md` written in cycle N do NOT persist to N+1; `reports/valid-bugs.md` always reverts to baseline 79 L / 7,384 B / `282390f8`. Durable artifacts are tracked: `reports/analyst-*.log` and `knowledge/index.md`. Recovery method: `sed -n 'a,bp'` / `awk NR>=a && NR<=b` on the tracked analyst log.
+- Canonical report hashes (authoritative over churned ones): gateway = `4291c128` (174 L / 8,593 B); auth DCR = `5a88476d` (130 L / 7,379 B). Prior churned hashes `a12c3fc9`, `d7b493dd`, `41ec5aab`, `36c78b62` are NOT canonical.
+- Commits `dfd1503` (reports restored) and `1123c7d` (KB recovery pointer) verified via `git cat-file -t` = commit. Prior claim `ae23e10` is FALSE (does not exist).
+- No submission API exists in-repo. `scope.yml:4` declares disclosure via bugs.olivermaicher.eu; `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` mirror leads only.
+- Live stable surfaces (byte-consistent many cycles): `api.sumup.com/v0.1/merchants/{code}/payment-methods` GET 200 static `{"available_payment_methods":[{"id":"card"}]}` but HEAD 404; RFC 9728 metadata 200 static; prod JWKS 8-kid; `api.sumup.com/v0.2/checkouts/{id}/apple-pay-session` GET structured 404 / OPTIONS 204; `auth.sam-app.ro/oauth2/register` GET 404 (POST-only).
+- `gateway.sumup.com/hosted.js`: 26,839 B, sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` — `event.origin` grep = 0; no X-Frame-Options/CSP frame-ancestors; `Te` endpoint factory injects `X-SumUp-Widget-Session-Id` unconditionally (string `"undefined"` when absent); `checkoutId` gate is a STATIC literal `ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i` (NOT `new RegExp(a.pattern)`, which was a 3-cycle error). Retracted claims: outbound blocked by bug (only true of `Re`), UUID-regex gate nonexistent.
+- `support_centre` (modern only, scopes `{openid, classic, offline}`, redirect `/api/auth/callback`) and `support_chat` (scopes `openid+offline+classic`, redirect `chat.sumup.com/api/sso/callback`) — modern/legacy registry divergence confirmed by control. Modern `dashboard` consent set = `{openid, classic, offline, readers.read, terminals.read, email}`; `offline_access` and all 13 REST spec scopes rejected.
+- Confirmed negatives (do NOT re-open): `js.sumup.com/api/checkouts/{id}` = 68 B Vercel platform 404, 4/4 credential differentials failed; `pos-payment.sumup.com` route enum refuted by negative control; `api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods` param-invariant AND credential-invariant (7 shapes × 5 IDs byte-identical 404/58 B `{"error_code":"NOT_FOUND"}`); `staging.iso20022.sumup.com` NXDOMAIN; `mcp.sumup.com/mcp` JWT `alg:none` + RS256→HS256 both refused, allowlist `{RS256, EdDSA}`.
+- `valid-bugs.md` running count = 0; both findings marked VALID 7.5 with FILE REPORT at L64/L79.
+
+## Work State
+### Completed
+- Gateway hosted-fields finding fully characterized: no `event.origin` validation in inbound handler `p=r=>{const{data:n,source:i}=r}`, gate `d.type===o.TYPE` where `o=Object.freeze({TYPE:"SumUpCard"})`; frame-access gate nested under `if("card"===a.payment_type)` and skippable; frame ships no XFO/CSP; cross-origin `form--submit` drives `PUT /v0.2/checkouts/{uuid}` (live netlog + iframe console PoC).
+- DCR finding fully characterized: RFC 7591 unauth POST → 201 client_id+secret+caller-chosen redirect_uris; client_credentials mints real JWT with empty `scp:[]` + attacker-controlled `aud`; cross-env JWKS isolation (prod 8 keys vs staging 11 entries / 9 unique, ZERO kid overlap); the only prod/staging AS-metadata structural difference is `registration_endpoint`.
+- Breadth sweeps closed: crt.sh 224 names triaged (72 money/auth-pattern → 38 NXDOMAIN, 21 non-Cloudflare/Vercel); 5 hosts publish RFC1918 in public DNS; `internal.sumup.com` 5-name estate NXDOMAIN but discloses k8s topology via CT; `serial-terminal.dev.solo.sumup.com` key-variation proves no ListBucket/object served.
+- KB corrections applied: staging JWKS 11 entries = 9 UNIQUE keys; staging discovery advertises 20 `scopes_supported`; `api.sumup.com/authorize` allows origin-echo CORS not literal `*`.
+- Reports reconstructed and hashed in same act; commits verified.
+
+### Active
+- Awaiting human submission of both report files (canonical bytes recoverable from tracked analyst log at L24465-24638 gw / L24646-24775 auth).
+- Cycle-opened by `ls` confirming both report files absent and `valid-bugs.md` at baseline; restoration required each cycle.
+
+### Blocked
+- No in-repo submission mechanism → human must submit to bugs.olivermaicher.eu per `scope.yml:4`.
+- `api.sumup.com` passive surface exhausted (27+ byte-stable cycles); only a live bearer can discriminate aud/iss binding vs key-level gate (AUTH_HELPED, not authorized).
+- `iso20022.sumup.com` blocked on an active POST the program's rules forbid.
+- Workspace re-materialization prevents cross-cycle artifact persistence; every cycle must re-restore reports.
+
+## Next Move
+1. `HUMAN`: submit `reports/gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c128…`) and `reports/auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / sha256 `5a88476d…`) to bugs.olivermaicher.eu per `scope.yml:4`; no in-repo submission API exists.
+2. On cycle open: `ls reports/` first; if reports absent, restore from tracked analyst log via `sed -n '24465,24638p'` (gw) and `sed -n '24646,24775p'` (auth), then verify with `ls`+`wc`+`sha256sum` in the same command before referencing any file.
+
+## Relevant Files
+- `reports/gateway-hostedfields-cross-origin-messenger.md`: finding #1 deliverable; canonical 174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e65798…`; absent on disk, recover from tracked log.
+- `reports/auth-sam-app-ro-dynamic-registration.md`: finding #2 deliverable; canonical 130 L / 7,379 B / sha256 `5a88476d…`; absent on disk, recover from tracked log.
+- `reports/valid-bugs.md`: running count 0; baseline 79 L / 7,384 B / `282390f8`; both findings carry FILE REPORT at L64/L79; reverts each cycle.
+- `reports/analyst-nemotron3.log`: durable tracked log; lossless report-byte recovery source (gw heredoc L24465-24638, auth L24646-24775).
+- `reports/analyst-bigpickle.log` / `reports/hypotheses-*.txt`: durable tracked analyst artifacts.
+- `scope.yml`: L4 declares report channel bugs.olivermaicher.eu (private program); defines REJECTED classes.
+- `scripts/sync-issues.py`, `.github/workflows/sync-issues.yml`: mirror leads only — NOT a submission path.
+- `inventory/sumup.md` / `knowledge/index.md`: durable inventory + KB; 9 seed hosts (admin, api, auth, dashboard, portal, sumup.com, support, web, www) all probed.
+- `reports/contentful-preview-token-leak.md`: verified ABSENT on disk; finding CLOSED (token rotated, 401 at 2026-09-11 09:29 UTC) — do not re-assert file claims.
+- `gateway.sumup.com/hosted.js` (remote): 26,839 B / sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` — verified live twice-cycle.
+- `developer.sumup.com/api` (remote): official 42-op OpenAPI spec (github.com/sumup/sumup-openapi) — authoritative endpoint/scope model.
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m$ [0mcat state_bigpickle.json; echo "---README---"; cat README.md; echo "---SCOPE---"; cat scope.yml
+{"phase": "POC", "target": "api"}---README---
+# sumup-hunt
+
+24/7 deep multi-model bug-hunting automation for **SumUp Payments Limited / SumUp Group** (Oliver Maicher bug-bounty hub).
+
+Scope: All company-owned infrastructure, payment platforms, merchant portals, APIs, mobile and web applications, point-of-sale systems, cloud services, websites, and domains operated by SumUp Group and its subsidiaries
+(full exclusion + rules list in `scope.yml`)
+
+Pipeline (all workflows run every 20 minutes):
+
+- **Deep Hunt** (`hunt.yml`): analyst hunts the discovered inventory + hypotheses, emits structured
+  leads, chains primitives, self-critiques. Models: mimo.
+- **Triager** (`triage.yml`): second-model 7-Question Gate validation + live passive probe; keeps
+  running count in `reports/valid-bugs.md`.
+- **Reposcan** (`reposcan.yml`): deep source scan of any public GitHub org (if configured).
+- **Sync Issues** (`sync-issues.yml`): mirrors leads to GitHub issues.
+
+Testing discipline: rate-limited (1 rps), no DoS/account-lockout, writes only on non-prod/test
+assets, no exposure of customer/employee/financial/auth data, secrets committed only as hashes.
+
+> IMPORTANT: the pipeline produces CANDIDATE leads. A reportable, validated finding requires
+> human triage + proof against the program's gate. No finding is fabricated; scanner output alone
+> is never accepted. Active testing is gated behind the in-scope hosts in `inventory/sumup.md` and
+> must stay within the program's published scope.
+
+Artifacts:
+
+| Artifact | Purpose |
+|---|---|
+| `leads/` | Candidate findings (UNVALIDATED) |
+| `triage/` | Validation verdicts |
+| `reports/valid-bugs.md` | Validated findings + running count |
+| `scope.yml` | Program scope and exclusions (edit to adjust) |
+
+Program description: Global financial technology company providing payment terminals, point-of-sale systems, online payments, invoicing, business accounts, and merchant software
+---SCOPE---
+programs:
+  sumup:
+    name: SumUp Payments Limited / SumUp Group Bug Bounty
+    disclosure_policy: via bugs.olivermaicher.eu (Oliver Maicher private program) - report + PoC + contact + payment
+    assets:
+      - name: "All company-owned infrastructure, payment platforms, merchant portals, APIs, mobile and web applications, point-of-sale systems, cloud services, websites, and domains operated by SumUp Group and its subsidiaries"
+        priority: In
+    out_of_scope:
+- "Network level Denial of Service attacks"
+      - "Application Denial of Service by locking user accounts"
+      - "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)"
+      - "Disclosure of known public files or directories (e.g. robots.txt)"
+      - "Outdated software / library versions"
+      - "OPTIONS / TRACE HTTP method enabled"
+      - "CSRF on logout"
+      - "CSRF on forms that are available to anonymous users"
+      - "Cookies that lack HTTP Only or Secure settings for non-sensitive data"
+      - "Self-XSS and issues exploitable only through Self-XSS"
+      - "Reports resulting from automated scanning utilities without additional details or a POC demonstrating a specific exploit"
+      - "Attacks requiring physical access to a user's device"
+      - "Attacks dependent upon social engineering of employees or vendors"
+      - "Username enumeration based on login or forgot password pages"
+      - "Enforcement policies for brute force, rate limiting, or account lockout"
+      - "SSL/TLS best practices"
+      - "SSL attacks such as BEAST, BREACH, Renegotiation attack"
+      - "Clickjacking, without additional details demonstrating a specific exploit"
+      - "Mail configuration issues including SPF, DKIM, DMARC settings"
+      - "Use of a known-vulnerable library without a description of an exploit specific to our implementation"
+      - "Password and account recovery policies"
+      - "Presence of autocomplete functionality in form fields"
+      - "Publicly accessible login panels"
+      - "Lack of email address verification during account registration or account invitation"
+      - "Lack of email address verification password restore"
+      - "Session control during email/password changes"
+      - "Social engineering, physical attacks, and DoS/DDoS testing (per program notes)"
+      - "Exposure of customer/employee/financial/authentication data during testing (per program notes)"
+    github_orgs:
+      - none-configured
+
+rules:
+  passive_first: false          # deep-hunt agent: active probes allowed when scoped
+  max_requests_per_second: 1    # never hammer live infra
+  no_doom: true                 # no DoS/DDoS, no account-lockout attacks
+  account_creation: restricted  # only on test/sandbox assets, never live customer data
+  no_data_modification: true    # no writes/deletes on live customer data
+  no_pre_disclosure: true       # never disclose before program response
+  poc_required: true            # scanner output alone is REJECTED
+  redact_secrets_in_commits: true
+
+models:
+  - { id: opencode/big-pickle, name: bigpickle }
+  - { id: opencode/nemotron-3-ultra-free, name: nemotron3 }
+  - { id: opencode/longcat-2.0-free, name: longcat }
+  - { id: opencode/ling-3.0-flash-free, name: ling3 }
+  - { id: opencode/laguna-s-2.1-free, name: laguna }
+[0m
+[0m$ [0mgit log --oneline -15; echo "---STATUS---"; git status --short
+0934fb6 reposcan 2026-10-10-07-11
+---STATUS---
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m
+[0m$ [0mwc -l reports/analyst-nemotron3.log; echo "---"; sed -n '24465,24475p' reports/analyst-nemotron3.log
+26389 reports/analyst-nemotron3.log
+---
+# gateway.sumup.com/hosted.js — Cross-Origin postMessage Checkout Write
+
+**Asset:** `gateway.sumup.com/hosted.js` (PCI card-entry iframe)  
+**Class:** MISCONFIG — missing `event.origin` validation on inbound `postMessage`; no framing protection  
+**Severity:** Medium (CSRF-like checkout manipulation via framable PCI component)  
+**Confidence:** 90  
+**Testability:** PASSIVE (static analysis + live iframe PoC); AUTH_HELPED for full payment flow validation  
+**Reported:** 2026-10-06  
+**Artifact hash:** `hosted.js` sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` (26,839 B)
+
+---
+[0m
+[0m$ [0msed -n '24465,24638p' reports/analyst-nemotron3.log > /tmp/gw.md; wc -lc /tmp/gw.md; sha256sum /tmp/gw.md; echo "---AUTH---"; sed -n '24646,24775p' reports/analyst-nemotron3.log > /tmp/auth.md; wc -lc /tmp/auth.md; sha256sum /tmp/auth.md
+174 8593 /tmp/gw.md
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  /tmp/gw.md
+---AUTH---
+ 130 7379 /tmp/auth.md
+5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24  /tmp/auth.md
+[0m
+[0m$ [0mecho "=== gw tail (24630-24645) ==="; sed -n '24630,24645p' reports/analyst-nemotron3.log; echo "=== auth tail (24770-24780) ==="; sed -n '24770,24780p' reports/analyst-nemotron3.log
+=== gw tail (24630-24645) ===
+3. **Add framing protection**: `Content-Security-Policy: frame-ancestors https://*.sumup.com` + `X-Frame-Options: SAMEORIGIN`.
+4. **Fix outbound `targetOrigin` bug**: replace `document.referrer` with `new URL(document.referrer).origin` in `Re` messenger.
+5. **Do not ship the fix for outbound without inbound validation** — the property holds by accident (throw on malformed URL), one refactor from being gone.
+
+---
+
+## 12. Scope Note
+
+Program scope rejects "clickjacking without demonstrated exploit." This report demonstrates a **state-changing API call** (`PUT /v0.2/checkouts/{id}`) driven from a cross-origin frame via a **missing origin validation** on a PCI card-entry component — not a generic clickjacking claim.
+EOF
+sha256sum /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md
+wc -l /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md
+174 /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md
+[0m
+[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md << 'EOF'
+=== auth tail (24770-24780) ===
+## 8. Remediation
+
+1. **Disable unauthenticated DCR** on staging (require initial access token or admin auth).
+2. **Enforce `token_endpoint_auth_method`** at token endpoint (currently stored but not enforced).
+3. **Align staging/prod registration posture** — prod correctly has no registration endpoint.
+4. **Document JWKS isolation** as intentional security control (it is effective).
+EOF
+sha256sum /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md
+wc -l /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md
+5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24  /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md
+130 /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md
+[0m
+[0m$ [0mecho "=== last 3 of gw.md ==="; tail -3 /tmp/gw.md; echo "=== first 3 of auth.md ==="; head -3 /tmp/auth.md; echo "=== last 3 of auth.md ==="; tail -3 /tmp/auth.md
+=== last 3 of gw.md ===
+## 12. Scope Note
+
+Program scope rejects "clickjacking without demonstrated exploit." This report demonstrates a **state-changing API call** (`PUT /v0.2/checkouts/{id}`) driven from a cross-origin frame via a **missing origin validation** on a PCI card-entry component — not a generic clickjacking claim.
+=== first 3 of auth.md ===
+# auth.sam-app.ro/oauth2/register — Unauthenticated Dynamic Client Registration → Mintable JWTs (Staging)
+
+**Asset:** `auth.sam-app.ro/oauth2/register` (staging auth server)  
+=== last 3 of auth.md ===
+2. **Enforce `token_endpoint_auth_method`** at token endpoint (currently stored but not enforced).
+3. **Align staging/prod registration posture** — prod correctly has no registration endpoint.
+4. **Document JWKS isolation** as intentional security control (it is effective).
+[0m
+[93m[1m! [0mpermission requested: external_directory (/tmp/*); auto-rejecting
+[0m✗ [0mcp /tmp/gw.md reports/gateway-hostedfields-cross-origin-messenger.md; cp /tmp/auth.md reports/auth-sam-app-ro-dynamic-registration.md; ls -l reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md; sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md; wc -l reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.
