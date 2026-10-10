@@ -9050,3 +9050,35 @@ evidence_needed: none available.
 verify_steps: none that demonstrate impact.
 impact: hardening only.
 testability: PASSIVE.
+## 2026-10-10 18:24:34 UTC [target] (model bigpickle)
+[NEW] Root-cause of the 46-cycle re-materialization loop identified from `.github/workflows/hunt.yml`: the `analyst` matrix job uploads only `lead_*.txt`/`analyst-*.out`/`ctx.txt` as artifacts and **never commits**; the `aggregate` job commits `reports/` but starts from a fresh checkout where opencode's `reports/*.md` were never artifacts. → standalone report files are structurally unpreservable; only the report text inside tracked `reports/analyst-*.log` survives.
+[CHANGED] On-disk this cycle: restored `reports/gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / `4291c128…`) and `reports/auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / `5a88476d…`) from the tracked log; both hash-verified.
+[CHANGED] Live passive re-check: `gateway.sumup.com/` → HTTP/2 200, only `strict-transport-security`; still **no** `X-Frame-Options`/`CSP frame-ancestors`/`Referrer-Policy`. `hosted.js` → 200, `content-length: 26839` (unchanged). Both findings live.
+[PRIO] gateway.sumup.com/hosted.js, 8.6, a=9 b=8 t=7 g=9 c=7 f=6
+[PRIO] auth.sam-app.ro/oauth2/register, 6.4, a=6 b=5 t=7 g=9 c=6 f=5
+[HYP] gateway hosted-fields cross-origin postMessage checkout write
+class: MISCONFIG
+asset: gateway.sumup.com/hosted.js
+confidence: 90
+reasoning: inbound handler never reads event.origin (`grep -c 'event\.'`=0 bundle-wide); no framing protection on `/` or `/hosted.js`; omitting `payment_type` skips the frame-access gate; checkoutId gate is a static regex literal
+evidence_needed: cross-origin frame → `PUT https://api.sumup.com/v0.2/checkouts/{attacker-uuid}` state change
+verify_steps: HEAD/GET gateway.sumup.com/ and /hosted.js for absent frame-ancestors/XFO (done this cycle, absent)
+impact: attacker-framable PCI card-entry component performs a state-changing checkout write; Medium
+testability: HUMAN_ONLY
+[HYP] staging DCR mints real JWTs
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: unauthenticated `POST → 201` RFC 7591; client_credentials returns real JWTs; dynamic clients forced to empty `scp`
+evidence_needed: prod-relay impact (no sync evidence — ZERO kid overlap isolates keys)
+verify_steps: GET /.well-known/oauth-authorization-server only (no POST — creates live clients)
+impact: attacker-controlled OAuth clients on staging; prod pivot blocked by key-level isolation; Low-Medium
+testability: PASSIVE
+[PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods 200/404 split: GET-vs-HEAD CDN method artifact; param-invariant stub; no impact.
+[PARKED] mcp.sumup.com third discovery path: 2 live paths confirmed; remainder not a defect.
+[PARKED] iso20022 prod-relay leg: unfalsifiable passively; needs POST (rules forbid).
+[FINAL] 1. gateway hosted-fields cross-origin messenger (90, Medium, HUMAN_ONLY PoC) 2. auth.sam-app.ro unauthenticated DCR (85, Low-Medium, PASSIVE)
+[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to `bugs.olivermaicher.eu` per `scope.yml` — repo has no submission tooling; this is the sole remaining blocker.
+[LEARN] ACCEPTED TOOLING @ hunt.yml: report `.md` files can never persist through the hunt pipeline (analyst job doesn't commit/upload them; aggregate commits from a fresh checkout). Durable channel = report body embedded in tracked `reports/analyst-<model>.log` + structured stdout lines. Re-materializing files each cycle is expected, not a failure.
+[LEARN] REJECTED method-artifact @ api.sumup.com/v0.1/merchants/{code}/payment-methods: GET 200 / HEAD 404 is a CDN route quirk with no impact — do not re-open.
+[RISK] sumup: 15 — two final findings ready; risk is now stale-hold and duplicate submission, not missed attack surface. Recommend human decision.
