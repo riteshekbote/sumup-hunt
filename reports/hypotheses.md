@@ -4084,3 +4084,21 @@
 - LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodi
 - LEARN: ACCEPTED OTHER @ workspace: 46 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist
 - LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
+
+## RANKED HYPOTHESES 2026-10-10 01:04:11 UTC
+- [90] gateway.sumup.com/hosted.js: gateway.sumup.com/hosted.js cross-origin postMessage checkout-write (from art/lead_nemotron3.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.
+- NEXT(hypotheses-nemotron3.txt): HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound ha
+- LEARN: REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retrac
+- LEARN: ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT mat
+- LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodi
+- LEARN: ACCEPTED OTHER @ workspace: 46 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
+- LEARN: REJECTED OTHER @ api.sumup.com/v0.1/merchants/{code}/payment-methods: the re-probe proves the 200/404 split is a GET-vs-HEAD method artifact, not a live-coded a
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound ha
+- LEARN: REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retrac
+- LEARN: ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT mat
+- LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodi
+- LEARN: ACCEPTED OTHER @ workspace: 46 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi

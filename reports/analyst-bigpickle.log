@@ -93062,3 +93062,378 @@ rules:
 sumup.md
 DEDICATED-DEEP.md
 [0m
+===== ANALYST bigpickle 2026-10-10 01:04:11 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null; echo "---SCOPE---"; ls -la scope.yml 2>/dev/null; echo "---REPORTS---"; ls -la reports/*.md 2>/dev/null; echo "---GIT---"; git log --oneline -5 2>/dev/null
+total 11608
+drwxr-xr-x  2 runner runner    4096 Oct 10 01:00 .
+drwxr-xr-x 12 runner runner    4096 Oct 10 01:01 ..
+-rw-r--r--  1 runner runner 7736208 Oct 10 01:00 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   46004 Oct 10 01:00 analyst-laguna.log
+-rw-r--r--  1 runner runner   45792 Oct 10 01:00 analyst-ling3.log
+-rw-r--r--  1 runner runner   46216 Oct 10 01:00 analyst-longcat.log
+-rw-r--r--  1 runner runner 3306794 Oct 10 01:00 analyst-nemotron3.log
+-rw-r--r--  1 runner runner      54 Oct 10 01:00 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Oct 10 01:00 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Oct 10 01:00 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Oct 10 01:00 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   11677 Oct 10 01:00 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  632789 Oct 10 01:00 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Oct 10 01:00 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Oct 10 01:00 valid-bugs.md
+---SCOPE---
+-rw-r--r-- 1 runner runner 3299 Oct 10 01:00 scope.yml
+---REPORTS---
+-rw-r--r-- 1 runner runner 632789 Oct 10 01:00 reports/hypotheses.md
+-rw-r--r-- 1 runner runner   9173 Oct 10 01:00 reports/reposcan-findings.md
+-rw-r--r-- 1 runner runner   7384 Oct 10 01:00 reports/valid-bugs.md
+---GIT---
+174a1f5 hunt cycle 2026-10-09-21-36
+[0m
+## Objective
+- Continue passive-first bug bounty analysis of SumUp (scope channel bugs.olivermaicher.eu), running 8-step delta/prioritize/hypothesize/critique/next/learn/risk cycles and producing structured blocks only.
+- Deliver the two triaged-VALID findings (gateway hosted-fields cross-origin messenger; auth.sam-app.ro unauth RFC 7591 DCR) to human submission.
+
+## Important Details
+- Production rule: passive-first, ≤1 rps, GET/HEAD/OPTIONS only; no auth-bypass or mutating tests against live customer data; any scanner output needs manual validation.
+- `scope.yml:4` declares disclosure via bugs.olivermaicher.eu (private program). No submission mechanism in-repo: `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` mirror leads only.
+- REJECTED classes (do not file): OPTIONS/TRACE, descriptive headers/errors, robots.txt/known public files, cookie flags on non-sensitive data, clickjacking without demonstrated exploit, SSL/TLS hygiene, username enumeration, rate-limit policy, known-vuln libraries, header/banner leaks (e.g. `x-envoy-decorator-operation`), SSL-expiry alone.
+- Scope: all SumUp-owned infrastructure/domains; hosts outside Cloudflare/Vercel/SumUp netblocks (Rackspace, Deutsche Telekom, AWS raw) require scope confirmation before deep testing.
+- Workspace re-materializes between cycles (~46 times): `reports/` opens with only logs + hypotheses + `valid-bugs.md` at baseline 79 L / 7,384 B / `282390f8…`. Artifacts written in cycle N do not persist to N+1 — always open with `ls`, and write+`sha256sum` in the same act.
+- Canonical report bytes recoverable losslessly from `reports/analyst-nemotron3.log` heredocs (gateway L24465-24638; auth L24646-24775); canonical gateway hash `4291c128` (174 L / 8,593 B), auth `5a88476d` (130 L / 7,379 B) — churned variants `a12c3fc9`/`d7b493dd` are stale.
+- `reports/valid-bugs.md` running count 0 with both findings carrying FILE REPORT at L64/L79; blocker is HUMAN submission, not triage/evidence.
+- Gateway finding (VALID 7.5, Medium): `gateway.sumup.com/hosted.js` 26,839 B sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`; zero `event.origin` validation; no XFO/CSP/frame-ancestors; `form--submit` drives `PUT https://api.sumup.com/v0.2/checkouts/{uuid}` cross-origin; frame gate skipped when `payment_type !== "card"`; `origin` param applied ONLY outbound (`t.postMessage(e, n||"*")`); checkoutId gate is static literal `ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i`. No exfiltration path (outbound `send()` throws on full-URL referrer). Backend acceptance unproven → AUTH_HELPED.
+- DCR finding (VALID 7.5, Low–Medium): `POST https://auth.sam-app.ro/oauth2/register` → 201 client_id+secret, caller-chosen redirect_uris, no auth; `client_credentials` (client_secret_post) mints real JWT with empty `scp` but attacker-controlled `aud`; not synced to `api.sam-app.ro/authorize`; prod `/register` 404; cross-env JWKS isolation (prod 8 keys vs staging 11 entries = 9 unique) blocks prod relay. Prod client-provenance-sync path explicitly UNTESTED.
+- Other verified stable facts: `api.sumup.com/v0.1/merchants/{code}/payment-methods` GET → 200 static `{"available_payment_methods":[{"id":"card"}]}` while HEAD → 404 (method-level discrepancy, param-invariant stub, no BOLA); `mcp.sumup.com/.well-known/oauth-protected-resource` 200 at 3 paths (incl. `/mcp/.well-known/oauth-protected-resource`, self-advertised in WWW-Authenticate), `scopes_supported:["offline_access","email"]`; `mcp.sumup.com/mcp` alg allowlist exactly `{RS256, EdDSA}`, `kid` optional (hardening only); `client_id=dashboard` consent set `{openid, classic, offline, readers.read, terminals.read, email}`.
+- api.sumup.com/authorize legacy callback-host enumeration fully exhaustive (~200 combos: crt.sh 52 + ccTLD 96 + custom schemes + bare paths = 0 HITs); earlier sweep used wrong path (`/callback` vs registered `/api/sso/callback`).
+- Prior findings refuted/retired: `api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods` IDOR (credential+param-invariant 58 B stub); `js.sumup.com/api/checkouts/{id}` BFF oracle (68 B Vercel platform 404, 4/4 credential differentials failed); `pos-payment.sumup.com` route enum (nonsense path identical 403); `serial-terminal.dev.solo.sumup.com` exposure (md5-of-empty key-variant control); Contentful PREVIEW token leak (token rotated 401; report file never existed).
+- api.sumup.com passive surface exhausted (~27+ byte-stable cycles); only a live bearer discriminates aud/iss binding.
+
+## Work State
+### Completed
+- Two findings triaged VALID 7.5 with FILE REPORT directives in `reports/valid-bugs.md`.
+- Gateway + DCR report content fully re-derived from served bytes; KB corrections applied (staging JWKS 9 unique keys, staging discovery 20 `scopes_supported`).
+- Frame/emission code read at source: `s.endpoint("checkouts/".concat(r),{method:"PUT",...})`; `Te` injects `X-SumUp-Widget-Session-Id` unconditionally (literal `"undefined"` when absent); `Sumup-Product-Origin` conditional.
+- PoC envelope confirmed from constants: `TYPE:"SumUpCard"`, `ACTION_MESSAGE:"message"`, `variant:"hostedfield"`, `form--submit` = `$`.
+- Wide estate mapped: pos-payment (AWS API GW/SigV4, prod+staging byte-identical), iso20022 (Istio mesh, case-sensitive substring `metrics` → 503 on awselb), js/circuit/pay/chat/checkout/me/help hosts, dev.solo Cognito buckets, RFC1918-in-public-DNS hosts.
+
+### Active
+- Recon state at 2026-10-09 21:36: both reports ABSENT from disk (46th re-materialization); restored from analyst-log heredocs and committed (`dfd1503` reports, `1123c7d` KB recovery pointer) in prior cycle, but persistence to current cycle unverified.
+- Latest probe deltas: `api.sumup.com/v0.1/merchants/{code}/payment-methods` GET 200 vs HEAD 404 method-level discrepancy; `mcp.sumup.com/mcp/.well-known/oauth-protected-resource` third RFC 9728 path.
+
+### Blocked
+- HUMAN submission step: no in-repo submission API; `valid-bugs.md` count stays 0 for 13+ consecutive cycles despite complete evidence.
+- Artifact persistence: reports do not survive re-materialization; must be re-written and hash-verified each cycle.
+- `auth.sam-app.ro` DCR re-verification requires a POST that creates a live OAuth client — deliberately not re-probed.
+- Prod client-provenance-sync leg of DCR finding untestable passively.
+- Backend acceptance of the gateway `PUT /v0.2/checkouts/{uuid}` requires a live bearer (AUTH_HELPED).
+- `web.sumup.com` (77.246.42.130, Rackspace lease) dormant takeover lead; host times out on 443.
+
+## Next Move
+1. `[NEXT] HUMAN`: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` (or canonical bytes from `reports/analyst-nemotron3.log` L24465-24638 / L24646-24775) to bugs.olivermaicher.eu per `scope.yml:4`.
+2. `[NEXT] PROBE`: read-only re-verify the method-level discrepancy — `HEAD` and `GET https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods` (≤1 rps) to confirm GET 200 vs HEAD 404 is a durable route/method split rather than a probe artifact.
+
+## Relevant Files
+- `reports/gateway-hostedfields-cross-origin-messenger.md`: gateway cross-origin postMessage finding report; canonical 174 L / 8,593 B / `4291c128…`; frequently absent — verify with `ls`.
+- `reports/auth-sam-app-ro-dynamic-registration.md`: unauth RFC 7591 DCR finding report; canonical 130 L / 7,379 B / `5a88476d…`.
+- `reports/valid-bugs.md`: running-count header (0), both findings FILE REPORT at L64/L79; baseline 79 L / 7,384 B / `282390f8…`.
+- `reports/analyst-nemotron3.log`: durable tracked artifact store; lossless recovery of canonical report bytes via `sed -n 'a,bp'`.
+- `reports/analyst-*.log`, `knowledge/index.md`: git-persisted durable logs/KB (untracked `reports/*.md` are not).
+- `scope.yml`: line 4 declares disclosure channel bugs.olivermaicher.eu.
+- `scripts/sync-issues.py`, `.github/workflows/sync-issues.yml`: mirror leads only; no submission API.
+- `inventory/sumup.md`: seed host inventory (admin, api, auth, dashboard, portal, sumup.com, support, web, www) — all 9 now probed.
+- `reports/hypotheses-nemotron3.txt`, `reports/hypotheses-bigpickle.txt`: per-model lead files driving rankings.
+- `recon-notes/AI-LLM-TOOLING-SURFACE.md`: 86 L / 4,909 B / `4a938b79…`.
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+Let me understand the situation. The context provided is a summary of prior work ("What did we do so far?"). Now I'm told to continue if I have next steps, or stop and ask for clarification.
+
+Let me assess. The workspace shows:
+- reports/ with logs, hypotheses, valid-bugs.md (7384 B matches baseline), but the two `.md` report files are ABSENT again (47th re-materialization).
+- git log shows one commit `174a1f5 hunt cycle 2026-10-09-21-36` (different from the previously mentioned dfd1503/1123c7d).
+
+The "Next Move" is:
+1. [NEXT] HUMAN: submit reports
+2. [NEXT] PROBE: re-verify HEAD vs GET discrepancy
+
+Let me think carefully about what I should actually do here. This is a bug bounty context. The user's summary indicates an ongoing autonomous hunt. But I need to be careful and honest.
+
+Let me first verify the actual state objectively. Let me check valid-bugs.md, check git status, and see whether the report files exist. The stated next step involves submitting to a bug bounty program — that's a HUMAN action that I cannot perform (no API). And a probe that sends network requests.
+
+Let me be careful about the framing here. The entire "prior work" summary has a lot of very specific technical detail that I did not actually generate — it's context provided as if it were my memory. I should verify claims rather than blindly trusting them. But also, I should be honest with the user about what I can and can't do.
+
+Actually, wait. Let me reconsider. This looks like a scenario where a lot of "work" has supposedly been done by an autonomous agent across many cycles, but there's a suspicious pattern: reports never persist, valid-bugs count stays 0, and the main blocker is "HUMAN submission." This is a red flag pattern — an agent could be spinning in circles doing nothing of value, or worse, fabricating findings.
+
+Let me actually inspect the ground truth. Let me look at valid-bugs.md, the git log, and check whether that commit contains the reports. Let me verify the hash claims.
+
+Let me be honest and grounded. I'll inspect.</think>
+[0m$ [0mgit log --oneline -20; echo "---STATUS---"; git status --short; echo "---SHOW FILES IN HEAD---"; git show --stat HEAD | head -30; echo "---VALID-BUGS HEAD---"; head -20 reports/valid-bugs.md; echo "---HASH---"; sha256sum reports/valid-bugs.md
+174a1f5 hunt cycle 2026-10-09-21-36
+---STATUS---
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+---SHOW FILES IN HEAD---
+commit 174a1f576be9248c1efd391118335e9c88a1ea1a
+Author: github-actions <actions@github.com>
+Date:   Fri Oct 9 21:36:44 2026 +0000
+
+    hunt cycle 2026-10-09-21-36
+
+ .github/workflows/hunt.yml                         |   250 +
+ .github/workflows/reposcan.yml                     |   109 +
+ .github/workflows/sync-issues.yml                  |    44 +
+ .github/workflows/triage.yml                       |   138 +
+ README.md                                          |    34 +
+ inventory/sumup.md                                 |  2098 +
+ knowledge/index.md                                 |   987 +
+ leads/lead-bigpickle.md                            |  8943 ++
+ leads/lead-laguna.md                               |   212 +
+ leads/lead-ling3.md                                |   212 +
+ leads/lead-longcat.md                              |   212 +
+ leads/lead-mimo.md                                 |     1 +
+ leads/lead-nemotron3.md                            | 11492 +++
+ leads/reposcan-sumup.md                            |   808 +
+ probe-results.md                                   |  1754 +
+ recon-notes/DEDICATED-DEEP.md                      |    21 +
+ reports/analyst-bigpickle.log                      | 93064 +++++++++++++++++++
+ reports/analyst-laguna.log                         |  1696 +
+ reports/analyst-ling3.log                          |  1696 +
+ reports/analyst-longcat.log                        |  1696 +
+ reports/analyst-nemotron3.log                      | 26318 ++++++
+ reports/hypotheses-bigpickle.txt                   |     1 +
+ reports/hypotheses-laguna.txt                      |     1 +
+ reports/hypotheses-ling3.txt                       |     1 +
+---VALID-BUGS HEAD---
+# Validated findings (running count 0)
+
+- 1 lead(s) marked VALID at 2026-09-04 06:02:58 UTC
+  - | Q4 Provable non-invasively? | **NO** — all unauthenticated paths return 404; requires valid merchant OAuth token to test. Probe results confirm 404 on every enumerated path (v0/v0.1/v1/v2/merchants/
+
+- 7 lead(s) marked VALID at 2026-09-06 21:30:02 UTC
+  - **Verdict: VALID**
+  - | Impact | Attacker-controlled OAuth clients on staging; mintable JWTs (empty scope blocks resources but token is valid at gateway). Staging environments often lack prod hardening. |
+  - **Verdict: VALID**
+  - **Verdict: VALID**
+  - | 1 | `auth.sam-app.ro` unauthenticated dynamic client registration | **VALID** | 7.5 |
+  - | 2 | `api.sumup.com/authorize` client-ID oracle + wildcard CORS | **VALID** | 5.3 |
+  - | 3 | `mcp.sumup.com` wildcard CORS on Bearer-protected endpoint | **VALID** | 5.3 |
+
+- 3 lead(s) marked VALID at 2026-09-09 15:21:03 UTC
+  - **Verdict: VALID**
+  - | Q3 | Real security impact? | Low — error taxonomy (`invalid_client` vs `invalid_request`) is a standard OAuth error pattern; wildcard CORS on an authorize endpoint that only redirects to error pages
+  - | 1 | help.sumup.com Contentful Preview Token Leak | **VALID** | 5.3 (Medium) | **FILE REPORT** |
+
+- 3 lead(s) marked VALID at 2026-09-10 16:19:46 UTC
+---HASH---
+282390f83b2213178c41f92857bb9df779abc3deaaefb81fb9b8f8c886ae6369  reports/valid-bugs.md
+[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m
+[0m$ [0mecho "===probe-results tail==="; wc -l probe-results.md; tail -60 probe-results.md; echo "===log line counts==="; wc -l reports/analyst-nemotron3.log reports/analyst-bigpickle.log
+===probe-results tail===
+1754 probe-results.md
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/.well-known/oauth-protected-resource -> HTTP 404
+https://mcp.sumup.com/mcp -> HTTP 401
+https://mcp.sumup.com -> HTTP 404
+
+## 2026-10-07 23:35:41 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/.well-known/oauth-protected-resource -> HTTP 404
+https://mcp.sumup.com/mcp -> HTTP 401
+https://mcp.sumup.com -> HTTP 404
+
+## 2026-10-08 03:01:04 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+
+## 2026-10-08 10:23:54 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+
+## 2026-10-08 17:33:01 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/mcp -> HTTP 401
+
+## 2026-10-08 22:30:21 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/mcp -> HTTP 401
+
+## 2026-10-09 02:53:08 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/mcp -> HTTP 401
+https://auth.sumup.com/oauth2/par -> HTTP 404
+https://auth.sumup.com/oauth2/token -> HTTP 405
+
+## 2026-10-09 09:41:16 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/mcp -> HTTP 401
+https://api.sumup.com/v1/merchants -> HTTP 404
+https://api.sumup.com/v1/payments -> HTTP 404
+https://api.sumup.com/swagger.json -> HTTP 404
+https://api.sumup.com/openapi.json -> HTTP 404
+https://api.sumup.com/api-docs -> HTTP 404
+https://api.sumup.com/health -> HTTP 404
+https://api.sumup.com/v2/ -> HTTP 404
+https://api.sumup.com/graphql -> HTTP 404
+https://admin.sumup.com/admin -> HTTP 403
+
+## 2026-10-09 16:38:15 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://mcp.sumup.com/mcp -> HTTP 401
+
+## 2026-10-09 21:36:44 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods -> HTTP 404
+===log line counts===
+   26318 reports/analyst-nemotron3.log
+   93064 reports/analyst-bigpickle.log
+  119382 total
+[0m
+[0m$ [0mecho "===gateway region ($(sed -n '24460,24470p' reports/analyst-nemotron3.log | head -3 | md5sum))==="; sed -n '24458,24472p' reports/analyst-nemotron3.log; echo "===auth region==="; sed -n '24644,24658p' reports/analyst-nemotron3.log; echo "===end of log==="; tail -20 reports/analyst-nemotron3.log
+===gateway region (914f2c17ed981c103df23e9160a8df98  -)===
+-rw-r--r--  1 runner runner    9173 Oct  7 05:23 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Oct  7 05:23 valid-bugs.md
+[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m→ [0mRead reports/hypotheses-nemotron3.txt
+[0m
+[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+# gateway.sumup.com/hosted.js — Cross-Origin postMessage Checkout Write
+
+**Asset:** `gateway.sumup.com/hosted.js` (PCI card-entry iframe)  
+**Class:** MISCONFIG — missing `event.origin` validation on inbound `postMessage`; no framing protection  
+**Severity:** Medium (CSRF-like checkout manipulation via framable PCI component)  
+**Confidence:** 90  
+**Testability:** PASSIVE (static analysis + live iframe PoC); AUTH_HELPED for full payment flow validation  
+**Reported:** 2026-10-06  
+===auth region===
+[0m
+[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md << 'EOF'
+# auth.sam-app.ro/oauth2/register — Unauthenticated Dynamic Client Registration → Mintable JWTs (Staging)
+
+**Asset:** `auth.sam-app.ro/oauth2/register` (staging auth server)  
+**Class:** OATH — RFC 7591 dynamic client registration live unauthenticated  
+**Severity:** Low-Medium (staging only; cross-env JWKS isolation blocks prod relay)  
+**Confidence:** 85  
+**Testability:** PASSIVE (registration + token minting proven); AUTH_HELPED for prod sync test (not possible passively)  
+**Reported:** 2026-10-06  
+
+---
+
+## 1. Summary
+
+===end of log===
+
+[PARKED] mcp.sumup.com/mcp kid-optional try-all: confidence 75 but exploitation purely theoretical — no JWKS pollution vector, no cross-env key reuse (ZERO kid overlap), HS256/none explicitly rejected; hardening deviation only.
+[PARKED] iso20022.sumup.com dual-upstream routing: routing observation, not a security finding — two classes differ in which server answers, not in what is disclosed; Origin control produced zero access-control-* headers on both classes.
+[PARKED] pos-payment.sumup.com AWS API Gateway IAM/SigV4: different trust model but route-level enum REFUTED; no passive anomaly beyond auth gate.
+[PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods: param-invariant stub (amount/currency/bogus-code/negative → identical 200; spec-declared 400 never fires) — no unauth oracle, no BOLA without bearer.
+
+[FINAL] 1. gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium
+[FINAL] 2. auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration → mintable JWTs on staging — 85, PASSIVE, Low-Medium (staging only)
+[FINAL] 3. api.sumup.com/v0.1/merchants/{code}/payment-methods method-level auth discrepancy — 65, PASSIVE, Low
+
+[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+
+[LEARN] ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound handler never reads event.origin; guard exists but applied backwards — developer fixing outbound targetOrigin will find origin in scope and assume inbound handled
+[LEARN] REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retracted entirely. Both wrong — constructor builds card-IIN brand table; actual gate is static UUID v1–v5 literal. Reading code around citation catches this; re-deriving from summary never will
+[LEARN] ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT match tells you what the rule actually keys on — case-sensitive substring "metrics" on raw path, not segment or exact match
+[LEARN] REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodies are fixed 11-byte stubs, and an attacker Origin control produced zero access-control-* headers on both classes. A routing observation is not a security finding; it is a finding only when the two classes differ in what an attacker can reach, and here they differ in which server answers, not in what is disclosed
+[LEARN] ACCEPTED OTHER @ workspace: 46 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist. Write+hash must be the same act before referencing any [NEW] file claim
+[LEARN] REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the binding control; the fileable finding is staging posture only (VALable)
+
+[RISK] sumup: 72 — Three gains, only the third is a discovery. First, the gateway finding is materially sharper: a declared, supplied, one-directionally-applied origin parameter converts remediation from "add validation" into "move existing validation to inbound handler and fix outbound bug in same change." Second, a wrong technical claim that survived three cycles (runtime-unrecoverable gate) was retracted on inspection; had it shipped, a triager would have been told the remaining barrier was unauditable when it is a public UUID regex. Third, the file-delivery blocker is finally diagnosed correctly (workspace re-materialization), which matters more than it sounds: 46 cycles of re-materialization, each reporting a plausible mechanism, each wrong in a way that guaranteed the next cycle would re-run the same failing path. The risk I am NOT claiming as reduced is delivery itself — 13+ cycles on, nothing is submitted, and treating these artifacts as filed would be the same category of error as the file claims, one level up.
+[0m
+[0m$ [0mgrep -n "cat > .*reports/gateway-hostedfields\|cat > .*reports/auth-sam-app-ro\|^EOF$" reports/analyst-nemotron3.log | tail -20
+24464:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+24639:EOF
+24645:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md << 'EOF'
+24776:EOF
+25127:24464:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+25132:24645:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md << 'EOF'
+25276:EOF
+25280:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+25455:EOF
+[0m
+[0m$ [0msed -n '24465,24638p' reports/analyst-nemotron3.log > reports/gateway-hostedfields-cross-origin-messenger.md
+sed -n '24646,24775p' reports/analyst-nemotron3.log > reports/auth-sam-app-ro-dynamic-registration.md
+sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md; wc -l reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  reports/gateway-hostedfields-cross-origin-messenger.md
+5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24  reports/auth-sam-app-ro-dynamic-registration.md
+  174 reports/gateway-hostedfields-cross-origin-messenger.md
+  130 reports/auth-sam-app-ro-dynamic-registration.md
+  304 total
+[0m
+Both canonical reports restored and hash-verified (gateway `4291c128`, auth `5a88476d`). Now the re-verify probe (next move #2) to resolve the GET 200 vs record "HTTP 404" contradiction.
+[0m$ [0mcode=`printf '\n'`; get() { curl -sS -o /tmp/opencode/pe.txt -D - -w "|STATUS:%{http_code}|SIZE:%{size_download}|RT:%{time_total}" "$1" 2>&1 | grep -iE "HTTP/|content-type|STATUS|SIZE|RT" | tr '\n' ' '; echo; echo -n "  BODY: "; cat /tmp/opencode/pe.txt; echo; }
+echo "== GET real code =="; get "https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods"; sleep 1.1
+echo "== HEAD real code =="; curl -sS -I -o /dev/null -D - -w "|STATUS:%{http_code}|SIZE:%{size_download}" "https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods" 2>&1 | grep -iE "HTTP/|STATUS|SIZE"; sleep 1.1
+echo "== GET bogus code (control) =="; get "https://api.sumup.com/v0.1/merchants/ZZZZZZ99/payment-methods"
+== GET real code ==
+HTTP/2 200 
+ content-type: application/json
+ cf-cache-status: DYNAMIC
+ nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+ set-cookie: __cf_bm=mWNLaK46nuXbIBqhrHEPc8_0rTy4FcqoK2eKUnOHsg8-1791594192.6965232-1.0.1.1-sTNxzgXSthMhFiZF70SMYh9cSayHiHEkzcqX1iNqJYiTFrVg3wqx7DaKXcy2bAoxBpHrjkZ3UQAOwSGW6mW9tW9FlLDGJwUuQ7lYA59N3jyzYUJdR4r6boGMbSigUa2GRlVfUeXnWLssqnpJviUEkg; HttpOnly; SameSite=None; Secure; Path=/; Domain=sumup.com; Expires=Sat, 10 Oct 2026 01:33:13 GMT
+ report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=uKZYkON77mxmBphv53GQIzQGA9FdgjNGNNbtHbP32Xcng5d5Yn8OqKBuvA2Tjj5nhhLBt5YYFpTDX2AtlWaRgNmUNIfbsz1rZ32yUK4PKitGTpDks1tWTGm858PZGOg%3D"}]}
+ |STATUS:200|SIZE:46|RT:0.750632 
+  BODY: {"available_payment_methods":[{"id":"card"}]}
+
+== HEAD real code ==
+HTTP/2 404 
+cf-cache-status: DYNAMIC
+|STATUS:404|SIZE:0
+== GET bogus code (control) ==
+HTTP/2 200 
+ content-type: application/json
+ cf-cache-status: DYNAMIC
+ nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+ report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=h50ToXb28q1AIC8bUdtFxew%2FSPCBikqYGrh3nMqYZ2JyEa1Gn9IFiZxdl6BbnvoWHkHaxoogryjitqspG89q1YmUPz5BnxYRM%2FVbDD9VblJ9sedugOJZlvTlH7O8djw%3D"}]}
+ |STATUS:200|SIZE:46|RT:0.229122 
+  BODY: {"available_payment_methods":[{"id":"card"}]}
+[0m
+[0m$ [0mts=$(date -u +'%Y-%m-%d %H:%M:%S'); printf '\n## %s UTC\n' "$ts" >> probe-results.md
+printf 'GET https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods -> 200 len=46 body={"available_payment_methods":[{"id":"card"}]}\n' >> probe-results.md
+printf 'HEAD https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods -> 404 len=0 (method discrepancy, GET-vs-HEAD)\n' >> probe-results.md
+printf 'GET https://api.sumup.com/v0.1/merchants/ZZZZZZ99/payment-methods (control) -> 200 len=46 body identical (param-invariant stub, no BOLA)\n' >> probe-results.md
+tail -4 probe-results.md; echo "---"; git status --short
+## 2026-10-10 01:03:37 UTC
+GET https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods -> 200 len=46 body={"available_payment_methods":[{"id":"card"}]}
+HEAD https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods -> 404 len=0 (method discrepancy, GET-vs-HEAD)
+GET https://api.sumup.com/v0.1/merchants/ZZZZZZ99/payment-methods (control) -> 200 len=46 body identical (param-invariant stub, no BOLA)
+---
+ M probe-results.md
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+?? reports/auth-sam-app-ro-dynamic-registration.md
+?? reports/gateway-hostedfields-cross-origin-messenger.md
+[0m
+Probe confirms the discrepancy is real and durable. Let me record it in the durable log and finalize.
+Cycle complete. Both actionable next moves done; remaining step is yours.
+
+**Probe (resolved the GET-200-vs-record-404 contradiction):**
+- `GET api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods` → **200**, body `{"available_payment_methods":[{"id":"card"}]}` (46 B)
+- `HEAD` same URL → **404** (0 B) — the earlier `probe-results.md` "HTTP 404" was the HEAD variant
+- Control `GET .../ZZZZZZ99/payment-methods` → **200**, byte-identical body → param-invariant stub, **no BOLA**. Durable, correctly [PARKED]/Low. Recorded in `probe-results.md`.
+
+**Artifacts on disk this cycle (hash-verified, canonical):**
+- `reports/gateway-hostedfields-cross-origin-messenger.md` — 174 L / `4291c128…` ✓
+- `reports/auth-sam-app-ro-dynamic-registration.md` — 130 L / `5a88476d…` ✓
+- Note: these will vanish on next re-materialization; bytes remain losslessly in `reports/analyst-nemotron3.log` L24464-24639 / L24645-24776.
+
+[NEXT] HUMAN (only true blocker): submit the two report files to bugs.olivermaicher.eu per `scope.yml:4`. No in-repo submission API exists, so this cannot be automated. Say "submit" and I'll prep the final message text from the canonical bytes.
+
+[LEARN] REJECTED OTHER @ api.sumup.com/v0.1/merchants/{code}/payment-methods: the re-probe proves the 200/404 split is a GET-vs-HEAD method artifact, not a live-coded auth gate — the stub is 46-B-identical across valid and bogus merchant codes, so the cross-cycle "auth discrepancy" reads as more than it is; it is a CDN route quirk with no impact.
+
+[RISK] sumup: 73 — the file-delivery leg is now unblocked for a human (canonical bytes + hashes verified present), but 13+ cycles of unattached artifact churn remain the binding risk: until a human either submits or says stop, every subsequent cycle is low-value re-derivation.
