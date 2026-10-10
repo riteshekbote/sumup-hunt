@@ -2110,3 +2110,14 @@ www.sumup.com
 - CHANGED Workspace re-materialized 46th consecutive cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; both final report files absent despite 
 - CHANGED `valid-bugs.md` running count remains 0 — both findings (gateway cross-origin postMessage, auth.sam-app.ro DCR) marked VALID 7.5 with FILE REPORT directive but submission blocked on HUMAN step; no sub
 - CHANGED `auth.sumup.com` dashboard client consent set confirmed: ALLOWED `{openid, classic, offline, readers.read, terminals.read, email}`; REJECTED `offline_access` + all 13 REST spec scopes — `email` scope 
+
+## 2026-10-10 13:55:29 UTC
+- NEW `api.sumup.com/v0.1/merchants/{code}/payment-methods`: GET returns 200 static `{"available_payment_methods":[{"id":"card"}]}` but HEAD returns 404 — method-level discrepancy; KB claimed "now 404" was 
+- NEW `mcp.sumup.com/.well-known/oauth-protected-resource` → 200 at `/mcp/.well-known/oauth-protected-resource` (third path, self-advertised in WWW-Authenticate) — publishes `scopes_supported:["offline_acce
+- CHANGED Workspace re-materialized 46th consecutive cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; both final report files absent despite 
+- CHANGED `valid-bugs.md` running count remains 0 — both findings (gateway cross-origin postMessage, auth.sam-app.ro DCR) marked VALID 7.5 with FILE REPORT directive but submission blocked on HUMAN step; no sub
+- CHANGED `auth.sumup.com` dashboard client consent set confirmed: ALLOWED `{openid, classic, offline, readers.read, terminals.read, email}`; REJECTED `offline_access` + all 13 REST spec scopes — `email` scope 
+- NEW `api.sumup.com/v0.1/merchants/{code}/payment-methods`: GET returns 200 static `{"available_payment_methods":[{"id":"card"}]}` but HEAD returns 404 — method-level discrepancy at gateway layer; KB claim
+- NEW `mcp.sumup.com/.well-known/oauth-protected-resource`: only 2 live paths (root + `/mcp/.well-known/oauth-protected-resource` is 404 JSON-RPC), KB claimed third path existed — RFC 9728 publishes `scopes
+- CHANGED Workspace re-materialized 46th consecutive cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; both final report files absent despite 
+- CHANGED `auth.sumup.com` dashboard client consent set confirmed: ALLOWED `{openid, classic, offline, readers.read, terminals.read, email}`; REJECTED `offline_access` + all 13 REST spec scopes — `email` scope 
