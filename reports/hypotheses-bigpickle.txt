@@ -1,28 +1,6 @@
-## 2026-10-11 06:59:28 UTC [target] (model bigpickle)
-[HYP] <title>
-class: <IDOR|SSRF|AUTH|XSS|BUSLOGIC|MISCONFIG|OATH|OTHER>
-asset: <host/endpoint>
-confidence: <0-100>
-reasoning: <facts only>
-evidence_needed: <what proves it>
-verify_steps: <passive-first concrete HTTP requests>
-impact: <what attacker gets + severity>
-testability: <PASSIVE|AUTH_HELPED|HUMAN_ONLY>
-[HYP] Framable PCI card-entry iframe w/ cross-origin postMessage checkout write
-class: MISCONFIG
-asset: gateway.sumup.com/hosted.js
-confidence: 90
-reasoning: inbound message handler never reads event.origin; origin param used ONLY outbound (t.postMessage(e,n||"*"), n=document.referrer); root sends no XFO/CSP frame-ancestors/Referrer-Policy; payment_type!=="card" skips frame-access gate; checkoutId gate is static UUID v1-5 literal; live netlog shows cross-origin form--submit -> PUT api.sumup.com/v0.2/checkouts/{attacker-uuid}; no exfil path as implemented
-evidence_needed: iframe + postMessage PoC from attacker origin driving checkout field writes; netlog
-verify_steps: GET https://gateway.sumup.com/ (headers); GET https://gateway.sumup.com/hosted.js (sha256 1302f1d6…); render iframe + postMessage form--submit
-impact: attacker page can manipulate merchant checkout contents via framable PCI component (CSRF-class, Medium); bounded by widget-session validity
-testability: HUMAN_ONLY
-[HYP] Unauthenticated RFC 7591 dynamic client registration on staging auth server
-class: OATH
-asset: auth.sam-app.ro/oauth2/register
-confidence: 85
-reasoning: POST -> 201 mints client_id+secret+chosen redirect_uris; registration_endpoint declared in openid-configuration; absent in prod (404); mints real JWTs via client_credentials with empty scp + attacker-controlled aud; PKCE + per-client redirect allowlist enforced; not synced to api.sam-app.ro/authorize; prod pivot blocked by ZERO JWKS kid overlap
-evidence_needed: unauthenticated POST 201 and token mint; prod vs staging discovery diff
-verify_steps: GET https://auth.sam-app.ro/.well-known/oauth-authorization-server; POST /oauth2/register {redirect_uris:[...]}
-impact: attacker registers OAuth clients + mints tokens on staging; empty scope prevents resource access (Low-Medium)
-testability: PASSIVE
+## 2026-10-11 13:56:12 UTC [target] (model bigpickle)
+[NEW]    (none) — no new surface; api.sumup.com passive rock is exhausted (27+ byte-stable cycles)
+[CHANGED] Re-materialized both deliverables on disk with canonical hashes:
+[PRIO]   P0 HUMAN submission (both findings), P1 rest, P3 nothing else
+[FINAL]  Two fileable findings, verified live this cycle; no submission tooling exists in repo
+[RISK]   none new; files re-materialize each cycle so submit from THIS cycle's disk state

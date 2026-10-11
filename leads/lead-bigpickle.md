@@ -9142,3 +9142,9 @@ evidence_needed: unauthenticated POST 201 and token mint; prod vs staging discov
 verify_steps: GET https://auth.sam-app.ro/.well-known/oauth-authorization-server; POST /oauth2/register {redirect_uris:[...]}
 impact: attacker registers OAuth clients + mints tokens on staging; empty scope prevents resource access (Low-Medium)
 testability: PASSIVE
+## 2026-10-11 13:56:12 UTC [target] (model bigpickle)
+[NEW]    (none) — no new surface; api.sumup.com passive rock is exhausted (27+ byte-stable cycles)
+[CHANGED] Re-materialized both deliverables on disk with canonical hashes:
+[PRIO]   P0 HUMAN submission (both findings), P1 rest, P3 nothing else
+[FINAL]  Two fileable findings, verified live this cycle; no submission tooling exists in repo
+[RISK]   none new; files re-materialize each cycle so submit from THIS cycle's disk state
