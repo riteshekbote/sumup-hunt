@@ -2170,3 +2170,6 @@ www.sumup.com
 - CHANGED Both reports re-materialized on disk from tracked log, hash-matched:
 - NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected
 - CHANGED hunt.yml root-cause confirmed: analyst job uploads only lead_*.txt/analyst-*.out/ctx.txt — report .md files never persist; durable channel = tracked analyst log + stdout
+
+## 2026-10-11 22:46:23 UTC
+- NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected
