@@ -9113,3 +9113,4 @@ testability: PASSIVE
 [LEARN] ACCEPTED TOOLING @ hunt.yml: report `.md` files never persist through the pipeline (analyst job doesn't commit/upload them); durable channel = report body in tracked `reports/analyst-<model>.log`. Re-materializing each cycle is expected.
 [LEARN] `valid-bugs.md` reverts to 79 L baseline each cycle (edit is not persisted by the pipeline) — do not treat prior appends as durable.
 [RISK] sumup: 15 — two final findings ready and re-verified live; risk is stale-hold and duplicate submission, not missed surface.
+## 2026-10-11 00:53:37 UTC [target] (model bigpickle)
