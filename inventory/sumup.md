@@ -2159,3 +2159,14 @@ www.sumup.com
 - NEW `api.sumup.com/v0.1/merchants/{code}/payment-methods`: GET returns 200 static `{"available_payment_methods":[{"id":"card"}]}` but HEAD returns 404 — method-level discrepancy at gateway layer; KB claim
 - NEW `mcp.sumup.com/.well-known/oauth-protected-resource`: only 2 live paths (root + `/mcp/.well-known/oauth-protected-resource` is 404 JSON-RPC), KB claimed third path existed — RFC 9728 publishes `scopes
 - CHANGED `auth.sumup.com` dashboard client consent set confirmed: ALLOWED `{openid, classic, offline, readers.read, terminals.read, email}`; REJECTED `offline_access` + all 13 REST spec scopes — `email` scope 
+
+## 2026-10-11 18:45:49 UTC
+- NEW (none) — no new surface; api.sumup.com passive rock is exhausted (27+ byte-stable cycles)
+- CHANGED Re-materialized both deliverables on disk with canonical hashes:
+- NEW (none) — no new surface; api.sumup.com passive rock is exhausted (27+ byte-stable cycles)
+- CHANGED Re-materialized both deliverables on disk with canonical hashes:
+- NEW (none) — no new surface; api.sumup.com passive rock still exhausted (28+ byte-stable cycles)
+- CHANGED Re-materialized both deliverables on disk from tracked analyst-nemotron3.log heredocs:
+- CHANGED Both reports re-materialized on disk from tracked log, hash-matched:
+- NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected
+- CHANGED hunt.yml root-cause confirmed: analyst job uploads only lead_*.txt/analyst-*.out/ctx.txt — report .md files never persist; durable channel = tracked analyst log + stdout
