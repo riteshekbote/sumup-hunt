@@ -1785,3 +1785,8 @@ https://api.sumup.com/v0.2/checkouts/{attacker-uuid -> HTTP 404
 https://gateway.sumup.com/ -> 200 len=546
 https://gateway.sumup.com/hosted.js -> 200 len=26839
 https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods -> HTTP 404
+
+## 2026-10-11 06:59:41 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods -> HTTP 404
