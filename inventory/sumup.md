@@ -2173,3 +2173,8 @@ www.sumup.com
 
 ## 2026-10-11 22:46:23 UTC
 - NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected
+
+## 2026-10-12 02:20:31 UTC
+- NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected
+- NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected
+- NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected
