@@ -2187,3 +2187,6 @@ www.sumup.com
 - NEW Gateway evidence re-derived from served bytes this cycle (GET, 1 rps): `hosted.js` byte-identical 26,839 B / sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`; `grep -c 'event\
 - NEW Both reports recovered from reports/analyst-nemotron3.log L24465-24775 and confirmed on disk (hashes match prior recording exactly).
 - NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected
+
+## 2026-10-13 01:31:55 UTC
+- NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected

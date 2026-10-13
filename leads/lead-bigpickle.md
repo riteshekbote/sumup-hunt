@@ -9286,3 +9286,4 @@ testability: PASSIVE.
 [LEARN] ACCEPTED MISCONFIG @ gateway.sumup.com: inbound postMessage lacks event.origin check; outbound uses document.referrer/"*"; no XFO/CSP frame-ancestors -> framed PCI iframe can drive PUT /v0.2/checkouts/{id}.
 [LEARN] ACCEPTED OATH @ auth.sam-app.ro: RFC7591 DCR live unauth on staging; empty scope + attacker aud; prod JWKS (8 keys) disjoint from staging -> no prod relay.
 [RISK] sumup: 20 — no new passive surface; two fileable staging/medium findings pending human submission.
+## 2026-10-13 01:31:44 UTC [target] (model bigpickle)
