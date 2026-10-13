@@ -9451,3 +9451,4 @@ testability: PASSIVE.
 [FINAL] 2. auth.sam-app.ro/oauth2/register unauth DCR → mintable JWTs (staging) — 85, PASSIVE, Low-Medium
 [NEXT] HUMAN: submit both report files to bugs.olivermaicher.eu per scope.yml:4.
 [NEXT] PROBE: none — quartet byte-stable 27+ cycles; re-probe expected zero yield.
+## 2026-10-13 21:34:12 UTC [target] (model bigpickle)
