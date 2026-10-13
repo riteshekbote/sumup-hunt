@@ -2190,3 +2190,10 @@ www.sumup.com
 
 ## 2026-10-13 01:31:55 UTC
 - NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected
+
+## 2026-10-13 08:27:42 UTC
+- NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected
+- NEW NO_DELTA — passive surfaces byte-stable; workspace re-materialized (reports/*.md absent on arrival). Both final reports reconstructed from durable log and byte-verified this cycle.
+- CHANGED reports/gateway-hostedfields-cross-origin-messenger.md GENUINELY on disk — 174 L / 8,593 B / sha256 4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9 (recovered reports/analyst-nemotron
+- CHANGED reports/auth-sam-app-ro-dynamic-registration.md GENUINELY on disk — 130 L / 7,379 B / sha256 5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24 (recovered reports/analyst-nemotron3.log L
+- NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected

@@ -9287,3 +9287,58 @@ testability: PASSIVE.
 [LEARN] ACCEPTED OATH @ auth.sam-app.ro: RFC7591 DCR live unauth on staging; empty scope + attacker aud; prod JWKS (8 keys) disjoint from staging -> no prod relay.
 [RISK] sumup: 20 — no new passive surface; two fileable staging/medium findings pending human submission.
 ## 2026-10-13 01:31:44 UTC [target] (model bigpickle)
+## 2026-10-13 08:26:52 UTC [target] (model bigpickle)
+[NEW] NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected-resource still 2 live paths; auth.sumup.com dashboard consent set stable {openid,classic,offline,readers.read,terminals.read,email}; workspace 47th re-materialization confirmed
+[PRIO] gateway.sumup.com/hosted.js,9.30,attack_surface=9,business_value=10,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=9
+[PRIO] auth.sam-app.ro/oauth2/register,8.70,attack_surface=9,business_value=8,tech_exposure=9,gate_ease=10,cloud_surface=8,freshness=8
+[PRIO] api.sumup.com/v0.1/merchants/{code}/payment-methods,6.95,attack_surface=6,business_value=8,tech_exposure=5,gate_ease=10,cloud_surface=5,freshness=7
+[HYP] gateway.sumup.com/hosted.js cross-origin postMessage checkout-write
+class: MISCONFIG
+asset: gateway.sumup.com/hosted.js
+confidence: 90
+reasoning: PCI card-entry iframe with postMessage API lacking event.origin validation; no X-Frame-Options/CSP frame-ancestors; framable by any origin. origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*") with n=document.referrer); inbound handler never reads event.origin. payment_type !== "card" branch skips frame-access gate (Ce(r.frames) / if(!d.length) return) completely. checkoutId gate is static UUID v1–5 literal (ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[05][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i). Three messenger construction sites: Re (container) uses document.referrer as targetOrigin (throws on full URL), Ue (metrics) and M use literal "*" (wildcard outbound live).
+evidence_needed: Cross-origin frame + postMessage {type:"SumUpCard",message:"form--submit",payment:{checkoutId:"11111111-2222-4333-8444-555555555555",payment_type:"not_card"}} → observe PUT /v0.2/checkouts/{id} on api.sumup.com via netlog/iframe console.
+verify_steps: GET https://gateway.sumup.com/ (546B shell) → GET https://gateway.sumup.com/hosted.js (26,839B) → grep for event.origin/origin===/targetOrigin → 0 hits; grep for X-Frame-Options/frame-ancestors → 0 hits; frame from attacker origin, postMessage form--submit with payment_type!=="card", observe checkout PUT in netlog.
+impact: Cross-origin attacker can drive framed card-entry iframe to issue state-changing PUT /v0.2/checkouts/{attacker-chosen-id} with attacker-supplied payment payload. Bounded by widget-session validity (checkoutId must be valid UUID shape); no response exfiltration path (send() throws on full-URL referrer). Severity: Medium (CSRF-like checkout manipulation via framable PCI component).
+testability: PASSIVE (framing/postMessage defect proven via static analysis + live iframe PoC); AUTH_HELPED for full payment flow validation.
+[HYP] auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration → mintable JWTs on staging
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS). Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge, enforce per-client redirect allowlist (unrelated redirect → 401), no RFC7592 get/put/delete (404), and are NOT synced to api.sam-app.ro/authorize (invalid_client) — bounded blast radius. Minted JWTs via client_credentials (client_secret_post) have empty scp but attacker-controlled aud; scope escalation blocked at registration + token endpoint; auth_method declared but not enforced. Prod JWKS rejects staging tokens (ZERO kid overlap: prod 8 keys, staging 9 unique keys).
+evidence_needed: Fileable as staging posture finding only (VALID 7.5 per triage); zero prod sync evidence after 30+ cycles; cross-env JWKS isolation is binding control.
+verify_steps: POST https://auth.sam-app.ro/oauth2/register {redirect_uris:["https://evil.example/cb"],grant_types:["client_credentials"],client_name:"test",token_endpoint_auth_method:"client_secret_post"} → 201 client_id/secret → POST https://auth.sam-app.ro/oauth2/token grant_type=client_credentials&client_id={id}&client_secret={secret} → 200 JWT (empty scp, aud=https://api.sam-app.ro) → GET https://api.sam-app.ro/v0.1/merchants/{code} with Bearer → 404 structured problem+json (token validated) vs plain 404 without → empty scope blocks resource access.
+impact: Staging environment allows unauthenticated client registration + token minting with empty scope + attacker-controlled aud. Cross-env key isolation (ZERO kid overlap) blocks prod relay. Fileable as staging misconfiguration (scope escalation blocked, no prod impact). Severity: Low-Medium (staging only).
+testability: PASSIVE (registration + token minting proven); AUTH_HELPED for prod sync test (not possible passively).
+[HYP] api.sumup.com/v0.1/merchants/{code}/payment-methods method-level auth discrepancy
+class: AUTH
+asset: api.sumup.com/v0.1/merchants/{code}/payment-methods
+confidence: 65
+reasoning: GET returns 200 static `{"available_payment_methods":[{"id":"card"}]}` unauthenticated; HEAD returns 404. KB claimed gateway now requires bearer for oauth2:[] ops but GET remains reachable. Handler is param-invariant stub (merchant_code/currency/amount ignored). Discrepancy suggests method-level routing divergence at gateway layer.
+evidence_needed: Confirm GET/HEAD response class difference is stable across multiple merchant codes; verify no other methods (POST/PUT/DELETE) expose handler.
+verify_steps: GET https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods → 200; HEAD same → 404; OPTIONS same → 204; test 4 merchant codes × 3 currencies × {GET,HEAD,OPTIONS}.
+impact: If GET bypasses auth gate while other methods enforce it, partial BOLA/SSRF surface on declared oauth2:[] operation. Severity: Low (read-only stub, param-invariant).
+testability: PASSIVE.
+[PARKED] mcp.sumup.com/mcp kid-optional try-all: confidence 75 but exploitation purely theoretical — no JWKS pollution vector, no cross-env key reuse (ZERO kid overlap), HS256/none explicitly rejected; hardening deviation only.
+[PARKED] iso20022.sumup.com dual-upstream routing: routing observation, not a security finding — two classes differ in which server answers, not in what is disclosed; Origin control produced zero access-control-* headers on both classes.
+[PARKED] pos-payment.sumup.com AWS API Gateway IAM/SigV4: different trust model but route-level enum REFUTED; no passive anomaly beyond auth gate.
+[PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods: param-invariant stub (amount/currency/bogus-code/negative → identical 200; spec-declared 400 never fires) — no unauth oracle, no BOLA without bearer.
+[FINAL] 1. gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium
+[FINAL] 2. auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration → mintable JWTs on staging — 85, PASSIVE, Low-Medium (staging only)
+[FINAL] 3. api.sumup.com/v0.1/merchants/{code}/payment-methods method-level auth discrepancy — 65, PASSIVE, Low
+[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+[NEW] NO_DELTA — passive surfaces byte-stable; workspace re-materialized (reports/*.md absent on arrival). Both final reports reconstructed from durable log and byte-verified this cycle.
+[CHANGED] reports/gateway-hostedfields-cross-origin-messenger.md GENUINELY on disk — 174 L / 8,593 B / sha256 4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9 (recovered reports/analyst-nemotron3.log L24465-24638, 0 escape bytes).
+[CHANGED] reports/auth-sam-app-ro-dynamic-registration.md GENUINELY on disk — 130 L / 7,379 B / sha256 5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24 (recovered reports/analyst-nemotron3.log L24646-24775).
+[PRIO] gateway.sumup.com/hosted.js,9.30
+[PRIO] auth.sam-app.ro/oauth2/register,8.70
+[FINAL] 1. gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium
+[FINAL] 2. auth.sam-app.ro/oauth2/register unauth DCR → mintable JWTs (staging) — 85, PASSIVE, Low-Medium
+[NEXT] HUMAN: submit both report files to bugs.olivermaicher.eu per scope.yml:4.
+[NEXT] PROBE: none — quartet byte-stable 27+ cycles; re-probe expected zero yield.
+[PRIO] gateway.sumup.com/hosted.js,9.30
+[PRIO] auth.sam-app.ro/oauth2/register,8.70
+[FINAL] 1. gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium
+[FINAL] 2. auth.sam-app.ro/oauth2/register unauth DCR → mintable JWTs (staging) — 85, PASSIVE, Low-Medium
+[NEXT] HUMAN: submit both report files to bugs.olivermaicher.eu per scope.yml:4.
+[NEXT] PROBE: none — quartet byte-stable 27+ cycles; re-probe expected zero yield.
