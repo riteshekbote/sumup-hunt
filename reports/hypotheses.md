@@ -4368,3 +4368,58 @@
 - LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodi
 - LEARN: ACCEPTED OTHER @ workspace: 46 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist
 - LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
+
+## RANKED HYPOTHESES 2026-10-14 10:54:37 UTC
+- [90] gateway.sumup.com/hosted.js: gateway.sumup.com/hosted.js cross-origin postMessage checkout-write (from art/lead_nemotron3.txt)
+- [88] gateway.sumup.com: gateway.sumup.com hosted-fields frame accepts and acts on form--submit from any web origin, issuing an authenticated PUT to the production payments API with attacker-supplied checkout id, session id and payment payload (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` to bugs.olivermaicher.eu (evidence complete: PoC pages, netlog, served bundle). Second pr
+- NEXT(hypotheses-nemotron3.txt): HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com: hosted-fields postMessage API performs no event.origin validation and the frame ships no X-Frame-Options/frame-ancestors
+- LEARN: ACCEPTED OTHER @ gateway.sumup.com: the asset the KB dismissed as a "non-Next 404" one cycle earlier is the program's highest-value surface — a PCI card-entry f
+- LEARN: REJECTED MISCONFIG @ gateway.sumup.com: response exfiltration via the postMessage API. Two candidate outbound channels tested directly, neither delivered; send(
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: RFC 9728 resource-server metadata LIVE on prod MCP host at two paths (/.well-known/oauth-protected-resource and /mcp/.well-known
+- LEARN: REJECTED AUTH @ mcp.sumup.com/mcp: JWT alg:none and RS256→HS256 key confusion both explicitly refused by production bearer verifier — {"error":"invalid_token","
+- LEARN: ACCEPTED OATH @ auth.sumup.com: client_id=dashboard ACCEPTS email (302 login_challenge), completing its consent set as {openid, classic, offline, readers.read, 
+- LEARN: REJECTED AUTH @ auth.sam-app.ro/oauth2-register/JWKS: 30-candidate kid sweep against prod MCP verifier found exactly 8 published prod kids trusted, 0 undeclared
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro JWKS: staging trust set contains 2 duplicated entries (public:3a13954d-…, public:f06a4960-… each twice) — 11 entries = 9 unique
+- LEARN: ACCEPTED OTHER @ reports/valid-bugs.md: ground truth re-verified via clean read — 79 lines, running count 0 header intact, auth.sam-app.ro finding flagged FILE 
+- LEARN: REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across byte-stable surface is waste — 27 stable cycles, only live bearer discriminates; re-prob
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET consistent with prior POST-only confirmation — endpoint presence unchanged, no drift signal
+- LEARN: ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only live bearer can discriminate aud/iss binding vs key-level gate; re-p
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is binding c
+- LEARN: ACCEPTED OTHER @ dashboard.sumup.com + support.sumup.com: two last seed-inventory hosts unprobed after 28 cycles are both live Vercel 308 aliases (to me.sumup.c
+- LEARN: REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening refuted on modern server for dashboard client by 6 controlled negatives — all invalid_request; h
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: KB's exhaustive legacy-callback sweep used wrong path for dashboard candidate (/callback instead of registered /api/sso
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com: hosted-fields postMessage API performs no event.origin validation and the frame ships no X-Frame-Options/frame-ancestors
+- LEARN: ACCEPTED OTHER @ gateway.sumup.com: the asset the KB dismissed as a "non-Next 404" one cycle earlier is the program's highest-value surface — a PCI card-entry f
+- LEARN: REJECTED MISCONFIG @ gateway.sumup.com: response exfiltration via the postMessage API. Two candidate outbound channels tested directly, neither delivered; send(
+- LEARN: ACCEPTED OTHER @ mcp.sumup.com: RFC 9728 resource-server metadata LIVE on prod MCP host at two paths (/.well-known/oauth-protected-resource and /mcp/.well-known
+- LEARN: REJECTED AUTH @ mcp.sumup.com/mcp: JWT alg:none and RS256→HS256 key confusion both explicitly refused by production bearer verifier — {"error":"invalid_token","
+- LEARN: ACCEPTED OATH @ auth.sumup.com: client_id=dashboard ACCEPTS email (302 login_challenge), completing its consent set as {openid, classic, offline, readers.read, 
+- LEARN: REJECTED AUTH @ auth.sam-app.ro/oauth2-register/JWKS: 30-candidate kid sweep against prod MCP verifier found exactly 8 published prod kids trusted, 0 undeclared
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro JWKS: staging trust set contains 2 duplicated entries (public:3a13954d-…, public:f06a4960-… each twice) — 11 entries = 9 unique
+- LEARN: ACCEPTED OTHER @ reports/valid-bugs.md: ground truth re-verified via clean read — 79 lines, running count 0 header intact, auth.sam-app.ro finding flagged FILE 
+- LEARN: REJECTED BUSLOGIC @ api.sumup.com: any further GET/OPTIONS probe across byte-stable surface is waste — 27 stable cycles, only live bearer discriminates; re-prob
+- LEARN: ACCEPTED OTHER @ auth.sam-app.ro: /oauth2/register 404 on GET consistent with prior POST-only confirmation — endpoint presence unchanged, no drift signal
+- LEARN: ACCEPTED AUTH @ api.sumup.com: 19 stable cycles → passive surface genuinely exhausted; only live bearer can discriminate aud/iss binding vs key-level gate; re-p
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is binding c
+- LEARN: ACCEPTED OTHER @ dashboard.sumup.com + support.sumup.com: two last seed-inventory hosts unprobed after 28 cycles are both live Vercel 308 aliases (to me.sumup.c
+- LEARN: REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening refuted on modern server for dashboard client by 6 controlled negatives — all invalid_request; h
+- LEARN: ACCEPTED OATH @ api.sumup.com/authorize: KB's exhaustive legacy-callback sweep used wrong path for dashboard candidate (/callback instead of registered /api/sso
+- LEARN: ACCEPTED TOOLING @ hunt.yml: report `.md` files can never persist through the hunt pipeline (analyst job doesn't commit/upload them; aggregate commits from a fr
+- LEARN: REJECTED method-artifact @ api.sumup.com/v0.1/merchants/{code}/payment-methods: GET 200 / HEAD 404 is a CDN route quirk with no impact — do not re-open.
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound ha
+- LEARN: REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retrac
+- LEARN: ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT mat
+- LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodi
+- LEARN: ACCEPTED OTHER @ workspace: 46 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
+- LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing dive
+- LEARN: ACCEPTED TOOLING @ hunt.yml: report `.md` files can never persist through the hunt pipeline (analyst job doesn't commit/upload them; aggregate commits from a fr
+- LEARN: REJECTED method-artifact @ api.sumup.com/v0.1/merchants/{code}/payment-methods: GET 200 / HEAD 404 is a CDN route quirk with no impact — do not re-open.
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound ha
+- LEARN: REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retrac
+- LEARN: ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT mat
+- LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodi
+- LEARN: ACCEPTED OTHER @ workspace: 46 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi

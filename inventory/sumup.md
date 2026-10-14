@@ -2228,3 +2228,24 @@ www.sumup.com
 
 ## 2026-10-14 05:27:00 UTC
 - NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected
+
+## 2026-10-14 10:54:37 UTC
+- NEW gateway.sumup.com hosted-fields iframe discovered: PCI card-entry frame with postMessage API lacking event.origin validation, no X-Frame-Options/CSP/frame-ancestors, framable by any origin; form--subm
+- NEW mcp.sumup.com/.well-known/oauth-protected-resource → 200 at two paths (prod, never fetched in 29 cycles); publishes scopes_supported:["offline_access","email"]; kid-optional try-all on /mcp (RFC 8725 
+- NEW js.sumup.com (live Vercel, "SumUp JS SDK" doc page, referenced as apiBFF origin in gateway code), circuit.sumup.com (200, 4.1KB logo origin) — two new hosts absent from 30-cycle inventory
+- CHANGED api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now 404 (was 200 static {"card"}) — gateway requires bearer even for spec-declared oauth2:[] operations
+- CHANGED dashboard.sumup.com / support.sumup.com probed first time in 28 cycles — both 308 permanent aliases to me.sumup.com / help.sumup.com (Vercel)
+- CHANGED redirect_uri allowlist widening refuted on modern auth.sumup.com for dashboard client by 6 controlled negatives — all invalid_request (exact URI match proven by host-root rejection)
+- CHANGED Legacy callback sweep used wrong path for dashboard candidate (/callback instead of registered /api/sso/callback) — "0 HITs" conclusion invalid; re-tested with correct path: still invalid_request
+- CHANGED reports/gateway-hostedfields-cross-origin-messenger.md claimed created in prior cycle but NOT ON DISK (verified via ls) — deliverable gap confirmed mechanical
+- NEW gateway.sumup.com hosted-fields iframe discovered: PCI card-entry frame with postMessage API lacking event.origin validation, no X-Frame-Options/CSP/frame-ancestors, framable by any origin; form--subm
+- NEW mcp.sumup.com/.well-known/oauth-protected-resource → 200 at two paths (prod, never fetched in 29 cycles); publishes scopes_supported:["offline_access","email"]; kid-optional try-all on /mcp (RFC 8725 
+- NEW js.sumup.com (live Vercel, "SumUp JS SDK" doc page, referenced as apiBFF origin in gateway code), circuit.sumup.com (200, 4.1KB logo origin) — two new hosts absent from 30-cycle inventory
+- CHANGED api.sumup.com/v0.1/merchants/{code}/payment-methods: unauthenticated now 404 (was 200 static {"card"}) — gateway requires bearer even for spec-declared oauth2:[] operations
+- CHANGED dashboard.sumup.com / support.sumup.com probed first time in 28 cycles — both 308 permanent aliases to me.sumup.com / help.sumup.com (Vercel)
+- CHANGED redirect_uri allowlist widening refuted on modern auth.sumup.com for dashboard client by 6 controlled negatives — all invalid_request (exact URI match proven by host-root rejection)
+- CHANGED Legacy callback sweep used wrong path for dashboard candidate (/callback instead of registered /api/sso/callback) — "0 HITs" conclusion invalid; re-tested with correct path: still invalid_request
+- CHANGED reports/gateway-hostedfields-cross-origin-messenger.md claimed created in prior cycle but NOT ON DISK (verified via ls) — deliverable gap confirmed mechanical
+- NEW Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e65798
+- NEW Gateway evidence re-derived from served bytes this cycle (GET, 1 rps): `hosted.js` byte-identical 26,839 B / sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`; `grep -c 'event\
+- NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected
