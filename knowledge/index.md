@@ -1099,3 +1099,4 @@
 - 2026-10-14 REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening refuted on modern server for dashboard client by 6 controlled negatives — all invalid_request; host-root rejection proves exact URI match
 - 2026-10-14 ACCEPTED OATH @ api.sumup.com/authorize: KB's exhaustive legacy-callback sweep used wrong path for dashboard candidate (/callback instead of registered /api/sso/callback) — "0 HITs" conclusion invalid; re-tested with correct path: still invalid_request
 - 2026-10-14 support.sumup.com ranked 6.55 is alias-only (308→Vercel help center); ranking
+- 2026-10-14 ACCEPTED OTHER @ workspace: 46+ re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist. Write+hash must be the same act before referencing any [NEW] file claim
