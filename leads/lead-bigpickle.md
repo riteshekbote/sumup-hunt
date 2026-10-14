@@ -9617,3 +9617,4 @@ testability: PASSIVE.
 [NEXT] PROBE: none — quartet byte-stable 27+ cycles; re-probe expected zero yield.
 [NEW] Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9`), `auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24`)
 [NEW] Gateway evidence re-derived from served bytes this cycle (GET, 1 rps): `hosted.js` byte-identical 26,839 B / sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`; `grep -c 'event\.'` → 0; framing headers → 0
+## 2026-10-14 05:25:43 UTC [target] (model bigpickle)
