@@ -4423,3 +4423,8 @@
 - LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodi
 - LEARN: ACCEPTED OTHER @ workspace: 46 re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist
 - LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
+
+## RANKED HYPOTHESES 2026-10-14 15:32:19 UTC
+- [0] ?: No new hypothesis. Both live hypotheses already resolved to [FINAL] passively: (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: submit the two reports above to bugs.olivermaicher.eu per scope.yml:4
+- LEARN: support.sumup.com ranked 6.55 is alias-only (308→Vercel help center); ranking

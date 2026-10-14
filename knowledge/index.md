@@ -1098,3 +1098,4 @@
 - 2026-10-14 ACCEPTED OTHER @ dashboard.sumup.com + support.sumup.com: two last seed-inventory hosts unprobed after 28 cycles are both live Vercel 308 aliases (to me.sumup.com and help.sumup.com); breadth was the actual gap
 - 2026-10-14 REJECTED OATH @ auth.sumup.com: redirect_uri allowlist widening refuted on modern server for dashboard client by 6 controlled negatives — all invalid_request; host-root rejection proves exact URI match
 - 2026-10-14 ACCEPTED OATH @ api.sumup.com/authorize: KB's exhaustive legacy-callback sweep used wrong path for dashboard candidate (/callback instead of registered /api/sso/callback) — "0 HITs" conclusion invalid; re-tested with correct path: still invalid_request
+- 2026-10-14 support.sumup.com ranked 6.55 is alias-only (308→Vercel help center); ranking

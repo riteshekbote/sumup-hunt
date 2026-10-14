@@ -9780,3 +9780,12 @@ class: MISCONFIG
 asset: gateway.sumup.com/hosted.js
 confidence: 90
 reasoning: PCI card-entry iframe with postMessage API lacking event.origin validation; no X-Frame-Options/CSP frame-ancestors; framable by any origin. origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*") with n=document.referrer); inbound handler never reads event.origin. payment_type !== "card" branch skips frame-access gate (Ce(r.frames) / if(!d.length) return) completely. checkoutId gate is static UUID v1–5 literal (ue=/^[0-9a-f]{8}-…$/i, le=e=>ue.test(e)) — recoverable from served bytes. Live PoC: cross-origin form--submit drives PUT https://api.sumup.com/v0.2/checkouts/{attacker-chosen-id} with attacker-supplied session id and payment payload. Outbound delivery conditional on referrer (empty referrer → wildcard delivery via n||"*").
+## 2026-10-14 15:32:07 UTC [target] (model bigpickle)
+[NEW] none — no new surfaces this cycle. reposcan commit 89e8e7b is the initial
+[CHANGED] none. Byte-stable surfaces (api.sumup.com quartet, RFC 9728 metadata,
+[PRIO] 1. HUMAN submit 2 canonical reports (blocks everything: valid-bugs count 0)
+[HYP] No new hypothesis. Both live hypotheses already resolved to [FINAL] passively:
+[FINAL] 2 findings, both restored+hash-verified on disk this cycle:
+[NEXT] HUMAN: submit the two reports above to bugs.olivermaicher.eu per scope.yml:4
+[LEARN] support.sumup.com ranked 6.55 is alias-only (308→Vercel help center); ranking
+[RISK] Cycle stays at valid-bugs count 0 until HUMAN submission happens; 13+ cycles of
