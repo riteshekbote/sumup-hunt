@@ -2253,3 +2253,6 @@ www.sumup.com
 ## 2026-10-14 15:32:19 UTC
 - NEW none — no new surfaces this cycle. reposcan commit 89e8e7b is the initial
 - CHANGED none. Byte-stable surfaces (api.sumup.com quartet, RFC 9728 metadata,
+
+## 2026-10-14 19:43:05 UTC
+- NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected

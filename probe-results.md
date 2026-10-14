@@ -1863,3 +1863,8 @@ https://api.sumup.com/callback -> HTTP 404
 
 ## 2026-10-14 15:32:20 UTC
 
+
+## 2026-10-14 19:43:08 UTC
+https://gateway.sumup.com/ -> 200 len=546
+https://gateway.sumup.com/hosted.js -> 200 len=26839
+https://api.sumup.com/v0.1/merchants/MH4H92C7/payment-methods -> HTTP 404
