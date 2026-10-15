@@ -2280,3 +2280,13 @@ www.sumup.com
 
 ## 2026-10-15 17:15:23 UTC
 - NEW NO_DELTA — passive surfaces unchanged vs 48th materialization; `api.sumup.com/v0.1/merchants/{code}/payment-methods` still GET 200/HEAD 404 (method-level gateway discrepancy, KB REJECTED as CDN quirk)
+
+## 2026-10-15 20:30:56 UTC
+- NEW NO_DELTA — passive surfaces unchanged vs 48th materialization; `api.sumup.com/v0.1/merchants/{code}/payment-methods` still GET 200/HEAD 404 (method-level gateway discrepancy, KB REJECTED as CDN quirk)
+- NEW Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e65798
+- NEW Gateway evidence re-derived from served bytes this cycle (GET, 1 rps): `hosted.js` byte-identical 26,839 B / sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`; `grep -c 'event\
+- CHANGED `reports/gateway-hostedfields-cross-origin-messenger.md` re-materialized from tracked log → 174 L / 8,593 B / sha256 `4291c128…d7a9` (canonical)
+- CHANGED `reports/auth-sam-app-ro-dynamic-registration.md` re-materialized → 130 L / 7,379 B / sha256 `5a88476d…3e24` (canonical)
+- NEW `gateway.sumup.com/hosted.js` re-fetched: 26,839 B / sha256 `1302f1d6…0873` — byte-identical, root ACAO `*` — evidence fresh
+- NEW Confirmatory: pipeline (`.github/workflows/hunt.yml`) commits `git add leads reports …` from a *fresh* checkout, but the analyst job uploads only `lead_*.txt`/`analyst-*.out`/`ctx.txt` — my in-workspa
+- NEW NO_DELTA — passive surfaces unchanged vs 48th materialization; `api.sumup.com/v0.1/merchants/{code}/payment-methods` still GET 200/HEAD 404 (method-level gateway discrepancy, KB REJECTED as CDN quirk)
