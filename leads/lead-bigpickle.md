@@ -9999,3 +9999,4 @@ testability: PASSIVE.
 [NEXT] HUMAN: submit reports/gateway-hostedfields-cross-origin-messenger.md and reports/auth-sam-app-ro-dynamic-registration.md to bugs.olivermaicher.eu per scope.yml:4. Both reports on disk hash-verified this cycle (4291c128… 174L; 5a88476d… 130L). No further machine probing has positive expected value.
 [LEARN] Re-materialization is deterministic: `sed -n '24465,24638p'` + `'24646,24775p'` of analyst-nemotron3.log, ANSI-stripped, reproduces canonical hashes exactly (gw copies at 24464 & 25280 are byte-identical). Untracked report .md files never persist; recovery is one command.
 [RISK] 55. Non-delivery remains the dominant risk (13+ cycles). Analysis saturation reached; value now lies entirely in human submission.
+## 2026-10-15 17:15:10 UTC [target] (model bigpickle)

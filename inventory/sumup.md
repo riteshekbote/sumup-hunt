@@ -2277,3 +2277,6 @@ www.sumup.com
 ## 2026-10-15 12:09:42 UTC
 - NEW NO_DELTA — passive surfaces unchanged vs 48th materialization; `api.sumup.com/v0.1/merchants/{code}/payment-methods` still GET 200/HEAD 404 (method-level gateway discrepancy, KB REJECTED as CDN quirk)
 - CHANGED `valid-bugs.md` running count remains 0 — both findings (gateway cross-origin postMessage, auth.sam-app.ro DCR) marked VALID 7.5 with FILE REPORT directive in prior cycles but submission blocked on HU
+
+## 2026-10-15 17:15:23 UTC
+- NEW NO_DELTA — passive surfaces unchanged vs 48th materialization; `api.sumup.com/v0.1/merchants/{code}/payment-methods` still GET 200/HEAD 404 (method-level gateway discrepancy, KB REJECTED as CDN quirk)
