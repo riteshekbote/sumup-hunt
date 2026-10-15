@@ -2273,3 +2273,7 @@ www.sumup.com
 - NEW Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e65798
 - NEW Gateway evidence re-derived from served bytes this cycle (GET, 1 rps): `hosted.js` byte-identical 26,839 B / sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`; `grep -c 'event\
 - NEW NO_DELTA — passive surfaces unchanged; api.sumup.com/v0.1/merchants/{code}/payment-methods still GET 200/HEAD 404 (method-level discrepancy at gateway layer); mcp.sumup.com/.well-known/oauth-protected
+
+## 2026-10-15 12:09:42 UTC
+- NEW NO_DELTA — passive surfaces unchanged vs 48th materialization; `api.sumup.com/v0.1/merchants/{code}/payment-methods` still GET 200/HEAD 404 (method-level gateway discrepancy, KB REJECTED as CDN quirk)
+- CHANGED `valid-bugs.md` running count remains 0 — both findings (gateway cross-origin postMessage, auth.sam-app.ro DCR) marked VALID 7.5 with FILE REPORT directive in prior cycles but submission blocked on HU

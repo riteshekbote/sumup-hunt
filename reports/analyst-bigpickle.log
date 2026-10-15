@@ -108811,3 +108811,347 @@ I'm restarting the cycle per instructions. Before I spend a cycle re-probing, I 
 2. **Open one genuinely-unexplored class** not covered anywhere in the KB — specifically **GraphQL endpoints** or **mobile app (APK/IPA) analysis** — rather than re-probe the exhausted passive surfaces?
 
 I'm unsure which you want, so I'm stopping here rather than churning.
+===== ANALYST bigpickle 2026-10-15 12:09:42 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null; echo "---"; ls -la . 2>/dev/null | head -30; echo "---GIT---"; git log --oneline -5 2>/dev/null; git status --short 2>/dev/null | head -20
+total 13464
+drwxr-xr-x  2 runner runner    4096 Oct 15 12:06 .
+drwxr-xr-x 12 runner runner    4096 Oct 15 12:06 ..
+-rw-r--r--  1 runner runner 9294103 Oct 15 12:06 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   51429 Oct 15 12:06 analyst-laguna.log
+-rw-r--r--  1 runner runner   51192 Oct 15 12:06 analyst-ling3.log
+-rw-r--r--  1 runner runner   51666 Oct 15 12:06 analyst-longcat.log
+-rw-r--r--  1 runner runner 3569872 Oct 15 12:06 analyst-nemotron3.log
+-rw-r--r--  1 runner runner     670 Oct 15 12:06 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Oct 15 12:06 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Oct 15 12:06 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Oct 15 12:06 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   10425 Oct 15 12:06 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  696517 Oct 15 12:06 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Oct 15 12:06 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Oct 15 12:06 valid-bugs.md
+---
+total 1512
+drwxr-xr-x 12 runner runner   4096 Oct 15 12:06 .
+drwxr-xr-x  3 runner runner   4096 Oct 15 12:06 ..
+drwxr-xr-x  7 runner runner   4096 Oct 15 12:06 .git
+drwxr-xr-x  3 runner runner   4096 Oct 15 12:06 .github
+-rw-r--r--  1 runner runner   1885 Oct 15 12:06 README.md
+-rw-r--r--  1 runner runner     32 Oct 15 12:06 analyst-out.txt
+-rw-r--r--  1 runner runner 677986 Oct 15 12:06 analyst-prompt.txt
+-rw-r--r--  1 runner runner 674100 Oct 15 12:06 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Oct 15 12:06 inventory
+drwxr-xr-x  2 runner runner   4096 Oct 15 12:06 knowledge
+drwxr-xr-x  2 runner runner   4096 Oct 15 12:06 leads
+-rw-r--r--  1 runner runner  91034 Oct 15 12:06 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Oct 15 12:06 recon-notes
+drwxr-xr-x  2 runner runner   4096 Oct 15 12:06 reports
+drwxr-xr-x  2 runner runner   4096 Oct 15 12:06 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Oct 15 12:06 scope.yml
+drwxr-xr-x  2 runner runner   4096 Oct 15 12:06 scripts
+-rw-r--r--  1 runner runner     33 Oct 15 12:06 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Oct 15 12:06 state_laguna.json
+-rw-r--r--  1 runner runner     33 Oct 15 12:06 state_ling3.json
+-rw-r--r--  1 runner runner     33 Oct 15 12:06 state_longcat.json
+-rw-r--r--  1 runner runner     33 Oct 15 12:06 state_mimo.json
+-rw-r--r--  1 runner runner     33 Oct 15 12:06 state_nemotron3.json
+drwxr-xr-x  2 runner runner  16384 Oct 15 12:06 triage
+---GIT---
+6d401c1 reposcan 2026-10-15-09-58
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+[0m
+## Objective
+- Act as a senior bug-bounty analyst for the SumUp program (report channel: bugs.olivermaicher.eu), running a 7-step structured cycle (DELTA → PRIORITIZE → HYPOTHESES → SELF-CRITIQUE → NEXT → LEARN → RISK) to find and document real, in-scope vulnerabilities.
+- Deliver two fileable reports (gateway cross-origin postMessage finding and auth.sam-app.ro dynamic client registration finding) and get them submitted by a human.
+
+## Important Details
+- Passive-first rule: live probes limited to GET/HEAD/OPTIONS at ≤1 rps; no mutating/auth-bypass tests against live customer data; POST only allowed historically on staging `auth.sam-app.ro` (now avoided — creates live OAuth clients).
+- Out-of-scope classes are extensive: includes clickjacking without demonstrated exploit, header/banner descriptive leaks, TLS best practice, OPTIONS/TRACE, CORS-without-capability-differential, routing observations without attacker-reachable difference.
+- Workspace is re-materialized every cycle: untracked `reports/*.md` never persist. Root cause: `.github/workflows/hunt.yml` analyst job uploads only `lead_*.txt`/`analyst-*.out`/`ctx.txt`; aggregate commits from fresh checkout. Re-materializing is expected, not a failure.
+- Durable channel: tracked `reports/analyst-nemotron3.log` (report bodies at L24465–24638 = gateway, L24646–24775 = auth) + structured stdout. `reports/valid-bugs.md` reverts to 79-line baseline (7,384 B, sha256 prefix `282390f8`) each cycle.
+- Write discipline: heredoc + `sha256sum` in the SAME command before any `[NEW]` claim referencing the file; treat any file claim without an in-context hash as unproven; open each cycle with `ls`.
+- Canonical report hashes: gateway `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9` (174 L / 8,593 B); auth `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24` (130 L / 7,379 B). Other line/hash variants seen are churn — prefer these.
+- Git: history contains only `8825e2f` (earlier claimed commit `ae23e10` does not exist); later cycles claimed `dfd1503`/`1123c7d` — verify with `git cat-file -t` before trusting any commit claim.
+- Key settled facts: `gateway.sumup.com/hosted.js` sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` (26,839 B), `event.origin` count 0, no XFO/CSP frame-ancestors; `origin` param used only outbound (`t.postMessage(e, n||"*")`, n=document.referrer); inbound filter is `e.type===o.TYPE`; UUID gate is a STATIC literal `ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i` (NOT `new RegExp(a.pattern)`); `payment_type !== "card"` skips frame-access gate `Ce(r.frames)`.
+- Settled negatives (do not re-open): api.sumup.com GET/HEAD payment-methods discrepancy = CDN quirk; `js.sumup.com/api/checkouts/{id}` = 68B Vercel platform 404 (earlier "181B app reflector" claim is stale/wrong); api.sumup.com checkouts payment-methods IDOR retired (35 responses byte-identical); pos-payment path sweep refuted; iso20022 routing divergence is recon-only; auth.sam-app.ro "aud → prod relay" unfalsifiable (zero kid overlap is the binding control); Contentful preview token rotated (401); kid-try-all on mcp.sumup.com is standards-permitted hardening.
+- Submission: `scope.yml:4` → bugs.olivermaicher.eu; `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml` mirror leads only — no report submission mechanism exists in repo. `valid-bugs.md` count remains 0; blocker is HUMAN submission (13+ consecutive cycles).
+- Program state: phase=POC, target=api; risk score last reported 55 — dominant risk is non-delivery, not analysis.
+
+## Work State
+### Completed
+- Two final reports reconstructed and hash-verified on disk this cycle: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / `4291c128…`), `auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / `5a88476d…`).
+- Gateway evidence re-derived from served bytes: hosted.js byte-identical 26,839 B / `1302f1d6…`, `grep -c 'event\.'` → 0, framing headers → 0.
+- Report `.md` persistence root cause diagnosed (hunt.yml artifact policy); recovery path established via tracked analyst log L24465–24775.
+- 48+ re-materialization cycles logged; passive surfaces byte-stable (NO_DELTA streak).
+
+### Active
+- Both final hypotheses live and ranked: `[90] gateway.sumup.com/hosted.js` cross-origin postMessage checkout-write (MISCONFIG, PASSIVE, Medium); `[85/80] auth.sam-app.ro/oauth2/register` unauthenticated DCR (OATH, PASSIVE, Low-Medium staging-only).
+- Delivery of both reports to bugs.olivermaicher.eu pending human action.
+
+### Blocked
+- HUMAN submission step: nothing filed in 13+ cycles; `valid-bugs.md` count 0.
+- Report files will be absent next cycle — must be re-materialized from `reports/analyst-nemotron3.log` L24465–24775 before any `[NEW]`/`[NEXT]` reference.
+
+## Next Move
+1. Re-open with `ls reports/` + `sha256sum` to confirm/restore both report files from `reports/analyst-nemotron3.log` L24465-24638 (gateway) and L24646-24775 (auth) in one act (heredoc + sha256sum same command).
+2. Emit `[NEXT] HUMAN`: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per `scope.yml:4` — no further machine probing has positive expected value.
+
+## Relevant Files
+- `reports/analyst-nemotron3.log`: durable tracked store; report bodies at L24465–24638 (gateway) and L24646–24775 (auth).
+- `reports/gateway-hostedfields-cross-origin-messenger.md`: primary deliverable (174 L / `4291c128…`); untracked, vanishes each cycle.
+- `reports/auth-sam-app-ro-dynamic-registration.md`: second deliverable (130 L / `5a88476d…`); untracked, vanishes each cycle.
+- `reports/valid-bugs.md`: 79-line baseline, count 0, FILE REPORT flags at L64/L79; reverts each cycle.
+- `.github/workflows/hunt.yml`: root cause of non-persistence (analyst job artifact policy).
+- `scope.yml`: line 4 declares disclosure via bugs.olivermaicher.eu; out-of-scope class list.
+- `inventory/sumup.md`: seed host inventory (9 hosts) + recon history.
+- `scripts/sync-issues.py` + `.github/workflows/sync-issues.yml`: mirror leads only, no report submission path.
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m$ [0mwc -l reports/analyst-nemotron3.log; echo "---"; sed -n '24460,24470p' reports/analyst-nemotron3.log | cat -A | cut -c1-200
+27829 reports/analyst-nemotron3.log
+---
+^[[0m$
+^[[0mM-bM-^FM-^R ^[[0mRead reports/valid-bugs.md$
+^[[0mM-bM-^FM-^R ^[[0mRead reports/hypotheses-nemotron3.txt$
+^[[0m$
+^[[0m$ ^[[0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'$
+# gateway.sumup.com/hosted.js M-bM-^@M-^T Cross-Origin postMessage Checkout Write$
+$
+**Asset:** `gateway.sumup.com/hosted.js` (PCI card-entry iframe)  $
+**Class:** MISCONFIG M-bM-^@M-^T missing `event.origin` validation on inbound `postMessage`; no framing protection  $
+**Severity:** Medium (CSRF-like checkout manipulation via framable PCI component)  $
+**Confidence:** 90  $
+[0m
+[0m$ [0mgrep -n 'gateway-hostedfields-cross-origin-messenger.md\|auth-sam-app-ro-dynamic-registration.md\|4291c128\|5a88476d' reports/analyst-nemotron3.log | tail -40
+25461:[0m← [0mWrite reports/auth-sam-app-ro-dynamic-registration.md
+25464:[0m$ [0mls -la reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md && wc -l reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md && sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+25465:-rw-r--r-- 1 runner runner 7378 Oct  7 23:33 reports/auth-sam-app-ro-dynamic-registration.md
+25466:-rw-r--r-- 1 runner runner 8592 Oct  7 23:32 reports/gateway-hostedfields-cross-origin-messenger.md
+25467:  173 reports/gateway-hostedfields-cross-origin-messenger.md
+25468:  129 reports/auth-sam-app-ro-dynamic-registration.md
+25470:d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c  reports/gateway-hostedfields-cross-origin-messenger.md
+25471:5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1  reports/auth-sam-app-ro-dynamic-registration.md
+25480:[NEW] Both final reports genuinely on disk with verified hashes (write+verify in same act): `gateway-hostedfields-cross-origin-messenger.md` (173 L, 8,592 B, sha256 `d7b493dd...`), `auth-sam-app-ro-dynamic-registration.md` (129 L, 7,378 B, sha256 `5e62a6ac...`), `valid-bugs.md` (10 L, sha256 `127c918f...`)
+25525:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verified on disk with hashes: gateway sha256 `d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c` (173 lines), DCR sha256 `5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1` (129 lines).
+25574:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verified on disk with hashes: gateway sha256 `d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c` (173 lines), DCR sha256 `5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1` (129 lines).
+25608:[NEW] Workspace re-materialized 45th cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; both final report files (`gateway-hostedfields-cross-origin-messenger.md`, `auth-sam-app-ro-dynamic-registration.md`) ABSENT despite KB claims of verified hashes — artifacts written in cycle N do not persist to N+1.
+25661:[NEW] Workspace re-materialized 45th cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; both final report files (`gateway-hostedfields-cross-origin-messenger.md`, `auth-sam-app-ro-dynamic-registration.md`) ABSENT despite KB claims of verified hashes — artifacts written in cycle N do not persist to N+1.
+25723:[NEW] Workspace re-materialized 45th cycle — `reports/` holds only logs + hypotheses + `valid-bugs.md` at exact 79-line/7,384-B/282390f8 pre-append state; both final report files (`gateway-hostedfields-cross-origin-messenger.md`, `auth-sam-app-ro-dynamic-registration.md`) ABSENT despite KB claims of verified hashes — artifacts written in cycle N do not persist to N+1.
+26152:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+26222:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+26309:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+26378:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+26438:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+26558:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.  
+26630:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.  
+26687:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.  
+26751:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.  
+26829:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.  
+26893:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.  
+26955:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.  
+27016:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27077:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27138:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27192:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27251:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27331:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27392:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27446:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27503:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27580:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27637:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27699:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27756:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27818:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+[0m
+[0m$ [0mgrep -n "cat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md\|cat > /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md" reports/analyst-nemotron3.log; echo "---EOF markers near 24465---"; awk 'NR>=24465 && NR<=24800 && /^EOF$/ {print NR": "$0}' reports/analyst-nemotron3.log
+24464:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+24645:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md << 'EOF'
+25127:24464:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+25132:24645:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md << 'EOF'
+25280:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+---EOF markers near 24465---
+24639: EOF
+24776: EOF
+[0m
+[0m$ [0mgrep -n "^EOF$" reports/analyst-nemotron3.log | awk -F: '$1>24400 && $1<25500'
+24639:EOF
+24776:EOF
+25276:EOF
+25455:EOF
+[0m
+Both report files are absent as predicted. Re-materializing from the durable log now.
+[0m$ [0mgrep -n "4291c128\|5a88476d" reports/analyst-nemotron3.log | head -20; echo "=== ctx/hypotheses ==="; grep -rn "4291c128\|5a88476d" ctx.txt analyst-prompt.txt 2>/dev/null | head -10
+24642:4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md
+24779:5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24  /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md
+24789:[NEW] Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9`), `auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24`)
+24830:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verified on disk with hashes: gateway sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9` (174 lines), DCR sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24` (130 lines).
+24848:[NEW] Gateway finding report `reports/gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9`) and DCR report `reports/auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24`) reconstructed from verified evidence and confirmed on disk in same act.
+24899:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verified on disk with hashes: gateway sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9` (174 lines), DCR sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24` (130 lines).
+25130:24642:4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md
+25135:24779:5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24  /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md
+25139:24789:[NEW] Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9`), `auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24`)
+25140:24830:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verified on disk with hashes: gateway sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9` (174 lines), DCR sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24` (130 lines).
+25141:24848:[NEW] Gateway finding report `reports/gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9`) and DCR report `reports/auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24`) reconstructed from verified evidence and confirmed on disk in same act.
+25142:24899:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verified on disk with hashes: gateway sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9` (174 lines), DCR sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24` (130 lines).
+=== ctx/hypotheses ===
+ctx.txt:1184:[NEW] Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9`), `auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24`)
+ctx.txt:3230:- NEW Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e65798
+ctx.txt:3239:- NEW Gateway finding report `reports/gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9`) and DCR report `reports/au
+ctx.txt:3291:- NEW Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e65798
+ctx.txt:3292:- NEW Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e65798
+ctx.txt:3304:- NEW Canonical gateway hash is 4291c128 (174L/8593B), NOT the churned a12c3fc9/d7b493dd; auth canonical 5a88476d (130L/7379B).
+ctx.txt:3354:- CHANGED On-disk this cycle: restored `reports/gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / `4291c128…`) and `reports/auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / `5a88476d
+ctx.txt:3363:- CHANGED On-disk restored: `gateway-hostedfields-cross-origin-messenger.md` 174 L / 8,593 B / `4291c128…`; `auth-sam-app-ro-dynamic-registration.md` 130 L / 7,379 B / `5a88476d…`.
+ctx.txt:3413:- NEW Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e65798
+ctx.txt:3424:- CHANGED reports/gateway-hostedfields-cross-origin-messenger.md GENUINELY on disk — 174 L / 8,593 B / sha256 4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9 (recovered reports/analyst-nemotron
+[0m
+[0m$ [0msed -n '24465,24638p' reports/analyst-nemotron3.log | sed 's/\x1b\[[0-9;]*m//g' > /tmp/opencode/gw_a.txt; sed -n '25281,25454p' reports/analyst-nemotron3.log | sed 's/\x1b\[[0-9;]*m//g' > /tmp/opencode/gw_b.txt; sed -n '24646,24775p' reports/analyst-nemotron3.log | sed 's/\x1b\[[0-9;]*m//g' > /tmp/opencode/auth_a.txt; wc -l -c /tmp/opencode/gw_a.txt /tmp/opencode/gw_b.txt /tmp/opencode/auth_a.txt; sha256sum /tmp/opencode/gw_a.txt /tmp/opencode/gw_b.txt /tmp/opencode/auth_a.txt; diff -q /tmp/opencode/gw_a.txt /tmp/opencode/gw_b.txt && echo GW_IDENTICAL
+174  8593 /tmp/opencode/gw_a.txt
+  174  8593 /tmp/opencode/gw_b.txt
+  130  7379 /tmp/opencode/auth_a.txt
+  478 24565 total
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  /tmp/opencode/gw_a.txt
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  /tmp/opencode/gw_b.txt
+5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24  /tmp/opencode/auth_a.txt
+GW_IDENTICAL
+[0m
+[0m$ [0mcp /tmp/opencode/gw_a.txt reports/gateway-hostedfields-cross-origin-messenger.md && cp /tmp/opencode/auth_a.txt reports/auth-sam-app-ro-dynamic-registration.md && ls -la reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md && wc -l reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md && sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md reports/valid-bugs.md && head -c 8 <(sha256sum reports/valid-bugs.md) && echo "" && grep -c '' reports/valid-bugs.md
+-rw-r--r-- 1 runner runner 7379 Oct 15 12:08 reports/auth-sam-app-ro-dynamic-registration.md
+-rw-r--r-- 1 runner runner 8593 Oct 15 12:08 reports/gateway-hostedfields-cross-origin-messenger.md
+  174 reports/gateway-hostedfields-cross-origin-messenger.md
+  130 reports/auth-sam-app-ro-dynamic-registration.md
+  304 total
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  reports/gateway-hostedfields-cross-origin-messenger.md
+5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24  reports/auth-sam-app-ro-dynamic-registration.md
+282390f83b2213178c41f92857bb9df779abc3deaaefb81fb9b8f8c886ae6369  reports/valid-bugs.md
+282390f8
+79
+[0m
+[0m$ [0mgrep -n "FILE REPORT\|count\|Total\|## " reports/valid-bugs.md | head -30; echo "---L60-79---"; sed -n '60,79p' reports/valid-bugs.md
+1:# Validated findings (running count 0)
+18:  - | 1 | help.sumup.com Contentful Preview Token Leak | **VALID** | 5.3 (Medium) | **FILE REPORT** |
+63:  - | 1 | Contentful Preview Token Leak (help.sumup.com) | **HOLD** | 5.3 | Re-verify token liveness; if live → VALID, FILE REPORT |
+64:  - | 2 | auth.sam-app.ro unauthenticated client registration → JWTs | **VALID** | 7.5 | FILE REPORT |
+79:  - | 1 | `auth.sam-app.ro` unauth dynamic client registration → JWTs | **VALID** | 7.5 | FILE REPORT |
+---L60-79---
+  - | Q2 Attacker reachable? | Partially — OIDC discovery is public, but actual token flow requires valid client registration |
+  - **Verdict: HOLD** — Interesting theoretical vector but insufficient proof. redirect_uri strict allowlist + PAR unrouted + no public client registration = mitigated. Could be VALID if a public client r
+  - **Verdict: HOLD** — Valid code issue (private key material in log output) but in a development tool, not production infrastructure. May be accepted as informational. Needs scoping clarification.
+  - | 1 | Contentful Preview Token Leak (help.sumup.com) | **HOLD** | 5.3 | Re-verify token liveness; if live → VALID, FILE REPORT |
+  - | 2 | auth.sam-app.ro unauthenticated client registration → JWTs | **VALID** | 7.5 | FILE REPORT |
+
+- 13 lead(s) marked VALID at 2026-09-18 01:28:35 UTC
+  - | Q3 | Real impact? | **YES** — attacker-controlled OAuth clients mint real JWT access tokens via `client_credentials` grant. Tokens valid at `api.sam-app.ro` gateway (structured error response). Stag
+  - | Q5 | Novel/unreported? | **YES** — not in `valid-bugs.md` as filed report. |
+  - | Q7 | Reasonable triager? | **YES** — unauthenticated client registration on staging auth server with mintable tokens is a valid finding. |
+  - **Verdict: VALID**
+  - | Q5 | Novel/unreported? | **ALREADY REPORTED** — marked VALID in `valid-bugs.md` (2026-09-10). |
+  - | Q7 | Reasonable triager? | **YES, but low bounty** — valid information disclosure, but standard OAuth errors. Already filed. |
+  - | Q5 | Novel/unreported? | **ALREADY REPORTED** — marked VALID in `valid-bugs.md`. |
+  - | Q5 | Novel/unreported? | **YES at time of discovery** — marked VALID 2026-09-09. |
+  - | Q2 | Attacker reachable? | **NO** — all unauthenticated paths return 404. Requires valid merchant OAuth token. |
+  - | Q4 | Provable non-invasively? | **NO** — requires valid merchant OAuth token with dashboard scopes to test ID-swapping. AUTH_HELPED. |
+  - | Q3 | Real impact? | **NO** — OPTIONS returns 204 (no content), wildcard CORS on a token endpoint that rejects all POST requests with `invalid_client` (no valid client credentials known). The `x-envo
+  - | Q5 | Novel/unreported? | **Possibly novel** — not in `valid-bugs.md`. |
+  - | 1 | `auth.sam-app.ro` unauth dynamic client registration → JWTs | **VALID** | 7.5 | FILE REPORT |
+[0m
+Extraction reproduces canonical hashes exactly. Writing both to disk + verifying in one act:
+[0m$ [0msed -n '1,30p' scope.yml
+programs:
+  sumup:
+    name: SumUp Payments Limited / SumUp Group Bug Bounty
+    disclosure_policy: via bugs.olivermaicher.eu (Oliver Maicher private program) - report + PoC + contact + payment
+    assets:
+      - name: "All company-owned infrastructure, payment platforms, merchant portals, APIs, mobile and web applications, point-of-sale systems, cloud services, websites, and domains operated by SumUp Group and its subsidiaries"
+        priority: In
+    out_of_scope:
+- "Network level Denial of Service attacks"
+      - "Application Denial of Service by locking user accounts"
+      - "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)"
+      - "Disclosure of known public files or directories (e.g. robots.txt)"
+      - "Outdated software / library versions"
+      - "OPTIONS / TRACE HTTP method enabled"
+      - "CSRF on logout"
+      - "CSRF on forms that are available to anonymous users"
+      - "Cookies that lack HTTP Only or Secure settings for non-sensitive data"
+      - "Self-XSS and issues exploitable only through Self-XSS"
+      - "Reports resulting from automated scanning utilities without additional details or a POC demonstrating a specific exploit"
+      - "Attacks requiring physical access to a user's device"
+      - "Attacks dependent upon social engineering of employees or vendors"
+      - "Username enumeration based on login or forgot password pages"
+      - "Enforcement policies for brute force, rate limiting, or account lockout"
+      - "SSL/TLS best practices"
+      - "SSL attacks such as BEAST, BREACH, Renegotiation attack"
+      - "Clickjacking, without additional details demonstrating a specific exploit"
+      - "Mail configuration issues including SPF, DKIM, DMARC settings"
+      - "Use of a known-vulnerable library without a description of an exploit specific to our implementation"
+      - "Password and account recovery policies"
+      - "Presence of autocomplete functionality in form fields"
+[0m
+[0m$ [0mcurl -sS --max-time 20 -D /tmp/opencode/gw_hdrs.txt -o /tmp/opencode/gw_live.js https://gateway.sumup.com/hosted.js && sha256sum /tmp/opencode/gw_live.js && wc -c /tmp/opencode/gw_live.js && grep -c 'event\.' /tmp/opencode/gw_live.js; echo "--- headers ---"; grep -i 'content-type\|x-frame-options\|content-security-policy\|etag\|last-modified\|content-length' /tmp/opencode/gw_hdrs.txt; echo "--- sleep ---"; sleep 2; echo done
+1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873  /tmp/opencode/gw_live.js
+26839 /tmp/opencode/gw_live.js
+0
+--- headers ---
+content-type: application/javascript; charset=utf-8
+etag: "5317283c6bfd5a2c59b5532f988d3b90"
+last-modified: Fri, 02 Oct 2026 06:35:23 GMT
+content-length: 26839
+--- sleep ---
+done
+[0m
+Delta check: hosted.js byte-identical (sha256 `1302f1d6…`, 26,839 B), `event.` count 0, no XFO/CSP framing headers. NO_DELTA confirmed.
+
+Now emit the full 7-step cycle output and log it. The reports are restored and hash-verified. The only actionable move is HUMAN submission.
+
+Let me write the cycle output to the durable log. I should append to reports/analyst-nemotron3.log? That's the durable tracked channel. Actually my role: emit the cycle in stdout. Let me produce the structured output.
+
+Let me keep it concise but cover the required steps: DELTA → PRIORITIZE → HYPOTHESES → SELF-CRITIQUE → NEXT → LEARN → RISK.
+
+Given the user's instruction "Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed." — I have clear next steps: report restored, delta confirmed, emit cycle.
+
+Let me append the cycle to the log and output it. Actually I'll just output it, and also append to the analyst log for durability? The analyst log is written by the harness. But I can append. Let me append to keep durability since report files vanish.
+
+Let me write the cycle record to reports/analyst-nemotron3.log.</think>Delta confirmed: hosted.js byte-identical (`1302f1d6…`, 26,839 B), `event.` count 0, no framing headers. `scope.yml:4` submission channel confirmed. Cycle follows.
+[0m$ [0mcat >> reports/analyst-nemotron3.log << 'EOF'
+
+=== CYCLE 2026-10-15 (big-pickle) ===
+[DELTA] Passive surfaces byte-stable. gateway.sumup.com/hosted.js sha256=1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873 (26,839 B), grep -c 'event\.' = 0, no x-frame-options / CSP frame-ancestors. NO_DELTA streak continues. No new attack surface.
+[PRIORITIZE] Nothing outranks delivery. Restored both final reports to disk this cycle (unproven prior claims re-derived from durable log):
+  - reports/gateway-hostedfields-cross-origin-messenger.md 174 L / 8,593 B / sha256 4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9
+  - reports/auth-sam-app-ro-dynamic-registration.md 130 L / 7,379 B / sha256 5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24
+  - reports/valid-bugs.md 79 L / 7,384 B / sha256 282390f83b2213178c41f92857bb9df779abc3deaaefb81fb9b8f8c886ae6369 (count 0, FILE REPORT flags L18/L63/L64/L79)
+[HYPOTHESES]
+  [90] gateway.sumup.com/hosted.js cross-origin postMessage checkout write (MISCONFIG, PASSIVE, Medium) — evidence re-derived from served bytes.
+  [85/80] auth.sam-app.ro/oauth2/register unauthenticated DCR (OATH, PASSIVE, Low-Medium, staging-only).
+[SELF-CRITIQUE] Both findings are recon/PASSIVE-grade; no active exploitation performed per passive-first rule. Risk of triager closure: gateway finding may be classed as CORS-without-capability-differential; DCR is staging-only. Mitigation in reports: explicit attacker-reachable differential and impact chain cited. Dominant residual risk is non-delivery, not validity.
+[NEXT] HUMAN: submit reports/gateway-hostedfields-cross-origin-messenger.md and reports/auth-sam-app-ro-dynamic-registration.md to bugs.olivermaicher.eu per scope.yml:4. Both reports on disk hash-verified this cycle (4291c128… 174L; 5a88476d… 130L). No further machine probing has positive expected value.
+[LEARN] Re-materialization is deterministic: `sed -n '24465,24638p'` + `'24646,24775p'` of analyst-nemotron3.log, ANSI-stripped, reproduces canonical hashes exactly (gw copies at 24464 & 25280 are byte-identical). Untracked report .md files never persist; recovery is one command.
+[RISK] 55. Non-delivery remains the dominant risk (13+ cycles). Analysis saturation reached; value now lies entirely in human submission.
+EOF
+sha256sum reports/analyst-nemotron3.log | cut -c1-16; echo "logged"
+2b24f08e2f989b44
+logged
+[0m
+Cycle complete. Let me give a concise summary to the user.</think>Cycle complete. Output:
+
+**DELTA** — `gateway.sumup.com/hosted.js` byte-identical (`1302f1d6…`, 26,839 B), `event.` count 0, no framing headers. NO_DELTA.
+
+**PRIORITIZE** — Restored both deliverables from durable log and hash-verified in the same act:
+- `reports/gateway-hostedfields-cross-origin-messenger.md` — 174 L / 8,593 B / `4291c128…`
+- `reports/auth-sam-app-ro-dynamic-registration.md` — 130 L / 7,379 B / `5a88476d…`
+- `reports/valid-bugs.md` — 79 L / 7,384 B / `282390f8…` (count 0), FILE REPORT flags at L18/L63/L64/L79.
+
+**HYPOTHESES** — `[90]` gateway cross-origin postMessage checkout write (Medium, PASSIVE); `[85/80]` auth.sam-app.ro unauth DCR (Low-Med, staging-only).
+
+**SELF-CRITIQUE** — Both PASSIVE-grade; triager-closure risks (CORS-without-capability-differential; staging-only) addressed in report bodies. Residual risk is non-delivery.
+
+**NEXT** — `HUMAN`: submit both reports to `bugs.olivermaicher.eu` per `scope.yml:4`. No probing has positive expected value.
+
+**LEARN** — Recovery is deterministic: `sed -n '24465,24638p'` + `'24646,24775p'` (ANSI-stripped) of `analyst-nemotron3.log` reproduces canonical hashes exactly; the two gateway heredoc copies (L24464 & L25280) are byte-identical.
+
+**RISK** — 55. Analysis saturated; dominant risk is non-delivery (13+ cycles). **Action needed from you: file the two reports.**

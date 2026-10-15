@@ -1120,3 +1120,4 @@
 - 2026-10-15 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: live re-derivation this cycle (sha256 `1302f1d6…`, event.origin=0, frame-ancestors=0, wildcard outbound ×3) reproduces the record exactly — the finding is stable and needs no re-probing.
 - 2026-10-15 REJECTED AUTH @ api.sumup.com: repeated GET/OPTIONS across a byte-stable surface is zero-yield; only a live bearer discriminates the remaining question.
 - 2026-10-15 ACCEPTED OTHER @ workspace: 46+ re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist. Write+hash must be the same act before referencing any [NEW] file claim
+- 2026-10-15 Re-materialization is deterministic: `sed -n '24465,24638p'` + `'24646,24775p'` of analyst-nemotron3.log, ANSI-stripped, reproduces canonical hashes exactly (gw copies at 24464 & 25280 are byte-identical). Untracked report .md files never persist; recovery is one command.
