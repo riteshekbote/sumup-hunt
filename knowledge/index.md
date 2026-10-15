@@ -1119,3 +1119,4 @@
 - 2026-10-15 ACCEPTED OTHER @ workspace: 48 re-materializations confirm the pipeline structurally cannot persist report `.md` files (analyst job uploads only `lead_*.txt`/`analyst-*.out`/`ctx.txt`; aggregate commits from a fresh checkout) — the durable channel is the tracked analyst log + stdout.
 - 2026-10-15 ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: live re-derivation this cycle (sha256 `1302f1d6…`, event.origin=0, frame-ancestors=0, wildcard outbound ×3) reproduces the record exactly — the finding is stable and needs no re-probing.
 - 2026-10-15 REJECTED AUTH @ api.sumup.com: repeated GET/OPTIONS across a byte-stable surface is zero-yield; only a live bearer discriminates the remaining question.
+- 2026-10-15 ACCEPTED OTHER @ workspace: 46+ re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist. Write+hash must be the same act before referencing any [NEW] file claim
