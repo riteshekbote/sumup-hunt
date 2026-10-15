@@ -2290,3 +2290,6 @@ www.sumup.com
 - NEW `gateway.sumup.com/hosted.js` re-fetched: 26,839 B / sha256 `1302f1d6…0873` — byte-identical, root ACAO `*` — evidence fresh
 - NEW Confirmatory: pipeline (`.github/workflows/hunt.yml`) commits `git add leads reports …` from a *fresh* checkout, but the analyst job uploads only `lead_*.txt`/`analyst-*.out`/`ctx.txt` — my in-workspa
 - NEW NO_DELTA — passive surfaces unchanged vs 48th materialization; `api.sumup.com/v0.1/merchants/{code}/payment-methods` still GET 200/HEAD 404 (method-level gateway discrepancy, KB REJECTED as CDN quirk)
+
+## 2026-10-15 23:21:26 UTC
+- NEW NO_DELTA — passive surfaces unchanged vs 48th materialization; `api.sumup.com/v0.1/merchants/{code}/payment-methods` still GET 200/HEAD 404 (method-level gateway discrepancy, KB REJECTED as CDN quirk)
