@@ -10160,3 +10160,4 @@ testability: PASSIVE.
 [LEARN] Workspace re-materialization destroys untracked reports/*.md every cycle; durable channel is tracked analyst-nemotron3.log + leads/. Always re-materialize from log and sha256-verify before any handoff.
 [RISK] sumup: Dominant risk is non-delivery — 49+ cycles, zero submissions. Do not re-probe byte-stable surfaces (api.sumup.com quartet, hosted.js evidence, js.sumup.com checkout 404).
 ## 2026-10-16 16:28:53 UTC [target] (model bigpickle)
+## 2026-10-16 19:44:05 UTC [target] (model bigpickle)

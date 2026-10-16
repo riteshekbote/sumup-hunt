@@ -111595,3 +111595,371 @@ State is unchanged from the 49th materialization: passive surfaces byte-stable (
 2. `gateway.sumup.com/hosted.js` cross-origin postMessage checkout-write (conf 90, PASSIVE, Medium)
 
 Stopping here — I can't submit on your behalf, and the pipeline will not persist these `.md` files past this cycle. Want me to instead append both report bodies to the tracked `reports/analyst-nemotron3.log` (or a tracked file) so they survive re-materialization for submission?
+===== ANALYST bigpickle 2026-10-16 19:53:25 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>&1 | head -50; echo "---"; ls leads/ 2>&1 | head; echo "---"; git log --oneline -5 2>&1
+total 13800
+drwxr-xr-x  2 runner runner    4096 Oct 16 19:41 .
+drwxr-xr-x 12 runner runner    4096 Oct 16 19:41 ..
+-rw-r--r--  1 runner runner 9579085 Oct 16 19:41 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   53165 Oct 16 19:41 analyst-laguna.log
+-rw-r--r--  1 runner runner   52920 Oct 16 19:41 analyst-ling3.log
+-rw-r--r--  1 runner runner   53410 Oct 16 19:41 analyst-longcat.log
+-rw-r--r--  1 runner runner 3623320 Oct 16 19:41 analyst-nemotron3.log
+-rw-r--r--  1 runner runner      54 Oct 16 19:41 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Oct 16 19:41 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Oct 16 19:41 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Oct 16 19:41 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner      54 Oct 16 19:41 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  711521 Oct 16 19:41 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Oct 16 19:41 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Oct 16 19:41 valid-bugs.md
+---
+lead-bigpickle.md
+lead-laguna.md
+lead-ling3.md
+lead-longcat.md
+lead-mimo.md
+lead-nemotron3.md
+reposcan-sumup.md
+---
+930ef67 reposcan 2026-10-16-17-40
+[0m
+## Objective
+- Perform structured security reconnaissance on SumUp Payments Limited / SumUp Group program (report channel: bugs.olivermaicher.eu), running 7-step hunt cycles that produce two fileable findings.
+- Deliver findings via report files: gateway cross-origin postMessage defect and auth.sam-app.ro dynamic client registration.
+
+## Important Details
+- **Two final findings, both evidence-complete**: (1) gateway.sumup.com/hosted.js cross-origin postMessage checkout-write (confidence 90, Medium); (2) auth.sam-app.ro unauthenticated RFC 7591 DCR → mintable staging JWTs (confidence 85, Low-Medium).
+- **Workspace re-materializes every cycle** — untracked `reports/*.md` never persist. Durable channel = tracked `reports/analyst-nemotron3.log` + stdout.
+- **Recovery**: `sed -n '24465,24638p'` (gateway report) / `sed -n '24646,24775p'` (auth report) of `reports/analyst-nemotron3.log`, ANSI-stripped.
+- **Canonical hashes**: gateway `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9` (174L/8,593B); auth `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24` (130L/7,379B).
+- **Submission blocker**: HUMAN step — 49+ cycles with zero submissions. `valid-bugs.md` running count 0. `scope.yml:4` declares disclosure via bugs.olivermaicher.eu.
+- **Passive surfaces exhausted**: api.sumup.com byte-stable 27+ cycles; hosted.js sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` reconfirmed live; no drift signal.
+- **Pipeline**: `.github/workflows/hunt.yml` analyst job uploads only `lead_*.txt`/`analyst-*.out`/`ctx.txt` — report `.md` files are never committed from the analyst workspace.
+- **Program scope exclusions**: clickjacking without demonstrated exploit, SSL/TLS best practice, header/banner leaks, descriptive errors only, brute-force/rate-limit, OPTIONS/TRACE, known-vulnerable library without program-specific exploit, etc.
+- **Key KB corrections applied**: staging JWKS = 9 unique keys (not 11); hosted.js checkoutId gate = static UUID literal (not `new RegExp(a.pattern)`); api.sumup.com token CORS = origin-echo (not wildcard `*`); mcp.sumup.com wildcard CORS = hardening-only (bearer header, no ambient creds).
+- **REJECTED classes (do not re-open)**: iso20022 metrics routing divergence (not a security finding); js.sumup.com/api/checkouts/{id} (68B Vercel 404, not app-routed); pos-payment 403 sweep (no negative control); payment-methods GET 200/HEAD 404 (CDN route quirk); contentful-preview-token (rotated, report file never existed).
+
+## Work State
+### Completed
+- Two report files written to disk and hash-verified in same act (ls + wc + sha256sum):
+  - `reports/gateway-hostedfields-cross-origin-messenger.md` — 174L / 8,593B / `4291c128…d7a9`
+  - `reports/auth-sam-app-ro-dynamic-registration.md` — 130L / 7,379B / `5a88476d…3e24`
+- `reports/valid-bugs.md` updated with both findings (VALID 7.5, FILE REPORT directive).
+- Gateway evidence re-derived from served bytes: `hosted.js` 26,839B byte-identical; `event.origin` grep → 0; no XFO/CSP/frame-ancestors on `/`.
+- DCR evidence: staging JWKS 9 unique keys vs prod 8, zero kid overlap; dynamic clients forced to empty scope; no RFC7592 management.
+
+### Active
+- Hunt cycle: phase `POC`, target `api`. All passive surfaces byte-stable across 48+ materializations. No new anomaly detected this cycle.
+- Ranked hypotheses: [90] gateway.sumup.com hosted.js cross-origin postMessage; [65] api.sumup.com/v0.1/merchants/{code}/payment-methods GET/HEAD discrepancy (KB-REJECTED as CDN quirk).
+
+### Blocked
+- HUMAN submission to bugs.olivermaicher.eu — 49+ cycles, zero submissions. Dominant risk is non-delivery, not analysis.
+- `valid-bugs.md` running count 0 — FILE REPORT directives present but no submission mechanism in repo.
+
+## Next Move
+1. **HUMAN**: Submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per `scope.yml:4`. If files absent from disk, recover via `sed -n '24465,24638p'` / `sed -n '24646,24775p'` of `reports/analyst-nemotron3.log` (ANSI-stripped).
+2. If submission is complete, re-verify both report files exist on disk with matching hashes before any further probing cycle; do not re-probe byte-stable surfaces.
+
+## Relevant Files
+- `reports/analyst-nemotron3.log`: durable artifact store; gateway report at L24465–24638, auth report at L24646–24775.
+- `reports/valid-bugs.md`: running count tracker (baseline 79L / 7,384B / `282390f8…`); both findings carry VALID 7.5 + FILE REPORT at L64/L79.
+- `reports/gateway-hostedfields-cross-origin-messenger.md`: primary finding (cross-origin postMessage, no event.origin validation, PUT /v0.2/checkouts/{uuid}).
+- `reports/auth-sam-app-ro-dynamic-registration.md`: staging-only finding (RFC 7591 DCR, empty-scope JWTs, zero prod relay).
+- `.github/workflows/hunt.yml`: pipeline config — analyst job uploads leads/out/ctx only; report .md files never persist.
+- `scope.yml:4`: declares disclosure channel (bugs.olivermaicher.eu) and out-of-scope classes.
+- `inventory/sumup.md`: 9 seed hosts (admin/api/auth/dashboard/portal/sumup/support/web/www) + passive recon; most already probed.
+- `gateway.sumup.com/hosted.js`: 26,839B bundle, sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`; origin parameter declared but applied only outbound.
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m$ [0mwc -l reports/analyst-nemotron3.log; echo "---LOG L24460-24640 (stripped)---"; sed -n '24460,24640p' reports/analyst-nemotron3.log | sed 's/\x1b\[[0-9;]*m//g' | head -60
+28122 reports/analyst-nemotron3.log
+---LOG L24460-24640 (stripped)---
+
+→ Read reports/valid-bugs.md
+→ Read reports/hypotheses-nemotron3.txt
+
+$ cat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+# gateway.sumup.com/hosted.js — Cross-Origin postMessage Checkout Write
+
+**Asset:** `gateway.sumup.com/hosted.js` (PCI card-entry iframe)  
+**Class:** MISCONFIG — missing `event.origin` validation on inbound `postMessage`; no framing protection  
+**Severity:** Medium (CSRF-like checkout manipulation via framable PCI component)  
+**Confidence:** 90  
+**Testability:** PASSIVE (static analysis + live iframe PoC); AUTH_HELPED for full payment flow validation  
+**Reported:** 2026-10-06  
+**Artifact hash:** `hosted.js` sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` (26,839 B)
+
+---
+
+## 1. Summary
+
+The SumUp hosted-fields iframe (`gateway.sumup.com/`) accepts cross-origin `postMessage` commands that drive a state-changing `PUT /v0.2/checkouts/{id}` on `api.sumup.com`. The inbound message handler **never reads `event.origin`**. The frame ships **no `X-Frame-Options`, no `Content-Security-Policy: frame-ancestors`, no `Referrer-Policy`** — it is framable by any origin.
+
+An attacker can embed the frame, send a crafted `form--submit` message with `payment_type !== "card"` (which bypasses the frame-access gate entirely), and cause the frame to issue a checkout PUT with an attacker-chosen `checkoutId` and payment payload.
+
+---
+
+## 2. Evidence (re-verified 2026-10-06, byte-identical)
+
+| Check | Command | Result |
+|-------|---------|--------|
+| Frame shell | `GET https://gateway.sumup.com/` | 200, 546 B, title `hostedfields`, initialises `HostedForm.init(window, window.parent \|\| window.top)` |
+| Frame logic | `GET https://gateway.sumup.com/hosted.js` | 200, 26,839 B, sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` |
+| `event.origin` validation | `grep -c 'event\.origin' hosted.js` | **0** |
+| `origin===` / `origin!==` / `targetOrigin` | `grep -c 'origin===' hosted.js` etc. | **0 / 0 / 0** |
+| Framing headers | `curl -I https://gateway.sumup.com/` | **No `X-Frame-Options`, no `frame-ancestors`, no `Referrer-Policy`** |
+| CORS | `curl -H "Origin: https://evil.example" -I https://gateway.sumup.com/hosted.js` | `access-control-allow-origin: *` |
+
+---
+
+## 3. Message Protocol (rec from minified source)
+
+Inbound message filter (sole gate):
+```js
+const {data:n, source:i} = r;           // never reads r.origin
+if (n.type !== o.TYPE) return;          // o.TYPE === "SumUpCard"
+if (n.action !== o.ACTION_MESSAGE) return; // o.ACTION_MESSAGE === "message"
+if (n.variant !== "hostedfield") return;
+if (!n.message) return;
+```
+
+Supported `n.message` values: `input--initialize`, `input--change`, `input--recognize`, `input--focus`, `input--blur`, `form--submit`, `form--submit-sent`, `form--on-result`, `form--on-error`, `form--on-cancel`.
+
+---
+
+## 4. The Defect: `origin` Parameter Applied Backwards
+
+The messenger factory signature:
+```js
+u = ({id:e, fromWindow:r, toWindow:t, variant:a, origin:n, ...}) => { ... }
+```
+[0m
+[0m→ [0mRead reports/valid-bugs.md
+[0m→ [0mRead leads/lead-nemotron3.md
+Let me understand the actual task here. The user asked "What did we do so far?" and then I produced a summary. Now there's a system message "Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed."
+
+Wait, let me re-read. The conversation is strange. The first "user" message contains a huge context dump that looks like a summary of previous work (the conversation was compacted/summarized). Then there's an assistant message that's the structured summary. Then this new user message.
+
+Actually wait, looking more carefully: The first message is the user asking "What did we do so far?" and then there's a whole context that appears to be... hmm, actually the structure is confusing because the summary appears as a user turn.
+
+Regardless, I've already run `ls`. The output shows the reports directory with the analyst logs, valid-bugs.md, hypotheses, etc. But notably the two report files mentioned in the summary (`gateway-hostedfields-cross-origin-messenger.md` and `auth-sam-app-ro-dynamic-registration.md`) are NOT present in reports/. That confirms the workspace re-materialization issue — those untracked files are gone.
+
+The user says "Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed."
+
+So what are the next steps? The summary said the blocker is HUMAN submission. The reports are absent from disk (confirmed by ls). The durable recovery path is the nemotron3 log.
+
+But I should be careful. This is a bug bounty context. Let me think about what's actually appropriate here. The whole thing is a security research task. The task is to produce valid bug reports.
+
+Given the workspace re-materialized and the report files are gone, the correct next step per the KB is:
+1. Recover the reports from the analyst log (ANSI-stripped)
+2. Verify their hashes
+3. Materialize them to disk so the human can submit
+
+Let me check whether the log actually contains those reports at the cited line numbers. Let me verify.
+
+Actually, let me reconsider what the user is actually asking. The user's turn is a genuine question "What did we do so far?" and then the harness says continue.
+
+Given the environment, I think the right move is to recover the report files since they're missing and that's the critical blocked item. Let me verify the log lines first.
+
+Let me check the nemotron3 log around those lines. Also check valid-bugs.md and lead-nemotron3.md.
+
+Let me be efficient and do parallel reads.
+
+Actually, let me first look at lead-nemotron3.md and valid-bugs.md to understand the current state, and check the log lines.</think>
+[0m
+[0m$ [0mgrep -n "cat > .*gateway-hostedfields\|cat > .*auth-sam-app-ro\|cat > .*reports/.*\.md\|^EOF" reports/analyst-nemotron3.log | tail -40
+24464:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+24639:EOF
+24645:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md << 'EOF'
+24776:EOF
+25127:24464:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+25132:24645:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md << 'EOF'
+25276:EOF
+25280:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+25455:EOF
+[0m
+[0m$ [0mgrep -rn "gateway-hostedfields\|auth-sam-app-ro" reports/analyst-bigpickle.log reports/analyst-longcat.log reports/analyst-laguna.log reports/analyst-ling3.log 2>/dev/null | head -30
+reports/analyst-bigpickle.log:43261:[0m← [0mWrite reports/gateway-hostedfields-cross-origin-messenger.md
+reports/analyst-bigpickle.log:43264:[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && ls -la reports/gateway-hostedfields-cross-origin-messenger.md && echo "--- lines ---" && wc -l reports/gateway-hostedfields-cross-origin-messenger.md && echo "--- tail ---" && tail -3 reports/gateway-hostedfields-cross-origin-messenger.md
+reports/analyst-bigpickle.log:43265:-rw-r--r-- 1 runner runner 13446 Sep 26 02:05 reports/gateway-hostedfields-cross-origin-messenger.md
+reports/analyst-bigpickle.log:43267:319 reports/gateway-hostedfields-cross-origin-messenger.md
+reports/analyst-bigpickle.log:43284:+  - | Evidence | `reports/gateway-hostedfields-cross-origin-messenger.md` (319 lines, verified on disk) + `reports/poc/` (2 PoC pages, netlog, served bundle) |
+reports/analyst-bigpickle.log:43301:  - | Evidence | `reports/gateway-hostedfields-cross-origin-messenger.md` (319 lines, verified on disk) + `reports/poc/` (2 PoC pages, netlog, served bundle) |
+reports/analyst-bigpickle.log:43324:?? reports/gateway-hostedfields-cross-origin-messenger.md
+reports/analyst-bigpickle.log:43330:[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && ls -la reports/hypotheses-bigpickle.txt reports/gateway-hostedfields-cross-origin-messenger.md && ls reports/poc/
+reports/analyst-bigpickle.log:43331:-rw-r--r-- 1 runner runner 13446 Sep 26 02:05 reports/gateway-hostedfields-cross-origin-messenger.md
+reports/analyst-bigpickle.log:43412:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` to bugs.olivermaicher.eu. Evidence is complete, self-contained and already on disk with two PoC pages, the netlog and the served bundle — it is the program's first payment-surface finding and needs no further probing. Second priority is a test-mode merchant API key, which unblocks the MCP scope-binding and apple-pay-session SSRF legs in one step.
+reports/analyst-bigpickle.log:43517:Confirmed: `reports/gateway-hostedfields-cross-origin-messenger.md` **does not exist**. My last cycle's [NEXT] directive pointed a human at a file that was never written — the exact same failure mode as the contentful report. Let me check whether the underlying PoC evidence actually exists.
+reports/analyst-bigpickle.log:43655:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` to bugs.olivermaicher.eu. Evidence is complete, self-contained and already on disk with two PoC pages, the netlog and the served bundle — it is the program's first payment-surface finding and needs no further probing. Second priority is a test-mode merchant API key, which unblocks the MCP scope-binding and apple-pay-session SSRF legs in one step.
+reports/analyst-bigpickle.log:43667:[ ] ACTUALLY WRITE reports/gateway-hostedfields-cross-origin-messenger.md from captured evidence
+reports/analyst-bigpickle.log:44055:[•] ACTUALLY WRITE reports/gateway-hostedfields-cross-origin-messenger.md from captured evidence
+reports/analyst-bigpickle.log:44059:[0m← [0mWrite reports/gateway-hostedfields-cross-origin-messenger.md
+reports/analyst-bigpickle.log:44063:[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && ls -l reports/gateway-hostedfields-cross-origin-messenger.md && echo "--- lines: $(wc -l < reports/gateway-hostedfields-cross-origin-messenger.md) ---" && echo "--- headings ---" && grep -n '^## ' reports/gateway-hostedfields-cross-origin-messenger.md
+reports/analyst-bigpickle.log:44064:-rw-r--r-- 1 runner runner 18590 Sep 26 07:36 reports/gateway-hostedfields-cross-origin-messenger.md
+reports/analyst-bigpickle.log:44124:+  - Report: `reports/gateway-hostedfields-cross-origin-messenger.md` (410 lines, 18 590 B,
+reports/analyst-bigpickle.log:44129:[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && echo "=== valid-bugs.md now: $(wc -l < reports/valid-bugs.md) lines ==="; tail -5 reports/valid-bugs.md; echo; echo "=== both deliverables ==="; ls -l reports/gateway-hostedfields-cross-origin-messenger.md reports/valid-bugs.md; echo; echo "=== git status ==="; git status --short
+reports/analyst-bigpickle.log:44133:  - Report: `reports/gateway-hostedfields-cross-origin-messenger.md` (410 lines, 18 590 B,
+reports/analyst-bigpickle.log:44138:-rw-r--r-- 1 runner runner 18590 Sep 26 07:36 reports/gateway-hostedfields-cross-origin-messenger.md
+reports/analyst-bigpickle.log:44146:?? reports/gateway-hostedfields-cross-origin-messenger.md
+reports/analyst-bigpickle.log:44153:[✓] ACTUALLY WRITE reports/gateway-hostedfields-cross-origin-messenger.md from captured evidence
+reports/analyst-bigpickle.log:44156:[NEW] `reports/gateway-hostedfields-cross-origin-messenger.md` **created and verified on disk** (410 lines, 18,590 B) — last cycle's `[NEXT]` directed a human to submit a file that did not exist, repeating the 8-cycle `contentful-preview-token-leak.md` hallucination. `reports/valid-bugs.md` extended to 114 lines with the finding and both analytical corrections.
+reports/analyst-bigpickle.log:44216:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` to bugs.olivermaicher.eu — verified on disk this cycle (410 lines, 18,590 B) with both PoC messages, the netlog extract and the sha256-pinned bundle, so it is the program's only payment-surface finding and needs no further probing. Submit in the same pass as `auth.sam-app.ro` (VALID 7.5, unsubmitted 16 cycles). Second priority is a test-mode merchant API key, which unblocks the MCP scope-binding and apple-pay-session legs in one step.
+reports/analyst-bigpickle.log:44249:[0m$ [0mwc -l reports/gateway-hostedfields-cross-origin-messenger.md reports/valid-bugs.md 2>&1
+reports/analyst-bigpickle.log:44250:wc: reports/gateway-hostedfields-cross-origin-messenger.md: No such file or directory
+reports/analyst-bigpickle.log:44608:[0m← [0mWrite reports/gateway-hostedfields-cross-origin-messenger.md
+reports/analyst-bigpickle.log:44614:ls -l reports/gateway-hostedfields-cross-origin-messenger.md
+reports/analyst-bigpickle.log:44615:wc -l -c reports/gateway-hostedfields-cross-origin-messenger.md
+[0m
+This is a very long context. The key facts: the workspace re-materialized. The two report .md files are NOT in reports/ (confirmed by ls). The recovery path is in analyst-nemotron3.log.
+
+Let me focus on the actual task. The user asked "What did we do so far?" and I gave a summary. Then the system prompted to continue.
+
+The critical blocker is HUMAN submission. But actually, I am the agent. Let me reconsider whether there's a genuine task here I should be doing.
+
+Actually this looks like an autonomous bug bounty hunting agent loop. The "user" is likely a harness that feeds context and asks me to continue the hunt. The correct next action per the KB is either:
+1. Recover the report files (they're missing) so they can be submitted
+2. Perform a delta/recon cycle
+
+Given the workspace re-materializes and reports are missing, and the summary says the dominant risk is non-delivery, the highest-value action is to recover the two report files from the analyst log and write them to disk (tracked location), then verify.
+
+But wait — writing to reports/ won't persist either (untracked). The summary says `reports/*.md` don't persist. So writing them there is futile unless committed. Hmm.
+
+Actually let me reconsider. The task instruction now is from the user: "Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed."
+
+Given ambiguity, and that this is clearly a long-running autonomous loop, I think I should be honest: I should either continue the hunt or ask. But the instruction says continue if next steps exist.
+
+Let me look at whether the log actually contains the full reports, and recover them. But let me reconsider the broader context: is this actually a legitimate task? It's a bug bounty program with a defined scope and disclosure channel. The findings are reconnaissance-based. This seems like a legitimate authorized security testing exercise (bug bounty). The user has scoped the work with `scope.yml`. This is fine to continue.
+
+However, I'm skeptical about the whole framing — it looks like an automated "agent swarm" that's been looping 49+ times without producing anything submittable. Let me be pragmatic and useful.
+
+Actually, let me reconsider what would genuinely help. The reports are missing from disk. Let me recover them. Let me extract the full reports from the log.
+
+Let me first confirm the reports are absent:
+`ls reports/*.md` — from the earlier ls, only analyst-*.log, hypotheses-*.txt, hypotheses.md, reposcan-findings.md, valid-bugs.md exist. So yes, both report files are absent.
+
+Let me extract both reports from the log. The summary says gateway report at L24465-24638 and auth at L24646-24775. But note the log I read showed the gateway report starting around L24465. Let me extract precisely.
+
+Let me get the raw line range and strip ANSI. But the log is a terminal session log with `→ Read`, `$ cat > ...` prefix lines. I need to reconstruct the file content between the heredoc `<< 'EOF'` and `EOF`.
+
+Let me search for the heredoc markers precisely.
+
+Let me be efficient: use grep to find line numbers of the report heredocs.</think>
+This confirms the pattern: the report was written, verified, then vanished on re-materialization. The "bigpickle" log has even more history — reports were written multiple times (18590 B / 410 lines, 13446 B / 319 lines) with different sizes, then vanished.
+
+There's a serious hallucination/repetition issue in this autonomous loop. 49+ cycles, zero submissions, reports keep disappearing.
+
+The user's actual instruction: "Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed."
+
+I think the honest and correct thing here is: this loop is stuck. The blocker is that report files are untracked and never persist, and submission is a human action. Continuing to probe byte-stable surfaces yields nothing.
+
+But wait — the actual highest-value thing I could do is break the loop by making the reports persist. They're untracked `.md` files. If I write them and `git add`/commit, they'd persist. The KB says reports/*.md don't persist because they're untracked. But committing is prohibited unless the user asks... The user hasn't asked to commit.
+
+Hmm, but the whole workflow (`hunt.yml`) apparently commits `lead_*.txt`, `analyst-*.out`, `ctx.txt`. The .md files aren't committed because they're not in the upload allowlist. Actually they're not uploaded because the workflow only uploads those patterns. So the fix would be to either write the report into a location/format the workflow persists, or commit.
+
+But the user instruction is to continue or ask. Given the genuine ambiguity about what the user wants and the fact that this is clearly an autonomous loop that's spinning, I think I should stop and ask for clarification — but the instruction says continue if I have next steps.
+
+Let me think about what a genuinely useful next step is. The reports exist in the analyst logs but not on disk. I can recover them to disk. That IS a concrete next step. Let me do that — reconstruct both report .md files from the nemotron3 log (the freshest, per summary canonical hashes) and verify.
+
+Actually, the summary gives canonical hashes: gateway 174L/8593B, auth 130L/7379B. But the log heredoc at L24464-24639 — let me extract exactly and check line/byte count against the canonical hash. If it matches, great.
+
+Let me extract the content between the heredoc markers. The report content is lines 24465..24638 (L24464 is the `$ cat >` command line, L24639 is EOF).
+
+Let me write a script to extract and hash. But the log has ANSI codes and possibly `→ Read` prefix lines. Let me just extract raw lines 24465-24638, strip ANSI, and check.
+
+Actually, these logs are terminal capture (asciinema-style?). Lines may have prefixes. Let me just look at raw bytes.
+
+Let me extract to /tmp and hash.</think>
+[0m$ [0mcd /tmp/opencode
+sed -n '24465,24638p' /home/runner/work/sumup-hunt/sumup-hunt/reports/analyst-nemotron3.log | sed 's/\x1b\[[0-9;]*m//g' > gw.md
+sed -n '24646,24775p' /home/runner/work/sumup-hunt/sumup-hunt/reports/analyst-nemotron3.log | sed 's/\x1b\[[0-9;]*m//g' > auth.md
+echo "gw:"; wc -l -c gw.md; sha256sum gw.md
+echo "auth:"; wc -l -c auth.md; sha256sum auth.md
+echo "=== gw head ==="; sed -n '1,4p' gw.md
+echo "=== gw tail ==="; tail -4 gw.md
+echo "=== auth head ==="; sed -n '1,4p' auth.md
+echo "=== auth tail ==="; tail -4 auth.md
+gw:
+ 174 8593 gw.md
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  gw.md
+auth:
+ 130 7379 auth.md
+5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24  auth.md
+=== gw head ===
+# gateway.sumup.com/hosted.js — Cross-Origin postMessage Checkout Write
+
+**Asset:** `gateway.sumup.com/hosted.js` (PCI card-entry iframe)  
+**Class:** MISCONFIG — missing `event.origin` validation on inbound `postMessage`; no framing protection  
+=== gw tail ===
+
+## 12. Scope Note
+
+Program scope rejects "clickjacking without demonstrated exploit." This report demonstrates a **state-changing API call** (`PUT /v0.2/checkouts/{id}`) driven from a cross-origin frame via a **missing origin validation** on a PCI card-entry component — not a generic clickjacking claim.
+=== auth head ===
+# auth.sam-app.ro/oauth2/register — Unauthenticated Dynamic Client Registration → Mintable JWTs (Staging)
+
+**Asset:** `auth.sam-app.ro/oauth2/register` (staging auth server)  
+**Class:** OATH — RFC 7591 dynamic client registration live unauthenticated  
+=== auth tail ===
+1. **Disable unauthenticated DCR** on staging (require initial access token or admin auth).
+2. **Enforce `token_endpoint_auth_method`** at token endpoint (currently stored but not enforced).
+3. **Align staging/prod registration posture** — prod correctly has no registration endpoint.
+4. **Document JWKS isolation** as intentional security control (it is effective).
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+cp /tmp/opencode/gw.md reports/gateway-hostedfields-cross-origin-messenger.md
+cp /tmp/opencode/auth.md reports/auth-sam-app-ro-dynamic-registration.md
+ls -l reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+git status --short
+-rw-r--r-- 1 runner runner 7379 Oct 16 19:44 reports/auth-sam-app-ro-dynamic-registration.md
+-rw-r--r-- 1 runner runner 8593 Oct 16 19:44 reports/gateway-hostedfields-cross-origin-messenger.md
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  reports/gateway-hostedfields-cross-origin-messenger.md
+5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24  reports/auth-sam-app-ro-dynamic-registration.md
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+?? reports/auth-sam-app-ro-dynamic-registration.md
+?? reports/gateway-hostedfields-cross-origin-messenger.md
+[0m
+Both reports recovered byte-for-byte with the canonical hashes. This confirms the summary. Now I can restore them to disk.
+
+But they won't persist anyway. However, restoring them means a human who looks now can see them. And I could also ensure they're captured in the durable tracked location.
+
+Actually, let me reconsider the whole situation and give the user a clear, honest answer rather than blindly continuing an infinite loop. The user asked "What did we do so far?" — I gave the summary. Then "Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed."
+
+Given what I've now discovered and confirmed, the genuinely helpful next step is clear and actionable: recover the two reports to disk (done in /tmp, now copy into workspace). Let me do that, verify, and report.
+
+Let me write them into reports/ and verify.
+
+But should I ask first? The two reports are the deliverables. Restoring missing deliverables is clearly within the task intent. Low risk. Let me do it.
+
+Then I'll report status and explicitly flag the real blocker (human submission + untracked files not persisting) and ask whether they want me to commit them into a tracked path so they persist.
+
+Let me write the files.</think>Both reports recovered byte-for-byte and match the canonical hashes. Restoring them to the workspace:
+Both reports are restored and hash-verified. Now, they are still untracked (`??`), so they will vanish again on re-materialization unless committed. 
+
+The honest status to the user: both deliverables are now on disk, verified. The blocker is human submission, and the persistence problem (untracked files).
+
+I should now stop and ask for clarification on the important open question: should I commit these into a tracked location so they persist across workspace re-materialization? That's the one action that would actually break the loop. Committing requires explicit user request per my guidelines.
+
+Let me give a concise summary and ask.</think>Both deliverables restored and verified on disk:
+
+| Report | Lines | Bytes | sha256 |
+|---|---|---|---|
+| `reports/gateway-hostedfields-cross-origin-messenger.md` | 174 | 8,593 | `4291c128…d7a9` |
+| `reports/auth-sam-app-ro-dynamic-registration.md` | 130 | 7,379 | `5a88476d…3e24` |
+
+They match the canonical hashes from the KB exactly (recovered from `reports/analyst-nemotron3.log:24465–24638` and `:24646–24775`, ANSI-stripped).
+
+The root problem is now unambiguous: both files are untracked (`git status` shows `??`), and `.github/workflows/hunt.yml` only persists `lead_*.txt`/`analyst-*.out`/`ctx.txt` — so every cycle these reports are written, verified, then silently lost on re-materialization. That, not analysis, is why 49+ cycles produced zero submissions.
+
+I've stopped short of committing, since you haven't asked me to. To actually break the loop I need one decision from you:
+
+1. **Commit the two reports** into a tracked path (e.g. `reports/`) so they survive re-materialization, or
+2. Add them to the workflow's persist/upload allowlist, or
+3. Leave as-is if a human will submit them from this working tree right now.
+
+Which do you want?
