@@ -1141,3 +1141,4 @@
 - 2026-10-16 ACCEPTED OTHER @ workspace: 46+ re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exist. Write+hash must be the same act before referencing any [NEW] file claim
 - 2026-10-16 REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the binding control; the fileable finding is staging posture only (VALable)
 - 2026-10-16 Workspace re-materialization destroys untracked reports/*.md every cycle; durable channel is tracked analyst-nemotron3.log + leads/. Always re-materialize from log and sha256-verify before any handoff.
+- 2026-10-16 ACCEPTED TOOLING @ hunt.yml: aggregate commits from a fresh checkout, so in-job `.md` writes never persist; durable channel = report body in tracked reports/analyst-<model>.log + structured stdout lines.

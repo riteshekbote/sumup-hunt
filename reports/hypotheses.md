@@ -4608,3 +4608,8 @@
 ## RANKED HYPOTHESES 2026-10-16 16:45:32 UTC
 
 ## RANKED HYPOTHESES 2026-10-16 19:53:25 UTC
+
+## RANKED HYPOTHESES 2026-10-16 23:02:45 UTC
+- [90] gateway.sumup.com/hosted.js: Cross-origin postMessage from framable PCI card-entry frame drives attacker-chosen checkout writes (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: submit reports/gateway-hostedfields-cross-origin-messenger.md (174 L / 8,593 B / sha256 4291c128…) and reports/auth-sam-app-ro-dynamic-registration.md (1
+- LEARN: ACCEPTED TOOLING @ hunt.yml: aggregate commits from a fresh checkout, so in-job `.md` writes never persist; durable channel = report body in tracked reports/ana

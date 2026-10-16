@@ -111963,3 +111963,60 @@ I've stopped short of committing, since you haven't asked me to. To actually bre
 3. Leave as-is if a human will submit them from this working tree right now.
 
 Which do you want?
+===== ANALYST bigpickle 2026-10-16 23:02:45 UTC =====
+[0m
+> build · big-pickle
+[0m
+STEP 1 – DELTA:
+[NO_DELTA] api.sumup.com: passive money surface unchanged vs 48th materialization (GET /v0.1/merchants/{code}/payment-methods → 200 {"available_payment_methods":[{"id":"card"}]} vs HEAD → 404; KB REJECTED as CDN method quirk, not re-opened).
+[NO_DELTA] auth/sam-app.ro: staging DCR posture unchanged (POST /oauth2/register → 201; empty scp; prod JWKS zero kid-overlap).
+[NO_DELTA] delivery: valid-bugs.md running count 0; both findings VALID 7.5 / FILE REPORT; reports confirmed on disk this cycle — gateway-hostedfields-cross-origin-messenger.md 174 L / 8,593 B / sha256 4291c128…d7a9; auth-sam-app-ro-dynamic-registration.md 130 L / 7,379 B / sha256 5a88476d…3e24 — recovered from reports/analyst-nemotron3.log L24465-24775 when absent.
+
+STEP 2 – PRIORITIZE:
+[PRIO] gateway.sumup.com/hosted.js: cross-origin postMessage checkout-write — 6.55/10 — attack_surface 9, business_value 8, tech_exposure 8, gate_ease 8, confidence 90, freshness 90.
+
+STEP 3 – HYPOTHESES:
+
+[HYP] Cross-origin postMessage from framable PCI card-entry frame drives attacker-chosen checkout writes
+class: MISCONFIG
+asset: gateway.sumup.com/hosted.js (hosted-fields frame)
+confidence: 90
+reasoning: Inbound postMessage handler reads {data, source} only, never event.origin; no X-Frame-Options/CSP frame-ancestors; frame root ACAO *; frame-access gate conditional on caller-supplied payment_type; live cross-origin PoC → PUT /v0.2/checkouts/{uuid}.
+evidence_needed: Backend checkout/session authorization on attacker-driven PUT.
+verify_steps: Passive re-verify done this cycle (hosted.js 26,839 B / sha256 1302f1d6…; event.→0; framing→0; ACAO *; payment_type branch; netlog PoC) — no new passive step.
+impact: Arbitrary-origin checkout write capability; Medium.
+testability: PASSIVE.
+
+[HYP] Unauthenticated RFC 7591 dynamic client registration on staging mints empty-scope attacker-aud JWTs
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: POST /oauth2/register → 201; empty scp forced; PKCE required; per-client allowlist; not synced to api/sam-app.ro /authorize; prod JWKS zero kid-overlap blocks prod relay; prod registration_endpoint absent.
+evidence_needed: None (proven); prod relay unfalsifiable passively.
+verify_steps: POST /oauth2/register (evil redirect) → 201; POST /oauth2/token grant_type=client_credentials → 200 JWT.
+impact: Staging-only misconfiguration; Low-Medium.
+testability: PASSIVE.
+
+[HYP] sdk.js onAny subscriptions bypass source-comparison dispatch
+class: OTHER
+asset: gateway.sumup.com/sdk.js
+confidence: 55
+reasoning: Two onAny subscriptions take the no-source-check branch, bypassing `n&&o!==n` source comparison (NEW this cycle).
+evidence_needed: Impact on money flows.
+verify_steps: Passive read of onAny dispatch code.
+impact: Unclear — follow-up needed.
+testability: PASSIVE.
+
+STEP 4 – SELF-CRITIQUE:
+[FINAL] gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium — ranked 1.
+[FINAL] auth.sam-app.ro/oauth2/register unauth DCR staging JWT mint — 85, PASSIVE, Low-Medium — ranked 2.
+[PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods method-level auth discrepancy — 65 — KB-REJECTED CDN quirk, do not re-open.
+
+STEP 5 – NEXT ACTION:
+[NEXT] HUMAN: submit reports/gateway-hostedfields-cross-origin-messenger.md (174 L / 8,593 B / sha256 4291c128…) and reports/auth-sam-app-ro-dynamic-registration.md (130 L / 7,379 B / sha256 5a88476d…) to bugs.olivermaicher.eu per scope.yml:4 — both hash-confirmed on disk this cycle; if absent again, recover via sed -n '24465,24638p' / '24646,24775p' reports/analyst-nemotron3.log (ANSI-stripped). No machine action has positive expected value.
+
+STEP 6 – LEARNING:
+[LEARN] ACCEPTED TOOLING @ hunt.yml: aggregate commits from a fresh checkout, so in-job `.md` writes never persist; durable channel = report body in tracked reports/analyst-<model>.log + structured stdout lines.
+
+STEP 7 – RISK:
+[RISK] sumup: 72 — both findings live and evidence-fresh (90 / 85), both validated-class; neither high-severity (Medium / Low-Medium); 49+ cycles with zero submissions — dominant risk is non-delivery, not analysis.
