@@ -2293,3 +2293,6 @@ www.sumup.com
 
 ## 2026-10-15 23:21:26 UTC
 - NEW NO_DELTA — passive surfaces unchanged vs 48th materialization; `api.sumup.com/v0.1/merchants/{code}/payment-methods` still GET 200/HEAD 404 (method-level gateway discrepancy, KB REJECTED as CDN quirk)
+
+## 2026-10-16 01:37:41 UTC
+- NEW NO_DELTA — passive surfaces unchanged vs 48th materialization; `api.sumup.com/v0.1/merchants/{code}/payment-methods` still GET 200/HEAD 404 (method-level gateway discrepancy, KB REJECTED as CDN quirk)
