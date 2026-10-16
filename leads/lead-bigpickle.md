@@ -10159,3 +10159,4 @@ testability: PASSIVE.
 [NEXT] HUMAN: submit reports/gateway-hostedfields-cross-origin-messenger.md and reports/auth-sam-app-ro-dynamic-registration.md to bugs.olivermaicher.eu (scope.yml:4). Bodies recover via sed -n '24465,24638p' / '24646,24775p' reports/analyst-nemotron3.log (ANSI-stripped).
 [LEARN] Workspace re-materialization destroys untracked reports/*.md every cycle; durable channel is tracked analyst-nemotron3.log + leads/. Always re-materialize from log and sha256-verify before any handoff.
 [RISK] sumup: Dominant risk is non-delivery — 49+ cycles, zero submissions. Do not re-probe byte-stable surfaces (api.sumup.com quartet, hosted.js evidence, js.sumup.com checkout 404).
+## 2026-10-16 16:28:53 UTC [target] (model bigpickle)
