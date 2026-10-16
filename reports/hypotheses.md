@@ -4600,3 +4600,7 @@
 - LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
 
 ## RANKED HYPOTHESES 2026-10-16 06:41:52 UTC
+
+## RANKED HYPOTHESES 2026-10-16 12:14:21 UTC
+- NEXT(hypotheses-bigpickle.txt): HUMAN: submit reports/gateway-hostedfields-cross-origin-messenger.md and reports/auth-sam-app-ro-dynamic-registration.md to bugs.olivermaicher.eu (scope.yml:4).
+- LEARN: Workspace re-materialization destroys untracked reports/*.md every cycle; durable channel is tracked analyst-nemotron3.log + leads/. Always re-materialize from 
