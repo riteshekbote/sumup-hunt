@@ -2320,3 +2320,5 @@ www.sumup.com
 - NEW `gateway.sumup.com/sdk.js` `onAny` dispatch analyzed from served bytes (291,877 B, sha256 `0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd`, etag `28e75d6c`, ACAO `*`). Messenger fact
 - NEW The `confirmation-success`/`confirmation-fail` `onAny` handlers (the only two `onAny` call sites; 3 total token hits incl. definition) sit on the merchant-widget messenger provided by class `Io`: `ko(
 - NEW Handler effect (verbatim): `e=yield p(n)` → `fetchCheckout` = `e.endpoint("checkouts/${t}?attempts=…",{method:"GET"})` (READ); `u.metrics.track(Ro,{status:$o,…})` with `Ro="checkout_process_attempt"`,
+
+## 2026-10-17 14:02:50 UTC
