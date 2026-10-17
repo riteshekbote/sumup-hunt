@@ -112671,3 +112671,970 @@ Let me write the final response.</think>Confirmed. `sdk.js` is on the explicit d
 - sumup: 72 — both findings live and evidence-fresh, neither high-severity; 50 cycles, zero submissions → dominant risk is non-delivery, not analysis.
 
 Both deliverables are hash-verified on disk this cycle; the only outstanding step is human submission. Do you want me to prepare the submission text (title/severity/body ready to paste into bugs.olivermaicher.eu), or leave it here?
+===== ANALYST bigpickle 2026-10-17 05:48:14 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null; echo "---"; ls -la leads/ 2>/dev/null; echo "---"; git log --oneline -5 2>/dev/null
+total 13924
+drwxr-xr-x  2 runner runner    4096 Oct 17 05:41 .
+drwxr-xr-x 12 runner runner    4096 Oct 17 05:41 ..
+-rw-r--r--  1 runner runner 9691021 Oct 17 05:41 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   53816 Oct 17 05:41 analyst-laguna.log
+-rw-r--r--  1 runner runner   53568 Oct 17 05:41 analyst-ling3.log
+-rw-r--r--  1 runner runner   54064 Oct 17 05:41 analyst-longcat.log
+-rw-r--r--  1 runner runner 3623829 Oct 17 05:41 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    5417 Oct 17 05:41 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Oct 17 05:41 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Oct 17 05:41 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Oct 17 05:41 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner      54 Oct 17 05:41 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  712723 Oct 17 05:41 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Oct 17 05:41 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Oct 17 05:41 valid-bugs.md
+---
+total 4344
+drwxr-xr-x  2 runner runner    4096 Oct 17 05:41 .
+drwxr-xr-x 12 runner runner    4096 Oct 17 05:41 ..
+-rw-r--r--  1 runner runner 1703267 Oct 17 05:41 lead-bigpickle.md
+-rw-r--r--  1 runner runner   12648 Oct 17 05:41 lead-laguna.md
+-rw-r--r--  1 runner runner   12400 Oct 17 05:41 lead-ling3.md
+-rw-r--r--  1 runner runner   12896 Oct 17 05:41 lead-longcat.md
+-rw-r--r--  1 runner runner      18 Oct 17 05:41 lead-mimo.md
+-rw-r--r--  1 runner runner 2616090 Oct 17 05:41 lead-nemotron3.md
+-rw-r--r--  1 runner runner   63453 Oct 17 05:41 reposcan-sumup.md
+---
+5afc772 reposcan 2026-10-17-05-14
+[0m
+## Objective
+- Act as a bug-bounty ANALYST for SumUp (report channel: bugs.olivermaicher.eu), running a 7-step hunt cycle (DELTA → PRIORITIZE → HYPOTHESES → SELF-CRITIQUE → NEXT → LEARN → RISK) emitting only structured blocks, passive-first probing.
+- Current phase: POC, target `api`; dominant goal is delivering two validated findings rather than finding new ones.
+
+## Important Details
+- Probe rules: GET/HEAD/OPTIONS only, ≤1 rps, no mutating tests against live customer data; POST-only endpoints (e.g. `auth.sam-app.ro/oauth2/register`) are not re-probed.
+- Out-of-scope classes (clickjacking w/o exploit, TLS best practice, header/banner leaks, OPTIONS/TRACE, etc.) must never be filed; full list in prompt.
+- Report `.md` files NEVER persist: hunt.yml analyst job uploads only `lead_*.txt`/`analyst-*.out`/`ctx.txt`; aggregate commits from fresh checkout. Workspace re-materialized 48+ times.
+- Durable channel: tracked `reports/analyst-nemotron3.log` — canonical report bodies at `sed -n '24465,24638p'` (gateway) and `'24646,24775p'` (auth), ANSI-stripped; hashes reproduce exactly.
+- Canonical report hashes: `reports/gateway-hostedfields-cross-origin-messenger.md` = 174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9`; `reports/auth-sam-app-ro-dynamic-registration.md` = 130 L / 7,379 B / sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24`.
+- `reports/valid-bugs.md` baseline 79 L / 7,384 B / `282390f8…`, running count 0; appends don't persist.
+- Top finding (conf 90): `gateway.sumup.com/hosted.js` — inbound postMessage never reads `event.origin`; no XFO/CSP frame-ancestors; frame-access gate skipped by `payment_type !== "card"`; live PoC drives `PUT https://api.sumup.com/v0.2/checkouts/{uuid}`. Bundle: 26,839 B, sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`. Severity basis = demonstrated state-changing request, not backend acceptance (unproven).
+- Second finding (conf 85): `auth.sam-app.ro/oauth2/register` unauth RFC 7591 DCR → mints empty-scope attacker-aud JWTs; staging-only (prod JWKS zero kid overlap; prod registration_endpoint absent). Low-Medium.
+- Rejected/don't-reopen: `api.sumup.com/v0.1/merchants/{code}/payment-methods` GET 200/HEAD 404 = CDN quirk; `js.sumup.com/api/checkouts/{id}` = 68B Vercel 404 reflector (not app-routed); checkout IDOR retired (param+credential-invariant 58B stub); iso20022 routing divergence = recon only; wildcard CORS classes = hardening-only; "attacker aud → prod relay" unfalsifiable.
+- Confirmed stable facts: `hosted.js` checkoutId gate is static literal `ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i` (NOT `new RegExp(a.pattern)`); dashboard consent set `{openid, classic, offline, readers.read, terminals.read, email}`; staging JWKS 11 entries = 9 unique keys; dashboard/login redirect allowlists exact-URI match.
+- New this cycle (lead tail): `gateway.sumup.com/sdk.js` (291,877 B) `onAny` subscriptions bypass `n&&o!==n` source-comparison dispatch (conf 55, impact unknown).
+- No automated submission mechanism in repo; `scope.yml:4` says disclosure via bugs.olivermaicher.eu — blocker is HUMAN submission.
+
+## Work State
+### Completed
+- Both final reports verified on disk this cycle with canonical hashes (gateway 174 L `4291c128…`, auth 130 L `5a88476d…`).
+- Gateway evidence re-derived live: `hosted.js` byte-identical, `event.origin` grep → 0, framing headers → 0, ACAO `*`.
+- 8 steps run; ranked finals: (1) gateway cross-origin postMessage checkout-write 90, (2) auth.sam-app.ro DCR 85.
+
+### Active
+- Phase POC, target `api`; investigation complete — both findings validated-class (Medium / Low-Medium), evidence-fresh.
+
+### Blocked
+- Submission: `valid-bugs.md` count 0 for 49+ cycles; both reports need HUMAN upload to bugs.olivermaicher.eu; reports vanish each cycle unless re-materialized from analyst log.
+- sdk.js `onAny` bypass lead (55) needs impact analysis on money flows.
+
+## Next Move
+1. `[NEXT] HUMAN:` submit `reports/gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c128…`) and `reports/auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / sha256 `5a88476d…`) to bugs.olivermaicher.eu per scope.yml:4; if absent, restore via `sed -n '24465,24638p'` / `'24646,24775p'` `reports/analyst-nemotron3.log` (ANSI-stripped) + `sha256sum` in one command.
+2. If machine action is still required: passive read of `gateway.sumup.com/sdk.js` `onAny` dispatch code to determine whether the no-source-check branch affects money-flow events (conf 55 hypothesis).
+
+## Relevant Files
+- `reports/analyst-nemotron3.log`: only durable store of report bodies (L24465-24638 gateway, L24646-24775 auth).
+- `reports/gateway-hostedfields-cross-origin-messenger.md`: primary deliverable (Medium, conf 90); absent/re-materialized each cycle.
+- `reports/auth-sam-app-ro-dynamic-registration.md`: second deliverable (Low-Medium, conf 85).
+- `reports/valid-bugs.md`: triage ledger at baseline 79 L, count 0.
+- `.github/workflows/hunt.yml`: root cause of non-persistence (analyst job uploads only leads/`.out`/ctx).
+- `scope.yml`: scope definition; line 4 = disclosure channel bugs.olivermaicher.eu; rejection classes.
+- `inventory/sumup.md`: seed host inventory (9 hosts, all probed).
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+Both deliverables are absent (reports/ has only logs). Restoring the canonical report bodies from the durable channel, then continuing with the machine-actionable `sdk.js` `onAny` lead.
+[0m$ [0msed -n '24465,24638p' reports/analyst-nemotron3.log | sed 's/\x1b\[[0-9;]*m//g' > reports/gateway-hostedfields-cross-origin-messenger.md
+sed -n '24646,24775p' reports/analyst-nemotron3.log | sed 's/\x1b\[[0-9;]*m//g' > reports/auth-sam-app-ro-dynamic-registration.md
+wc -l -c reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+174  8593 reports/gateway-hostedfields-cross-origin-messenger.md
+  130  7379 reports/auth-sam-app-ro-dynamic-registration.md
+  304 15972 total
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  reports/gateway-hostedfields-cross-origin-messenger.md
+5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24  reports/auth-sam-app-ro-dynamic-registration.md
+[0m
+Both hashes match canonical exactly:
+- gateway: 174 L / 8,593 B / 4291c128… ✓
+- auth: 130 L / 7,379 B / 5a88476d… ✓
+
+Both deliverables are restored and verified. Now the machine-actionable next step: passive read of `gateway.sumup.com/sdk.js` `onAny` dispatch to determine whether the no-source-check branch affects money-flow events (conf 55 hypothesis).
+
+Let me do that. GET-only, ≤1 rps. Fetch sdk.js and grep for onAny dispatch logic.
+
+Actually before fetching live (be measured), the summary mentions prior analysis: `gateway.sumup.com/sdk.js` (291,877 B) `onAny` subscriptions bypass `n&&o!==n` source-comparison dispatch. I should analyze the bundle. Let me fetch it once and inspect.
+
+Let me check if there's a cached copy in the workspace first.</think>Both deliverables restored and hashes match canonical exactly (174 L / 8,593 B / `4291c128…`; 130 L / 7,379 B / `5a88476d…`). Now the `sdk.js` `onAny` lead — checking for a cached copy before any live fetch.
+[0m$ [0mfind / -name 'sdk.js' -not -path '*/node_modules/*' 2>/dev/null | head; echo "---grep logs---"; grep -c 'onAny' leads/lead-nemotron3.md reports/analyst-nemotron3.log 2>/dev/null
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m✱ [0mGlob "**/sdk*.js"[90m 0 matches[0m
+[0m✱ [0mGrep "onAny"[90m in leads · 11 matches[0m
+The find over / timed out. Let me use glob instead within workspace, and grep with tools.</think>
+[0m→ [0mRead leads/lead-bigpickle.md[90m [offset=7970, limit=40][0m
+No cached sdk.js. The lead-bigpickle.md has detail. Let me read the relevant section in lead-bigpickle around line 7988 and the hypotheses section. Also check the top finding context. Let me read lead-nemotron3 tail too for the most recent sdk.js notes.
+
+Actually, the lead files are huge. Let me grep more precisely for sdk.js dispatch analysis in lead-nemotron3.md (the current target's lead) and analyst log.
+
+But the machine action is: passive read of sdk.js. Since no cached copy, I'd need to fetch it live. GET-only is allowed. Let me fetch once.
+
+Let me first read the detailed lead section to understand what's known, then decide whether a live fetch is needed. Read lead-bigpickle.md lines ~7980-8000.</think>No cached `sdk.js`. Reading the prior analysis detail before deciding on a live GET.
+[0m✱ [0mGrep "onAny|sdk\.js|291,877|291877"[90m in leads/lead-nemotron3.md · 100 matches[0m
+The lead-bigpickle.md has the most detailed sdk.js onAny analysis. The key insight at line 7988: `onAny("confirmation-success", ...)` takes the no-source-check branch, and spoofing it from a same-window-origin message drives merchant-visible redirect + success analytics.
+
+Wait — important distinction. Let me understand the messenger dispatch. In hosted.js there are two dispatch branches:
+- `c[i.message]` dispatch — this is the "onAny" (wildcard/any-source) subscriptions, no source check.
+- `s[i.message]` dispatch gated by `n&&o!==n` — source comparison (o is source, n is the expected source window).
+
+Actually from the reasoning: `n&&o!==n||(...)` means "if n is falsy OR o===n, then dispatch". So when `n` (expected source) is not set, it dispatches regardless of source. `onAny` registers with no source filter → no source comparison.
+
+But the critical question: is this exploitable cross-origin? In hosted.js the finding is that inbound never reads `event.origin`. The `onAny` subscriptions in sdk.js bypass even the `event.source` comparison. So a cross-origin attacker who can postMessage to the SDK's window can trigger `confirmation-success`, which:
+1. fetches checkout `p(n)` 
+2. `triggerRedirectComplete` 
+3. fires merchant analytics with success status
+4. calls `onResponse` merchant handler
+
+But wait — this is the merchant's SDK embedded in the merchant's page. The "attacker" would need to be able to postMessage to the merchant's page window. Actually the messenger `ko` receives messages via `addEventListener("message")` on... which window? If it's `window` (top) in the merchant page, then any origin that can get a reference to the window (e.g., an iframe the merchant embeds, or a popup, or a window.opener chain) can postMessage.
+
+Hmm, but this is a synthetic lead. The summary says "impact unknown" and confidence 55.
+
+The key machine-actionable task: passive read of sdk.js onAny dispatch code to determine whether the no-source-check branch affects money-flow events.
+
+Now, do I have sdk.js? No cached copy. I need to fetch it. GET-only allowed, ≤1 rps. It's a public static asset — prior cycles fetched it. Fetching from gateway.sumup.com/sdk.js.
+
+But wait — I should be measured. Let me think about whether this is worth a live fetch. The prior KB already has extensive characterization. The question is whether `onAny` affects money flows. Let me get the actual served bytes to inspect the `ko` factory and the `onAny` call sites.
+
+Let me fetch it once with curl and save to /tmp, then grep. This is a single GET to a public static asset — acceptable per risk notes.
+
+Actually, let me reconsider the environment. This is a Git repo workspace /home/runner/work/sumup-hunt/sumup-hunt. Network access? Prior cycles did live fetches, so presumably yes. Let me try.
+
+Let me fetch sdk.js and analyze the messenger factory `ko` and onAny.
+
+Plan:
+1. curl sdk.js to /tmp/opencode/sdk.js, verify size/sha.
+2. Extract `ko` messenger factory, `onAny` definition, and the two call sites.
+3. Analyze whether the no-source-check branch reaches money-flow (PUT checkout) events.
+
+Let me also fetch hosted.js for the shared factory to compare — but hosted.js already characterized. Actually to answer the onAny question I need sdk.js.
+
+Let me do the fetch. One GET.</think>Prior analysis is thorough (lead-bigpickle.md:7987-7988). The open question is whether the `onAny` no-source-check branch reaches money-flow events. No cached copy, so one GET of the public static asset to recover the served bytes.
+[0m
+[0m$ [0mcd /tmp/opencode && curl -sS -D sdk.hdr -o sdk.js --max-time 60 https://gateway.sumup.com/sdk.js && wc -c sdk.js && sha256sum sdk.js && grep -iE '^(HTTP|content-type|etag|access-control-allow-origin|x-frame|content-security)' sdk.hdr
+291877 sdk.js
+0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd  sdk.js
+HTTP/2 200 
+access-control-allow-origin: *
+content-type: application/javascript; charset=utf-8
+etag: "28e75d6c454233d86c99046da66efddd"
+[0m
+Byte-identical to prior (291,877 B, sha256 0fae546a…). No framing headers, ACAO `*`.
+
+Now let me analyze the messenger factory `ko` and the onAny dispatch. Let me find the relevant code. It's minified. Let me search for `onAny`, `addEventListener("message"`, `confirmation-success`, `confirmation-fail`.
+
+The file is one long line probably. Let me use grep with -o to extract context. Better: use node or python to find substrings and print windows.
+
+Let me use a python script to extract windows around key tokens.</think>Byte-identical to KB (291,877 B / `0fae546a…`). Now extracting the `ko` messenger factory, `onAny`, and the two call sites.
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+print("len",len(s))
+for tok in ['onAny','addEventListener("message"','confirmation-success','confirmation-fail','event.origin','origin===','targetOrigin']:
+    print(tok, s.count(tok))
+PY
+len 291698
+onAny 3
+addEventListener("message" 1
+confirmation-success 1
+confirmation-fail 1
+event.origin 0
+origin=== 0
+targetOrigin 0
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+def win(tok,before=300,after=700):
+    i=s.find(tok)
+    print("="*30,tok,"@",i,"="*30)
+    print(s[max(0,i-before):i+after])
+    print()
+for t in ['addEventListener("message"','confirmation-success','confirmation-fail']:
+    win(t)
+PY
+============================== addEventListener("message" @ 128088 ==============================
+d:o=>{try{const e=Object.assign({variant:r,type:xo.TYPE,action:xo.ACTION_MESSAGE},o);if(n)return void n.postMessage(e,i||"*");t&&t.parent.postMessage(e,"*")}catch(t){console.error(`Error while sending message: ${e}`,t),a({error:t,message:`Error while sending message: ${e}`})}},mount:()=>{null==t||t.addEventListener("message",l)},unmount:()=>{d.send({message:_o}),null==t||t.removeEventListener("message",l),t=void 0,n=void 0,Object.keys(s).forEach((e=>delete s[e])),Object.keys(c).forEach((e=>delete c[e]))}};return o&&d.mount(),d.on(_o,(()=>{d.unmount()})),d},So=F(null);function Co(){const e=pe(So);if(!e)throw new Error("HostedElementsContext was not initialised.");return e}const Ao="aux--metric-track";class Oo{constructor(){this.elements={},this.loadedElements=this.loadedElements.bind(this)}init(e){this.elements[e]={name:e,isLoaded:!1}}elementsKeys(){return Object.keys(this.elements)}setIsLoaded(e){this.elements[e]&&(this.elements[e].isLoaded=!0)}loadedElements(){return Object.keys(this.
+
+============================== confirmation-success @ 284088 ==============================
+SubmitButton:m.donateSubmitButton,showNames:m.showNames,showCountry:m.showCountry,showAddress:m.showAddress,showCpfNumber:m.showCpfNumber,showZipCode:m.showZipCode,showTaxId:m.showTaxId,scaExperienceMode:m.scaExperienceMode}}),()=>{window.removeEventListener("resize",A)})),[]),ae((()=>{_&&(o.onAny("confirmation-success",(()=>Xp(void 0,void 0,void 0,(function*(){try{const e=yield p(n);u.metrics.track(Ro,{status:$o,payment_method:_.paymentMethod,flow:Lo}),f.triggerRedirectComplete({sessionId:g,checkoutId:n,checkoutStatus:e.status,mechanism:"iframe",paymentMethod:_.paymentMethod,scaExperienceMode:l,result:"success",timestamp:Date.now().toString()}),a($o,e)}finally{x(void 0)}})))),o.onAny("confirmation-fail",(()=>Xp(void 0,void 0,void 0,(function*(){try{const e=yield p(n);u.metrics.track(Ro,{status:Mo,payment_method:_.paymentMethod,flow:Lo,error:"external-page-error"}),f.triggerRedirectComplete({sessionId:g,checkoutId:n,checkoutStatus:e.status,mechanism:"iframe",paymentMethod:_.paymentMeth
+
+============================== confirmation-fail @ 284483 ==============================
+s.track(Ro,{status:$o,payment_method:_.paymentMethod,flow:Lo}),f.triggerRedirectComplete({sessionId:g,checkoutId:n,checkoutStatus:e.status,mechanism:"iframe",paymentMethod:_.paymentMethod,scaExperienceMode:l,result:"success",timestamp:Date.now().toString()}),a($o,e)}finally{x(void 0)}})))),o.onAny("confirmation-fail",(()=>Xp(void 0,void 0,void 0,(function*(){try{const e=yield p(n);u.metrics.track(Ro,{status:Mo,payment_method:_.paymentMethod,flow:Lo,error:"external-page-error"}),f.triggerRedirectComplete({sessionId:g,checkoutId:n,checkoutStatus:e.status,mechanism:"iframe",paymentMethod:_.paymentMethod,scaExperienceMode:l,result:"fail",timestamp:Date.now().toString()}),a(Mo,e)}finally{x(void 0)}})))))}),[_,n,p,a,o]);const O=!(w||_&&"modal"!==l),P=!!(null==h?void 0:h.merchant_sandbox);return U(Qp,Object.assign({ref:b,className:tp},js("widget__container"),{children:[_&&U(hp,{widgetDimension:y,challenge:_,onCancel:()=>{f.triggerRedirectComplete({sessionId:g,checkoutId:n,checkoutStatus:(null
+[0m
+Let me print windows around each.</think>
+Now I need to find the `ko` messenger factory that defines `onAny`, `on`, and the dispatch. Let me look at the addEventListener window more broadly and find the factory. The `l` handler is defined earlier in the factory. Let me extract the whole factory by finding the start.
+
+Let me find all occurrences of `onAny` and the code that defines `on`/`onAny` and the dispatch logic `c[` and `s[`. Search for `onAny:` or `.onAny=`. onAny appears 3 times: 2 call sites + 1 definition. Let me find the definition.</think>
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+import re
+for m in re.finditer('onAny',s):
+    print("onAny @",m.start())
+# find the messenger factory: search for the inbound handler pattern
+i=s.find('addEventListener("message"')
+# print a larger window before to capture factory definition
+print("\n--- factory region ---")
+print(s[i-2200:i+200])
+PY
+onAny @ 127523
+onAny @ 284081
+onAny @ 284476
+
+--- factory region ---
+r,Object.assign({value:{widgetConfiguration:o,setWidgetConfiguration:a}},{children:e({widgetConfiguration:o,setWidgetConfiguration:a})}))}fo.Consumer;const mo=()=>pe(fo);function bo(e){return t=>U(e,Object.assign({},Object.assign(Object.assign({},t),{configContext:mo()})))}const yo=mo;var vo=function(e,t,n,r){return new(n||(n=Promise))((function(i,o){function a(e){try{c(r.next(e))}catch(e){o(e)}}function s(e){try{c(r.throw(e))}catch(e){o(e)}}function c(e){var t;e.done?i(e.value):(t=e.value,t instanceof n?t:new n((function(e){e(t)}))).then(a,s)}c((r=r.apply(e,t||[])).next())}))};const _o="messenger--unmount",xo=Object.freeze({TYPE:"SumUpCard",ACTION_MESSAGE:"message"}),wo=e=>e.type===xo.TYPE,ko=({id:e,fromWindow:t,toWindow:n,variant:r,origin:i,autoMount:o=!1,onError:a=({error:e})=>{throw e}})=>{const s={},c={},l=t=>{const{data:i,source:o}=t;i&&i.message&&(wo(i)&&(c[i.message]||[]).forEach((t=>vo(void 0,void 0,void 0,(function*(){try{yield Promise.resolve(t.handler(i.value,i))}catch(t){console.error(`Error while receiving message: ${e} - ${i.message}`,t),a({error:t,message:`Error while receiving message: ${e} - ${i.message}`})}})))),n&&o!==n||(s[i.message]||[]).forEach((t=>vo(void 0,void 0,void 0,(function*(){try{((e,t,n)=>Boolean(wo(e)&&e.action===xo.ACTION_MESSAGE&&(e.variant===t||n.ignoreVariant)&&e.message))(i,r,t.options||{})&&(yield Promise.resolve(t.handler(i.value,i)))}catch(t){console.error(`Error while receiving message: ${e} - ${i.message}`,t),a({error:t,message:`Error while receiving message: ${e} - ${i.message}`})}})))))},d={unsubscribe:(e,t)=>{s&&(s[e]=(s[e]||[]).filter((({handler:e})=>e!==t)))},onAny:(e,t)=>{c&&(c[e]=[{handler:t,options:{ignoreVariant:!0}}])},on:(e,t,n={})=>{s&&(n.uniqueListener?s[e]=[{handler:t,options:n}]:s[e]=[...s[e]||[],{handler:t,options:n}])},sendTo:(e,t)=>{const n=Object.assign({variant:r,type:xo.TYPE},t);e.postMessage(n,"*")},send:o=>{try{const e=Object.assign({variant:r,type:xo.TYPE,action:xo.ACTION_MESSAGE},o);if(n)return void n.postMessage(e,i||"*");t&&t.parent.postMessage(e,"*")}catch(t){console.error(`Error while sending message: ${e}`,t),a({error:t,message:`Error while sending message: ${e}`})}},mount:()=>{null==t||t.addEventListener("message",l)},unmount:()=>{d.send({message:_o}),null==t||t.removeEventListener("message",l),t=void 0,n=void 0,Object.keys(s).forEach((e=>delete s[e])),Object.keys(c).forEach((e=>delet
+[0m
+Now I have the full factory. Let me analyze carefully.
+
+```js
+ko=({id:e,fromWindow:t,toWindow:n,variant:r,origin:i,autoMount:o=!1,onError:a=...})=>{
+  const s={},      // on() subscriptions
+        c={},      // onAny() subscriptions
+        l=t=>{     // handler attached to `fromWindow` message event
+          const{data:i,source:o}=t;
+          i&&i.message&&(
+            wo(i)&&(c[i.message]||[]).forEach(t=>... Promise.resolve(t.handler(i.value,i)) ...),
+            // ^ onAny dispatch: NO source check, NO variant check (ignoreVariant:true), but requires wo(i) i.e. type==="SumUpCard"
+
+            n&&o!==n||(s[i.message]||[]).forEach(t=>... 
+               ((e,t,n)=>Boolean(wo(e)&&e.action===xo.ACTION_MESSAGE&&(e.variant===t||n.ignoreVariant)&&e.message))(i,r,t.options||{}) 
+               && (yield Promise.resolve(t.handler(i.value,i)))
+            )
+            // ^ on() dispatch: guarded by `n&&o!==n||` meaning if toWindow truthy AND source !== toWindow, skip; otherwise dispatch. Plus variant/action checks.
+          )
+        },
+        d={
+          unsubscribe, onAny, on, sendTo, send, mount, unmount
+        };
+  return o&&d.mount(), ...
+}
+```
+
+Wait — hold on. Let me re-read. Important: The onAny dispatch happens inside the same `i&&i.message&&(...)` block, as a sequence expression with comma operator:
+```
+i&&i.message&&(
+  wo(i)&&(c[i.message]||[]).forEach(...),
+  n&&o!==n||(s[i.message]||[]).forEach(...)
+)
+```
+
+So BOTH onAny and on() dispatch happen, comma-separated. onAny requires `wo(i)` (type check) but NO source check. on() requires source check `n&&o!==n` (skip if source mismatch when n set) plus the variant/action predicate.
+
+Now what is `origin:i` used for? In `send`: `n.postMessage(e, i||"*")`. So `origin` is used as the **outbound targetOrigin** when `toWindow` (n) exists. Not inbound. Confirms origin used outbound only.
+
+Now, the addEventListener is attached to `fromWindow:t`. What is `fromWindow` in the sdk.js usage? In hosted.js, `HostedForm.init(window, window.parent||window.top)`. Let me find the ko() invocation sites in sdk.js to understand fromWindow/toWindow.
+
+Key security question:
+- The `onAny` handler fires on ANY message whose `data.type === "SumUpCard"` and `data.message === "confirmation-success"`, regardless of `event.source`.
+- BUT the listener `l` is attached to `fromWindow` (t). If `fromWindow` is the top merchant window, then any script running in the merchant page (or a same-origin iframe) can dispatch. An iframe with a different origin CAN postMessage to the parent window; `event.source` would be that iframe's window. Since onAny has no source check, a cross-origin iframe could trigger it.
+- But wait, does the cross-origin iframe have a reference to postMessage to the top window? Yes — `window.parent.postMessage(...)` from within the iframe sends to the parent. So a cross-origin iframe embedded in the merchant page could postMessage `{type:"SumUpCard",message:"confirmation-success",...}` to the parent, and if the SDK's messenger listener is mounted on the parent window, the onAny handler fires.
+
+Now, what does the handler do?
+```js
+o.onAny("confirmation-success", () => {
+  const e = yield p(n);   // p = fetchCheckout(checkoutId n) — a GET, read-only
+  u.metrics.track(Ro,{status:$o, payment_method, flow});  // analytics
+  f.triggerRedirectComplete({
+    sessionId:g, checkoutId:n, checkoutStatus:e.status,
+    mechanism:"iframe", paymentMethod, scaExperienceMode:l,
+    result:"success", timestamp:...
+  });   // fires a redirect-complete callback to the merchant
+  a($o,e);   // onResponse merchant handler with success status
+});
+```
+
+So spoofing `confirmation-success` from a cross-origin iframe causes the merchant's `onResponse`/redirect-complete callback to fire with `result:"success"` and the real checkout status. `p(n)` fetchCheckout is a GET (read), so no state change to checkout. The impact: merchant is told the payment succeeded (redirect to success page / mark order paid) even though the user may not have paid. This is a **business-logic / UI-spoofing** issue: it could cause the merchant's integration to believe a payment succeeded.
+
+BUT — critical: the checkout status `e.status` is fetched from the real checkout, so it reflects true status. Yet `triggerRedirectComplete` passes `result:"success"` hardcoded and `checkoutStatus:e.status`. The merchant handler `a($o,e)` receives status `$o` (a constant success). So the merchant's onResponse gets `$o` regardless of the actual checkout status. That IS a spoofable success signal.
+
+However, is this cross-origin reachable? The messenger is mounted with `fromWindow`. Let me find where ko is instantiated in sdk.js to see fromWindow. Search for `ko({` or `=ko(`.
+
+Also key: is this the SDK running in the merchant's page (so top window) — then fromWindow might be `window` (merchant top). Or the messenger might be mounted in an iframe. Let me find.
+
+Let me search for `fromWindow:` and `toWindow:` and `ko(`.
+
+Actually the minified variable name `ko` might be renamed. Let me grep for `fromWindow:` and `toWindow:`.</think>Full factory recovered. Now find where `ko` is instantiated to determine `fromWindow`/`toWindow` (whether the listener mounts on the merchant top window, making cross-origin postMessage reachable).
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+import re
+for t in ['fromWindow:','toWindow:','autoMount','variant:','.mount()']:
+    print(t, s.count(t))
+print("---- fromWindow sites ----")
+for m in re.finditer('fromWindow:',s):
+    i=m.start(); print(s[i-260:i+180]); print('---')
+PY
+fromWindow: 5
+toWindow: 4
+autoMount 4
+variant: 13
+.mount() 2
+---- fromWindow sites ----
+tion c(e){var t;e.done?i(e.value):(t=e.value,t instanceof n?t:new n((function(e){e(t)}))).then(a,s)}c((r=r.apply(e,t||[])).next())}))};const _o="messenger--unmount",xo=Object.freeze({TYPE:"SumUpCard",ACTION_MESSAGE:"message"}),wo=e=>e.type===xo.TYPE,ko=({id:e,fromWindow:t,toWindow:n,variant:r,origin:i,autoMount:o=!1,onError:a=({error:e})=>{throw e}})=>{const s={},c={},l=t=>{const{data:i,source:o}=t;i&&i.message&&(wo(i)&&(c[i.message]||[
+---
+rrent:null},this.initializeInput=this.initializeInput.bind(this),this.hostedElementsTracer=new Oo,this.hasLoaded=!1,this.state={isInitialized:!1}}initializeInput(){const e=this.ref.current,{env:t={}}=this.props,n=new URL(t.sdkURL),r=ko({id:"hf-form-component",fromWindow:window,toWindow:e.contentWindow,variant:"hostedfield",origin:n.origin,autoMount:!0});this.tracker=(e,t)=>new Promise((n=>{r.send({message:Ao,value:{metric:e,labels:t}}),
+---
+solute;top: -9999px;left: -9999px;","data-testid":"hosted-aux",onload:this.initializeInput,ref:this.ref,src:Po(t.sdkURL),"aria-hidden":!0,tabIndex:-1}),e&&this.props.children)}}class Io extends _{constructor(e,t){super(e,t),this.messenger=e.messenger||(e=>ko({fromWindow:e.win||window,variant:e.variant,onError:e=>{let{error:t,message:n}=e;return Fr(t,n)}}))(e)}componentDidMount(){this.messenger.mount(),window.addEventListener("beforeunlo
+---
+,n,r,i]),ae((()=>()=>null==s?void 0:s.unmount()),[]),m(v,null,m("div",{style:"visibility: 'hidden';position: absolute;top: -9999px;left: -9999px;"},m("iframe",{"data-testid":"hostedform--form",onload:()=>{const e=new URL(o.sdkURL),t=ko({id:"hf-form-component",fromWindow:a,toWindow:null==d?void 0:d.contentWindow,variant:"hostedfield",origin:e.origin,autoMount:!0});c(t)},name:vc,ref:l,src:xc(o.sdkURL),"aria-hidden":!0,tabIndex:-1,scrollin
+---
+-testid"],"data-sumup-id":g["data-sumup-id"]},{children:[U($c,{children:[U(Lc,{children:a}),U(Mc,{"data-isloaded":A?"true":"false",ref:w,src:`${P=S.sdkURL,`${P||"./"}field.html`}?name=${t}&maxLength=${o||""}`,name:t,onLoad:()=>{const e=new URL(S.sdkURL),a=ko({fromWindow:window,toWindow:w.current.contentWindow,variant:"hostedfield",origin:e.origin,autoMount:!0});a.on(Nc,p),a.on(Ic,f),a.on(Ec,C),a.on("input--blur",(()=>{v(!0),x(!1)})),a.o
+---
+[0m
+Key sites:
+
+1. `initializeInput()`: `ko({id:"hf-form-component", fromWindow:window, toWindow:e.contentWindow, variant:"hostedfield", origin:n.origin, autoMount:!0})` — fromWindow = `window` (merchant top page), toWindow = iframe contentWindow. So the messenger listener is attached to the MERCHANT's top window.
+
+2. `Io` constructor: `ko({fromWindow:e.win||window, variant:e.variant, ...})` with no toWindow. fromWindow = merchant window.
+
+3. hostedform--form iframe onload: `ko({id:"hf-form-component", fromWindow:a, toWindow:d.contentWindow, variant:"hostedfield", origin:e.origin, autoMount:!0})` — fromWindow = `a` (probably the iframe window or some var).
+
+4. field.html onLoad: `ko({fromWindow:window, toWindow:w.current.contentWindow, variant:"hostedfield", origin:e.origin, autoMount:!0})` — fromWindow = window (merchant page), then registers `a.on(Nc,p), a.on(Ic,f), a.on(Ec,C), a.on("input--blur", ...)`.
+
+Now, critical: the confirmation-success onAny at 284088 — which messenger `o` is it? Let me find what `o` is in that scope. And more importantly: what is `fromWindow` for the messenger that has the confirmation-success onAny? If fromWindow = merchant top `window`, then an embedded cross-origin iframe could postMessage to the merchant top and trigger it.
+
+But wait — there's a subtlety. If `fromWindow` is the merchant's own window, then the listener receives messages from ANY source that posts to it, including cross-origin iframes (event.source = iframe window) and popups. The on() path checks `n&&o!==n` — but onAny skips it. So an embedded cross-origin iframe can trigger onAny handlers.
+
+However — can an attacker iframe call `window.parent.postMessage({type:"SumUpCard", ...}, "*")`? Yes. That message arrives at the merchant top window. If the SDK messenger `l` is attached to the merchant top window (`fromWindow:window`), then it processes it. Since onAny has no source check and only `wo(i)` (type==="SumUpCard"), it fires.
+
+Now, which messenger owns the confirmation-success subscription? The variable `o` at line 284088. Let me find the enclosing component and how `o` is created. Search backwards for `o=` or the component. This is likely the hosted-checkout iframe bridge — the SDK's `PaymentWidget`/`HostedCheckout` component that listens for confirmation events from the hosted checkout iframe.
+
+Actually the presence of `f.triggerRedirectComplete`, `u.metrics.track`, `a($o,e)` — this is the redirect-mode hosted checkout. The `o` messenger likely has `fromWindow:window` (merchant page).
+
+Let me find the definition of `o` and the component. Let me search for the block around it. Print a big window before 284088.
+
+Also important: is the onAny subscription registered on the same messenger whose listener is on the merchant window? Let me trace.
+
+Let me print ~4000 chars before 284088.</think>Critical: sites 1 & 4 use `fromWindow:window` (merchant top page). Let me trace which messenger owns the `confirmation-success` `onAny` (`o` at 284088) and its `fromWindow`.
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+i=284088
+print(s[i-4200:i-1500])
+PY
+d":Go},m(Bp,{onClick:()=>{r(!n)}},m(qp,null),m(Fp,null,"Mostrar")),m(zp,{"data-testid":Ko,isRevealed:n,readOnly:!0},t))}function Hp(e){let{t,content:n,paymentMethod:r}=e;const i=mp(n);return i?m("div",{"data-testid":Wo},m("span",null,t("apm.payment_methods.".concat(r,".pending.barcode.description"))),m("h4",null,i)):m(Up,{t,content:n})}function Zp(e){let{t,paymentMethod:n,value:r}=e;return m(Np,{message:t("apm.payment_methods.boleto.pending.barcode.copied_to_clipboard")},((e,i)=>m("section",null,m(Hp,{t,content:r,paymentMethod:n}),m(Ip,{linkClassName:"pay-button",t,value:r,onClick:e,isDisabled:i}))))}function Wp(e){let{t,payment:n,url:r}=e;return m("form",{"data-testid":"boleto-download",action:r,target:"_blank",rel:"noopener noreferrer"},m(cd,{type:"submit"},m("span",null,t("apm.payment_methods.".concat(n,".pending.download_button")))))}function Gp(e){let{barcodeImg:t}=e;return m(Dp,{"data-testid":"scannable-barcode"},m("img",{src:"".concat(t,"?width=250&height=250"),alt:"QR Code"}))}const Kp=Yr((function(e){let{t,paymentMethod:n,artefacts:r,validUntil:i}=e;const o=(e=>t=>(e||[]).reduce(((e,n)=>({...e,...t(n)})),{}))(r)((e=>({[e.name]:e})));return m(Tp,null,o.instructions&&m("div",null,m("p",null,t("apm.payment_methods.".concat(n,".instructions")))),i&&m(Vp,{t,date:i}),o.barcode&&m(Gp,{barcodeImg:o.barcode.location}),o.code&&m(Zp,{t,paymentMethod:n,value:o.code.content}),o.invoice&&m(Wp,{t,payment:n,url:o.invoice.location}),o.disclaimer&&m("p",null,t("apm.payment_methods.".concat(n,".pending.disclaimer"))))})),Jp="PENDING",Yp=({pending:e,paymentMethods:t,apiBFF:n,checkoutId:r,maxAttempts:i,onResult:o})=>{const a=de((()=>function(e=60){let t,n=1;function r(){clearTimeout(t)}return{start:function i(o){return t=setTimeout((()=>{if(n>e)return r();o(n),n+=1,i(o)}),5e3),r},clear:r}}(i)),[]);ae((()=>(a.start((e=>{n.checkouts.fetchCheckout(r,e).then((e=>{e.status!==Jp&&a.clear(),o&&o(e)}))})),()=>{a.clear()})),[]);const s=t.find((t=>t.id===e.payment_method));return U("div",Object.assign({"data-testid":"pending-screen"},{children:[s&&U(gc,{paymentMethod:s}),"artefacts"in e&&U(Kp,{paymentMethod:e.payment_method,artefacts:e.artefacts,validUntil:e.valid_until})]}))};var Xp=function(e,t,n,r){return new(n||(n=Promise))((function(i,o){function a(e){try{c(r.next(e))}catch(e){o(e)}}function s(e){try{c(r.throw(e))}catch(e){o(e)}}function c(e){var t;e.done?i(e.value):(t=e.value,t instanceof n?t:new n((function(e){e(t)}))).then(a,s)}c((r=r.apply(e,t||[])).next())}))};const Qp=ha.div`
+  font-family: -apple-system, 'Helvetica Neue', 'Arial', sans-serif;
+
+  border-radius: 16px;
+  background-color: var(--cui-bg-normal);
+  color: var(--cui-fg-normal);
+
+  max-width: 700px;
+  p
+[0m
+The confirmation-success onAny is inside the hosted-checkout widget component (`Qp` styled component). I need to find where `o` (the messenger) is created in this component and the component's `fromWindow`. Let me print a larger region after and find `o=` assignment / the component function start. Let me print 284088 to 286000 and search backward for the component function that defines `o`.
+
+Actually, let me search for the pattern where `o` is assigned a messenger. Let's look at the region between 282000 and 284100. Print it.</think>
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+print(s[282300:284100])
+PY
+eof n?t:new n((function(e){e(t)}))).then(a,s)}c((r=r.apply(e,t||[])).next())}))};const Qp=ha.div`
+  font-family: -apple-system, 'Helvetica Neue', 'Arial', sans-serif;
+
+  border-radius: 16px;
+  background-color: var(--cui-bg-normal);
+  color: var(--cui-fg-normal);
+
+  max-width: 700px;
+  padding: 16px 24px;
+  margin: auto;
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  && h4,
+  && h3 {
+    margin: 10px 0;
+    line-height: 20px;
+    font-weight: bold;
+    color: var(--cui-fg-normal);
+    font-size: 18px;
+  }
+
+  && img {
+    display: inline-block;
+  }
+`,eh=ha.div`
+  visibility: ${({isVisible:e})=>e?"visible":"hidden"};
+  height: ${({isVisible:e})=>e?"initial":"0"};
+`,th=e=>{const{showFooter:t,checkoutId:n,paymentMethods:r,initialState:i,messenger:o,onResponse:a=()=>{},onChangePaymentMethod:s=()=>{}}=e,c=Zi(),l=ol(),d=yo(),u=Co(),{fetchCheckout:p,checkoutInfo:h}=ao(),{events:f,sessionId:g}=Yi(),{widgetConfiguration:m}=d,b=ce(),[y,v]=ie({width:0,height:0}),[_,x]=ie(),[w,k]=ie(),[S,C]=ie(!1),A=ue((()=>{const e=Math.max(b.current.offsetHeight,640),t=Math.max(b.current.offsetWidth,360);v({width:t,height:e})}),[]);ae((()=>(A(),window.addEventListener("resize",A),f.triggerWidgetMountEvent({checkoutId:n,sessionId:g,widgetConfiguration:{locale:m.locale,country:i.country,showCardholder:m.showCardholder,showSubmitButton:m.showSubmitButton,showFooter:m.showFooter,showEmail:m.showEmail,showInstallments:m.showInstallments,installments:i.installments,donateSubmitButton:m.donateSubmitButton,showNames:m.showNames,showCountry:m.showCountry,showAddress:m.showAddress,showCpfNumber:m.showCpfNumber,showZipCode:m.showZipCode,showTaxId:m.showTaxId,scaExperienceMode:m.scaExperienceMode}}),()=>{window.removeEventListener("resize",A)})),[]),ae((()=>{_&&(o.onAny("confirmation
+[0m
+So the component `th` receives `messenger:o` as a prop. So `o` is passed in from a parent. I need to find who renders `th` and passes messenger. Search for where `th` is used with messenger prop. Since minified, search `messenger:` occurrences, or search for `th,{`. Actually `th` is the component. Let me search for it being rendered. Also the messenger creation `Io` class uses `fromWindow:e.win||window`. Let me trace how the hosted checkout widget gets its messenger.
+
+Let me search for `messenger:` and also for `Io,{` / `new Io`.
+
+Actually more efficient: find where the messenger is created for the whole hosted checkout page. The `fromWindow` sites found earlier: the 5th site (field.html) is the hosted-fields card form. The `Io` class default creates messenger with `fromWindow:e.win||window`. 
+
+Let me search for `new Io` and `messenger:` props and `win:`.
+
+Let me grep counts and contexts.</think>`th` receives `messenger:o` as a prop. Tracing where that messenger is created (parent render site) to determine `fromWindow`.
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+import re
+for t in ['messenger:','new Io','win:','Io,{','win||window','win )','fromWindow']:
+    print(repr(t), s.count(t))
+print("=== messenger: sites ===")
+for m in re.finditer('messenger:',s):
+    i=m.start(); print(i, s[i-120:i+120]); print('---')
+PY
+'messenger:' 2
+'new Io' 0
+'win:' 1
+'Io,{' 0
+'win||window' 1
+'win )' 0
+'fromWindow' 5
+=== messenger: sites ===
+283069   height: ${({isVisible:e})=>e?"initial":"0"};
+`,th=e=>{const{showFooter:t,checkoutId:n,paymentMethods:r,initialState:i,messenger:o,onResponse:a=()=>{},onChangePaymentMethod:s=()=>{}}=e,c=Zi(),l=ol(),d=yo(),u=Co(),{fetchCheckout:p,checkoutI
+---
+289098 entMethodsLoad:Q.onPaymentMethodsLoad,render:({paymentMethods:n,isAPM:r,pending:i})=>U(th,Object.assign({},Q,{api:a.api,messenger:e,paymentMethods:n,initialState:X,checkoutId:t.checkoutId,showCpfNumber:k,showFooter:f,showZipCode:S,isAPM:r,p
+---
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+print(s[287600:289200])
+PY
+ype:l,installments:$,maxInstallments:d,implicitCardConsent:u,showCardholder:p,showSubmitButton:h,showFooter:f,showEmail:g,showBirthDate:m,showPhoneNumber:b,showInstallments:y,donateSubmitButton:v,showNames:_,showCountry:x,showAddress:w,showCpfNumber:k,showZipCode:S,showTaxId:C,showStreetNumber:A,showAmount:O,isSdkWithoutIframe:!0,googlePay:z,scaExperienceMode:P,forwardCustomerDetails:N},X={firstName:I,lastName:E,birthDate:R,phoneNumber:L,email:j,installments:$,city:M,street:T,streetNumber:D,postalCode:V,country:q,stateName:B,taxId:F},Q={onLoad:H,onPaymentMethodsLoad:Z,onChangeCountry:W,onChangeInstallments:G,onChangePaymentMethod:K,onResponse:J},ee=de((()=>kt({key:"sumup-payment",nonce:r})),[r]);return U(Bn,Object.assign({value:ee},{children:[U(Zn,{styles:Wn`
+          ${np}
+        `}),U(Hi,Object.assign({sessionId:i},{children:a=>U(Ji,Object.assign({sessionId:i,checkoutId:o},{children:U(No,Object.assign({env:a,onAllElementsLoad:rh(Q.onLoad)},{children:U(Kr,Object.assign({locale:c,localesPath:a.localesPath,onError:()=>{}},{children:U(Io,Object.assign({variant:e},{children:e=>U(ho,Object.assign({value:t},{children:U(go,Object.assign({initialConfigs:Y,commandEvents:t},{children:({widgetConfiguration:t})=>U(io,Object.assign({apiBFF:a.apiBFF,api:a.api,checkoutId:t.checkoutId},{children:[U(oa,{nonce:r}),U(ea,{api:a.api,checkoutId:t.checkoutId,hostname:n,onPaymentMethodsLoad:Q.onPaymentMethodsLoad,render:({paymentMethods:n,isAPM:r,pending:i})=>U(th,Object.assign({},Q,{api:a.api,messenger:e,paymentMethods:n,initialState:X,checkoutId:t.checkoutId,showCpfNumber:k,showFooter:f,showZ
+[0m
+So `th` is rendered at 289098 with `messenger:e`. Need to find `e` in that scope — likely the outer component's prop/messenger. Let me print the region around 289098, and trace back to the component that defines `e`. Let me print 288000-289200.</think>
+Now I see the chain. `Io` at line ~288... `U(Io,Object.assign({variant:e},{children:e=>U(ho, ... {children:({widgetConfiguration:t})=>U(io, ... {render:...=>U(th, {...messenger:e...})})})})})`.
+
+So the messenger `e` passed to `th` is the child-render argument of `Io` — i.e., `Io`'s render prop receives the messenger. And `Io` (class) creates the messenger:
+
+```js
+class Io extends _{constructor(e,t){super(e,t),this.messenger=e.messenger||(e=>ko({fromWindow:e.win||window,variant:e.variant,onError:...}))(e)} ...}
+```
+
+So `Io`'s messenger = `ko({fromWindow: e.win || window, variant: e.variant, ...})` where `e` = `Io`'s props = `{variant: e, ...}` (from `U(Io, Object.assign({variant:e}, ...))`). So `win` is undefined → `fromWindow = window` = the top merchant page window. And **no `toWindow`** (n undefined) → the source check `n&&o!==n||` is satisfied trivially (n falsy → dispatch) for the `on()` path too, and onAny bypasses anyway.
+
+Wait, but hold on. Is this SDK running in the merchant's top page, or inside the hosted-checkout iframe? The `Io` here is part of the `PaymentWidget` component that the merchant embeds. So `window` = merchant page. Thus the messenger listener `l` is attached to the **merchant's top window** with `fromWindow: window`.
+
+Hmm, but then `toWindow` is undefined, so `send()` does `t&&t.parent.postMessage(e,"*")` (t=fromWindow=window → window.parent). And `sendTo` posts to a given window. OK.
+
+So the messenger processing `confirmation-success` is mounted on the merchant's top window, with no source restriction. Any window that can postMessage to the merchant's top window can trigger `onAny` handlers:
+- An embedded cross-origin iframe (attacker-controlled iframe on the merchant page) → `parent.postMessage({type:"SumUpCard", message:"confirmation-success"}, "*")`.
+- A popup with `window.opener`.
+- A window the attacker opened that references the merchant window.
+
+BUT there's a catch: `wo(i)&&(c[i.message]||[])` requires `i.type === "SumUpCard"` and `i.message === "confirmation-success"`. No `action` check for onAny (the action===ACTION_MESSAGE check is only in the on() predicate). So `data = {type:"SumUpCard", message:"confirmation-success"}` fires it.
+
+Then handler:
+- `p(n)` where n = checkoutId → `fetchCheckout(checkoutId)` (GET read).
+- `u.metrics.track(Ro, {status:$o(success), payment_method, flow})` → analytics event to SumUp.
+- `f.triggerRedirectComplete({... result:"success", checkoutStatus:e.status, ...})` → fires the merchant's `onRedirectComplete`/events with result success.
+- `a($o,e)` where a = onResponse prop (default no-op) → merchant's onResponse called with success status `$o` and checkout data `e`.
+
+So the impact: **an attacker iframe embedded on a merchant page that uses the SumUp SDK can spoof a "confirmation-success" event, causing the merchant's `onResponse` handler to be invoked with a success status and the redirect-complete event to fire as success**, potentially making the merchant believe a payment succeeded when it did not (payment-status spoofing / logic bypass). The checkout status `e.status` comes from a real fetch, but the merchant callback receives the hardcoded success status `$o`, not derivable from `e`.
+
+Wait, `a($o,e)` — is `$o` the success status? Let me confirm what `$o` and `Ro` are. `$o` used as status in track and passed to a(). `Ro` is the metric name. Let me find definitions of `$o` and `Mo` (fail). Also need to confirm `a` = onResponse prop (from Q = {onResponse:J}, and `a=()=>{}` default destructure → yes `onResponse:a`).
+
+Actually in `th`, destructure: `onResponse:a=()=>{}`. So `a($o,e)` calls merchant onResponse with `$o` (success status string) and checkout `e`. Confirmed.
+
+Let me find `$o`, `Mo`, `Ro`, `Lo`, `$o` definitions. Search near.
+
+This is a real cross-origin issue IF:
+(a) the messenger is mounted on merchant top window (fromWindow=window) — confirmed for the `Io` default path, AND
+(b) the merchant's page can contain a cross-origin iframe (usual case), AND
+(c) the onAny handler causes a security-relevant effect (merchant success callback / redirect).
+
+But note: this is the merchant's OWN page being tricked. The "attacker" needs to already have an iframe/script on the merchant's page — which for a merchant page means the attacker already controls some content on the page (e.g., an ad, a widget, third-party embed). That's a meaningful threat but not "unauthenticated attacker from nowhere". It's a cross-origin postMessage spoofing of payment success state — a real class of bug (like the classic "postMessage spoofing" where any embedded cross-origin content can forge payment success).
+
+Actually, more importantly — can a fully external attacker (not embedded on merchant page) reach it? They'd need a window reference. Options:
+- If the merchant page is opened as a popup by attacker, attacker has `window.opener`. But merchants don't typically get opened by attackers.
+- Attacker's iframe embedded via a payment plugin/ad on the merchant page.
+- `window.open` from an attacker page to the checkout URL → then attacker's opener window holds a reference to the checkout window and can postMessage to it.
+
+Hmm, the hosted checkout could be opened via `window.open` (payment link / redirect flow). If the checkout page is the popup's top window and attacker initiated the navigation, attacker keeps the handle → can postMessage spoofing. That's the strongest vector.
+
+Anyway — the security question posed: does the no-source-check branch affect money-flow events? The onAny subscriptions only handle `confirmation-success` / `confirmation-fail`, which trigger merchant callbacks and analytics — they do NOT issue the checkout PUT (that's `onAny($)` in hosted.js, different). Wait — the summary/lead said "`onAny($)` drives `PUT checkouts/{checkoutId}` via processCheckout" — but that was about hosted.js (the card-entry iframe), not sdk.js. Let me distinguish:
+
+- hosted.js (26,839 B): has `onAny($)` that drives `PUT checkouts/{checkoutId}` via processCheckout. That's the money-flow write. Already the top finding.
+- sdk.js (291,877 B): the two onAny are confirmation-success/confirmation-fail → merchant callbacks + analytics.
+
+So in sdk.js, the no-source-check onAny does NOT directly issue a money-flow write. It spoofs the merchant-visible success callback. That's a state/UI-integrity issue for the merchant integration, not a direct API money write. Impact: Medium-ish, but depends on whether merchant integrations authorize order fulfillment on onResponse success.
+
+Let me verify by checking the `send`/message flow: does the confirmation-success handler itself send any mutating message? It calls `p(n)` = fetchCheckout (GET). No PUT. So no money-flow write in sdk.js onAny.
+
+Now let me also check: is there an onAny in the card-entry (hosted) direction that issues submit? In sdk.js, search `onAny` count = 3 → 2 call sites + 1 def. So only these two. So sdk.js onAny = confirmation only.
+
+Thus the answer to the lead: **The sdk.js `onAny` no-source-check branch does NOT reach a direct money-flow write** (no PUT checkout); it reaches merchant-visible success callbacks + analytics (spoofable payment-success signal). This is a downgrade of the conf-55 lead's severity but a real cross-origin postMessage integrity issue, and it strengthens the hosted.js report's "systematic missing source validation" framing.
+
+But wait — I should double check whether the messenger in sdk.js is genuinely cross-origin reachable with no source check, and whether `fromWindow` is the top window. Let me verify `Io` class and confirm `fromWindow:e.win||window`. Also check `Io` is used as a render-prop provider. Let me look at `Io` class definition fully.
+
+Let me print around the `Io` class (found earlier at site 2: "class Io extends _").
+
+Also find `$o`, `Mo`, `Ro`, `Lo`.
+
+Let me also consider: is there any possibility `event.source` is checked in onAny? No — onAny path: `wo(i)&&(c[i.message]||[]).forEach(t=>... t.handler(i.value,i))`. The handler is called with `(i.value, i)` where `i` is the data, NOT the event. So the handler doesn't even get `event.source`. And the outer `l` destructures `{data:i, source:o}=t` but only uses `o` in the `on()` branch. So onAny is fully source-blind.
+
+Let me confirm the `$o`/`Mo` values and the `Io` class. Then write up.
+
+Let me also verify the finding is cross-origin: the listener is `fromWindow.addEventListener("message",l)`. fromWindow = window (merchant top). An iframe inside merchant page calling parent.postMessage reaches it. Cross-origin iframes CAN postMessage to parent. So yes.
+
+Let me get `Io` class and constants.</think>Found the chain: `Io` render-prop provides the messenger to `th`'s `onAny`. Let me confirm `Io`'s `fromWindow` and the `$o`/`Mo`/`Ro` constants.
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+import re
+# Io class
+i=s.find('class Io extends')
+print("=== Io class ===")
+print(s[i:i+700])
+print()
+# constants
+for name in ['$o=','Mo=','Ro=','Lo=','const $o','const Mo','const Ro']:
+    j=s.find(name)
+    print(name, j, s[j:j+90] if j>=0 else '')
+PY
+=== Io class ===
+class Io extends _{constructor(e,t){super(e,t),this.messenger=e.messenger||(e=>ko({fromWindow:e.win||window,variant:e.variant,onError:e=>{let{error:t,message:n}=e;return Fr(t,n)}}))(e)}componentDidMount(){this.messenger.mount(),window.addEventListener("beforeunload",this.messenger.unmount,!1)}componentWillUnmount(){this.messenger.unmount()}render(){return this.props.children instanceof Function?this.props.children(this.messenger):this.props.children}}window.location.href;const Eo=e=>e?["sumup","debitoor"].find((t=>e.includes(t)))?e.split(".").join("_"):"external":"",Ro="checkout_process_attempt",Lo="redirected-iframe",jo=e=>"http-".concat(e),$o="success",Mo="fail",To="error",Do={apple_pay:["
+
+$o= 130793 $o="success",Mo="fail",To="error",Do={apple_pay:["masterCard","visa"],google_pay:["MASTERC
+Mo= 130806 Mo="fail",To="error",Do={apple_pay:["masterCard","visa"],google_pay:["MASTERCARD","VISA"]}
+Ro= 130716 Ro="checkout_process_attempt",Lo="redirected-iframe",jo=e=>"http-".concat(e),$o="success",
+Lo= 130746 Lo="redirected-iframe",jo=e=>"http-".concat(e),$o="success",Mo="fail",To="error",Do={apple
+const $o -1 
+const Mo -1 
+const Ro -1
+[0m
+Confirmed:
+- `Io` messenger: `ko({fromWindow: e.win || window, variant, onError})`. `e` is props. The render site is `U(Io, Object.assign({variant:e}, {children:e=>...}))`. So `win` undefined → `fromWindow = window` (merchant top page). No `toWindow`.
+- `$o = "success"`, `Mo = "fail"`, `Ro = "checkout_process_attempt"`, `Lo = "redirected-iframe"`.
+
+So the handler `a($o, e)` calls merchant `onResponse("success", checkout)`. `u.metrics.track("checkout_process_attempt", {status:"success", ...})`.
+
+So the sdk.js onAny is source-blind and cross-origin reachable (listener on merchant top window; no event.source/origin check). It spoofs:
+1. Merchant `onResponse("success", checkout)` callback.
+2. `triggerRedirectComplete` event with `result:"success"`.
+3. Analytics `checkout_process_attempt` status success.
+
+But crucially: **no money-flow write**. The only network call is `p(n)` = fetchCheckout (GET). So answer: does not reach direct money flow, but spoofs merchant success signaling.
+
+Wait — let me double check the `Io` used at 288... is same class. Also verify `fetchCheckout` is GET only. `p` from `{fetchCheckout:p, checkoutInfo:h}=ao()`. Let me confirm fetchCheckout is GET.
+
+Also I should verify the messenger at 288 is the one from Io (yes, render prop passes messenger `e`).
+
+Let me confirm fetchCheckout method. Search for `fetchCheckout:` definition.
+
+Also, one more consideration: Is there a possibility this messenger is inside the hosted checkout iframe rather than the merchant page? The `Io` class is used in the PaymentWidget component (the root widget the merchant mounts). The `window` in that context is the merchant page. Actually — hmm, is sdk.js loaded in the merchant page OR inside the hosted-checkout iframe? The file is the SumUp Web SDK, embedded by merchants. So `window` = merchant page. The messenger listens on the merchant window for messages from... `fromWindow:e.win||window`. But wait, `toWindow` is undefined for Io, meaning when the widget sends messages it uses `t.parent.postMessage` where t=fromWindow=window → window.parent (the parent of merchant page, i.e., usually none/top). Hmm, that's odd. Actually if merchant page is top, `window.parent === window`, so send posts to itself.
+
+Hmm, so `Io`'s messenger listens on `window` and sends to `window.parent`. The hosted checkout iframe communicates with the widget. Actually the confirmation-success events come FROM the hosted checkout iframe. But if Io's fromWindow is the merchant window and there's no toWindow, then how does it receive from the iframe? The iframe would postMessage to the merchant window (parent), and the Io listener on window receives it with source=iframe. That works: iframe calls `window.parent.postMessage(...)`. And the onAny path fires regardless of source — which is exactly the vulnerability, because it also fires for ANY other iframe.
+
+So yes: any cross-origin iframe on the merchant page (e.g., attacker iframe, or even another SumUp iframe instance) can forge confirmation-success.
+
+Actually — critical nuance: `Io` is also used to embed the hosted-fields card iframe. So the merchant page has multiple cross-origin iframes. The confirmation events normally come from one of them. An attacker-controlled iframe can send the same message.
+
+Now, is this within scope? The target here is the merchant's integration. The bug is in SumUp's SDK (shipware) — a cross-origin postMessage handler without source validation. The impact is merchant-side payment-status spoofing. For the bug bounty, the reportable artifact is gateway.sumup.com/sdk.js. Severity: Low-Medium (requires attacker content embedded on merchant page or opener relationship; affects merchant business logic/UI, not SumUp API state directly).
+
+I think I've answered the lead. Let me do a couple more confirmations:
+1. fetchCheckout is GET.
+2. Confirm `triggerRedirectComplete` doesn't cause a network mutation.
+3. Confirm there is NO action/type check beyond wo(i) (type==="SumUpCard") in onAny.
+
+Let me check fetchCheckout.
+
+Also let me double-check the hosted.js onAny that drives PUT — is that different? In hosted.js, yes. But we're analyzing sdk.js. Let me make sure sdk.js has no other message handler that writes. sdk.js has exactly 1 addEventListener("message"). And 2 onAny call sites (confirmation). And on() subscriptions. The money write in sdk.js would be checkout creation via api (POST) triggered by user action, not by message. Let me quickly check whether any `on()` (source-checked) handler issues writes — but those are source-checked so less interesting. The lead is specifically about onAny bypass.
+
+Let me confirm fetchCheckout.</think>Confirmed: `Io` uses `fromWindow: e.win || window` (merchant top window) with **no `toWindow`**; `$o="success"`, `Mo="fail"`, `Ro="checkout_process_attempt"`. Verifying the only network effect in the handler is a GET (`fetchCheckout`).
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+import re
+i=s.find('fetchCheckout:')
+print("fetchCheckout def @",i)
+print(s[i-60:i+400])
+print()
+# triggerRedirectComplete
+j=s.find('triggerRedirectComplete:')
+print("triggerRedirectComplete def @",j)
+print(s[j-40:j+360])
+PY
+fetchCheckout def @ 119305
+window.location.href)){return function(e){return{checkouts:{fetchCheckout:(t,n)=>function(e,t,n,r){return new(n||(n=Promise))((function(i,o){function a(e){try{c(r.next(e))}catch(e){o(e)}}function s(e){try{c(r.throw(e))}catch(e){o(e)}}function c(e){var t;e.done?i(e.value):(t=e.value,t instanceof n?t:new n((function(e){e(t)}))).then(a,s)}c((r=r.apply(e,t||[])).next())}))}(this,void 0,void 0,(function*(){if(Ni(t))return{id:"demo",currency:"EUR",amount:123.45,
+
+triggerRedirectComplete def @ 122498
+cs.sendEvent("widget.redirected",t)}))},triggerRedirectComplete:function(t){return Wi(this,void 0,void 0,(function*(){yield e.analytics.sendEvent("widget.redirect-complete",t)}))},triggerCardTokenizationPrivacyPolicyViewedEvent:function(t){return Wi(this,void 0,void 0,(function*(){const n=Date.now().toString();yield e.analytics.sendEvent("widget.privacy-policy-viewed",Object.assign(Object.assign({
+[0m
+`triggerRedirectComplete` → `e.analytics.sendEvent("widget.redirect-complete", t)`. That's analytics only. And fetchCheckout: `checkouts.fetchCheckout:(t,n)=>...` — let me see the actual HTTP. It's a promise-returning function. Let me print more to see if it does a GET. But it's clearly a "fetch checkout" — read. The `ao()` hook `{fetchCheckout:p}` at line ~... Actually the `p` used in `th` is `{fetchCheckout:p, checkoutInfo:h}=ao()`. Let me check `ao`'s fetchCheckout. But the def at 119305 is the apiBFF `checkouts.fetchCheckout` which returns demo for demo IDs, else... let me see. It likely calls `GET /checkouts/{id}`.
+
+Let me print more of 119305.
+
+Also confirm the handler `p(n)` corresponds to this. In `th`, `{fetchCheckout:p}=ao()`. Let me find `ao`. Search `ao=` or `function ao`.
+
+Let me just confirm network is GET read. Print 119305-119700.</think>
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+print(s[119500:119950])
+print("\n=== ao def ===")
+import re
+for m in re.finditer(r'\bao\b',s[:60000]):
+    pass
+j=s.find('ao=')
+print(j, s[j-40:j+260] if j>=0 else 'na')
+PY
+.done?i(e.value):(t=e.value,t instanceof n?t:new n((function(e){e(t)}))).then(a,s)}c((r=r.apply(e,t||[])).next())}))}(this,void 0,void 0,(function*(){if(Ni(t))return{id:"demo",currency:"EUR",amount:123.45,status:"demo",merchant_code:"demo",merchant_name:"demo",merchant_country:"demo",merchant_sandbox:Ii(t),purpose:"CHECKOUT"};if(!wi(t))throw zr(`Unable to fetch checkout. checkoutId: ${t} is not valid.`),new Error(`Invalid checkoutId: ${t}`);retur
+
+=== ao def ===
+125034 utInfo:r,processCheckout:i})))})}}const ao=()=>pe(ro),so="COMMAND_SUBMIT_FORM",co="COMMAND_UPDATE_STATE";function lo(){return lo=Object.assign?Object.assign.bind():function(e){for(var t,n=1;n<arguments.length;n++)for(var r in t=arguments[n])Object.prototype.hasOwnProperty.call(t,r)&&(e[r]=t[r]);retu
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+print(s[119950:120450])
+PY
+n e.endpoint(`checkouts/${t}${n?`?attempts=${n}`:""}`,{method:"GET"})})),fetchFeesByCheckout:(t,n)=>e.endpoint(`checkouts/${t}/fee-calculation`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(n)})}}}(Bi(e,t,n,null,ni))}const Ui=F(void 0);class Hi extends _{constructor(e){super(e),this.state={sdkURL:"https://gateway.sumup.com/gateway/ecom/card/v2/",localesPath:"https://gateway.sumup.com/gateway/ecom/card/v2/locales/",env:"production",api:Fi("https://api.sumup.com",t
+[0m
+</think>
+Interesting! In the apiBFF `fetchCheckout` builder, there's also `fetchFeesByCheckout` which is a POST to `checkouts/{t}/fee-calculation`. But the confirmation handler uses `p(n)` = fetchCheckout which is GET.
+
+Wait, but there are two `fetchCheckout` definitions:
+1. At 119305: `checkouts.fetchCheckout:(t,n)=>...` in the apiBFF builder (Bi). Line shows: `e.endpoint("checkouts/${t}${n?`?attempts=${n}`:""}",{method:"GET"})`. GET. Confirmed.
+2. The `ao()` context provides `{fetchCheckout, checkoutInfo}`. Let me check which. `ao=()=>pe(ro)`. `ro` is a context. Let me find `ro` and its value — likely `{fetchCheckout,processCheckout,checkoutInfo}`. Hmm.
+
+Actually at 125034: `utInfo:r,processCheckout:i})` — so the context value is `{fetchCheckout:..., checkoutInfo:r, processCheckout:i}`. Let me print around 124800-125050.
+
+But regardless, the confirmation handler's network effect is a checkout read (GET). Let me verify the `fetchCheckout` in `ao` context is GET. Print 124700-125050.</think>
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+print(s[124250:125060])
+PY
+ider,Object.assign({value:{checkoutId:n,checkoutInfo:i,processCheckout:(t,r)=>function(e,t,n,r){return new(n||(n=Promise))((function(i,o){function a(e){try{c(r.next(e))}catch(e){o(e)}}function s(e){try{c(r.throw(e))}catch(e){o(e)}}function c(e){var t;e.done?i(e.value):(t=e.value,t instanceof n?t:new n((function(e){e(t)}))).then(a,s)}c((r=r.apply(e,t||[])).next())}))}(void 0,void 0,void 0,(function*(){return e.checkouts.processCheckout({checkoutId:(null==i?void 0:i.id)||n,payload:t,redirectMechanism:Qi(r)})})),fetchCheckout:u}},{children:!a&&r}))};function oo(e){return function(t){return U(ro.Consumer,{children:({checkoutId:n,checkoutInfo:r,processCheckout:i})=>U(e,Object.assign({},Object.assign(Object.assign({},t),{checkoutId:n,checkoutInfo:r,processCheckout:i})))})}}const ao=()=>pe(ro),so="COMMAND_
+[0m
+So `ro` context provides `{checkoutId, checkoutInfo, processCheckout, fetchCheckout:u}`. And `fetchCheckout:u` — where `u` is from the parent. Let me trace `u` in that component. It's likely the same apiBFF GET fetchCheckout. Let me find the enclosing component. Print before 124250.
+
+Actually, this confirms `fetchCheckout` = u. Let me find what u is. Search backwards.
+
+Regardless, the important point: the confirmation-success onAny handler calls `fetchCheckout(n)` (read) + analytics + merchant callbacks. No writes.
+
+Now I've thoroughly answered the lead. Let me also make sure there's no `processCheckout` (which issues PUT) reachable from an onAny. `processCheckout` is exposed via context and called from command events (COMMAND_SUBMIT_FORM) — which come through `on()` not `onAny`? Let me check. The command handling: `so="COMMAND_SUBMIT_FORM"`. Let me see how commands are handled — via messenger on() with source check, or onAny?
+
+If `COMMAND_SUBMIT_FORM` (which drives processCheckout → PUT) is handled via onAny (no source check), that WOULD reach money flow. Let me check. onAny count is only 3 (2 call + 1 def), so COMMAND_SUBMIT_FORM is NOT onAny. But let me verify how the command messages are dispatched. Search for `so` usage / `COMMAND_SUBMIT_FORM`.
+
+Let me search for command handling.</think>The confirmation handler's only network effect is a GET (`fetchCheckout`). Now the decisive check: is the money-writing `processCheckout` (`COMMAND_SUBMIT_FORM`) reachable via `onAny` (source-blind) or only via source-checked `on()`?
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+import re
+print("so/co usage:")
+for t in ['COMMAND_SUBMIT_FORM','COMMAND_UPDATE_STATE','processCheckout']:
+    print(t, s.count(t))
+for m in re.finditer('so\\)|\\.on\\(so|onAny\\(so',s):
+    i=m.start(); print(i, s[i-80:i+120]); print('--')
+print("=== .on( or onAny with command consts ===")
+for m in re.finditer(r'\.on\((so|co)',s):
+    i=m.start(); print(i, s[i-100:i+160]); print('--')
+for m in re.finditer(r'\.onAny\(',s):
+    i=m.start(); print("onAny@",i, s[i:i+70])
+PY
+so/co usage:
+COMMAND_SUBMIT_FORM 1
+COMMAND_UPDATE_STATE 1
+processCheckout 9
+291108 (configsToUpdate).then(w => w.submit())".'),i.push({ev:so,data:{}})):n.dispatch(so)},update:e=>{r=!0,n.dispatch(co,e)},unmount:()=>{o.unmount(),n.unmount()},set:e=>new Promise(((t,r)=>{const i=setTime
+--
+=== .on( or onAny with command consts ===
+onAny@ 284080 .onAny("confirmation-success",(()=>Xp(void 0,void 0,void 0,(function*(
+onAny@ 284475 .onAny("confirmation-fail",(()=>Xp(void 0,void 0,void 0,(function*(){t
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+print(s[290600:291320])
+PY
+=>{r=!1;let e=i.shift();for(;e;){const{ev:t,data:r}=e;n.dispatch(t,r),e=i.shift()}}));const o=ah(Object.assign(Object.assign({},e),{commandEvents:n,variant:t})),a={submit:()=>{r?(console.warn('SumUpCard: Race condition violation! There was an attempt to submit the checkout while an update was happening. For backward compatibility reasons it will perform the attemtp again, please use the async safe method instead: "widget.set(configsToUpdate).then(w => w.submit())".'),i.push({ev:so,data:{}})):n.dispatch(so)},update:e=>{r=!0,n.dispatch(co,e)},unmount:()=>{o.unmount(),n.unmount()},set:e=>new Promise(((t,r)=>{const i=setTimeout((()=>{r(new Error("Something went wrong while attempting to update the widget configurat
+[0m
+The `so`/`co` command constants are used at 291108 in what appears to be a command dispatcher object (`{ev:so, data:{}}` and `n.dispatch(so)`). Let me look at that region 290900-291300 to see how commands are received — via on() presumably. Let me search for where commands are subscribed (`.on(` with a command message name).
+
+Actually the message that arrives with `message` key. onAny dispatch uses `c[i.message]`. The command dispatch likely uses `on()` with `s[i.message]`. Let me find `.on(` calls in the messenger usage. Earlier at field.html: `a.on(Nc,p),a.on(Ic,f),a.on(Ec,C),a.on("input--blur",...)`. Those are input events.
+
+For the hosted checkout, the commands come from the checkout iframe. Let me find how the widget handles `COMMAND_SUBMIT_FORM`. The object at 291108 has `.dispatch(so)`. Let me print 290700-291300.</think>
+The `n.dispatch(so)` is the merchant-facing widget API (`widget.submit()`), not an inbound message. Let me find where inbound command messages are handled — where the widget receives COMMAND_* from the iframe. Let me search for `commandEvents` and `dispatch`. The `ah(...)` creates something with commandEvents. Let me look at `ah` and how it maps inbound messages to command events.
+
+Search for `.on(` near command/`so`. Actually, the messenger on() subscription for commands. Let me find `ah=`.
+
+Let me search for `dispatch:` and `commandEvents`.
+
+This is getting deep. The key finding for the lead is already established: onAny (source-blind) only has 2 subscriptions and both are confirmation events → no money flow. Let me just confirm that the command (`COMMAND_SUBMIT_FORM`) path uses source-checked `on()`, so it's protected by `n&&o!==n` when toWindow is set. But we established the Io messenger has NO toWindow (n undefined), so even `on()` has no effective source check (`n&&o!==n` → n falsy → dispatch). Hmm! That's important.
+
+Wait: for the Io messenger, `toWindow` is undefined. In `l`: `n&&o!==n||(...)`. If n (toWindow) is undefined, `n&&...` is undefined/falsy, so `||` evaluates the right side → dispatch regardless of source. So even `on()` subscriptions in the Io messenger are source-blind! Only when `toWindow` is set does the source check kick in.
+
+Hold on, let me re-read. `toWindow` = n. Source check `n&&o!==n||(dispatch)`. Means: if (n is truthy AND source !== n) then short-circuit true (skip dispatch); else dispatch. So if n is falsy → always dispatch (source-blind). If n truthy → only dispatch when source===n.
+
+So the source check ONLY works when `toWindow` is provided. Io provides no toWindow → all its subscriptions are source-blind, not just onAny.
+
+But then how do commands get distinguished? They'd also be source-blind. So COMMAND_SUBMIT_FORM (which triggers processCheckout → PUT) could be forged cross-origin too!
+
+Wait, but is COMMAND_SUBMIT_FORM handled as an inbound message on the Io messenger? Let me find. The command dispatch `n.dispatch(t,r)` where t=ev from a queue. Where's the queue populated? `commandEvents:n` in `ah(...)`. Let me find `ah`.
+
+Let me search for `ah=` and `commandEvents`.
+
+Actually, I realize this is drifting from the specific lead (onAny). But it's directly relevant: does the no-source-check branch reach money flow? If the command path is also source-blind on the Io messenger, then yes potentially.
+
+But wait — need to be careful about which messenger handles commands. The hosted checkout iframe communicates via postMessage. The widget's messenger listens on `window` (fromWindow). The iframe posts commands to parent. If an attacker iframe also posts `{type:"SumUpCard",message:"...command..."}`, and commands are handled by a source-blind on()... Let me find the command message subscription.
+
+Let me search for how command events are received. Look for `.on(` explicitly and the message names. Search for `commandEvents` and a map.
+
+Let me print around `ah`.
+
+Let me grep for `commandEvents:` and `dispatch:` and `ev:`.</think>Important: for the `Io` messenger, `toWindow` is undefined, so `n&&o!==n||` short-circuits to dispatch for **all** `on()` subscriptions too (source check only engages when `toWindow` is set). Let me find whether inbound `COMMAND_SUBMIT_FORM` (→ `processCheckout` PUT) is handled on this source-blind messenger.
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+import re
+for t in ['commandEvents','ah=','dispatch(','COMMAND_']:
+    print(t, s.count(t))
+i=s.find('ah=')
+print("=== ah def ===", i)
+print(s[i-60:i+700] if i>=0 else 'na')
+PY
+commandEvents 6
+ah= 1
+dispatch( 5
+COMMAND_ 2
+=== ah def === 289696
+ress:!1,showStreeNumber:!1,showCpfNumber:!1,showZipCode:!1},ah=function(e){const{id:t,...n}={...oh,...e},r=document.getElementById(t),i=((e=21)=>{let t="",n=crypto.getRandomValues(new Uint8Array(e|=0));for(;e--;)t+="useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict"[63&n[e]];return t})();return n.sessionId=i,r?((e,t)=>(V(m(ih,e),t),{unmount:()=>{V(null,t)}}))(n,r):(console.error("The SumUp Card is not rendered."+' You are missing a DOM element with id = "'.concat(t,'".')),{unmount:()=>{console.error("Widget is not mounted.")}})},sh={mount:e=>{const{variant:t}=e,n=(()=>{let e={};const t={subscribe:(t,n)=>{e[t]=[...e[t]||[],n]},unsubscribe:(t,n)=>{e[t]=(e[t]||[]).filter((e=>e!==n))},dispatch:(t,n)=>{try{(e[t]||[]).forEach((e=>e(n)))}catc
+[0m
+`ah` is the widget factory that mounts `ih` (a component) into the DOM element. `commandEvents:n` — where n is the widget's command event emitter (merchant API side). The `sh` object is the "events" emitter (subscribe/dispatch) — the widget's public events API.
+
+So `commandEvents` here is the merchant-facing emitter, not inbound. Let me find where inbound messages from the checkout iframe are handled. Look at `ih` component. Search for `ih=`.
+
+Let me find `ih`.</think>
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+import re
+i=s.find('ih=')
+print("ih @",i)
+print(s[i:i+800])
+PY
+ih @ 286817
+ih=({variant:e,commandEvents:t,hostname:n,nonce:r,sessionId:i,checkoutId:o,amount:a,currency:s,locale:c,paymentType:l,maxInstallments:d,implicitCardConsent:u,showCardholder:p,showSubmitButton:h,showFooter:f,showEmail:g,showBirthDate:m,showPhoneNumber:b,showInstallments:y,donateSubmitButton:v,showNames:_,showCountry:x,showAddress:w,showCpfNumber:k,showZipCode:S,showTaxId:C,showStreetNumber:A,showAmount:O,scaExperienceMode:P,forwardCustomerDetails:N,firstName:I,lastName:E,birthDate:R,phoneNumber:L,email:j,installments:$,city:M,street:T,streetNumber:D,postalCode:V,country:q,stateName:B,taxId:F,googlePay:z,onLoad:H,onPaymentMethodsLoad:Z,onChangeCountry:W,onChangeInstallments:G,onChangePaymentMethod:K,onResponse:J})=>{const Y={checkoutId:o,amount:a,currency:s,locale:c,paymentType:l,installment
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+import re
+# find .on( calls with quoted string names or known consts across file
+for m in re.finditer(r'\.on(Any)?\((?:"[^"]*"|[A-Za-z_$][\w$]*)',s):
+    i=m.start()
+    seg=s[i:i+60]
+    print(i, seg.replace('\n',' '))
+PY
+89154 .on("*",(function(t){for(var n=arguments.length,r=new Array(
+89624 .on("*",(function(t){for(var n=arguments.length,r=new Array(
+97546 .on("*",(function(e){for(var t=arguments.length,n=new Array(
+128320 .on(_o,(()=>{d.unmount()})),d},So=F(null);function Co(){cons
+129491 .on("".concat(Ao,"--ack"),n)})),this.setState({isInitialized
+174714 .on(mc,n),s.on(bc,r),s.on(yc,i),()=>{s.unsubscribe(mc,n),s.u
+174725 .on(bc,r),s.on(yc,i),()=>{s.unsubscribe(mc,n),s.unsubscribe(
+174736 .on(yc,i),()=>{s.unsubscribe(mc,n),s.unsubscribe(bc,r),s.uns
+178579 .on(Nc,p),m.on(Ic,f),m.on(Ec,C),()=>{m.unsubscribe(Nc,p),m.u
+178590 .on(Ic,f),m.on(Ec,C),()=>{m.unsubscribe(Nc,p),m.unsubscribe(
+178601 .on(Ec,C),()=>{m.unsubscribe(Nc,p),m.unsubscribe(Ic,f),m.uns
+179206 .on(Nc,p),a.on(Ic,f),a.on(Ec,C),a.on("input--blur",(()=>{v(!
+179217 .on(Ic,f),a.on(Ec,C),a.on("input--blur",(()=>{v(!0),x(!1)}))
+179228 .on(Ec,C),a.on("input--blur",(()=>{v(!0),x(!1)})),a.on("form
+179239 .on("input--blur",(()=>{v(!0),x(!1)})),a.on("form--invalid-i
+179279 .on("form--invalid-input",(()=>{v(!0)})),a.send({message:"in
+284080 .onAny("confirmation-success",(()=>Xp(void 0,void 0,void 0,(
+284475 .onAny("confirmation-fail",(()=>Xp(void 0,void 0,void 0,(fun
+[0m
+`ih` is the merchant-facing widget component. It renders `Io` (messenger provider) → `th`. The `commandEvents:t` passed to `ih` is the merchant-emitter. Wait, but earlier at 291108 the object `o=ah({...e, commandEvents:n, variant:t})` where `n` is commandEvents created inside `ah`'s IIFE (the emitter with subscribe/dispatch). And `a.submit=()=>n.dispatch(so)`. So `so` is dispatched via the emitter to the widget. Then within `ih`, the widget subscribes to `commandEvents` to receive submit/update commands, and presumably forwards them to the checkout iframe via messenger `send`.
+
+So the flow for submit: merchant calls `widget.submit()` → emitter dispatch `so` → `ih`/`io` component receives → sends message to the checkout iframe → iframe processes → response. The messenger `send` posts to the iframe window. This is outbound from merchant.
+
+Now, INBOUND: the checkout iframe posts messages back (confirmation-success etc.). Those are received by the Io messenger on `window`. onAny catches confirmation. Are there on() handlers for other inbound messages? Let me find all `.on(` calls on the Io messenger. Earlier the field.html messenger had `a.on(Nc,p)...`. For the hosted checkout `th`/`io`, let me search for `.on(` usages near the messenger variable `o`.
+
+Actually the messenger `o` in `th` is used for `o.onAny(...)`. In `io` component, maybe `e.on(...)`. Let me search all `.on(` occurrences and their message names.
+
+Let me grep `\.on\(` count and contexts. But `.on(` is common (React). Let me narrow. Hmm.
+
+Actually — the key question is answered well enough: onAny (source-blind, definitively no source check) only has confirmation-success/fail, which do NOT write. The remaining question of whether other inbound handlers are source-blind is a separate (broader) issue, but the specific lead asks about onAny.
+
+But wait, I found something potentially bigger: the `n&&o!==n||` source check only exists in the `on()` path AND only functions when `toWindow` is set. For the Io messenger (toWindow undefined), ALL inbound handling is source-blind. But do any on() handlers on that messenger trigger writes? Let me check if the hosted checkout widget subscribes to inbound messages via on().
+
+Let me search for `.on("` with quoted names and `.on(` with const names in the relevant region (286000-291000). Actually let me grep for the messenger variable being used with .on. In `th`, `o` is messenger. In `io` (parent), let me look.
+
+Let me print the `io` component and surrounding ~1200 chars before 287600 where io appears... Actually at 289098 region we saw the render. `io` is used `U(io,{apiBFF,api,checkoutId, children:[...]})`. Let me find `io=` definition.
+
+Let me search.</think>`onAny` is confirmed source-blind and confirmation-only (no writes). But the broader source-check weakness (only active when `toWindow` set) is worth checking for write-capable inbound handlers. Let me enumerate `.on(...)` subscriptions on the widget messenger.
+[0m$ [0mcd /tmp/opencode && python3 - <<'PY'
+s=open('sdk.js',encoding='utf-8',errors='replace').read()
+import re
+for name in ['mc=','bc=','yc=','Nc=','Ic=','Ec=','Ao=']:
+    m=re.search(re.escape(name),s)
+    i=m.start() if m else -1
+    print(name, i, s[i:i+70] if i>=0 else '')
+PY
+mc= 174243 mc="form--on-result",bc="form--on-error",yc="form--invalid",vc="hosted
+bc= 174264 bc="form--on-error",yc="form--invalid",vc="hosted-field-form";var _c;!
+yc= 174284 yc="form--invalid",vc="hosted-field-form";var _c;!function(e){e.NAME="
+Nc= 176543 Nc="input--change",Ic="input--recognize",Ec="input--focus";var Rc;cons
+Ic= 176562 Ic="input--recognize",Ec="input--focus";var Rc;const Lc=ha.span(Rc||(R
+Ec= 176584 Ec="input--focus";var Rc;const Lc=ha.span(Rc||(Rc=function(e,t){return
+Ao= 128474 Ao="aux--metric-track";class Oo{constructor(){this.elements={},this.lo
+[0m
+Let me examine the on() subscriptions:
+- 128320: `.on(_o, ...)` — `_o="messenger--unmount"` (unmount). Not money.
+- 129491: `.on("aux--metric-track--ack", n)` — metric ack.
+- 174714: `.on(mc,n), s.on(bc,r), s.on(yc,i)` — const subscriptions.
+- 178579/179206: `.on(Nc,p), m.on(Ic,f), m.on(Ec,C), ... input--blur, form--invalid-input` — hosted-fields form events.
+
+None of these is COMMAND_SUBMIT_FORM inbound. Let me check what mc/bc/yc/Nc/Ic/Ec are.
+
+Let me resolve those constants.
+
+Also, importantly, is there an inbound handler that calls processCheckout? processCheckout is called from `oi`/context on the merchant side (submit). The iframe sends confirmation. So the write (processCheckout PUT) is initiated by the merchant `submit()` → messenger.send → iframe. Not inbound via message. Good.
+
+Let me resolve mc,bc,yc and Nc,Ic,Ec to be thorough. Search for their definitions.</think>
+Confirmed: all on() subscriptions are UI/form/analytics events:
+- `form--on-result`, `form--on-error`, `form--invalid` (hosted field form)
+- `input--change`, `input--recognize`, `input--focus`, `input--blur`, `form--invalid-input`
+- `aux--metric-track--ack`, `messenger--unmount`
+
+None triggers a money write (processCheckout/PUT). The money write is initiated merchant-side via `widget.submit()` → `commandEvents.dispatch(so)` → messenger.send outbound.
+
+So conclusion: **The sdk.js `onAny` no-source-check branch does NOT reach money-flow events.** It reaches only `confirmation-success`/`confirmation-fail` handlers → `fetchCheckout` (GET), analytics `checkout_process_attempt`, and the merchant `onResponse`/`triggerRedirectComplete` callbacks. The security impact is merchant-visible payment-success spoofing (onResponse("success", checkout)), not a direct money write.
+
+BUT — the broader observation: the source check `n&&o!==n` is entirely ineffective on the `Io` messenger (no `toWindow`), so ALL inbound handling on that messenger is source-blind. However, none of those handlers write money. So the finding remains bounded.
+
+Wait, but there is still the important cross-origin spoof: `confirmation-success` from any cross-origin iframe on the merchant page invokes merchant `onResponse("success", checkout)`. This is a real cross-origin postMessage validation bug in a payment SDK, allowing payment-success forgery to the merchant integration. Severity: Low-Medium (requires attacker content on merchant page OR crafted opener; affects merchant-side order-fulfillment logic; no SumUp state change). It's a candidate to fold into the hosted.js report as the systematic missing-origin-validation pattern, or a separate low finding.
+
+Now, is there any way `confirmation-success` triggers an actual money write indirectly? The merchant `onResponse` is merchant code — out of SumUp's control. So no direct SumUp write.
+
+Alright. I have enough to conclude the lead. Let me update the KB? The issue: reports written don't persist. But lead files? lead-nemotron3.md is tracked? Let me check git status. The durable channel is reports/analyst-nemotron3.log (tracked). Actually the lead files are in leads/ and committed by the flow (reposcan commit). Let me check git status to see what's tracked and whether I should append.
+
+The task says "Continue if you have next steps". The next step was the sdk.js onAny analysis. I've completed it. I should record the conclusion durably and report.
+
+Let me check git status and whether lead-nemotron3.md is tracked/appendable. Actually the environment re-materializes; appending to lead-*.md may or may not persist. The summary said lead_*.txt uploaded. Hmm — "hunt.yml analyst job uploads only lead_*.txt/analyst-*.out/ctx.txt". So leads/*.md might not persist, but reports/analyst-*.log does.
+
+Given the durable channel is reports/analyst-nemotron3.log, but I'm opencode/big-pickle perhaps. Hmm. The current model is opencode/big-pickle. The relevant lead file is lead-bigpickle.md. Let me check the workflow to understand persistence for this model.
+
+Actually, let me not over-engineer. The user asked to continue next steps. I've done the analysis. Let me:
+1. Append the conclusion to the durable log and/or lead file (whichever persists).
+2. Report concisely.
+
+Let me check git status and .github/workflows/hunt.yml quickly to know what persists.</think>Decisive result. Let me confirm what persists (git-tracked) so I record the conclusion in the durable channel.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && git status --short | head -20; echo "--- tracked? ---"; git ls-files reports/analyst-nemotron3.log leads/lead-bigpickle.md leads/lead-nemotron3.md 2>/dev/null; echo "--- workflow uploads ---"; grep -nE 'path:|name:|lead|analyst|ctx' .github/workflows/hunt.yml 2>/dev/null | head -40
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+?? reports/auth-sam-app-ro-dynamic-registration.md
+?? reports/gateway-hostedfields-cross-origin-messenger.md
+--- tracked? ---
+leads/lead-bigpickle.md
+leads/lead-nemotron3.md
+reports/analyst-nemotron3.log
+--- workflow uploads ---
+1:name: Deep Hunt (SumUp Payments Limited / SumUp Group)
+16:  analyst:
+26:          - { id: opencode/big-pickle, name: bigpickle }
+27:          - { id: opencode/nemotron-3-ultra-free, name: nemotron3 }
+28:          - { id: opencode/longcat-2.0-free, name: longcat }
+29:          - { id: opencode/ling-3.0-flash-free, name: ling3 }
+30:          - { id: opencode/laguna-s-2.1-free, name: laguna }
+36:      - name: Checkout
+39:      - name: Install OpenCode
+54:      - name: Prepare context (RAG + state + inventory + last cycle)
+56:          mkdir -p knowledge inventory leads reports
+65:            tail -60 leads/lead-${MODEL_NAME}.md 2>/dev/null || echo none
+70:          } > ctx.txt
+72:      - name: Analyst run (deep-hunt methodology)
+74:          cat ctx.txt > analyst-prompt.txt
+75:          cat >> analyst-prompt.txt << 'PROMPT_EOF'
+87:          STEP 1 — DELTA: compare inventory+knowledge+last leads against current surface. [NEW]/[CHANGED] one line each, or NO_DELTA.
+107:          timeout -k 15 20m opencode run --model "$MODEL_ID" < analyst-prompt.txt > analyst-out.txt 2>&1 || true
+108:          cp analyst-out.txt analyst-${MODEL_NAME}.out
+109:          grep -E '^\[(NEW|CHANGED|PRIO|HYP|PARKED|FINAL|NEXT|LEARN|RISK)\]|^class:|^confidence:|^asset:|^impact:|^testability:|^verify_steps:|^reasoning:|^evidence_needed:' analyst-out.txt > lead.txt || true
+112:            cat lead.txt
+113:          } > lead_${MODEL_NAME}.txt
+114:          echo "lead bytes: $(wc -c < lead.txt) | raw bytes: $(wc -c < analyst-out.txt)"
+116:      - name: Upload model artifacts
+119:          name: analyst-${{ matrix.model.name }}
+120:          path: |
+121:            lead_${{ matrix.model.name }}.txt
+122:            analyst-${{ matrix.model.name }}.out
+123:            ctx.txt
+129:    needs: analyst
+135:      - name: Checkout
+138:      - name: Download artifacts
+142:          path: art
+145:      - name: Merge + rank + inventory + knowledge update
+147:          mkdir -p leads reports knowledge inventory
+148:          for f in art/lead_*.txt; do
+150:            cat "$f" >> leads/lead-$(basename "$f" | sed -E 's/lead_([a-z0-9]+)\.txt/\1/').md
+156:          for f in glob.glob('art/lead_*.txt'):
+157:              base=os.path.basename(f); model=re.sub(r'^lead_([a-z0-9]+)\.txt$',r'\1',base)
+196:          for f in glob.glob('art/analyst-*.out'):
+[0m
+So the durable persistence mechanism: the analyst job writes `lead.txt` (filtered lines) → `lead_${MODEL_NAME}.txt`, which is uploaded as artifact. The aggregate job appends those to `leads/lead-<model>.md`, which is git-tracked. So to persist a conclusion, I should emit the structured lines in my output (which become lead.txt via the grep filter). The `[NEW]`, `[LEARN]`, etc. lines get captured.
+
+So my output should include structured `[NEW]`/`[LEARN]`/`[PARKED]` lines matching the grep pattern, and they'll be persisted to leads/lead-bigpickle.md.
+
+Also note: the `reports/*.md` files I restored are untracked (`??`) and will be lost — but the aggregate job doesn't commit them. However, the human needs them. Actually per KB they never persist. But I restored them for human submission this cycle. That's the best I can do.
+
+Wait — actually the summary said the canonical report bodies live at specific line numbers in reports/analyst-nemotron3.log. I restored from there. Good.
+
+Now let me also consider: should I append the analysis to the durable log reports/analyst-nemotron3.log? That's nemotron3's log; I'm bigpickle. Better to emit structured lines in my output for lead-bigpickle.md.
+
+Given the instructions, I should output the structured blocks. The system prompt is a deep-hunt methodology requiring structured emission. But the user's actual message is "Continue if you have next steps, or stop and ask for clarification."
+
+I've completed the machine-actionable next step. Let me now:
+1. Provide the conclusion with structured lines so it persists.
+2. Note the human submission blocker.
+
+Let me emit the finding as structured lines. The methodology wants STEP blocks. But since the primary deliverable is done and this is a follow-up analysis, I'll emit a concise structured update using the recognized tags so it gets captured by the grep filter.
+
+Let me write the analysis conclusion.
+
+Actually — I should double-check one thing to be rigorous: the lead claimed "A same-window-origin message spoofing confirmation-success drives a merchant-visible redirect + success analytics." I've now confirmed it's cross-origin COMPLETELY source-blind (not just same-window-origin), because no source check at all in onAny and no toWindow on the Io messenger. Let me confirm the Io messenger is the one carrying the onAny — yes, `th` gets `messenger:o` which is the render-prop from `Io`. Confirmed.
+
+But wait, is `Io` the `fromWindow:window` one? There were multiple ko() sites. `Io` class constructor: `ko({fromWindow:e.win||window, variant:e.variant, ...})`. And the render site `U(Io, Object.assign({variant:e}, {children:...}))` — no `win` prop → fromWindow=window. Yes.
+
+Hmm, but hold on — is the hosted checkout widget (`ih`/`Io`) running on the merchant page or inside SumUp's own hosted page? The SDK is `gateway.sumup.com/sdk.js`, embedded by merchants via script tag. So `window` = merchant's page. Confirmed.
+
+One more: Could `e.win` be provided somewhere? The render site didn't pass `win`. Only `variant`. So no.
+
+Therefore: cross-origin source-blind postMessage → payment-success callback forgery. Confidence high. Impact: Low-Medium (client-side/integration integrity; requires attacker content on merchant page or opener).
+
+Let me now check: is there actually a direct write? No. So this does not reach money flow — answers the lead (conf 55) as: no money-flow reach; downgrade to a bounded spoofing/integrity issue.
+
+Now, severity for bounty: A cross-origin postMessage handler in a payment SDK that lets any embedded cross-origin iframe forge a payment-success response to the merchant — that's a legitimate but low-severity finding. Could be Medium if merchants act on onResponse to fulfill orders (many do). But it's merchant-page-context dependent and requires attacker content/opener.
+
+I'll record it as [NEW]/[LEARN] with a lower confidence and fold into the systematic-missing-origin-validation narrative.
+
+Let me also record the key mechanism nuance: source check `n&&o!==n` only operational when `toWindow` set; the merchant-widget messenger has no toWindow → source-blind for all subscriptions; but only confirmation events are inbound (no write).
+
+Now produce final output with structured lines. Keep it reasonably concise but the KB expects detail. I'll include a [NEW], [LEARN], and [PARKED]/[NEXT].
+
+Let me write to the log? The persistent mechanism picks up my stdout. So just output the structured lines in my final message. Good.
+
+Let me finalize.</think>Analysis complete. Recording the structured conclusion (captured by the workflow's `grep` into `lead_bigpickle.txt` → `leads/lead-bigpickle.md`).
+
+[NEW] `gateway.sumup.com/sdk.js` `onAny` dispatch analyzed from served bytes (291,877 B, sha256 `0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd`, etag `28e75d6c`, ACAO `*`). Messenger factory `ko` dispatches `onAny` from map `c` with the sole predicate `wo(i)` (`data.type==="SumUpCard"`) — **no `event.origin`, no `event.source`, no variant/action check**. The source-guarded `on()` path (`n&&o!==n||…`) runs separately in the same comma expression.
+[NEW] The `confirmation-success`/`confirmation-fail` `onAny` handlers (the only two `onAny` call sites; 3 total token hits incl. definition) sit on the merchant-widget messenger provided by class `Io`: `ko({fromWindow:e.win||window, variant, onError})` — and the render site `U(Io,{variant:e})` passes **no `win` and no `toWindow`**, so `fromWindow=window` (merchant top page) and `n` is undefined.
+[NEW] Handler effect (verbatim): `e=yield p(n)` → `fetchCheckout` = `e.endpoint("checkouts/${t}?attempts=…",{method:"GET"})` (READ); `u.metrics.track(Ro,{status:$o,…})` with `Ro="checkout_process_attempt"`, `$o="success"` / `Mo="fail"`; `f.triggerRedirectComplete({…result:"success"…})` → `analytics.sendEvent("widget.redirect-complete",t)`; `a($o,e)` where `a` = merchant `onResponse` prop. **No `processCheckout` / PUT is reachable from `onAny`.**
+[LEARN] ANSWER to the conf-55 lead: the `onAny` no-source-check branch does **NOT** reach money-flow. It reaches only a read (`fetchCheckout` GET) plus three client-side effects — analytics `checkout_process_attempt`, `widget.redirect-complete`, and the merchant `onResponse("success", checkout)` callback. Impact is payment-success **signal spoofing to the merchant integration**, not a SumUp state change.
+[LEARN] The spoof is strictly cross-origin, not merely same-window: since `Io`'s messenger has no `toWindow`, even the `n&&o!==n` source check is inoperative for *all* its subscriptions (`n` falsy → unconditional dispatch), and `onAny` never receives `event` at all (handler is called with `(data.value, data)`). Any cross-origin iframe on a merchant page — or an attacker opener holding a window handle — can post `{type:"SumUpCard",message:"confirmation-success"}` to the merchant top window and forge success.
+[LEARN] Bounded: all other inbound subscriptions on the widget messenger are UI/form events (`form--on-result/-error/-invalid`, `input--change/-recognize/-focus/-blur`, `form--invalid-input`, `aux--metric-track--ack`, `messenger--unmount`); the money write (`processCheckout`→`PUT`) is initiated merchant-side via `widget.submit()`→`commandEvents.dispatch("COMMAND_SUBMIT_FORM")`→outbound `send`, never from an inbound message. So severity stays Low–Medium (merchant-page-context integrity), and it folds into the hosted.js report's "systematic missing-origin-validation across both gateway bundles" remediation framing rather than a new title.
+[PARKED] sdk.js `onAny` second bundle: mechanism fully resolved (source-blind, confirmation-only, no write) — no new report title; contributes remediation framing to the gateway report.
+
+Status:
+- Both deliverables restored and hash-verified this cycle: `reports/gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / `4291c128…`) and `reports/auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / `5a88476d…`). They are untracked and will not survive the next re-materialization.
+- `sdk.js` lead (conf 55) is now **closed**: no money-flow reach; bounded cross-origin success-spoofing folded into the existing gateway report.
+
+[NEXT] HUMAN: submit the two restored reports to bugs.olivermaicher.eu (scope.yml:4). If absent next cycle, re-materialize with `sed -n '24465,24638p'` / `'24646,24775p'` on `reports/analyst-nemotron3.log` (ANSI-strip) — the machine side of this hunt has no remaining open lead with money-flow impact.

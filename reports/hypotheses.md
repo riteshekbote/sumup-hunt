@@ -4618,3 +4618,19 @@
 - [90] gateway.sumup.com/hosted.js: Cross-origin postMessage from framable PCI card-entry frame drives attacker-chosen checkout writes (from art/lead_bigpickle.txt)
 - NEXT(hypotheses-bigpickle.txt): HUMAN: submit reports/gateway-hostedfields-cross-origin-messenger.md (174 L / 8,593 B / sha256 4291c128…) and reports/auth-sam-app-ro-dynamic-registration.md (1
 - LEARN: ACCEPTED TOOLING @ hunt.yml: aggregate commits from a fresh checkout, so in-job `.md` writes never persist; durable channel = report body in tracked reports/ana
+
+## RANKED HYPOTHESES 2026-10-17 05:48:14 UTC
+- [90] gateway.sumup.com/hosted.js: gateway.sumup.com/hosted.js cross-origin postMessage checkout-write (from art/lead_nemotron3.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: submit the two restored reports to bugs.olivermaicher.eu (scope.yml:4). If absent next cycle, re-materialize with `sed -n '24465,24638p'` / `'24646,24775
+- NEXT(hypotheses-nemotron3.txt): HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.
+- LEARN: ANSWER to the conf-55 lead: the `onAny` no-source-check branch does **NOT** reach money-flow. It reaches only a read (`fetchCheckout` GET) plus three client-sid
+- LEARN: The spoof is strictly cross-origin, not merely same-window: since `Io`'s messenger has no `toWindow`, even the `n&&o!==n` source check is inoperative for *all* 
+- LEARN: Bounded: all other inbound subscriptions on the widget messenger are UI/form events (`form--on-result/-error/-invalid`, `input--change/-recognize/-focus/-blur`,
+- LEARN: ACCEPTED TOOLING @ hunt.yml: report `.md` files can never persist through the hunt pipeline (analyst job doesn't commit/upload them; aggregate commits from a fr
+- LEARN: REJECTED method-artifact @ api.sumup.com/v0.1/merchants/{code}/payment-methods: GET 200 / HEAD 404 is a CDN route quirk with no impact — do not re-open.
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound ha
+- LEARN: REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retrac
+- LEARN: ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT mat
+- LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodi
+- LEARN: ACCEPTED OTHER @ workspace: 46+ re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exis
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi

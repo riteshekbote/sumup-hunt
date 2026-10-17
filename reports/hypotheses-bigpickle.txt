@@ -1,60 +1,9 @@
-## 2026-10-17 01:18:30 UTC [target] (model bigpickle)
-[PRIO] gateway.sumup.com/hosted.js: cross-origin postMessage checkout-write — 6.55/10 — attack_surface 9, business_value 8, tech_exposure 8, gate_ease 8, confidence 90, freshness 90.
-[HYP] Cross-origin postMessage from framable PCI card-entry frame drives attacker-chosen checkout writes
-class: MISCONFIG
-asset: gateway.sumup.com/hosted.js (hosted-fields frame)
-confidence: 90
-reasoning: Inbound postMessage handler reads {data, source} only, never event.origin; no X-Frame-Options/CSP frame-ancestors; frame root ACAO *; frame-access gate conditional on caller-supplied payment_type; live cross-origin PoC → PUT /v0.2/checkouts/{uuid}.
-evidence_needed: Backend checkout/session authorization on attacker-driven PUT.
-verify_steps: Passive re-verify done this cycle (hosted.js 26,839 B / sha256 1302f1d6…; event.→0; framing→0; ACAO *; payment_type branch; netlog PoC) — no new passive step.
-impact: Arbitrary-origin checkout write capability; Medium.
-testability: PASSIVE.
-[HYP] Unauthenticated RFC 7591 dynamic client registration on staging mints empty-scope attacker-aud JWTs
-class: OATH
-asset: auth.sam-app.ro/oauth2/register
-confidence: 85
-reasoning: POST /oauth2/register → 201; empty scp forced; PKCE required; per-client allowlist; not synced to api/sam-app.ro /authorize; prod JWKS zero kid-overlap blocks prod relay; prod registration_endpoint absent.
-evidence_needed: None (proven); prod relay unfalsifiable passively.
-verify_steps: POST /oauth2/register (evil redirect) → 201; POST /oauth2/token grant_type=client_credentials → 200 JWT.
-impact: Staging-only misconfiguration; Low-Medium.
-testability: PASSIVE.
-[HYP] sdk.js onAny subscriptions bypass source-comparison dispatch
-class: OTHER
-asset: gateway.sumup.com/sdk.js
-confidence: 55
-reasoning: Two onAny subscriptions take the no-source-check branch, bypassing `n&&o!==n` source comparison (NEW this cycle).
-evidence_needed: Impact on money flows.
-verify_steps: Passive read of onAny dispatch code.
-impact: Unclear — follow-up needed.
-testability: PASSIVE.
-[FINAL] gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium — ranked 1.
-[FINAL] auth.sam-app.ro/oauth2/register unauth DCR staging JWT mint — 85, PASSIVE, Low-Medium — ranked 2.
-[PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods method-level auth discrepancy — 65 — KB-REJECTED CDN quirk, do not re-open.
-[NEXT] HUMAN: submit reports/gateway-hostedfields-cross-origin-messenger.md (174 L / 8,593 B / sha256 4291c128…) and reports/auth-sam-app-ro-dynamic-registration.md (130 L / 7,379 B / sha256 5a88476d…) to bugs.olivermaicher.eu per scope.yml:4 — both hash-confirmed on disk this cycle; if absent again, recover via sed -n '24465,24638p' / '24646,24775p' reports/analyst-nemotron3.log (ANSI-stripped). No machine action has positive expected value.
-[LEARN] ACCEPTED TOOLING @ hunt.yml: aggregate commits from a fresh checkout, so in-job `.md` writes never persist; durable channel = report body in tracked reports/analyst-<model>.log + structured stdout lines.
-[RISK] sumup: 72 — both findings live and evidence-fresh (90 / 85), both validated-class; neither high-severity (Medium / Low-Medium); 49+ cycles with zero submissions — dominant risk is non-delivery, not analysis.
-evidence_needed: None (proven); prod relay unfalsifiable passively.
-verify_steps: POST /oauth2/register (evil redirect) → 201; POST /oauth2/token grant_type=client_credentials → 200 JWT.
-impact: Staging-only misconfiguration; Low-Medium.
-testability: PASSIVE.
-[HYP] sdk.js onAny subscriptions bypass source-comparison dispatch
-class: OTHER
-asset: gateway.sumup.com/sdk.js
-confidence: 55
-reasoning: Two onAny subscriptions take the no-source-check branch, bypassing `n&&o!==n` source comparison (NEW this cycle).
-evidence_needed: Impact on money flows.
-verify_steps: Passive read of onAny dispatch code.
-impact: Unclear — follow-up needed.
-testability: PASSIVE.
-[FINAL] gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium — ranked 1.
-[FINAL] auth.sam-app.ro/oauth2/register unauth DCR staging JWT mint — 85, PASSIVE, Low-Medium — ranked 2.
-[PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods method-level auth discrepancy — 65 — KB-REJECTED CDN quirk, do not re-open.
-evidence_needed: POST register→201; client_credentials→JWT empty scp; prod JWKS rejects
-verify_steps: POST /oauth2/register (evil redirect)→201; POST /oauth2/token grant_type=client_credentials→200 JWT
-impact: unauth client registration + token minting on staging, no prod relay. Low-Medium.
-testability: PASSIVE
-[PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods GET 200/HEAD 404: KB-REJECTED CDN route quirk, param-invariant stub, no bearer-free impact.
-[PARKED] gateway/sdk.js second bundle: already characterized 2026-10-03 (systematic missing-origin-validation across both bundles); adds remediation framing, no new title.
-[FINAL] 1. gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium
-[FINAL] 2. auth.sam-app.ro/oauth2/register unauthenticated DCR → mintable staging JWTs — 85, PASSIVE, Low-Medium
-[PARKED] gateway/sdk.js second bundle: already characterized 2026-10-03 (systematic missing-origin-validation across both bundles); adds remediation framing, no new title.
+## 2026-10-17 05:48:02 UTC [target] (model bigpickle)
+[NEW] `gateway.sumup.com/sdk.js` `onAny` dispatch analyzed from served bytes (291,877 B, sha256 `0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd`, etag `28e75d6c`, ACAO `*`). Messenger factory `ko` dispatches `onAny` from map `c` with the sole predicate `wo(i)` (`data.type==="SumUpCard"`) — **no `event.origin`, no `event.source`, no variant/action check**. The source-guarded `on()` path (`n&&o!==n||…`) runs separately in the same comma expression.
+[NEW] The `confirmation-success`/`confirmation-fail` `onAny` handlers (the only two `onAny` call sites; 3 total token hits incl. definition) sit on the merchant-widget messenger provided by class `Io`: `ko({fromWindow:e.win||window, variant, onError})` — and the render site `U(Io,{variant:e})` passes **no `win` and no `toWindow`**, so `fromWindow=window` (merchant top page) and `n` is undefined.
+[NEW] Handler effect (verbatim): `e=yield p(n)` → `fetchCheckout` = `e.endpoint("checkouts/${t}?attempts=…",{method:"GET"})` (READ); `u.metrics.track(Ro,{status:$o,…})` with `Ro="checkout_process_attempt"`, `$o="success"` / `Mo="fail"`; `f.triggerRedirectComplete({…result:"success"…})` → `analytics.sendEvent("widget.redirect-complete",t)`; `a($o,e)` where `a` = merchant `onResponse` prop. **No `processCheckout` / PUT is reachable from `onAny`.**
+[LEARN] ANSWER to the conf-55 lead: the `onAny` no-source-check branch does **NOT** reach money-flow. It reaches only a read (`fetchCheckout` GET) plus three client-side effects — analytics `checkout_process_attempt`, `widget.redirect-complete`, and the merchant `onResponse("success", checkout)` callback. Impact is payment-success **signal spoofing to the merchant integration**, not a SumUp state change.
+[LEARN] The spoof is strictly cross-origin, not merely same-window: since `Io`'s messenger has no `toWindow`, even the `n&&o!==n` source check is inoperative for *all* its subscriptions (`n` falsy → unconditional dispatch), and `onAny` never receives `event` at all (handler is called with `(data.value, data)`). Any cross-origin iframe on a merchant page — or an attacker opener holding a window handle — can post `{type:"SumUpCard",message:"confirmation-success"}` to the merchant top window and forge success.
+[LEARN] Bounded: all other inbound subscriptions on the widget messenger are UI/form events (`form--on-result/-error/-invalid`, `input--change/-recognize/-focus/-blur`, `form--invalid-input`, `aux--metric-track--ack`, `messenger--unmount`); the money write (`processCheckout`→`PUT`) is initiated merchant-side via `widget.submit()`→`commandEvents.dispatch("COMMAND_SUBMIT_FORM")`→outbound `send`, never from an inbound message. So severity stays Low–Medium (merchant-page-context integrity), and it folds into the hosted.js report's "systematic missing-origin-validation across both gateway bundles" remediation framing rather than a new title.
+[PARKED] sdk.js `onAny` second bundle: mechanism fully resolved (source-blind, confirmation-only, no write) — no new report title; contributes remediation framing to the gateway report.
+[NEXT] HUMAN: submit the two restored reports to bugs.olivermaicher.eu (scope.yml:4). If absent next cycle, re-materialize with `sed -n '24465,24638p'` / `'24646,24775p'` on `reports/analyst-nemotron3.log` (ANSI-strip) — the machine side of this hunt has no remaining open lead with money-flow impact.
