@@ -113638,3 +113638,217 @@ Status:
 - `sdk.js` lead (conf 55) is now **closed**: no money-flow reach; bounded cross-origin success-spoofing folded into the existing gateway report.
 
 [NEXT] HUMAN: submit the two restored reports to bugs.olivermaicher.eu (scope.yml:4). If absent next cycle, re-materialize with `sed -n '24465,24638p'` / `'24646,24775p'` on `reports/analyst-nemotron3.log` (ANSI-strip) — the machine side of this hunt has no remaining open lead with money-flow impact.
+===== ANALYST bigpickle 2026-10-17 10:31:04 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /home/runner/work/sumup-hunt/sumup-hunt/ 2>&1 | head -40; echo "---REPORTS---"; ls -la /home/runner/work/sumup-hunt/sumup-hunt/reports/ 2>&1 | head -30
+total 1528
+drwxr-xr-x 12 runner runner   4096 Oct 17 10:26 .
+drwxr-xr-x  3 runner runner   4096 Oct 17 10:26 ..
+drwxr-xr-x  7 runner runner   4096 Oct 17 10:26 .git
+drwxr-xr-x  3 runner runner   4096 Oct 17 10:26 .github
+-rw-r--r--  1 runner runner   1885 Oct 17 10:26 README.md
+-rw-r--r--  1 runner runner     32 Oct 17 10:26 analyst-out.txt
+-rw-r--r--  1 runner runner 687300 Oct 17 10:26 analyst-prompt.txt
+-rw-r--r--  1 runner runner 683414 Oct 17 10:26 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Oct 17 10:26 inventory
+drwxr-xr-x  2 runner runner   4096 Oct 17 10:26 knowledge
+drwxr-xr-x  2 runner runner   4096 Oct 17 10:26 leads
+-rw-r--r--  1 runner runner  92428 Oct 17 10:26 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Oct 17 10:26 recon-notes
+drwxr-xr-x  2 runner runner   4096 Oct 17 10:26 reports
+drwxr-xr-x  2 runner runner   4096 Oct 17 10:26 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Oct 17 10:26 scope.yml
+drwxr-xr-x  2 runner runner   4096 Oct 17 10:26 scripts
+-rw-r--r--  1 runner runner     33 Oct 17 10:26 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Oct 17 10:26 state_laguna.json
+-rw-r--r--  1 runner runner     33 Oct 17 10:26 state_ling3.json
+-rw-r--r--  1 runner runner     33 Oct 17 10:26 state_longcat.json
+-rw-r--r--  1 runner runner     33 Oct 17 10:26 state_mimo.json
+-rw-r--r--  1 runner runner     33 Oct 17 10:26 state_nemotron3.json
+drwxr-xr-x  2 runner runner  16384 Oct 17 10:26 triage
+---REPORTS---
+total 14040
+drwxr-xr-x  2 runner runner    4096 Oct 17 10:26 .
+drwxr-xr-x 12 runner runner    4096 Oct 17 10:26 ..
+-rw-r--r--  1 runner runner 9787245 Oct 17 10:26 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   54033 Oct 17 10:26 analyst-laguna.log
+-rw-r--r--  1 runner runner   53784 Oct 17 10:26 analyst-ling3.log
+-rw-r--r--  1 runner runner   54282 Oct 17 10:26 analyst-longcat.log
+-rw-r--r--  1 runner runner 3639545 Oct 17 10:26 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    3464 Oct 17 10:26 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Oct 17 10:26 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Oct 17 10:26 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Oct 17 10:26 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   10544 Oct 17 10:26 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  715165 Oct 17 10:26 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Oct 17 10:26 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Oct 17 10:26 valid-bugs.md
+[0m
+## Objective
+- Act as a bug-bounty ANALYST for SumUp (report channel: bugs.olivermaicher.eu), running a 7-step cycle (delta→prioritize→hypotheses→critique→next→learn→risk) on passive-only, ≤1 rps read-only probes.
+- Deliver two validated findings via report files; dominant risk is non-delivery, not analysis.
+
+## Important Details
+- Passive-first: GET/HEAD/OPTIONS only, ≤1 rps; no mutating probes against live customer data; POST to `auth.sam-app.ro/oauth2/register` deliberately NOT re-run (creates live OAuth clients).
+- Out-of-scope classes (long list in prompt): clickjacking-without-exploit, TLS hygiene, header/banner leaks, OPTIONS/TRACE, brute-force, mail config, etc. — report must frame gateway finding as demonstrated state-changing exploit (CSRF-class), not clickjacking.
+- Workspace re-materialized ~49 times: untracked `reports/*.md` never persist across cycles (root cause: `.github/workflows/hunt.yml` analyst job uploads only `lead_*.txt`/`analyst-*.out`/`ctx.txt`; aggregate commits from fresh checkout).
+- Durable recovery: `sed -n '24465,24638p'` (gateway report) / `sed -n '24646,24775p'` (auth report) on `reports/analyst-nemotron3.log`, ANSI-stripped — reproduces canonical hashes exactly. Write+`sha256sum` must be one act (heredoc in same command).
+- Canonical report hashes: `gateway-hostedfields-cross-origin-messenger.md` = 174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9`; `auth-sam-app-ro-dynamic-registration.md` = 130 L / 7,379 B / sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24`.
+- `reports/valid-bugs.md` reverts to 79 L baseline each cycle; running count 0; submission blocked on HUMAN.
+- Key rejections (do not re-open): payment-methods GET 200/HEAD 404 = CDN quirk; `js.sumup.com/api/checkouts/{id}` = 68B Vercel platform 404 (contradiction RESOLVED, 4/4 credential differentials failed); `api.sumup.com/v0.{1,2}/checkouts/{id}/payment-methods` IDOR retired (byte-identical 404/58B across 35 responses); iso20022 routing divergence not a vuln; `auth.sam-app.ro` "aud→prod relay" leg unfalsifiable (key isolation = binding control); api.sumup.com byte-stable = re-probing is waste.
+- Key facts: `hosted.js` (26,839 B, sha256 `1302f1d6…f220873`) — origin param used only outbound (`t.postMessage(e,n||"*")`), inbound never reads `event.origin`, guard applied backwards; `payment_type!=="card"` skips frame-access gate; checkoutId gate is static UUID v1–v5 literal `ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i` (NOT `new RegExp(a.pattern)`).
+- New this cycle: `sdk.js` `onAny` dispatch (291,877 B, sha256 `0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd`) — `confirmation-success`/`confirmation-fail` handlers have no source check, but reach ONLY `fetchCheckout` GET + analytics + merchant `onResponse` callback; NO money write. Spoof = payment-success signal forgery to merchant page (Low–Medium); folds into gateway report remediation framing, no new title.
+
+## Work State
+### Completed
+- Two findings finalized: (1) [90] `gateway.sumup.com/hosted.js` cross-origin postMessage → `PUT /v0.2/checkouts/{attacker-chosen-id}`, Medium; (2) [85] `auth.sam-app.ro/oauth2/register` unauth DCR → staging JWT mint, Low–Medium.
+- conf-55 `sdk.js onAny` lead answered: no money-flow reach; PARKED.
+- Latest state (`== MY STATE ==`): `{"phase": "POC", "target": "api"}`.
+- Ranked: `[FINAL]` gateway 90 (rank 1), auth.sam-app.ro 85 (rank 2); `[PARKED]` payment-methods CDN quirk 65; `[NEXT] HUMAN` submit both reports.
+
+### Active
+- Latest cycle entry 2026-10-17 05:48 UTC (bigpickle target log): sdk.js onAny analysis committed as [NEW]/[LEARN]/[PARKED] blocks.
+
+### Blocked
+- HUMAN submission of both reports to bugs.olivermaicher.eu (scope.yml:4) — 49+ cycles, zero submissions; `valid-bugs.md` count 0.
+- No machine action has positive expected value per current [NEXT].
+
+## Next Move
+1. [NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c128…`) and `reports/auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / sha256 `5a88476d…`) to bugs.olivermaicher.eu; if absent, re-materialize via `sed -n '24465,24638p'` / `'24646,24775p'` on `reports/analyst-nemotron3.log` (ANSI-strip), heredoc+sha256sum in one command.
+2. Fold sdk.js `onAny` finding (payment-success signal spoofing, no write) into gateway report's "systematic missing-origin-validation across both bundles" remediation section — no new report title.
+
+## Relevant Files
+- `reports/gateway-hostedfields-cross-origin-messenger.md`: primary deliverable (gateway postMessage finding); must be restored each cycle before referencing.
+- `reports/auth-sam-app-ro-dynamic-registration.md`: second deliverable (staging DCR finding).
+- `reports/analyst-nemotron3.log`: durable store — L24465-24638 (gateway report), L24646-24775 (auth report).
+- `reports/valid-bugs.md`: running count 0 at 79 L baseline; findings marked VALID 7.5 + FILE REPORT.
+- `.github/workflows/hunt.yml`: root cause of non-persistence (analyst job uploads only leads/ctx artifacts).
+- `scope.yml`: line 4 = disclosure channel bugs.olivermaicher.eu; clickjacking-without-exploit rejected.
+- `knowledge/index.md`, `inventory/sumup.md`, `leads/` (lead_bigpickle.txt, lead_nemotron3.txt, hypotheses-*.txt): tracked carry-forward state.
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+## What we've done so far
+
+**Two validated findings, both report-ready:**
+
+1. **[90/Medium] `gateway.sumup.com/hosted.js` cross-origin postMessage** — the hosted-fields messenger never checks `event.origin` on inbound messages (guard applied backwards; `origin` param only used outbound as `postMessage(e, n||"*")`). Lets an attacker page drive `PUT /v0.2/checkouts/{attacker-chosen-id}` state changes. Frame-access gate skipped when `payment_type!=="card"`; checkoutId gate is a static UUID literal, not the claimed dynamic regex.
+2. **[85/Low-Medium] `auth.sam-app.ro/oauth2/register` unauthenticated DCR** — mint staging JWTs via dynamic client registration, no auth.
+
+**Also closed this cycle:** `sdk.js onAny` dispatch has no source check on `confirmation-success/fail`, but reach is only `fetchCheckout` GET + analytics + merchant callback — **no money write**. Parked; folds into report #1's remediation section as payment-success signal spoofing.
+
+**Everything else was retired with cause:** payment-methods GET/HEAD asymmetry (CDN quirk), `js.sumup.com/api/checkouts` (Vercel platform 404, 4/4 credential differentials failed), v0.1/v0.2 payment-methods IDOR (35 byte-identical 404s), iso20022 routing, auth relay leg (unfalsifiable), api.sumup.com re-probing (byte-stable).
+
+**Persistent problem:** the workspace re-materializes ~49 times; `reports/*.md` never survives (the workflow only archives lead/ctx artifacts). `valid-bugs.md` sits at count 0. **Zero submissions to bugs.olivermaicher.eu — the only blocker left is human action.**
+
+---
+
+Let me verify the durable recovery source still reproduces the canonical hashes before declaring next steps:
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+# Check the sentinel lines exist in the durable log
+sed -n '24465p;24638p;24646p;24775p' reports/analyst-nemotron3.log | cat -v | cut -c1-80
+echo "===state==="
+cat state_bigpickle.json
+echo "===valid-bugs tail==="
+tail -5 reports/valid-bugs.md
+# gateway.sumup.com/hosted.js M-bM-^@M-^T Cross-Origin postMessage Checkout Writ
+Program scope rejects "clickjacking without demonstrated exploit." This report d
+# auth.sam-app.ro/oauth2/register M-bM-^@M-^T Unauthenticated Dynamic Client Reg
+4. **Document JWKS isolation** as intentional security control (it is effective)
+===state===
+{"phase": "POC", "target": "api"}===valid-bugs tail===
+  - | Q2 | Attacker reachable? | **NO** — all unauthenticated paths return 404. Requires valid merchant OAuth token. |
+  - | Q4 | Provable non-invasively? | **NO** — requires valid merchant OAuth token with dashboard scopes to test ID-swapping. AUTH_HELPED. |
+  - | Q3 | Real impact? | **NO** — OPTIONS returns 204 (no content), wildcard CORS on a token endpoint that rejects all POST requests with `invalid_client` (no valid client credentials known). The `x-envo
+  - | Q5 | Novel/unreported? | **Possibly novel** — not in `valid-bugs.md`. |
+  - | 1 | `auth.sam-app.ro` unauth dynamic client registration → JWTs | **VALID** | 7.5 | FILE REPORT |
+[0m
+Sentinel lines intact. Restoring both deliverables and verifying canonical hashes in one act:
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+sed -n '24465,24638p' reports/analyst-nemotron3.log | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' > reports/gateway-hostedfields-cross-origin-messenger.md
+sed -n '24646,24775p' reports/analyst-nemotron3.log | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' > reports/auth-sam-app-ro-dynamic-registration.md
+wc -lc reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+174  8593 reports/gateway-hostedfields-cross-origin-messenger.md
+  130  7379 reports/auth-sam-app-ro-dynamic-registration.md
+  304 15972 total
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  reports/gateway-hostedfields-cross-origin-messenger.md
+5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24  reports/auth-sam-app-ro-dynamic-registration.md
+[0m
+Both hashes match canonical exactly. Checking whether the gateway report already covers the sdk.js `onAny` cross-bundle point:
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+grep -n -i "sdk.js\|onAny\|confirmation-success\|both bundles\|systematic" reports/gateway-hostedfields-cross-origin-messenger.md | head -20
+echo "===headings==="
+grep -n "^#" reports/gateway-hostedfields-cross-origin-messenger.md
+===headings===
+1:# gateway.sumup.com/hosted.js — Cross-Origin postMessage Checkout Write
+13:## 1. Summary
+21:## 2. Evidence (re-verified 2026-10-06, byte-identical)
+34:## 3. Message Protocol (rec from minified source)
+49:## 4. The Defect: `origin` Parameter Applied Backwards
+68:## 5. Frame-Access Gate Bypass (`payment_type !== "card"`)
+81:## 6. CheckoutId Gate — Static Literal (NOT runtime `new RegExp`)
+91:## 7. Emission Code (read from source, not summary)
+106:## 8. Live PoC (verified 2026-09-26)
+136:## 9. Impact & Boundaries
+147:## 10. Per-Claim Reproduction Table
+162:## 11. Remediation
+172:## 12. Scope Note
+[0m
+Report doesn't yet reference the sdk.js cross-bundle point. Verifying the durable evidence for that claim before folding it in:
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+grep -n "onAny\|confirmation-success\|0fae546a" reports/analyst-bigpickle.log | tail -20
+113374:This is getting deep. The key finding for the lead is already established: onAny (source-blind) only has 2 subscriptions and both are confirmation events → no money flow. Let me just confirm that the command (`COMMAND_SUBMIT_FORM`) path uses source-checked `on()`, so it's protected by `n&&o!==n` when toWindow is set. But we established the Io messenger has NO toWindow (n undefined), so even `on()` has no effective source check (`n&&o!==n` → n falsy → dispatch). Hmm! That's important.
+113380:So the source check ONLY works when `toWindow` is provided. Io provides no toWindow → all its subscriptions are source-blind, not just onAny.
+113388:Actually, I realize this is drifting from the specific lead (onAny). But it's directly relevant: does the no-source-check branch reach money flow? If the command path is also source-blind on the Io messenger, then yes potentially.
+113453:284080 .onAny("confirmation-success",(()=>Xp(void 0,void 0,void 0,(
+113454:284475 .onAny("confirmation-fail",(()=>Xp(void 0,void 0,void 0,(fun
+113460:Now, INBOUND: the checkout iframe posts messages back (confirmation-success etc.). Those are received by the Io messenger on `window`. onAny catches confirmation. Are there on() handlers for other inbound messages? Let me find all `.on(` calls on the Io messenger. Earlier the field.html messenger had `a.on(Nc,p)...`. For the hosted checkout `th`/`io`, let me search for `.on(` usages near the messenger variable `o`.
+113462:Actually the messenger `o` in `th` is used for `o.onAny(...)`. In `io` component, maybe `e.on(...)`. Let me search all `.on(` occurrences and their message names.
+113466:Actually — the key question is answered well enough: onAny (source-blind, definitively no source check) only has confirmation-success/fail, which do NOT write. The remaining question of whether other inbound handlers are source-blind is a separate (broader) issue, but the specific lead asks about onAny.
+113474:Let me search.</think>`onAny` is confirmed source-blind and confirmation-only (no writes). But the broader source-check weakness (only active when `toWindow` set) is worth checking for write-capable inbound handlers. Let me enumerate `.on(...)` subscriptions on the widget messenger.
+113511:So conclusion: **The sdk.js `onAny` no-source-check branch does NOT reach money-flow events.** It reaches only `confirmation-success`/`confirmation-fail` handlers → `fetchCheckout` (GET), analytics `checkout_process_attempt`, and the merchant `onResponse`/`triggerRedirectComplete` callbacks. The security impact is merchant-visible payment-success spoofing (onResponse("success", checkout)), not a direct money write.
+113515:Wait, but there is still the important cross-origin spoof: `confirmation-success` from any cross-origin iframe on the merchant page invokes merchant `onResponse("success", checkout)`. This is a real cross-origin postMessage validation bug in a payment SDK, allowing payment-success forgery to the merchant integration. Severity: Low-Medium (requires attacker content on merchant page OR crafted opener; affects merchant-side order-fulfillment logic; no SumUp state change). It's a candidate to fold into the hosted.js report as the systematic missing-origin-validation pattern, or a separate low finding.
+113517:Now, is there any way `confirmation-success` triggers an actual money write indirectly? The merchant `onResponse` is merchant code — out of SumUp's control. So no direct SumUp write.
+113521:The task says "Continue if you have next steps". The next step was the sdk.js onAny analysis. I've completed it. I should record the conclusion durably and report.
+113604:Actually — I should double-check one thing to be rigorous: the lead claimed "A same-window-origin message spoofing confirmation-success drives a merchant-visible redirect + success analytics." I've now confirmed it's cross-origin COMPLETELY source-blind (not just same-window-origin), because no source check at all in onAny and no toWindow on the Io messenger. Let me confirm the Io messenger is the one carrying the onAny — yes, `th` gets `messenger:o` which is the render-prop from `Io`. Confirmed.
+113628:[NEW] `gateway.sumup.com/sdk.js` `onAny` dispatch analyzed from served bytes (291,877 B, sha256 `0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd`, etag `28e75d6c`, ACAO `*`). Messenger factory `ko` dispatches `onAny` from map `c` with the sole predicate `wo(i)` (`data.type==="SumUpCard"`) — **no `event.origin`, no `event.source`, no variant/action check**. The source-guarded `on()` path (`n&&o!==n||…`) runs separately in the same comma expression.
+113629:[NEW] The `confirmation-success`/`confirmation-fail` `onAny` handlers (the only two `onAny` call sites; 3 total token hits incl. definition) sit on the merchant-widget messenger provided by class `Io`: `ko({fromWindow:e.win||window, variant, onError})` — and the render site `U(Io,{variant:e})` passes **no `win` and no `toWindow`**, so `fromWindow=window` (merchant top page) and `n` is undefined.
+113630:[NEW] Handler effect (verbatim): `e=yield p(n)` → `fetchCheckout` = `e.endpoint("checkouts/${t}?attempts=…",{method:"GET"})` (READ); `u.metrics.track(Ro,{status:$o,…})` with `Ro="checkout_process_attempt"`, `$o="success"` / `Mo="fail"`; `f.triggerRedirectComplete({…result:"success"…})` → `analytics.sendEvent("widget.redirect-complete",t)`; `a($o,e)` where `a` = merchant `onResponse` prop. **No `processCheckout` / PUT is reachable from `onAny`.**
+113631:[LEARN] ANSWER to the conf-55 lead: the `onAny` no-source-check branch does **NOT** reach money-flow. It reaches only a read (`fetchCheckout` GET) plus three client-side effects — analytics `checkout_process_attempt`, `widget.redirect-complete`, and the merchant `onResponse("success", checkout)` callback. Impact is payment-success **signal spoofing to the merchant integration**, not a SumUp state change.
+113632:[LEARN] The spoof is strictly cross-origin, not merely same-window: since `Io`'s messenger has no `toWindow`, even the `n&&o!==n` source check is inoperative for *all* its subscriptions (`n` falsy → unconditional dispatch), and `onAny` never receives `event` at all (handler is called with `(data.value, data)`). Any cross-origin iframe on a merchant page — or an attacker opener holding a window handle — can post `{type:"SumUpCard",message:"confirmation-success"}` to the merchant top window and forge success.
+113634:[PARKED] sdk.js `onAny` second bundle: mechanism fully resolved (source-blind, confirmation-only, no write) — no new report title; contributes remediation framing to the gateway report.
+[0m
+[0m→ [0mRead reports/gateway-hostedfields-cross-origin-messenger.md[90m [offset=147, limit=28][0m
+Evidence durable. Now folding the cross-bundle point into §11 Remediation. Reading the current section first:
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && git status --short | head; git log --oneline -3; grep -rn "4291c128\|5a88476d" --include="*.md" knowledge/ leads/ reports/valid-bugs.md 2>/dev/null | head
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+?? reports/auth-sam-app-ro-dynamic-registration.md
+?? reports/gateway-hostedfields-cross-origin-messenger.md
+ef28996 reposcan 2026-10-17-09-25
+leads/lead-bigpickle.md:8772:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verified on disk with hashes: gateway sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9` (174 lines), DCR sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24` (130 lines).
+leads/lead-bigpickle.md:8843:[NEW] Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9`), `auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24`)
+leads/lead-bigpickle.md:8844:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verified on disk with hashes: gateway sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9` (174 lines), DCR sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24` (130 lines).
+leads/lead-bigpickle.md:8858:[NEW] Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9`), `auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24`)
+leads/lead-bigpickle.md:8859:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verified on disk with hashes: gateway sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9` (174 lines), DCR sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24` (130 lines).
+leads/lead-bigpickle.md:8920:[NEW] Canonical gateway hash is 4291c128 (174L/8593B), NOT the churned a12c3fc9/d7b493dd; auth canonical 5a88476d (130L/7379B).
+leads/lead-bigpickle.md:9055:[CHANGED] On-disk this cycle: restored `reports/gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / `4291c128…`) and `reports/auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / `5a88476d…`) from the tracked log; both hash-verified.
+leads/lead-bigpickle.md:9087:[CHANGED] On-disk restored: `gateway-hostedfields-cross-origin-messenger.md` 174 L / 8,593 B / `4291c128…`; `auth-sam-app-ro-dynamic-registration.md` 130 L / 7,379 B / `5a88476d…`.
+leads/lead-bigpickle.md:9281:[NEW] Both final reports reconstructed from verified evidence and confirmed on disk in same act: `gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9`), `auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24`)
+leads/lead-bigpickle.md:9331:[CHANGED] reports/gateway-hostedfields-cross-origin-messenger.md GENUINELY on disk — 174 L / 8,593 B / sha256 4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9 (recovered reports/analyst-nemotron3.log L24465-24638, 0 escape bytes).
+[0m
+Both reports are restored and hash-verified; all machine-side analysis is exhausted. I deliberately did **not** fold the sdk.js point into §11 — the fold isn't durable (untracked `reports/*.md` are regenerated from the tracked log each cycle, so the edit would silently revert and re-trigger the documented "hash churn" confusion). The sdk.js remediation contribution is already recorded durably as `[PARKED]` in `leads/lead-bigpickle.md`.
+
+**Current state:**
+- `reports/gateway-hostedfields-cross-origin-messenger.md` — 174 L / 8,593 B / `4291c128…` ✓
+- `reports/auth-sam-app-ro-dynamic-registration.md` — 130 L / 7,379 B / `5a88476d…` ✓
+- State: `{"phase": "POC", "target": "api"}`; running count in `valid-bugs.md`: 0
+
+**Stopping here — I need clarification on the only remaining step:** submitting to bugs.olivermaicher.eu (scope.yml:4) requires human action (authenticated platform access I don't have). How would you like to proceed?
+
+1. **You submit** the two report files as-is (hashes above).
+2. **Give me credentials/access method** for the reporting platform, and I'll attempt the submission.
+3. **Something else** — e.g., you want one more analysis angle explored before submitting.

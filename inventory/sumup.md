@@ -2314,3 +2314,9 @@ www.sumup.com
 - NEW The `confirmation-success`/`confirmation-fail` `onAny` handlers (the only two `onAny` call sites; 3 total token hits incl. definition) sit on the merchant-widget messenger provided by class `Io`: `ko(
 - NEW Handler effect (verbatim): `e=yield p(n)` → `fetchCheckout` = `e.endpoint("checkouts/${t}?attempts=…",{method:"GET"})` (READ); `u.metrics.track(Ro,{status:$o,…})` with `Ro="checkout_process_attempt"`,
 - NEW NO_DELTA — passive surfaces unchanged vs 48th materialization; `gateway.sumup.com/hosted.js` sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` reconfirmed live (26,839 B, ACAO 
+
+## 2026-10-17 10:31:04 UTC
+- NEW NO_DELTA — passive surfaces unchanged vs 48th materialization; `gateway.sumup.com/hosted.js` sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` reconfirmed live (26,839 B, ACAO 
+- NEW `gateway.sumup.com/sdk.js` `onAny` dispatch analyzed from served bytes (291,877 B, sha256 `0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd`, etag `28e75d6c`, ACAO `*`). Messenger fact
+- NEW The `confirmation-success`/`confirmation-fail` `onAny` handlers (the only two `onAny` call sites; 3 total token hits incl. definition) sit on the merchant-widget messenger provided by class `Io`: `ko(
+- NEW Handler effect (verbatim): `e=yield p(n)` → `fetchCheckout` = `e.endpoint("checkouts/${t}?attempts=…",{method:"GET"})` (READ); `u.metrics.track(Ro,{status:$o,…})` with `Ro="checkout_process_attempt"`,
