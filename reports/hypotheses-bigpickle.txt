@@ -1,4 +1,4 @@
-## 2026-10-16 23:02:31 UTC [target] (model bigpickle)
+## 2026-10-17 01:18:30 UTC [target] (model bigpickle)
 [PRIO] gateway.sumup.com/hosted.js: cross-origin postMessage checkout-write — 6.55/10 — attack_surface 9, business_value 8, tech_exposure 8, gate_ease 8, confidence 90, freshness 90.
 [HYP] Cross-origin postMessage from framable PCI card-entry frame drives attacker-chosen checkout writes
 class: MISCONFIG
@@ -33,3 +33,28 @@ testability: PASSIVE.
 [NEXT] HUMAN: submit reports/gateway-hostedfields-cross-origin-messenger.md (174 L / 8,593 B / sha256 4291c128…) and reports/auth-sam-app-ro-dynamic-registration.md (130 L / 7,379 B / sha256 5a88476d…) to bugs.olivermaicher.eu per scope.yml:4 — both hash-confirmed on disk this cycle; if absent again, recover via sed -n '24465,24638p' / '24646,24775p' reports/analyst-nemotron3.log (ANSI-stripped). No machine action has positive expected value.
 [LEARN] ACCEPTED TOOLING @ hunt.yml: aggregate commits from a fresh checkout, so in-job `.md` writes never persist; durable channel = report body in tracked reports/analyst-<model>.log + structured stdout lines.
 [RISK] sumup: 72 — both findings live and evidence-fresh (90 / 85), both validated-class; neither high-severity (Medium / Low-Medium); 49+ cycles with zero submissions — dominant risk is non-delivery, not analysis.
+evidence_needed: None (proven); prod relay unfalsifiable passively.
+verify_steps: POST /oauth2/register (evil redirect) → 201; POST /oauth2/token grant_type=client_credentials → 200 JWT.
+impact: Staging-only misconfiguration; Low-Medium.
+testability: PASSIVE.
+[HYP] sdk.js onAny subscriptions bypass source-comparison dispatch
+class: OTHER
+asset: gateway.sumup.com/sdk.js
+confidence: 55
+reasoning: Two onAny subscriptions take the no-source-check branch, bypassing `n&&o!==n` source comparison (NEW this cycle).
+evidence_needed: Impact on money flows.
+verify_steps: Passive read of onAny dispatch code.
+impact: Unclear — follow-up needed.
+testability: PASSIVE.
+[FINAL] gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium — ranked 1.
+[FINAL] auth.sam-app.ro/oauth2/register unauth DCR staging JWT mint — 85, PASSIVE, Low-Medium — ranked 2.
+[PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods method-level auth discrepancy — 65 — KB-REJECTED CDN quirk, do not re-open.
+evidence_needed: POST register→201; client_credentials→JWT empty scp; prod JWKS rejects
+verify_steps: POST /oauth2/register (evil redirect)→201; POST /oauth2/token grant_type=client_credentials→200 JWT
+impact: unauth client registration + token minting on staging, no prod relay. Low-Medium.
+testability: PASSIVE
+[PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods GET 200/HEAD 404: KB-REJECTED CDN route quirk, param-invariant stub, no bearer-free impact.
+[PARKED] gateway/sdk.js second bundle: already characterized 2026-10-03 (systematic missing-origin-validation across both bundles); adds remediation framing, no new title.
+[FINAL] 1. gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium
+[FINAL] 2. auth.sam-app.ro/oauth2/register unauthenticated DCR → mintable staging JWTs — 85, PASSIVE, Low-Medium
+[PARKED] gateway/sdk.js second bundle: already characterized 2026-10-03 (systematic missing-origin-validation across both bundles); adds remediation framing, no new title.

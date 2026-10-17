@@ -112020,3 +112020,654 @@ STEP 6 – LEARNING:
 
 STEP 7 – RISK:
 [RISK] sumup: 72 — both findings live and evidence-fresh (90 / 85), both validated-class; neither high-severity (Medium / Low-Medium); 49+ cycles with zero submissions — dominant risk is non-delivery, not analysis.
+===== ANALYST bigpickle 2026-10-17 01:18:42 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ leads/ 2>/dev/null; echo "---"; ls -la
+leads/:
+total 4340
+drwxr-xr-x  2 runner runner    4096 Oct 17 01:11 .
+drwxr-xr-x 12 runner runner    4096 Oct 17 01:11 ..
+-rw-r--r--  1 runner runner 1697850 Oct 17 01:11 lead-bigpickle.md
+-rw-r--r--  1 runner runner   12597 Oct 17 01:11 lead-laguna.md
+-rw-r--r--  1 runner runner   12350 Oct 17 01:11 lead-ling3.md
+-rw-r--r--  1 runner runner   12844 Oct 17 01:11 lead-longcat.md
+-rw-r--r--  1 runner runner      18 Oct 17 01:11 lead-mimo.md
+-rw-r--r--  1 runner runner 2616036 Oct 17 01:11 lead-nemotron3.md
+-rw-r--r--  1 runner runner   63349 Oct 17 01:11 reposcan-sumup.md
+
+reports/:
+total 13844
+drwxr-xr-x  2 runner runner    4096 Oct 17 01:11 .
+drwxr-xr-x 12 runner runner    4096 Oct 17 01:11 ..
+-rw-r--r--  1 runner runner 9615515 Oct 17 01:11 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   53599 Oct 17 01:11 analyst-laguna.log
+-rw-r--r--  1 runner runner   53352 Oct 17 01:11 analyst-ling3.log
+-rw-r--r--  1 runner runner   53846 Oct 17 01:11 analyst-longcat.log
+-rw-r--r--  1 runner runner 3623584 Oct 17 01:11 analyst-nemotron3.log
+-rw-r--r--  1 runner runner    3347 Oct 17 01:11 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Oct 17 01:11 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Oct 17 01:11 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Oct 17 01:11 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner      54 Oct 17 01:11 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  712145 Oct 17 01:11 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Oct 17 01:11 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Oct 17 01:11 valid-bugs.md
+---
+total 1528
+drwxr-xr-x 12 runner runner   4096 Oct 17 01:11 .
+drwxr-xr-x  3 runner runner   4096 Oct 17 01:11 ..
+drwxr-xr-x  7 runner runner   4096 Oct 17 01:11 .git
+drwxr-xr-x  3 runner runner   4096 Oct 17 01:11 .github
+-rw-r--r--  1 runner runner   1885 Oct 17 01:11 README.md
+-rw-r--r--  1 runner runner     32 Oct 17 01:11 analyst-out.txt
+-rw-r--r--  1 runner runner 684531 Oct 17 01:11 analyst-prompt.txt
+-rw-r--r--  1 runner runner 680645 Oct 17 01:11 ctx.txt
+drwxr-xr-x  2 runner runner   4096 Oct 17 01:11 inventory
+drwxr-xr-x  2 runner runner   4096 Oct 17 01:11 knowledge
+drwxr-xr-x  2 runner runner   4096 Oct 17 01:11 leads
+-rw-r--r--  1 runner runner  92202 Oct 17 01:11 probe-results.md
+drwxr-xr-x  2 runner runner   4096 Oct 17 01:11 recon-notes
+drwxr-xr-x  2 runner runner   4096 Oct 17 01:11 reports
+drwxr-xr-x  2 runner runner   4096 Oct 17 01:11 reposcan-raw
+-rw-r--r--  1 runner runner   3299 Oct 17 01:11 scope.yml
+drwxr-xr-x  2 runner runner   4096 Oct 17 01:11 scripts
+-rw-r--r--  1 runner runner     33 Oct 17 01:11 state_bigpickle.json
+-rw-r--r--  1 runner runner     33 Oct 17 01:11 state_laguna.json
+-rw-r--r--  1 runner runner     33 Oct 17 01:11 state_ling3.json
+-rw-r--r--  1 runner runner     33 Oct 17 01:11 state_longcat.json
+-rw-r--r--  1 runner runner     33 Oct 17 01:11 state_mimo.json
+-rw-r--r--  1 runner runner     33 Oct 17 01:11 state_nemotron3.json
+drwxr-xr-x  2 runner runner  16384 Oct 17 01:11 triage
+[0m
+## Objective
+- Act as a senior bug-bounty ANALYST for the SumUp program (report channel: bugs.olivermaicher.eu), running the mandated 7-step cycle (DELTA → PRIORITIZE → HYPOTHESES → SELF-CRITIQUE → NEXT → LEARN → RANK → RISK) over a passive-only recon surface.
+- Produce two fileable findings (gateway cross-origin postMessage checkout-write; auth.sam-app.ro dynamic client registration) and get them submitted by a human.
+
+## Important Details
+- Rules: passive-first, ≤1 rps, GET/HEAD/OPTIONS only for live probes; no mutating tests on live customer data; sha256 any secret; strict facts-vs-hypotheses separation; never re-probe byte-stable surfaces (27+ stable cycles = zero yield).
+- Out-of-scope classes: clickjacking without demonstrated exploit, descriptive headers only, OPTIONS/TRACE, TLS best practice, etc. Reports must be framed as demonstrated state-changing exploit, not clickjacking.
+- Workspace is re-materialized every cycle: untracked `reports/*.md` and `valid-bugs.md` edits never persist (root cause: `.github/workflows/hunt.yml` analyst job uploads only `lead_*.txt`/`analyst-*.out`/`ctx.txt`; aggregate commits from fresh checkout).
+- Durable recovery channel: tracked `reports/analyst-nemotron3.log` — gateway report at L24465-24638, auth report at L24646-24775 (ANSI-stripped, `sed -n 'a,bp'`), reproduces canonical hashes exactly.
+- Canonical hashes: gateway report `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9` (174 L / 8,593 B); auth report `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24` (130 L / 7,379 B).
+- Submission blocker is HUMAN: `[NEXT] HUMAN: submit both reports to bugs.olivermaicher.eu per scope.yml:4`. Zero submissions after 49+ cycles; no machine action has positive expected value.
+- My state: `{"phase": "POC", "target": "api"}`.
+- Do not re-open: Contentful preview token (rotated 401), js.sumup.com checkout 404 lead (resolved: 68B Vercel platform 404), GET200/HEAD404 payment-methods (CDN quirk), iso20022 routing divergence (not a vuln), audit-prod-relay leg (unfalsifiable).
+
+## Work State
+### Completed
+- Two final findings validated with live PoC:
+  - `[FINAL] 1` gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — conf 90, PASSIVE, Medium. `hosted.js` 26,839 B, sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873`, ACAO `*`, zero `event.origin` validation, no XFO/CSP frame-ancestors; `payment_type !== "card"` skips frame-access gate; `origin` param used only outbound (`t.postMessage(e, n||"*")`); UUID gate is static literal `ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i`.
+  - `[FINAL] 2` auth.sam-app.ro/oauth2/register unauthenticated RFC 7591 DCR — conf 85, PASSIVE, Low-Medium (staging only; prod JWKS zero kid overlap blocks relay).
+- `reports/valid-bugs.md` confirmed on disk historically at 79 L baseline (running count 0), both findings flagged FILE REPORT — but reverts each cycle.
+- Exhausted/rejected leads documented: api.sumup.com payment-methods IDOR retired (param- and credential-invariant stub), ~200 legacy-callback combos 0 HITs, JWT alg confusion on mcp.sumup.com refused, Cognito implicit grant no reader.
+
+### Active
+- Cycle 2026-10-16 23:02 UTC (model bigpickle) emitted `[HYP]` for gateway (90), auth.sam-app.ro DCR (85), and a new low-value `sdk.js onAny` subscription lead (55); ranked hypotheses list shows gateway at 90.
+- Reports re-materialized from tracked log each cycle; hashes verified in the writing act (heredoc + `sha256sum` same command).
+
+### Blocked
+- No submission mechanism usable by the agent: `scope.yml:4` mandates human disclosure via bugs.olivermaicher.eu; `scripts/sync-issues.py` mirrors leads only.
+- DCR re-verification requires POST (creates live OAuth client) — deliberately not re-probed; passive-only rule.
+- biz surface exhaustion: only live bearer can discriminate remaining api.sumup.com questions.
+
+## Next Move
+1. `[NEXT] HUMAN:` submit `reports/gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c128…`) and `reports/auth-sam-app-ro-dynamic-registration.md` (130 L / 7,379 B / sha256 `5a88476d…`) to bugs.olivermaicher.eu per scope.yml:4; if absent, recover via `sed -n '24465,24638p'` / `sed -n '24646,24775p'` reports/analyst-nemotron3.log (ANSI-stripped).
+2. Do not re-probe byte-stable surfaces (api.sumup.com quartet, hosted.js evidence, RFC 9728 metadata, auth.sam-app.ro register GET); explore breadth (sdk.js `onAny` no-source-check branch, conf 55) only if a new cycle needs a lead.
+
+## Relevant Files
+- `reports/gateway-hostedfields-cross-origin-messenger.md`: primary deliverable (Medium finding); never persists — recover from analyst log L24465-24638.
+- `reports/auth-sam-app-ro-dynamic-registration.md`: second deliverable (Low-Medium staging DCR); recover from analyst log L24646-24775.
+- `reports/analyst-nemotron3.log`: only durable store for report bodies (git-tracked).
+- `reports/valid-bugs.md`: running count ledger; reverts to 79 L / 7,384 B / `282390f8…` each cycle.
+- `.github/workflows/hunt.yml`: root cause of non-persistence (analyst job uploads only lead_*.txt/analyst-*.out/ctx.txt).
+- `scope.yml`: line 4 defines disclosure channel bugs.olivermaicher.eu; also defines rejected classes (clickjacking, TLS, etc.).
+- `scripts/sync-issues.py`, `.github/workflows/sync-issues.yml`: mirror leads only — no report submission path.
+- `gateway.sumup.com/hosted.js`, `gateway.sumup.com/sdk.js` (291,877 B, sha256 `0fae546a…`): evidence artifacts for the gateway finding.
+- `inventory/sumup.md`: seed inventory (9 hosts, all now probed).
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m$ [0mcat state_bigpickle.json; echo "---"; ls reports/*.md 2>/dev/null; echo "---"; sed -n '1,40p' reports/valid-bugs.md
+{"phase": "POC", "target": "api"}---
+reports/hypotheses.md
+reports/reposcan-findings.md
+reports/valid-bugs.md
+---
+# Validated findings (running count 0)
+
+- 1 lead(s) marked VALID at 2026-09-04 06:02:58 UTC
+  - | Q4 Provable non-invasively? | **NO** — all unauthenticated paths return 404; requires valid merchant OAuth token to test. Probe results confirm 404 on every enumerated path (v0/v0.1/v1/v2/merchants/
+
+- 7 lead(s) marked VALID at 2026-09-06 21:30:02 UTC
+  - **Verdict: VALID**
+  - | Impact | Attacker-controlled OAuth clients on staging; mintable JWTs (empty scope blocks resources but token is valid at gateway). Staging environments often lack prod hardening. |
+  - **Verdict: VALID**
+  - **Verdict: VALID**
+  - | 1 | `auth.sam-app.ro` unauthenticated dynamic client registration | **VALID** | 7.5 |
+  - | 2 | `api.sumup.com/authorize` client-ID oracle + wildcard CORS | **VALID** | 5.3 |
+  - | 3 | `mcp.sumup.com` wildcard CORS on Bearer-protected endpoint | **VALID** | 5.3 |
+
+- 3 lead(s) marked VALID at 2026-09-09 15:21:03 UTC
+  - **Verdict: VALID**
+  - | Q3 | Real security impact? | Low — error taxonomy (`invalid_client` vs `invalid_request`) is a standard OAuth error pattern; wildcard CORS on an authorize endpoint that only redirects to error pages
+  - | 1 | help.sumup.com Contentful Preview Token Leak | **VALID** | 5.3 (Medium) | **FILE REPORT** |
+
+- 3 lead(s) marked VALID at 2026-09-10 16:19:46 UTC
+  - **VERDICT: VALID**
+  - **VERDICT: HOLD** — Missing webhook HMAC verification in Vendure plugin is a valid code issue, but responsibility may lie with integrators who deploy the plugin. Needs clarification on whether this is
+  - | 1 | Contentful Preview API Token Leak (help.sumup.com) | **VALID** | 5.3 |
+
+- 4 lead(s) marked VALID at 2026-09-10 19:11:04 UTC
+  - | Q7 Reasonable triager | YES — client_id enumeration via error differentiation is a valid finding |
+  - **Verdict: VALID** — Client ID oracle on legacy OAuth endpoint. Read-only proof: GET requests to `/authorize` with different client_ids show error differentiation. Impact: Medium (information disclosu
+  - | Q4 Provable | NO — requires valid merchant OAuth token (AUTH_HELPED) |
+  - | VALID | 1 | #6: Legacy OAuth client_id oracle on api.sumup.com/authorize |
+
+- 5 lead(s) marked VALID at 2026-09-10 21:43:51 UTC
+  - | 1 | `auth.sam-app.ro` unauthenticated RFC 7591 dynamic client registration → mintable JWTs | staging auth | AUTH | 7.5 | VALID |
+  - | 2 | `api.sumup.com/authorize` client_id oracle (invalid_client vs invalid_request) | api gateway | INFO | 5.3 | VALID |
+  - | 3 | `mcp.sumup.com` wildcard CORS (`*`) on Bearer-protected MCP endpoint | MCP server | MISCONFIG | 5.3 | VALID |
+  - | 4 | `help.sumup.com` Contentful Preview API token leak → 1,082 draft entries readable | help center | MISCONFIG | 5.3 | VALID |
+  - | 9 | API BOLA via dashboard-client scopes | Requires valid merchant OAuth token |
+
+- 2 lead(s) marked VALID at 2026-09-12 00:39:58 UTC
+  - **Verdict: VALID** (finding now closed — token rotated 2026-09-11)
+  - | 1 | Contentful Preview Token Leak (help.sumup.com) | **VALID** (closed) | Report if still live at time of submission; token rotated |
+[0m
+[0m$ [0mgrep -n "FILE REPORT\|CONF\|\[FINAL\]" reports/valid-bugs.md | head -40; echo "=== git status ==="; git status --short | head -20; git log --oneline -5
+18:  - | 1 | help.sumup.com Contentful Preview Token Leak | **VALID** | 5.3 (Medium) | **FILE REPORT** |
+34:  - | 3 | `mcp.sumup.com` wildcard CORS (`*`) on Bearer-protected MCP endpoint | MCP server | MISCONFIG | 5.3 | VALID |
+35:  - | 4 | `help.sumup.com` Contentful Preview API token leak → 1,082 draft entries readable | help center | MISCONFIG | 5.3 | VALID |
+63:  - | 1 | Contentful Preview Token Leak (help.sumup.com) | **HOLD** | 5.3 | Re-verify token liveness; if live → VALID, FILE REPORT |
+64:  - | 2 | auth.sam-app.ro unauthenticated client registration → JWTs | **VALID** | 7.5 | FILE REPORT |
+79:  - | 1 | `auth.sam-app.ro` unauth dynamic client registration → JWTs | **VALID** | 7.5 | FILE REPORT |
+=== git status ===
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+16d00dc reposcan 2026-10-17-00-55
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && sed -n '24465,24638p' reports/analyst-nemotron3.log | sed 's/\x1b\[[0-9;]*m//g' > /tmp/opencode/gw.md && wc -lc /tmp/opencode/gw.md && sha256sum /tmp/opencode/gw.md && head -5 /tmp/opencode/gw.md && echo "..." && tail -3 /tmp/opencode/gw.md
+174 8593 /tmp/opencode/gw.md
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  /tmp/opencode/gw.md
+# gateway.sumup.com/hosted.js — Cross-Origin postMessage Checkout Write
+
+**Asset:** `gateway.sumup.com/hosted.js` (PCI card-entry iframe)  
+**Class:** MISCONFIG — missing `event.origin` validation on inbound `postMessage`; no framing protection  
+**Severity:** Medium (CSRF-like checkout manipulation via framable PCI component)  
+...
+## 12. Scope Note
+
+Program scope rejects "clickjacking without demonstrated exploit." This report demonstrates a **state-changing API call** (`PUT /v0.2/checkouts/{id}`) driven from a cross-origin frame via a **missing origin validation** on a PCI card-entry component — not a generic clickjacking claim.
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && sed -n '24646,24775p' reports/analyst-nemotron3.log | sed 's/\x1b\[[0-9;]*m//g' > /tmp/opencode/auth.md && wc -lc /tmp/opencode/auth.md && sha256sum /tmp/opencode/auth.md && head -5 /tmp/opencode/auth.md && echo "..." && tail -3 /tmp/opencode/auth.md
+130 7379 /tmp/opencode/auth.md
+5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24  /tmp/opencode/auth.md
+# auth.sam-app.ro/oauth2/register — Unauthenticated Dynamic Client Registration → Mintable JWTs (Staging)
+
+**Asset:** `auth.sam-app.ro/oauth2/register` (staging auth server)  
+**Class:** OATH — RFC 7591 dynamic client registration live unauthenticated  
+**Severity:** Low-Medium (staging only; cross-env JWKS isolation blocks prod relay)  
+...
+2. **Enforce `token_endpoint_auth_method`** at token endpoint (currently stored but not enforced).
+3. **Align staging/prod registration posture** — prod correctly has no registration endpoint.
+4. **Document JWKS isolation** as intentional security control (it is effective).
+[0m
+Workspace re-materialized as expected — the two report files are gone, `valid-bugs.md` is back at the 79 L baseline. Recovering from the tracked log first.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && cp /tmp/opencode/gw.md reports/gateway-hostedfields-cross-origin-messenger.md && cp /tmp/opencode/auth.md reports/auth-sam-app-ro-dynamic-registration.md && sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md && wc -l reports/*.md | tail -5
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  reports/gateway-hostedfields-cross-origin-messenger.md
+5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24  reports/auth-sam-app-ro-dynamic-registration.md
+   174 reports/gateway-hostedfields-cross-origin-messenger.md
+  4615 reports/hypotheses.md
+   112 reports/reposcan-findings.md
+    79 reports/valid-bugs.md
+  5110 total
+[0m
+Both recovered byte-exact against canonical hashes. Writing them back.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && sed -n '1,60p' reports/hypotheses-bigpickle.txt
+## 2026-10-16 23:02:31 UTC [target] (model bigpickle)
+[PRIO] gateway.sumup.com/hosted.js: cross-origin postMessage checkout-write — 6.55/10 — attack_surface 9, business_value 8, tech_exposure 8, gate_ease 8, confidence 90, freshness 90.
+[HYP] Cross-origin postMessage from framable PCI card-entry frame drives attacker-chosen checkout writes
+class: MISCONFIG
+asset: gateway.sumup.com/hosted.js (hosted-fields frame)
+confidence: 90
+reasoning: Inbound postMessage handler reads {data, source} only, never event.origin; no X-Frame-Options/CSP frame-ancestors; frame root ACAO *; frame-access gate conditional on caller-supplied payment_type; live cross-origin PoC → PUT /v0.2/checkouts/{uuid}.
+evidence_needed: Backend checkout/session authorization on attacker-driven PUT.
+verify_steps: Passive re-verify done this cycle (hosted.js 26,839 B / sha256 1302f1d6…; event.→0; framing→0; ACAO *; payment_type branch; netlog PoC) — no new passive step.
+impact: Arbitrary-origin checkout write capability; Medium.
+testability: PASSIVE.
+[HYP] Unauthenticated RFC 7591 dynamic client registration on staging mints empty-scope attacker-aud JWTs
+class: OATH
+asset: auth.sam-app.ro/oauth2/register
+confidence: 85
+reasoning: POST /oauth2/register → 201; empty scp forced; PKCE required; per-client allowlist; not synced to api/sam-app.ro /authorize; prod JWKS zero kid-overlap blocks prod relay; prod registration_endpoint absent.
+evidence_needed: None (proven); prod relay unfalsifiable passively.
+verify_steps: POST /oauth2/register (evil redirect) → 201; POST /oauth2/token grant_type=client_credentials → 200 JWT.
+impact: Staging-only misconfiguration; Low-Medium.
+testability: PASSIVE.
+[HYP] sdk.js onAny subscriptions bypass source-comparison dispatch
+class: OTHER
+asset: gateway.sumup.com/sdk.js
+confidence: 55
+reasoning: Two onAny subscriptions take the no-source-check branch, bypassing `n&&o!==n` source comparison (NEW this cycle).
+evidence_needed: Impact on money flows.
+verify_steps: Passive read of onAny dispatch code.
+impact: Unclear — follow-up needed.
+testability: PASSIVE.
+[FINAL] gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium — ranked 1.
+[FINAL] auth.sam-app.ro/oauth2/register unauth DCR staging JWT mint — 85, PASSIVE, Low-Medium — ranked 2.
+[PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods method-level auth discrepancy — 65 — KB-REJECTED CDN quirk, do not re-open.
+[NEXT] HUMAN: submit reports/gateway-hostedfields-cross-origin-messenger.md (174 L / 8,593 B / sha256 4291c128…) and reports/auth-sam-app-ro-dynamic-registration.md (130 L / 7,379 B / sha256 5a88476d…) to bugs.olivermaicher.eu per scope.yml:4 — both hash-confirmed on disk this cycle; if absent again, recover via sed -n '24465,24638p' / '24646,24775p' reports/analyst-nemotron3.log (ANSI-stripped). No machine action has positive expected value.
+[LEARN] ACCEPTED TOOLING @ hunt.yml: aggregate commits from a fresh checkout, so in-job `.md` writes never persist; durable channel = report body in tracked reports/analyst-<model>.log + structured stdout lines.
+[RISK] sumup: 72 — both findings live and evidence-fresh (90 / 85), both validated-class; neither high-severity (Medium / Low-Medium); 49+ cycles with zero submissions — dominant risk is non-delivery, not analysis.
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && sed -n '1,30p' scope.yml
+programs:
+  sumup:
+    name: SumUp Payments Limited / SumUp Group Bug Bounty
+    disclosure_policy: via bugs.olivermaicher.eu (Oliver Maicher private program) - report + PoC + contact + payment
+    assets:
+      - name: "All company-owned infrastructure, payment platforms, merchant portals, APIs, mobile and web applications, point-of-sale systems, cloud services, websites, and domains operated by SumUp Group and its subsidiaries"
+        priority: In
+    out_of_scope:
+- "Network level Denial of Service attacks"
+      - "Application Denial of Service by locking user accounts"
+      - "Descriptive error messages or headers (e.g. Stack Traces, banner grabbing)"
+      - "Disclosure of known public files or directories (e.g. robots.txt)"
+      - "Outdated software / library versions"
+      - "OPTIONS / TRACE HTTP method enabled"
+      - "CSRF on logout"
+      - "CSRF on forms that are available to anonymous users"
+      - "Cookies that lack HTTP Only or Secure settings for non-sensitive data"
+      - "Self-XSS and issues exploitable only through Self-XSS"
+      - "Reports resulting from automated scanning utilities without additional details or a POC demonstrating a specific exploit"
+      - "Attacks requiring physical access to a user's device"
+      - "Attacks dependent upon social engineering of employees or vendors"
+      - "Username enumeration based on login or forgot password pages"
+      - "Enforcement policies for brute force, rate limiting, or account lockout"
+      - "SSL/TLS best practices"
+      - "SSL attacks such as BEAST, BREACH, Renegotiation attack"
+      - "Clickjacking, without additional details demonstrating a specific exploit"
+      - "Mail configuration issues including SPF, DKIM, DMARC settings"
+      - "Use of a known-vulnerable library without a description of an exploit specific to our implementation"
+      - "Password and account recovery policies"
+      - "Presence of autocomplete functionality in form fields"
+[0m
+Reports are back on disk, hashes canonical. Now checking the two open items: any machine-usable submission path, and a local copy of `sdk.js` for the onAny lead.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && ls triage/ | head -30; echo "=== raw ==="; ls reposcan-raw/ | head; echo "=== find sdk.js ==="; find . -name "*sdk*" -not -path "./.git/*" | head -20; echo "=== scripts ==="; ls scripts/
+run-2026-09-02-22-14.md
+run-2026-09-03-00-06.md
+run-2026-09-03-04-42.md
+run-2026-09-03-09-36.md
+run-2026-09-03-13-56.md
+run-2026-09-03-17-46.md
+run-2026-09-03-20-54.md
+run-2026-09-03-23-11.md
+run-2026-09-04-01-05.md
+run-2026-09-04-06-02.md
+run-2026-09-04-11-29.md
+run-2026-09-04-15-06.md
+run-2026-09-04-18-29.md
+run-2026-09-04-21-02.md
+run-2026-09-04-23-05.md
+run-2026-09-05-01-06.md
+run-2026-09-05-05-52.md
+run-2026-09-05-10-26.md
+run-2026-09-05-13-32.md
+run-2026-09-05-16-16.md
+run-2026-09-05-18-26.md
+run-2026-09-05-20-43.md
+run-2026-09-05-22-45.md
+run-2026-09-06-00-48.md
+run-2026-09-06-05-45.md
+run-2026-09-06-10-45.md
+run-2026-09-06-14-06.md
+run-2026-09-06-17-10.md
+run-2026-09-06-19-18.md
+run-2026-09-06-21-30.md
+=== raw ===
+summary.txt
+sumup-reposcan-$(date -u +%Y-%m-%dT%H:%M:%SZ).md
+=== find sdk.js ===
+=== scripts ===
+sync-issues.py
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "onAny" reports/analyst-bigpickle.log | tail -30
+78614:=== summary of value flow onAny ===
+78615:onAny($,(e=>{let{payment:a,sessionId:n,product:s}=e;const i=function(e,r,t=fe(window.location.href)){const a=Te(e,r,t,"v0.1",(e=>e.text())),n=Te(e,r,t,"v0.2",B);return{checkouts:(s=n,i=t,{processCheckout:e=>{let{checkoutId:r,payload:t,redirectMechanism:a}=e;const n=we(t);if(!r)throw new Error("Unable to process checkout without a valid checkoutId");return qe(r)?Ee(n):le(r)?(a&&(n.sca_experience=a),i&&(n.product_origin=i.origin,n.session_id=i.sessionId),s.endpoint("checkouts/".concat(r),{method:"PUT",headers:{"Content-Type":"application/json","X-Sumup-Correlation-Id":r},body:JSON.stringify(n)}).then(xe).then(ge).then(ve)):pe(r)},createAppleSession:e=>{let{checkoutId:r,payload:t}=e;const a=we(t);retu
+78617:[0m$ [0mcd /tmp/opencode/su && grep -o 'onAny(\$.\{700\}\{700\}' hosted.js | head -c 3000; echo; echo "=== direct ==="; python3 - <<'EOF'
+78619:i=s.find('onAny($')
+78623:onAny($,(e=>{let{payment:a,sessionId:n,product:s}=e;const i=function(e,r,t=fe(window.location.href)){const a=Te(e,r,t,"v0.1",(e=>e.text())),n=Te(e,r,t,"v0.2",B);return{checkouts:(s=n,i=t,{processCheckout:e=>{let{checkoutId:r,payload:t,redirectMechanism:a}=e;const n=we(t);if(!r)throw new Error("Unable to process checkout without a valid checkoutId");return qe(r)?Ee(n):le(r)?(a&&(n.sca_experience=a),i&&(n.product_origin=i.origin,n.session_id=i.sessionId),s.endpoint("checkouts/".concat(r),{method:"PUT",headers:{"Content-Type":"application/json","X-Sumup-Correlation-Id":r},body:JSON.stringify(n)}).then(xe).then(ge).then(ve)):pe(r)},createAppleSession:e=>{let{checkoutId:r,payload:t}=e;const a=we(t);return le(r)?s.endpoint("checkouts/".concat(r,"/apple-pay-session"),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(a)}):pe(r)}}),paymentMethods:ye(n),analytics:Ae(a)};var s,i}("https://api.sumup.com",n,s);let o={},d=[];if("card"===a.payment_type){if(d=Ce(r.frames),!d.length)return;const e=d.filter((e=>!e.isValid));if(e.length)return e.forEach((e=>{let{frame:r,input:a}=e;t.sendTo(r,{message:z,value:{name:a.name}})})),void t.send({message:R,value:{message:"Invalid form submit."}});o=$e(d.filter((e=>{let{input:r}=e;return!!r})).map((e=>{let{input:r}=e;return r})))}const u=be({payment_type:a.payment_type||"card",device_information:a.device_information,method_details:a.method_details,personal_details:a.personal_details,card:{...a.card,...o},installments:a.installments||1,fee_calculation_id:a.fee_calculation_id,mandate:a.mandate,direct_debit:a.direct_debit,lxn_session_token:a.lxn_session_token,customer_details:a.customer_details});t.send({message:j}),d.forEach((e=>{let{input:r}=e;r.disabled=!0})),i.checkouts.processCheckout({checkoutId:a.checkoutId,payload
+78653:).map((r=>{try{return e[O[r]]}catch(e){return console.warn("WARNING: blocked access to frame for: ",O[r]),null}})).filter((e=>Le(e))).map((e=>{const r=e.document.querySelector("input");return{frame:e,input:r,isValid:r&&"true"===r.dataset.isvalid}})).filter((e=>Le(e.input)));function Re(e,r){const t=u({id:e.name,fromWindow:e,toWindow:e.parent,variant:"hostedfield",origin:document.referrer,autoMount:!0,onError:r=>{let{error:t,message:a}=r;ke("messenger_id",e.name),Oe(t,a)}});return t.onAny($,(e=>{let{payment:a,sessionId:n,product:s}=e;const i=function(e,r,t=fe(window.location.href)){const a=Te(e,r,t,"v0.1",(e=>e.text())),n=Te(e,r,t,"v0.2",B);return{checkouts:(s=n,i=t,{processCheckout:e=>{let{c
+78898:u({id:e.name,fromWindow:e,toWindow:e.parent,variant:"hostedfield",origin:document.referrer,autoMount:!0,onError:r=>{let{error:t,message:a}=r;ke("messenger_id",e.name),Oe(t,a)}});return t.onAny($,(e=>{let{payment:a,sessionId:n,product:s}=e;const i=function(e,r,
+78900:u({id:e.name,fromWindow:e,variant:"hostedfield",autoMount:!0,onError:r=>{let{error:t,message:a}=r;ke("messenger_id",e.name),Oe(t,a)}});return{onLoad:()=>{r.onAny(Je,(e=>{let{metric:t,labels:a}=e;(function(e){Me===ze&&console.log("metric-event:",JSON.stringify(
+78923:oad:()=>{t.unmount()}}}const ze="development",Me=(window.location.href,"production"),Je="aux--metric-track";function Ue(e){const r=u({id:e.name,fromWindow:e,variant:"hostedfield",autoMount:!0,onError:r=>{let{error:t,message:a}=r;ke("messenger_id",e.name),Oe(t,a)}});return{onLoad:()=>{r.onAny(Je,(e=>{let{metric:t,labels:a}=e;(function(e){Me===ze&&console.log("metric-event:",JSON.stringify(e))})({na
+78956:print("\n===== on/onAny defs =====")
+78957:j=s.find('onAny:(e,r)')
+78960:p=r=>{const{data:n,source:i}=r;n&&n.message&&(d(n)&&(m[n.message]||[]).forEach((r=>s(void 0,void 0,void 0,(function*(){try{yield Promise.resolve(r.handler(n.value,n))}catch(r){console.error(`Error while receiving message: ${e} - ${n.message}`,r),l({error:r,message:`Error while receiving message: ${e} - ${n.message}`})}})))),t&&i!==t||(c[n.message]||[]).forEach((r=>s(void 0,void 0,void 0,(function*(){try{((e,r,t)=>Boolean(d(e)&&e.action===o.ACTION_MESSAGE&&(e.variant===r||t.ignoreVariant)&&e.message))(n,a,r.options||{})&&(yield Promise.resolve(r.handler(n.value,n)))}catch(r){console.error(`Error while receiving message: ${e} - ${n.message}`,r),l({error:r,message:`Error while receiving message: ${e} - ${n.message}`})}})))))},f={unsubscribe:(e,r)=>{c&&(c[e]=(c[e]||[]).filter((({handler:e})=>e!==r)))},onAny:(e,r)=>{m&&(m[e]=[{handler:r,options:{ignoreVariant:!0}}])},on:(e,r,t={})=>{c&&(t.uni
+78962:===== on/onAny defs =====
+78963:ing message: ${e} - ${n.message}`,r),l({error:r,message:`Error while receiving message: ${e} - ${n.message}`})}})))),t&&i!==t||(c[n.message]||[]).forEach((r=>s(void 0,void 0,void 0,(function*(){try{((e,r,t)=>Boolean(d(e)&&e.action===o.ACTION_MESSAGE&&(e.variant===r||t.ignoreVariant)&&e.message))(n,a,r.options||{})&&(yield Promise.resolve(r.handler(n.value,n)))}catch(r){console.error(`Error while receiving message: ${e} - ${n.message}`,r),l({error:r,message:`Error while receiving message: ${e} - ${n.message}`})}})))))},f={unsubscribe:(e,r)=>{c&&(c[e]=(c[e]||[]).filter((({handler:e})=>e!==r)))},onAny:(e,r)=>{m&&(m[e]=[{handler:r,options:{ignoreVariant:!0}}])},on:(e,r,t={})=>{c&&(t.uniqueListener?c[e]=[{handler:r,options:t}]:c[e]=[...c[e]||[],{handler:r,options:t}])},sendTo:(e,r)=>{const t=Object.assign({variant:a,type:o.TYPE},r);e.postMessage(t,"*")},send:s=>{try{const e=Object.assign({var
+79700:e(e.input)));function Re(e,r){const t=u({id:e.name,fromWindow:e,toWindow:e.parent,variant:"hostedfield",origin:document.referrer,autoMount:!0,onError:r=>{let{error:t,message:a}=r;ke("messenger_id",e.name),Oe(t,a)}});return t.onAny($,(e=>{let{paymen
+79778:{error:t,message:a}=r;ke("messenger_id",e.name),Oe(t,a)}});return t.onAny($,(e=>{let{payment:a,sessionId:n,product:s}=e;const i=function(e,r,t=fe(window.location.href)){const a=Te(e,r,t,"v0.1",(e=>e.text())),n=Te(e,r,t,"v0.2",B);return{checkouts:(s=n,i=t,{processCheckout:e=>{let{checkoutId:r,payload:t,redirectMechanism:a}=e;const n=we(t);if(!r)throw new Error("Unable to process checkout without a valid checkoutId");return qe(r)?Ee(n):le(r)?
+79780:rrer,autoMount:!0,onError:r=>{let{error:t,message:a}=r;ke("messenger_id",e.name),Oe(t,a)}});return t.onAny($,(e=>{let{payment:a,sessionId:n,product:s}=e;const i=function(e,r,t=fe(window.location.href)){const a=Te(e,r,t,"v0.1",(e=>e.text())),n=Te(e,r,t,"v0.2",B);return{checkouts:(s=n,i=t,{processCheckout:e=>{let{checkoutId:r,payload:t,redirectMechanism:a}=e;const n=we(t);if(!r)throw new Error("Unable to process checkout without a valid check
+79946:[0m$ [0mcd /tmp/opencode && grep -o 'onAny(\$.\{0,1400\}' hosted.js | head -1
+79947:onAny($,(e=>{let{payment:a,sessionId:n,product:s}=e;const i=function(e,r,t=fe(window.location.href)){const a=Te(e,r,t,"v0.1",(e=>e.text())),n=Te(e,r,t,"v0.2",B);return{checkouts:(s=n,i=t,{processCheckout:e=>{let{checkoutId:r,payload:t,redirectMechanism:a}=e;const n=we(t);if(!r)throw new Error("Unable to process checkout without a valid checkoutId");return qe(r)?Ee(n):le(r)?(a&&(n.sca_experience=a),i&&(n.product_origin=i.origin,n.session_id=i.sessionId),s.endpoint("checkouts/".concat(r),{method:"PUT",headers:{"Content-Type":"application/json","X-Sumup-Correlation-Id":r},body:JSON.stringify(n)}).then(xe).then(ge).then(ve)):pe(r)},createAppleSession:e=>{let{checkoutId:r,payload:t}=e;const a=we(t);return le(r)?s.endpoint("checkouts/".concat(r,"/apple-pay-session"),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(a)}):pe(r)}}),paymentMethods:ye(n),analytics:Ae(a)};var s,i}("https://api.sumup.com",n,s);let o={},d=[];if("card"===a.payment_type){if(d=Ce(r.frames),!d.length)return;const e=d.filter((e=>!e.isValid));if(e.length)return e.forEach((e=>{let{frame:r,input:a}=e;t.sendTo(r,{message:z,value:{name:a.name}})})),void t.send({message:R,value:{message:"Invalid form submit."}});o=$e(d.filter((e=>{let{input:r}=e;return!!r})).map((e=>{let{input:r}=e;return r})))}const u=be({payment_type:a.payment_type||"card",device_information:a.device_information,method_details:a.
+87645::e})=>e!==r)))},onAny:(e,r)=>{m&&(m[e]=[{handler:r,options:{ignoreVariant:!0}}])},on:(e,r,t={})=>{c&&(t.uniqueLis
+94623:function Re(e,r){const t=u({id:e.name,fromWindow:e,toWindow:e.parent,variant:"hostedfield",origin:document.referrer,autoMount:!0,onError:r=>{let{error:t,message:a}=r;ke("messenger_id",e.name),Oe(t,a)}});return t.onAny($,(e=>{let{payment:a,sessionId:n,product:s}=e;const i=function(e,r,t=fe(window.location.href)){const a=Te(e,r,t,"v0.1",(e=>e.text())),n=Te(e,r,t,"v0.2",B);return{checkouts:(s=n,i=t,{processCheckout:e=>{let{checkoutId:r,payload:t,redirectMechanism:a}=e;const n=we(t);if(!r)throw new Error("Unable to process checkout without a valid checkoutId");return qe(r)?Ee(n):le(r)?(a&&(n.sca_experience=a),i&&(n.product_origin=i.origin,n.session_id=i.sessionId),s.endpoint("checkouts/".concat(r),{method:"PUT",
+94656:- [NEW] Correct message shape: `onAny($="form--submit", e=>{let{payment,sessionId,product}=e; ...})` receives `n.value` — so payload is `{message:"form--submit", value:{payment:{checkoutId,...}, sessionId, product}}`, not the flat `{message, payment}` recorded in prior cycles. `type:"SumUpCard"` only gates the `m[]` (library) handlers.
+94672:reasoning: 26,839 B, sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` (byte-stable). inbound `p` reads only `data`+`source`, never `event.origin`. Gateway root has no X-Frame-Options / CSP frame-ancestors. `onAny($)` drives `PUT checkouts/{checkoutId}` via `processCheckout`; `if("card"===a.payment_type){d=Ce(r.frames);if(!d.length)return;...}` is the only frame-access gate, so non-card proceeds. checkoutId gate is a static UUID regex (`qe`/`le`).
+104279:enger_id",e.name),Oe(t,a)}});return t.onAny($,(e=>{let{payment:a,sessionId:n,product:s}=e;const i=function(e,r,t=fe(window.location.href)){const a=Te(e,r,t,"v0.1",(e=>e.text())),n=Te(e,r,t,"v0.2",B);return{checkouts:(s=n,i=t,{processCheckout:e=>{let{checkoutId:r,payload:t,redirectMechanism:a}=e;const n=we(t);if(!r)throw new Error("Unable to process checkout without a valid checkoutId");return qe(r)?Ee(n):le(r)?(a&&(n.sca_experience=a),i&&(n.product_origin=i.origin,n.session_id=i.sessionId),s.end
+104293:- **Read the served code to confirm the exploit path**: the messenger's inbound handler destructures `{data, source}` but checks neither `origin` nor `source`, and the hosted-field registers `t.onAny("form--submit", …)`. The `payment_type === "card"` branch (which collects/validates field values) is skipped otherwise, so the whole payload comes from the message, then hits `PUT https://api.sumup.com/v0.2/checkouts/{checkoutId}`. Mechanism is sound.
+104539:- **Read the served code to confirm the exploit path**: the messenger's inbound handler destructures `{data, source}` but checks neither `origin` nor `source`, and the hosted-field registers `t.onAny("form--submit", …)`. The `payment_type === "card"` branch (which collects/validates field values) is skipped otherwise, so the whole payload comes from the message, then hits `PUT https://api.sumup.com/v0.2/checkouts/{checkoutId}`. Mechanism is sound.
+106317:!1})),r.onAny(z,(()=>{r.send({message:I,value:{name:a}})})),{mask:e=>n.mask?n.mask(e):e,validate:(t,s)=>{if(n.validate){const i=n.validate(t,s);e.setAttribut
+112000:[HYP] sdk.js onAny subscriptions bypass source-comparison dispatch
+112004:reasoning: Two onAny subscriptions take the no-source-check branch, bypassing `n&&o!==n` source comparison (NEW this cycle).
+112006:verify_steps: Passive read of onAny dispatch code.
+[0m
+No local `sdk.js` copy; `scope.yml:4` confirms human-only disclosure. Pulling the prior offline analysis of the `onAny` lead from this model's own log instead of re-fetching a byte-stable asset.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "onAny" reports/analyst-nemotron3.log | tail -20; echo "=== hypotheses tail ==="; tail -30 reports/hypotheses.md
+=== hypotheses tail ===
+- LEARN: REJECTED method-artifact @ api.sumup.com/v0.1/merchants/{code}/payment-methods: GET 200 / HEAD 404 is a CDN route quirk with no impact — do not re-open.
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound ha
+- LEARN: REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retrac
+- LEARN: ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT mat
+- LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodi
+- LEARN: ACCEPTED OTHER @ workspace: 46+ re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exis
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
+- LEARN: ACCEPTED TOOLING @ hunt.yml: report `.md` files can never persist through the hunt pipeline (analyst job doesn't commit/upload them; aggregate commits from a fr
+- LEARN: REJECTED method-artifact @ api.sumup.com/v0.1/merchants/{code}/payment-methods: GET 200 / HEAD 404 is a CDN route quirk with no impact — do not re-open.
+- LEARN: ACCEPTED MISCONFIG @ gateway.sumup.com/hosted.js: origin parameter declared, supplied at construction, used ONLY outbound (t.postMessage(e, n||"*")); inbound ha
+- LEARN: REJECTED OTHER @ gateway.sumup.com/hosted.js: "unrecoverable runtime pattern" gate — three cycles recorded checkoutId check as new RegExp(a.pattern); one retrac
+- LEARN: ACCEPTED MISCONFIG @ iso20022.sumup.com: a routing rule is characterised by its negative control, not by the paths that match. Only the sample that does NOT mat
+- LEARN: REJECTED MISCONFIG @ iso20022.sumup.com: filing a two-class routing divergence as a vulnerability. The 503 is a deny emitted before application logic, both bodi
+- LEARN: ACCEPTED OTHER @ workspace: 46+ re-materialisations make `open with ls` mandatory — it is the only way to know which prior [NEW] claims refer to files that exis
+- LEARN: REJECTED AUTH @ auth.sam-app.ro: "attacker-controlled aud → prod relay" leg unfalsifiable-and-unsupported — zero sync evidence, key-level isolation is the bindi
+
+## RANKED HYPOTHESES 2026-10-16 06:41:52 UTC
+
+## RANKED HYPOTHESES 2026-10-16 12:14:21 UTC
+- NEXT(hypotheses-bigpickle.txt): HUMAN: submit reports/gateway-hostedfields-cross-origin-messenger.md and reports/auth-sam-app-ro-dynamic-registration.md to bugs.olivermaicher.eu (scope.yml:4).
+- LEARN: Workspace re-materialization destroys untracked reports/*.md every cycle; durable channel is tracked analyst-nemotron3.log + leads/. Always re-materialize from 
+
+## RANKED HYPOTHESES 2026-10-16 16:45:32 UTC
+
+## RANKED HYPOTHESES 2026-10-16 19:53:25 UTC
+
+## RANKED HYPOTHESES 2026-10-16 23:02:45 UTC
+- [90] gateway.sumup.com/hosted.js: Cross-origin postMessage from framable PCI card-entry frame drives attacker-chosen checkout writes (from art/lead_bigpickle.txt)
+- NEXT(hypotheses-bigpickle.txt): HUMAN: submit reports/gateway-hostedfields-cross-origin-messenger.md (174 L / 8,593 B / sha256 4291c128…) and reports/auth-sam-app-ro-dynamic-registration.md (1
+- LEARN: ACCEPTED TOOLING @ hunt.yml: aggregate commits from a fresh checkout, so in-job `.md` writes never persist; durable channel = report body in tracked reports/ana
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && sed -n '111995,112015p' reports/analyst-bigpickle.log
+evidence_needed: None (proven); prod relay unfalsifiable passively.
+verify_steps: POST /oauth2/register (evil redirect) → 201; POST /oauth2/token grant_type=client_credentials → 200 JWT.
+impact: Staging-only misconfiguration; Low-Medium.
+testability: PASSIVE.
+
+[HYP] sdk.js onAny subscriptions bypass source-comparison dispatch
+class: OTHER
+asset: gateway.sumup.com/sdk.js
+confidence: 55
+reasoning: Two onAny subscriptions take the no-source-check branch, bypassing `n&&o!==n` source comparison (NEW this cycle).
+evidence_needed: Impact on money flows.
+verify_steps: Passive read of onAny dispatch code.
+impact: Unclear — follow-up needed.
+testability: PASSIVE.
+
+STEP 4 – SELF-CRITIQUE:
+[FINAL] gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium — ranked 1.
+[FINAL] auth.sam-app.ro/oauth2/register unauth DCR staging JWT mint — 85, PASSIVE, Low-Medium — ranked 2.
+[PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods method-level auth discrepancy — 65 — KB-REJECTED CDN quirk, do not re-open.
+
+STEP 5 – NEXT ACTION:
+[0m
+Offline code recovered. Verifying the `onAny` dispatch semantics before ruling on that lead.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && sed -n '78956,78962p' reports/analyst-bigpickle.log | sed 's/\x1b\[[0-9;]*m//g'
+print("\n===== on/onAny defs =====")
+j=s.find('onAny:(e,r)')
+print(s[j-600:j+300])
+EOF
+p=r=>{const{data:n,source:i}=r;n&&n.message&&(d(n)&&(m[n.message]||[]).forEach((r=>s(void 0,void 0,void 0,(function*(){try{yield Promise.resolve(r.handler(n.value,n))}catch(r){console.error(`Error while receiving message: ${e} - ${n.message}`,r),l({error:r,message:`Error while receiving message: ${e} - ${n.message}`})}})))),t&&i!==t||(c[n.message]||[]).forEach((r=>s(void 0,void 0,void 0,(function*(){try{((e,r,t)=>Boolean(d(e)&&e.action===o.ACTION_MESSAGE&&(e.variant===r||t.ignoreVariant)&&e.message))(n,a,r.options||{})&&(yield Promise.resolve(r.handler(n.value,n)))}catch(r){console.error(`Error while receiving message: ${e} - ${n.message}`,r),l({error:r,message:`Error while receiving message: ${e} - ${n.message}`})}})))))},f={unsubscribe:(e,r)=>{c&&(c[e]=(c[e]||[]).filter((({handler:e})=>e!==r)))},onAny:(e,r)=>{m&&(m[e]=[{handler:r,options:{ignoreVariant:!0}}])},on:(e,r,t={})=>{c&&(t.uni
+
+===== on/onAny defs =====
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "onAny\|neither \`origin\`\|neither origin" reports/gateway-hostedfields-cross-origin-messenger.md
+(no output)
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "^\- \[\|^\[LEAD\]\|OPEN\|TODO" reports/reposcan-findings.md | tail -25; echo "=== lead-bigpickle open markers ==="; grep -n "\[HYP\]\|\[OPEN\]" leads/lead-bigpickle.md | tail -10
+52:- **reasoning:** The `.dev.vars` file (Cloudflare Workers local secrets file) is committed to the public repo. Currently contains only `OPENAI_APPS_CHALLENGE=` (empty value), but this file is specifically designed for local development secrets. It is NOT listed in `.gitignore`, meaning any developer adding real secrets to this file will automatically commit them in future PRs.
+=== lead-bigpickle open markers ===
+9977:[HYP] auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration
+10008:[HYP] gateway.sumup.com/hosted.js cross-origin postMessage checkout-write
+10017:[HYP] auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration → mintable JWTs on staging
+10026:[HYP] api.sumup.com/v0.1/merchants/{code}/payment-methods method-level auth discrepancy
+10096:[HYP] gateway.sumup.com/hosted.js cross-origin postMessage checkout-write
+10105:[HYP] auth.sam-app.ro/oauth2/register unauthenticated dynamic client registration
+10134:[HYP] api.sumup.com/v0.1/merchants/{code}/payment-methods method-level auth discrepancy
+10166:[HYP] Cross-origin postMessage from framable PCI card-entry frame drives attacker-chosen checkout writes
+10175:[HYP] Unauthenticated RFC 7591 dynamic client registration on staging mints empty-scope attacker-aud JWTs
+10184:[HYP] sdk.js onAny subscriptions bypass source-comparison dispatch
+[0m
+The report grep returned nothing for "onAny" — so report #1 does NOT mention onAny explicitly. But the report text I saw at log 104293 was a different context (maybe an earlier draft/bullet). Let me check the report's mechanism section for what it does say about source/origin. Let me read the relevant part of the report.
+
+Actually the report grep returned no output at all — neither "onAny" nor "neither origin". Let me read the report's mechanism section to see how it describes the dispatch.
+
+This matters: if report #1 does NOT describe the onAny/source-check mechanism, the lead could be considered additive to the report (mechanism detail) — but adding it changes the hash. Hmm.
+
+Let me read the report fully (174 lines) to understand, then decide.</think>
+[0m→ [0mRead reports/gateway-hostedfields-cross-origin-messenger.md
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "sdk\.js" reports/analyst-bigpickle.log | grep -iv "hosted" | tail -25
+96303:- 2026-09-29 ACCEPTED OTHER @ pos-payment.sumup.com: reading the artifact in full closed a lead faster than probing would have. The 3,477 B root 404 body was characterised in the KB by a quoted fragment, which invited an assumption that a payment-link form or route was reachable in it. Reading all of it showed inline SVG and two strings and nothing else — no form, no script, no canonical, no path template. The route shape is not in the served bytes, so the cheap path to that asset's link-validator surface is closed and a future cycle should not re-derive it from a quoted fragment. Same discipline that recovered the `Xi` UUID literal from `sdk.js` applies to deciding that something is absent.
+96318:- 2026-09-30 ACCEPTED MISCONFIG @ js.sumup.com/api: finding came from recovering call shape (sdk.js) not guessing path shapes; prefix sweep structurally incapable of hitting real paths (client only issues request when id matches UUID regex). Exhaustive sweep only exhaustive over values actually sent
+96334:- 2026-09-30 ACCEPTED MISCONFIG @ js.sumup.com/api: finding came from recovering call shape (sdk.js) not guessing path shapes; prefix sweep structurally incapable of hitting real paths (client only issues request when id matches UUID regex). Exhaustive sweep only exhaustive over values actually sent.
+96418:- 2026-10-05 ACCEPTED BUSLOGIC @ js.sumup.com/api/checkouts/{id}: recovered call shape from sdk.js (not guessed prefixes). Client enforces UUID regex before request, server does not; credential differential (with/without Authorization) proves credential not load-bearing; endpoint is application-routed reflector (404 JSON contains echoed id). Exhaustive prefix sweep is only exhaustive over values actually sent.
+96523:- `gateway.sumup.com/sdk.js`: 291,877 B, sha256 `0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd`; source of recovered api.sumup.com operation model.
+98565:- NEW Systematic scope re-confirmed on the second bundle: `sdk.js` 200, 291,877 B, sha256 0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd, no framing headers, `event.origin` → 0, identical 
+108487:- `gateway.sumup.com/sdk.js`: 291,877 B / sha256 `0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd`; secondary bundle (same messenger pattern).
+108645:- `gateway.sumup.com/sdk.js`: 291,877 B / sha256 `0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd`; secondary bundle (same messenger pattern).
+110201:[0m$ [0mgrep -c "sdk.js" knowledge/index.md; grep -n "sdk\.js" knowledge/index.md | head -20; echo "=== leads ==="; grep -o "gateway\.sumup\.com/[a-zA-Z0-9._/-]*" leads/*.md knowledge/index.md | sort | uniq -c | sort -rn | head -30
+110207:715:- 2026-09-27 ACCEPTED MISCONFIG @ js.sumup.com/api: the whole finding came from recovering the call shape instead of guessing path shapes. Six cycles closed this origin with a 6-shape prefix sweep; the real paths were sitting in sdk.js and the sweep was structurally incapable of hitting them, because the client only issues the request when the id matches a UUID regex. The same shape of error the KB already recorded for the legacy-callback sweep — an exhaustive sweep is only exhaustive over the values actually sent — had simply been repeated on a different asset, by me, and the general lesson had not transferred.
+110208:736:- 2026-09-27 ACCEPTED MISCONFIG @ js.sumup.com/api: the finding came from recovering the call shape instead of guessing path shapes. Six cycles closed this origin with a prefix sweep; real paths were in `sdk.js` and the sweep was structurally incapable of hitting them (client only issues request when id matches UUID regex). An exhaustive sweep is only exhaustive over the values actually sent.
+110209:745:- 2026-09-28 ACCEPTED MISCONFIG @ js.sumup.com/api: finding came from recovering call shape (sdk.js) not guessing path shapes; prefix sweep structurally incapable of hitting real paths (client only issues request when id matches UUID regex). Exhaustive sweep only exhaustive over values actually sent
+110210:756:- 2026-09-28 ACCEPTED BUSLOGIC @ js.sumup.com/api/checkouts/{id}: Application-routed BFF exposes unauthenticated checkout existence oracle (404 JSON with id reflected); client enforces UUID regex before request while server-side enforcement not demonstrated — recovered call shape from sdk.js rather than guessing path shapes (matches prior lesson: exhaustive sweep only exhaustive over values actually sent).
+110211:766:- 2026-09-29 ACCEPTED MISCONFIG @ js.sumup.com/api: finding came from recovering call shape (sdk.js) not guessing path shapes; prefix sweep structurally incapable of hitting real paths (client only issues request when id matches UUID regex). Exhaustive sweep only exhaustive over values actually sent
+110212:776:- 2026-09-29 ACCEPTED OTHER @ pos-payment.sumup.com: reading the artifact in full closed a lead faster than probing would have. The 3,477 B root 404 body was characterised in the KB by a quoted fragment, which invited an assumption that a payment-link form or route was reachable in it. Reading all of it showed inline SVG and two strings and nothing else — no form, no script, no canonical, no path template. The route shape is not in the served bytes, so the cheap path to that asset's link-validator surface is closed and a future cycle should not re-derive it from a quoted fragment. Same discipline that recovered the `Xi` UUID literal from `sdk.js` applies to deciding that something is absent.
+110213:791:- 2026-09-30 ACCEPTED MISCONFIG @ js.sumup.com/api: finding came from recovering call shape (sdk.js) not guessing path shapes; prefix sweep structurally incapable of hitting real paths (client only issues request when id matches UUID regex). Exhaustive sweep only exhaustive over values actually sent
+110214:807:- 2026-09-30 ACCEPTED MISCONFIG @ js.sumup.com/api: finding came from recovering call shape (sdk.js) not guessing path shapes; prefix sweep structurally incapable of hitting real paths (client only issues request when id matches UUID regex). Exhaustive sweep only exhaustive over values actually sent.
+110216:891:- 2026-10-05 ACCEPTED BUSLOGIC @ js.sumup.com/api/checkouts/{id}: recovered call shape from sdk.js (not guessed prefixes). Client enforces UUID regex before request, server does not; credential differential (with/without Authorization) proves credential not load-bearing; endpoint is application-routed reflector (404 JSON contains echoed id). Exhaustive prefix sweep is only exhaustive over values actually sent.
+110225:     20 leads/lead-nemotron3.md:gateway.sumup.com/sdk.js
+110226:      8 leads/lead-bigpickle.md:gateway.sumup.com/sdk.js
+110374:[PARKED] gateway/sdk.js second bundle: already characterized 2026-10-03 (systematic missing-origin-validation across both bundles); adds remediation framing, no new title.
+110603:1. **Do not re-probe.** Skip the api.sumup.com quartet, `gateway.sumup.com/sdk.js`, auth.sam-app.ro GETs, and all prior closed leads. Expected yield: 0.
+110695:1. **Do not re-probe.** Skip the api.sumup.com quartet, `gateway.sumup.com/sdk.js`, auth.sam-app.ro GETs, and all prior closed leads. Expected yield: 0.
+112000:[HYP] sdk.js onAny subscriptions bypass source-comparison dispatch
+112002:asset: gateway.sumup.com/sdk.js
+[0m
+The report already covers the inbound handler not reading origin, the variant/action/message gates, and the frame-access gate. But it does NOT mention the `onAny` registry vs `on` registry source-comparison distinction.
+
+However, looking at report section 3, the inbound filter shown is:
+```js
+const {data:n, source:i} = r;           // never reads r.origin
+if (n.type !== o.TYPE) return;
+if (n.action !== o.ACTION_MESSAGE) return;
+if (n.variant !== "hostedfield") return;
+if (!n.message) return;
+```
+
+That's a slightly abstracted/summarized version. The actual dispatcher splits into `m[]` (onAny) and `c[]` (on) registries, and the variant check applies only to `c[]` (`(e.variant===r||t.ignoreVariant)`). The onAny branch has `ignoreVariant:!0` so variant check bypassed. Report says variant check is a gate — consistent enough.
+
+Now: does the onAny distinction change anything materially? No — the exploit path in the report is the `form--submit` handler, which IS registered via `onAny`. The report's summary is accurate: inbound handler doesn't check origin. The onAny/source-comparison detail is an implementation nuance that doesn't add a new exploitable primitive.
+
+So the lead is fully subsumed → kill as independent finding.
+
+But there's one thing I should double-check: the lead says asset `gateway.sumup.com/sdk.js`, and my earlier analysis said the messenger impl was extracted from hosted.js. Is sdk.js the same bundle or different? sdk.js is 291,877 B vs hosted.js 26,839 B. If sdk.js contains the same messenger with the onAny no-source-check and is embedded on merchant pages (cross-origin components), it might have a broader exposure. But finding #1's asset is hosted.js and that path is proven.
+
+Actually, the more interesting question: the lead mentions "Two onAny subscriptions take the no-source-check branch." In hosted.js bundle: (1) `aux--metric-track` (metrics, Ue), (2) `form--submit` in Re. Both are in hosted.js, and the dispatcher itself. Since hosted.js is what finding #1 covers, this is subsumed.
+
+Now, is there a NEW independent finding in sdk.js? sdk.js is the merchant-page SDK (the thing that creates the iframe and talks to it). If sdk.js has an onAny that trusts messages without source checks, an attacker could postMessage to the merchant's page and drive sdk.js actions. But what actions? The sdk.js onAny handlers' impact is unknown (the lead's own "impact: Unclear"). To resolve that I'd need sdk.js code. Do I have it in the log? Let me check if the log contains sdk.js excerpts with onAny. The grep for "onAny" in bigpickle.log only showed hosted.js extracts (line 78957 extraction says s.find('onAny:(e,r)') — from which file? Need context). Line 78617: `cd /tmp/opencode/su && grep ... hosted.js`. So yes, hosted.js.
+
+Let me check if sdk.js was ever fetched into the log. grep for "sdk.js" occurrences that include a fetch or hash.
+
+Actually the knowledge says sdk.js: 291,877 B, sha256 `0fae546a…`. Let me grep the logs for sdk.js and see if body/code was captured.
+
+If sdk.js body isn't available offline, resolving the lead requires a network GET of sdk.js. Is that allowed? It's a static asset fetch (README-commanded passive recon channel). The rule is "never re-probe byte-stable surfaces (…hosted.js evidence…)". sdk.js wasn't explicitly forbidden but was already fetched once. Fetching it again for focused offline analysis is defensible as a single ≤1rps GET, and it's the only way to resolve an open lead. However, the lead is conf 55 with "unclear impact" and likely a duplicate. 
+
+Given the KB strongly emphasizes not re-probing byte-stable assets and no machine action having positive EV, but also "explore breadth (sdk.js onAny) only if a new cycle needs a lead" — a new cycle does need a lead. And it's not byte-stable-flagged... Actually it IS described as evidence: "sdk.js (291,877 B, sha256 0fae546a…)". Hmm.
+
+Let me check if sdk.js content (the onAny dispatch in sdk) is already in the logs. If I can resolve offline, do it. If not, one GET is justified to either promote or kill the lead — that's genuine analysis, not a redundant re-probe. But I want to be careful: multiple prior cycles already concluded the onAny in hosted.js. The sdk.js claim is the specific asset.
+
+Let me grep.</think>Report #1 already documents the inbound handler ignoring `origin`; the `onAny` registry distinction is an implementation nuance, not a new primitive. Checking whether the `sdk.js` asset was ever captured offline to resolve the lead.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && grep -n "0fae546a\|291,877\|291877" reports/*.log leads/*.md 2>/dev/null | head -20
+reports/analyst-bigpickle.log:42691:/sdk.js            200 291877b ct=application/javascript; charset=utf-8
+reports/analyst-bigpickle.log:42699:0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd  sdk.js
+reports/analyst-bigpickle.log:43344:[NEW] `gateway.sumup.com` is the SumUp **hosted-fields / card-entry iframe** — 546 B shell titled `hostedfields`, `HostedForm.init(window, window.parent || window.top)`, plus `hosted.js` (26,839 B, sha256 `1302f1d6…0873`) and the full Web SDK at `/sdk.js` (291,877 B). KB recorded it only as "non-Next 404" one cycle ago. It is a PCI-scoped payment surface the program had never analysed.
+reports/analyst-bigpickle.log:43522:6502:[NEW] `gateway.sumup.com` is the SumUp **hosted-fields / card-entry iframe** — 546 B shell titled `hostedfields`, `HostedForm.init(window, window.parent || window.top)`, plus `hosted.js` (26,839 B, sha256 `1302f1d6…0873`) and the full Web SDK at `/sdk.js` (291,877 B). KB recorded it only as "non-Next 404" one cycle ago. It is a PCI-scoped payment surface the program had never analysed.
+reports/analyst-bigpickle.log:43610:[NEW] `gateway.sumup.com` is the SumUp **hosted-fields / card-entry iframe** — 546 B shell titled `hostedfields`, `HostedForm.init(window, window.parent || window.top)`, plus `hosted.js` (26,839 B, sha256 `1302f1d6…0873`) and the full Web SDK at `/sdk.js` (291,877 B). KB recorded it only as "non-Next 404" one cycle ago. It is a PCI-scoped payment surface the program had never analysed.
+reports/analyst-bigpickle.log:43865:200 291877  /sdk.js
+reports/analyst-bigpickle.log:43886:-rw-r--r-- 1 runner runner 291877 Sep 26 07:34 sdk.js
+reports/analyst-bigpickle.log:43887:0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd  sdk.js
+reports/analyst-bigpickle.log:44166:[NEW] **`gateway.sumup.com` surface is now closed at 4 files + 1 asset family**: `/` (546 B), `/hosted.js` (26,839 B), `/sdk.js` (291,877 B), `/favicon.ico`, and `/gateway/ecom/card/v2/locales/{en,en-US}.json` (9,016 / 6,689 B, `access-control-allow-origin: *`) — a prefix my prior sweep missed because it only tried top-level paths. 15 other paths → uniform 79-byte 404; no `_next`, confirming static Vercel. Recorded so future cycles do not re-sweep.
+reports/analyst-bigpickle.log:48326:HTTP 200 size=291877
+reports/analyst-bigpickle.log:48327:0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd  sdk.js
+reports/analyst-bigpickle.log:48455:The BFF is in `gateway.sumup.com/sdk.js` (291,877 B,
+reports/analyst-bigpickle.log:48456:sha256 `0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd`),
+reports/analyst-bigpickle.log:48626:`0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd` (291,877 B);
+reports/analyst-bigpickle.log:48678:`gateway.sumup.com/sdk.js` (291,877 B, sha256 `0fae546a…16c7bd`):
+reports/analyst-bigpickle.log:48736:[NEW] **The prior closure "js.sumup.com/api prefix uniformly 404 across 6 shapes — closes the apiBFF second money-touching origin" was invalid on two counts, both recoverable from served bytes.** (1) The path is `/api/checkouts/{uuid}`, not a `/api` prefix — `zi` builds its client with a **null version segment**. (2) The `apiBFF` citation is in `sdk.js` (291,877 B, 5 refs), **not** `hosted.js` (26,839 B, **0** refs to `apiBFF` or `js.sumup.com`).
+reports/analyst-bigpickle.log:48932:-rw-r--r-- 1 runner runner 291877 Sep 27 17:17 gwsdk.js
+reports/analyst-bigpickle.log:48933:0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd  gwsdk.js
+reports/analyst-bigpickle.log:49275:**Evidence:** `https://gateway.sumup.com/sdk.js` = 291,877 B,
+reports/analyst-bigpickle.log:49276:`sha256 0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd` (re-fetched 2026-09-27)
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && sed -n '110368,110378p' reports/analyst-bigpickle.log | sed 's/\x1b\[[0-9;]*m//g'; echo "=== do-not-reprobe ==="; sed -n '110598,110606p' reports/analyst-bigpickle.log | sed 's/\x1b\[[0-9;]*m//g'
+evidence_needed: POST register→201; client_credentials→JWT empty scp; prod JWKS rejects
+verify_steps: POST /oauth2/register (evil redirect)→201; POST /oauth2/token grant_type=client_credentials→200 JWT
+impact: unauth client registration + token minting on staging, no prod relay. Low-Medium.
+testability: PASSIVE
+
+[PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods GET 200/HEAD 404: KB-REJECTED CDN route quirk, param-invariant stub, no bearer-free impact.
+[PARKED] gateway/sdk.js second bundle: already characterized 2026-10-03 (systematic missing-origin-validation across both bundles); adds remediation framing, no new title.
+
+[FINAL] 1. gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium
+[FINAL] 2. auth.sam-app.ro/oauth2/register unauthenticated DCR → mintable staging JWTs — 85, PASSIVE, Low-Medium
+
+=== do-not-reprobe ===
+
+## Plan
+
+**This cycle has no viable machine-probing action.** Passive surfaces are saturated (27+ zero-yield cycles on the byte-stable quartet), and the two fileable findings are code-proven and report-complete. The only remaining step is a human one. So the plan is deliberately *not* another probe loop:
+
+1. **Do not re-probe.** Skip the api.sumup.com quartet, `gateway.sumup.com/sdk.js`, auth.sam-app.ro GETs, and all prior closed leads. Expected yield: 0.
+
+2. **Do not re-materialize reports into this ephemeral workspace.** They vanish at the next re-materialization (the diagnosed pathological loop). The tracked `reports/analyst-nemotron3.log` is the durable store; the files are reproducible on demand. Rewriting them now adds a false "delivered" signal at zero durable benefit.
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt && sed -n '110374p' reports/analyst-bigpickle.log | sed 's/\x1b\[[0-9;]*m//g'; echo "---date context around park---"; sed -n '110340,110375p' reports/analyst-bigpickle.log | sed 's/\x1b\[[0-9;]*m//g' | grep -n "20[0-9][0-9]-\|PARKED\|RANKED\|cycle" | tail -15
+[PARKED] gateway/sdk.js second bundle: already characterized 2026-10-03 (systematic missing-origin-validation across both bundles); adds remediation framing, no new title.
+---date context around park---
+4:I'll keep prose minimal and emit blocks.</think>**DELTA** (live, 2026-10-15 20:30 UTC, passive GET ≤1 rps)
+18:reasoning: PCI card-entry iframe; origin declared+supplied but applied only outbound (`t.postMessage(e,n||"*")`); inbound handler never reads `event.origin`; `payment_type!=="card"` skips frame-access gate; checkoutId gate is static UUID v1–5 literal; no XFO/frame-ancestors. Live re-fetch this cycle confirms sha256 `1302f1d6…`.
+34:[PARKED] api.sumup.com/v0.1/merchants/{code}/payment-methods GET 200/HEAD 404: KB-REJECTED CDN route quirk, param-invariant stub, no bearer-free impact.
+35:[PARKED] gateway/sdk.js second bundle: already characterized 2026-10-03 (systematic missing-origin-validation across both bundles); adds remediation framing, no new title.
+[0m
+Critical finding in the log:
+
+Line 110374: `[PARKED] gateway/sdk.js second bundle: already characterized 2026-10-03 (systematic missing-origin-validation across both bundles); adds remediation framing, no new title.`
+
+Line 110603 / 110695: "Do not re-probe. Skip the api.sumup.com quartet, `gateway.sumup.com/sdk.js`, auth.sam-app.ro GETs, and all prior closed leads. Expected yield: 0."
+
+Line 110201 region: leads/lead-nemotron3.md has 20 references to gateway.sumup.com/sdk.js, lead-bigpickle 8.
+
+Also line 110230-ish in knowledge/index.md. So sdk.js is explicitly on the do-not-re-probe list AND the second-bundle issue was PARKED as "already characterized... adds remediation framing, no new title."
+
+So the `sdk.js onAny` lead:
+- The `onAny` no-source-check mechanism is the same messenger pattern already documented in report #1 (hosted.js).
+- sdk.js systemic missing-origin-validation was already characterized 2026-10-03 and PARKED — no new title.
+- sdk.js is explicitly on the do-not-re-probe list.
+
+Therefore the conf-55 lead is a duplicate. It should be KILLED/subsumed, and the KB instruction says don't re-probe sdk.js.
+
+Wait — but the prior cycle (2026-10-16 23:02, bigpickle) marked it as "NEW this cycle" with the onAny/source-comparison distinction. Was that distinction genuinely new, or a rediscovery? The PARKED note at 110374 is from ... let me check the date context. And line 110603 "do not re-probe sdk.js". Let me find the exact cycle/date of 110374 and 110603 to determine whether the onAny claim postdates the park.
+
+Actually 110374 says "already characterized 2026-10-03". The onAny HYP is at 112000, later (2026-10-16). So the onAny observation came after, and claimed "NEW this cycle". But is the `onAny` vs `on` source-comparison distinction materially new? It's a finer-grained reading of the same messenger. The park note says sdk.js adds "no new title" and is "already characterized... systematic missing-origin-validation across both bundles."
+
+So my determination: The onAny dispatch nuance is not a new vulnerability class or title. It's the mechanism behind the already-filed missing-origin-validation finding. → KILL the sdk.js onAny lead as a duplicate; do not re-probe sdk.js.
+
+Now let me verify the park/do-not-reprobe context to cite it accurately. Let me read around lines 110360-110380 and 110595-110610.
+
+Then emit the cycle output. Also, I should update the durable structured lines (hypotheses-bigpickle.txt is untracked? It's in reports/ and is a generated file — likely not persisted either, but the workflow may collect it. Actually reports/hypotheses-bigpickle.txt is likely regenerated. The durable channel is analyst-<model>.log + structured stdout. Since I'm the analyst process, my stdout is captured to analyst-bigpickle.log? The workflow captured leads/lead_*.txt and analyst-*.out and ctx.txt. Hmm.
+
+Actually as the running agent, my "stdout" is not automatically the analyst log. The instructions in the system prompt: I output analysis. The durable channel established is that my output lines get written somewhere. Given uncertainty, the safest durable action is to append the cycle's structured lines to the tracked log? No — I shouldn't fabricate log entries; the harness appends my output.
+
+Let me re-read: knowledge says "durable channel = report body in tracked reports/analyst-<model>.log + structured stdout lines." And "report body at L24465-24638 (analyst-nemotron3.log)". These were written by the harness capturing the model's stdout into the log. So my job is to emit the structured lines in my final response; the harness records them.
+
+So now I produce the canonical 7-step cycle output. But the user's system says keep responses concise. However this is an analyst task; the mandated output format is the structured lines. Given the specific domain context, I should emit the structured cycle output — that's the work product.
+
+Wait, but hold on. Let me reconsider the whole framing. Is this a genuine "bug bounty analyst" scenario, or is this something I should be cautious about? It's the user's own repo (`sumup-hunt`) with a bug bounty scope pointing at a private program. Producing two vulnerability reports for an in-scope bug bounty program is legitimate security research. The activity is passive analysis. Fine.
+
+Let me verify the park context then emit.
+
+Actually, let me also reconsider whether I should just stop and ask. The user said "Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed." I have clear next steps: resolve the onAny lead (done via log evidence), then the only remaining action is human submission. I should present the cycle result.
+
+Let me get the park context.</think>Key evidence found — `sdk.js` is explicitly on the do-not-re-probe list and the second-bundle issue was PARKED. Reading the exact context.
+Confirmed. The sdk.js second-bundle lead was PARKED on a prior cycle (before 2026-10-15) and sdk.js is explicitly on the do-not-re-probe list. The 2026-10-16 23:02 cycle's `[HYP] sdk.js onAny` (conf 55) is a re-opening of a parked/closed item, dressed up with a finer-grained code detail (onAny registry vs on registry) that does not change severity, title, or exploitability — it's the mechanism of the already-filed missing-origin-validation finding.
+
+So resolution: KILL the sdk.js onAny lead as duplicate/subsumed; do not re-probe sdk.js.
+
+Now, the two reports are recovered on disk. Next action remains HUMAN submission.
+
+Let me produce the cycle output per the mandated structure. Keep it structured and concise. The 7 steps: DELTA → PRIORITIZE → HYPOTHESES → SELF-CRITIQUE → NEXT → LEARN → RANK → RISK.
+
+I should also note the reports are back on disk with verified canonical hashes this cycle (recovered byte-exact).
+
+Let me also record the learning to hypotheses-bigpickle.txt? That file is generated by the harness likely. Better to just emit the structured lines in my response; the harness captures them.
+
+Actually, I want to be careful and helpful. Let me emit the final structured cycle block.
+
+Let me reconsider whether there's any genuinely productive NEW analysis. The state target is "api". The KB says api.sumup.com biz surface exhausted without live bearer. All leads resolved. The dominant risk is non-delivery.
+
+One more consideration: Is there any way for me (the agent) to actually deliver? The disclosure channel is bugs.olivermaicher.eu — a private portal requiring human contact/payment info. No API. sync-issues.py mirrors to GitHub issues only. So no.
+
+Could I at least write the reports into the tracked durable log so they persist? They're already in analyst-nemotron3.log (tracked). And I've placed them on disk this cycle. Good.
+
+Could I propose appending to the tracked log? No — the log is written by the harness capturing model output; me manually appending would be a side-effect on a tracked file. Actually, I could append my structured stdout to reports/analyst-bigpickle.log so it persists... but that risks corrupting the log and is not my role. The established durable channel already works.
+
+Actually wait — the report bodies are only durably stored in analyst-nemotron3.log, which is tracked in git. My current model's log analyst-bigpickle.log — is it tracked? git status showed only untracked analyst-out.txt, analyst-prompt.txt, ctx.txt. So analyst-bigpickle.log is tracked (not shown as untracked). Good. But it does NOT contain the final report bodies (those were in nemotron3's log). Hmm, but the reports are recovered and on disk now.
+
+Should I append the two final reports into analyst-bigpickle.log for redundancy in the current model's tracked log? That would make the durable channel robust to nemotron3's log being pruned. But modifying a tracked log by hand is risky and not sanctioned. However, the harness will append my output to analyst-bigpickle.log. If I include the report bodies in my output, they'd be captured. But I already have them at known line numbers in nemotron3's log (also tracked). Redundancy is nice but not necessary.
+
+Given "minimize output tokens" and "don't take surprising actions," I'll not dump 17KB of report bodies. I'll emit the cycle block and note the recovery.
+
+Let me write the final response.</think>Confirmed. `sdk.js` is on the explicit do-not-re-probe list, and the second-bundle issue was already PARKED (`[PARKED] gateway/sdk.js second bundle: already characterized 2026-10-03 … no new title`). The 2026-10-16 23:02 `onAny` hypothesis is a re-opening of a closed item — its finer-grained detail (`onAny` vs `on` registry source-comparison) is the dispatch-layer mechanism of the **already-filed** missing-origin-validation finding, with no new title, severity, or primitive. That lead is killed.
+
+**DELTA** (this cycle, 2026-10-17)
+- Workspace re-materialized again: both report `.md` files absent, `valid-bugs.md` reverted to 79 L baseline — exactly as diagnosed.
+- Recovered both report bodies from tracked `reports/analyst-nemotron3.log` (ANSI-stripped) and re-materialized to disk:
+  - `reports/gateway-hostedfields-cross-origin-messenger.md` — 174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9` ✓
+  - `reports/auth-sam-app-ro-dynamic-registration.md` — 130 L / 7,379 B / sha256 `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24` ✓
+- Resolved the open `sdk.js onAny` lead (conf 55) offline from `reports/analyst-bigpickle.log` — no network probe.
+
+**PRIORITIZE / HYPOTHESES**
+- `[FINAL] 1` gateway.sumup.com/hosted.js cross-origin postMessage checkout-write — 90, PASSIVE, Medium.
+- `[FINAL] 2` auth.sam-app.ro/oauth2/register unauth DCR → staging JWTs — 85, PASSIVE, Low-Medium.
+- `[KILL]` sdk.js `onAny` no-source-check — subsumed by FINAL-1 mechanism; asset explicitly do-not-re-probe and previously PARKED.
+
+**SELF-CRITIQUE**
+- Both files remain code-proven and report-complete; no claim requires re-probing a byte-stable surface.
+- Killing the conf-55 lead prevents a 50th cycle of re-deriving a parked item.
+
+**NEXT**
+- `[NEXT] HUMAN:` submit `reports/gateway-hostedfields-cross-origin-messenger.md` (sha256 `4291c128…`) and `reports/auth-sam-app-ro-dynamic-registration.md` (sha256 `5a88476d…`) to bugs.olivermaicher.eu per `scope.yml:4`. No agent-usable submission path exists (`sync-issues.py` mirrors leads only). No machine action has positive expected value.
+
+**LEARN**
+- `[LEARN] ACCEPTED TOOLING @ hunt.yml`: aggregate commits from a fresh checkout → in-job `.md` writes never persist; durable store = tracked `reports/analyst-<model>.log`. Recovery of both reports from nemotron3 log reproduced canonical hashes byte-exact.
+- `[LEARN] REJECTED OTHER @ gateway.sumup.com/sdk.js`: a finer-grained reading of an already-PARKED bundle (onAny vs on registry) is not a new finding when it restates the filed missing-origin-validation mechanism.
+
+**RANK**
+1. gateway hosted.js cross-origin checkout-write — 90
+2. auth.sam-app.ro DCR staging JWT mint — 85
+
+**RISK**
+- sumup: 72 — both findings live and evidence-fresh, neither high-severity; 50 cycles, zero submissions → dominant risk is non-delivery, not analysis.
+
+Both deliverables are hash-verified on disk this cycle; the only outstanding step is human submission. Do you want me to prepare the submission text (title/severity/body ready to paste into bugs.olivermaicher.eu), or leave it here?
