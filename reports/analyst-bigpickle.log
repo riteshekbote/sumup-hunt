@@ -114693,3 +114693,365 @@ Prior cycles already did CT sweeps (KB refs confirm). Diffing the full CT set ag
 I'm at the point where the loop's machine side is exhausted and the only remaining step is outside my control. To proceed correctly I need one clarification:
 
 **Have you submitted either report to bugs.olivermaicher.eu?** If yes, I'll record it and stop the loop pending triage; if no, I'll stop here rather than burn cycles re-confirming deliverables — unless you want me to attempt a specific new direction (e.g., active testing with a test merchant account, which scope.yml permits only on test/sandbox assets).
+===== ANALYST bigpickle 2026-10-17 17:00:02 UTC =====
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la reports/ 2>/dev/null; echo "---"; ls -la leads/ 2>/dev/null; echo "---"; git log --oneline -5
+total 14172
+drwxr-xr-x  2 runner runner    4096 Oct 17 16:57 .
+drwxr-xr-x 12 runner runner    4096 Oct 17 16:57 ..
+-rw-r--r--  1 runner runner 9898385 Oct 17 16:57 analyst-bigpickle.log
+-rw-r--r--  1 runner runner   54467 Oct 17 16:57 analyst-laguna.log
+-rw-r--r--  1 runner runner   54216 Oct 17 16:57 analyst-ling3.log
+-rw-r--r--  1 runner runner   54718 Oct 17 16:57 analyst-longcat.log
+-rw-r--r--  1 runner runner 3651004 Oct 17 16:57 analyst-nemotron3.log
+-rw-r--r--  1 runner runner   18278 Oct 17 16:57 hypotheses-bigpickle.txt
+-rw-r--r--  1 runner runner      51 Oct 17 16:57 hypotheses-laguna.txt
+-rw-r--r--  1 runner runner      50 Oct 17 16:57 hypotheses-ling3.txt
+-rw-r--r--  1 runner runner      52 Oct 17 16:57 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner      54 Oct 17 16:57 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  720173 Oct 17 16:57 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Oct 17 16:57 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Oct 17 16:57 valid-bugs.md
+---
+total 4392
+drwxr-xr-x  2 runner runner    4096 Oct 17 16:57 .
+drwxr-xr-x 12 runner runner    4096 Oct 17 16:57 ..
+-rw-r--r--  1 runner runner 1725063 Oct 17 16:57 lead-bigpickle.md
+-rw-r--r--  1 runner runner   12801 Oct 17 16:57 lead-laguna.md
+-rw-r--r--  1 runner runner   12550 Oct 17 16:57 lead-ling3.md
+-rw-r--r--  1 runner runner   13052 Oct 17 16:57 lead-longcat.md
+-rw-r--r--  1 runner runner      18 Oct 17 16:57 lead-mimo.md
+-rw-r--r--  1 runner runner 2637859 Oct 17 16:57 lead-nemotron3.md
+-rw-r--r--  1 runner runner   63765 Oct 17 16:57 reposcan-sumup.md
+---
+bb494b8 reposcan 2026-10-17-16-27
+[0m
+## Objective
+- Act as the SumUp bug-bounty ANALYST agent running the 8-step hunt loop (delta → prioritize → hypotheses → self-critique → next → learning → risk) over passive read-only recon.
+- Deliver two fileable reports (`reports/gateway-hostedfields-cross-origin-messenger.md`, `reports/auth-sam-app-ro-dynamic-registration.md`) and get them submitted to bugs.olivermaicher.eu per scope.yml:4.
+
+## Important Details
+- Rules: passive-first, ≤1 rps, GET/HEAD/OPTIONS only for live probes; no mutating tests on live customer data; confidence<40 or REJECTED-class leads dropped; sha256 secrets; no REJECTED classes (see program out-of-scope list in prompt).
+- Report `.md` files NEVER persist: `.github/workflows/hunt.yml` analyst job uploads only `lead_*.txt`/`analyst-*.out`/`ctx.txt`; aggregate commits from fresh checkout. Durable channel = tracked `reports/analyst-nemotron3.log` + structured stdout. Recovery: `sed -n '24465,24638p'` (gateway) and `'24646,24775p'` (auth) of `reports/analyst-nemotron3.log`, ANSI-stripped. Canonical hashes: gateway `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9` (174 L / 8,593 B); auth `5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24` (130 L / 7,379 B).
+- `reports/valid-bugs.md` reverts to 79 L / 7,384 B / `282390f8…` baseline each cycle — appends are not durable.
+- Root-cause lesson: workspace is re-materialized between cycles (48+ times); open with `ls` before referencing any `[NEW]` file; write+`sha256sum` must be one act.
+- Key stable facts: `gateway.sumup.com/hosted.js` 26,839 B sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` (byte-stable); `sdk.js` 291,877 B sha256 `0fae546ae34ee5e97cf0c3107d87adaa79129983d423bce6cf9a0fc19916c7bd`.
+- REJECTED/DO-NOT-REOPEN: `api.sumup.com/v0.1/merchants/{code}/payment-methods` GET 200/HEAD 404 = CDN route quirk; `js.sumup.com/api/checkouts/{id}` = 68 B Vercel platform 404 (prior "181 B live reflector" reading stale); iso20022 metrics routing divergence = recon note not vuln; wildcard CORS + credentials classes hardening-only; `auth.sam-app.ro` "aud → prod relay" leg unfalsifiable (staging posture only); api.sumup.com GET/OPTIONS re-probing zero-yield (27+ stable cycles); CT re-pulls = confirmation not discovery (220 names, 0 never-mentioned).
+- STUN invariant: `gateway.sumup.com/hosted.js` origin param declared/supplied but used ONLY outbound (`t.postMessage(e, n||"*")`, `n=document.referrer`); inbound filter `e.type===o.TYPE`, never reads `event.origin`. checkoutId gate is static UUID v1–v5 literal `ue=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i` (NOT `new RegExp(a.pattern)`).
+- sdk.js `onAny` `confirmation-success` branch: no-source-check, cross-origin forgeable, but only reaches read (`fetchCheckout` GET) + analytics/`widget.redirect-complete`/merchant `onResponse` callback — impact is payment-success signal spoofing to merchant integration, Low–Medium; folds into hosted.js report remediation, not a new title.
+- No submission mechanism in repo; `scope.yml:4` declares bugs.olivermaicher.eu (private program).
+
+## Work State
+### Completed
+- Two [FINAL] findings: (1) gateway.sumup.com hosted-fields cross-origin postMessage checkout-write — 90, PASSIVE, Medium; (2) auth.sam-app.ro/oauth2/register unauthenticated RFC 7591 DCR → mintable staging JWTs — 85, PASSIVE, Low-Medium.
+- Live PoCs previously proven (netlog + iframe console): cross-origin `form--submit` drives `PUT /v0.2/checkouts/{uuid}`.
+- Packet hypothesis `api.sumup.com/v0.1/merchants/{code}/payment-methods` method-level auth discrepancy: parked (CDN quirk, do not re-open).
+- All 9 seed-inventory hosts probed; passive surface declared exhausted (27+ byte-stable cycles).
+- Canonical report hashes recorded in tracked `reports/analyst-nemotron3.log` (recovery verified byte-exact).
+
+### Active
+- Phase `POC`, target `api`; no open hypotheses (2 [FINAL], 1 [PARKED]).
+- Latest cycle (2026-10-17 14:02 UTC) is re-verification only: NO_DELTA, sdk.js `onAny` analysis confirming spoof-only impact.
+
+### Blocked
+- Submission is HUMAN-only: 50+ cycles, zero submissions; `valid-bugs.md` count remains 0.
+- Anything requiring a live bearer or POST (prod token tests, staging re-registration) is AUTH_HELPED/HUMAN_ONLY.
+
+## Next Move
+1. `[NEXT] HUMAN`: submit `reports/gateway-hostedfields-cross-origin-messenger.md` (canonical 174 L/8,593 B/`4291c128…`) and `reports/auth-sam-app-ro-dynamic-registration.md` (130 L/7,379 B/`5a88476d…`) to bugs.olivermaicher.eu per scope.yml:4 — restore from `reports/analyst-nemotron3.log` L24465-24775 first if absent.
+2. If further machine cycles run: re-materialize both reports from the tracked log in one act (heredoc + sha256sum), re-verify `hosted.js` sha256, and avoid all REJECTED/byte-stable re-probes.
+
+## Relevant Files
+- `reports/analyst-nemotron3.log`: durable store; L24465-24638 = gateway report body, L24646-24775 = auth DCR report body (also L25146-25275 DCR / L25281-25454 gateway variants recorded).
+- `reports/gateway-hostedfields-cross-origin-messenger.md`: primary deliverable (absent each cycle until re-materialized).
+- `reports/auth-sam-app-ro-dynamic-registration.md`: second deliverable (same persistence caveat).
+- `reports/valid-bugs.md`: triage ledger; reverts to 79 L baseline; findings flagged VALID 7.5 / FILE REPORT at lines 64/79.
+- `scope.yml`: line 4 = disclosure channel bugs.olivermaicher.eu; rejection classes (clickjacking w/o exploit, TLS best practice, etc.).
+- `.github/workflows/hunt.yml`: explains non-persistence of `.md` artifacts.
+- `inventory/sumup.md`: seed host inventory + recon history.
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+# Step 1 DELTA: what's new since last cycle
+echo "=== new/changed files vs last commit ==="
+git status --porcelain | head -40
+echo "=== newest artifacts ==="
+ls -lt leads/ reports/ 2>/dev/null | head -12
+echo "=== check deliverables present? ==="
+ls -la reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md 2>&1
+=== new/changed files vs last commit ===
+?? analyst-out.txt
+?? analyst-prompt.txt
+?? ctx.txt
+=== newest artifacts ===
+reports/:
+total 14164
+-rw-r--r-- 1 runner runner 3651004 Oct 17 16:57 analyst-nemotron3.log
+-rw-r--r-- 1 runner runner   18278 Oct 17 16:57 hypotheses-bigpickle.txt
+-rw-r--r-- 1 runner runner      51 Oct 17 16:57 hypotheses-laguna.txt
+-rw-r--r-- 1 runner runner      50 Oct 17 16:57 hypotheses-ling3.txt
+-rw-r--r-- 1 runner runner      52 Oct 17 16:57 hypotheses-longcat.txt
+-rw-r--r-- 1 runner runner      54 Oct 17 16:57 hypotheses-nemotron3.txt
+-rw-r--r-- 1 runner runner  720173 Oct 17 16:57 hypotheses.md
+-rw-r--r-- 1 runner runner    9173 Oct 17 16:57 reposcan-findings.md
+-rw-r--r-- 1 runner runner    7384 Oct 17 16:57 valid-bugs.md
+-rw-r--r-- 1 runner runner 9898385 Oct 17 16:57 analyst-bigpickle.log
+=== check deliverables present? ===
+ls: cannot access 'reports/gateway-hostedfields-cross-origin-messenger.md': No such file or directory
+ls: cannot access 'reports/auth-sam-app-ro-dynamic-registration.md': No such file or directory
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+# locate exact report body boundaries in the tracked log
+grep -n "gateway-hostedfields-cross-origin-messenger.md\|auth-sam-app-ro-dynamic-registration.md\|4291c1281cae2d4f0\|5a88476d986bf45e" reports/analyst-nemotron3.log | tail -30
+26378:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+26438:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+26558:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.  
+26630:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.  
+26687:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.  
+26751:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.  
+26829:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.  
+26893:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.  
+26955:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.  
+27016:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27077:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27138:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27192:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27251:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27331:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27392:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27446:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27503:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27580:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27637:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27699:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27756:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27818:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27875:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27932:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+27987:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+28042:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+28099:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+28304:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+28357:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4.
+[0m
+DELTA confirmed: both deliverables absent (known re-materialization). Executing Next Move 2 — restore from tracked log.
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+grep -n "^# \|^## Summary\|CONFIDENCE: 90\|CONFIDENCE: 85\|RFC 7591\|hosted-fields" reports/analyst-nemotron3.log | sed -n '1,60p'
+3309:# STEP 1 — DELTA
+3321:# STEP 2 — PRIORITIZE
+3334:# STEP 3 — HYPOTHESES
+3366:# STEP 4 — SELF-CRITIQUE
+3372:# STEP 5 — NEXT ACTION
+3376:# STEP 6 — LEARNING
+3391:# STEP 7 — RISK
+4015:- `auth.sam-app.ro`: RFC 7591 dynamic client registration LIVE unauthenticated (POST /oauth2/register → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com
+4075:[HYP] Unauthenticated RFC 7591 dynamic client registration on staging identity host enables self-issued OAuth clients with controlled redirect_uris
+4103:[FINAL] Unauthenticated RFC 7591 dynamic client registration on staging identity host enables self-issued OAuth clients with controlled redirect_uris (confidence 75) — SURVIVES
+4132:[LEARN] ACCEPTED OATH @ auth.sam-app.ro: RFC 7591 dynamic client registration LIVE unauthenticated (POST /oauth2/register → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 both discovery docs)
+4325:[NEW] sam-app.ro staging stack: mcp.theta/api.theta/auth.theta publicly reachable; replicates prod gates byte-for-byte; auth.sam-app.ro exposes unauthenticated RFC 7591 dynamic client registration (POST /oauth2/register → 201)
+4366:[HYP] Unauthenticated RFC 7591 dynamic client registration on staging identity host enables self-issued OAuth clients with controlled redirect_uris
+4389:[FINAL] 2. Unauthenticated RFC 7591 dynamic client registration on staging identity host enables self-issued OAuth clients with controlled redirect_uris (confidence 75) — SURVIVES
+4412:[LEARN] ACCEPTED OATH @ auth.sam-app.ro: RFC 7591 dynamic client registration LIVE unauthenticated (POST /oauth2/register → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 both discovery docs)
+4473:[NEW] auth.sam-app.ro/oauth2/register: Unauthenticated RFC 7591 dynamic client registration LIVE (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (404 on /register). Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge, enforce per-client redirect allowlist (unrelated redirect → 401), no RFC7592 get/put/delete (404), NOT synced to api.sam-app.ro/authorize (invalid_client).
+4582:[NEXT] PROBE: POST https://auth.sam-app.ro/oauth2/register with Content-Type: application/json body {"redirect_uris":["https://evil.com/callback"],"grant_types":["authorization_code","client_credentials"],"response_types":["code"],"token_endpoint_auth_method":"client_secret_post"} → observe 201 client_id+secret+registered redirect_uris; confirms unauthenticated RFC 7591 dynamic registration with attacker-controlled redirect_uri and client_credentials grant
+4594:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+4622:[RISK] sumup: 75 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector and staging registration bypass.
+4625:[NEW] auth.sam-app.ro/oauth2/register: Unauthenticated RFC 7591 dynamic client registration LIVE (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (404 on /register). Dynamic clients forced to EMPTY scope (requesting openid → invalid_scope "exceeds allowed scopes"), require PKCE code_challenge, enforce per-client redirect allowlist (unrelated redirect → 401), no RFC7592 get/put/delete (404), NOT synced to api.sam-app.ro/authorize (invalid_client).
+4702:[NEXT] PROBE: POST https://auth.sam-app.ro/oauth2/register with Content-Type: application/json body {"redirect_uris":["https://evil.com/callback"],"grant_types":["authorization_code","client_credentials"],"response_types":["code"],"token_endpoint_auth_method":"client_secret_post"} → observe 201 client_id+secret+registered redirect_uris; confirms unauthenticated RFC 7591 dynamic registration with attacker-controlled redirect_uri and client_credentials grant
+4706:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+4726:[RISK] sumup: 75 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector and staging registration bypass.
+4781:**[NEW]** `auth.sam-app.ro/oauth2/register`: Unauthenticated RFC 7591 dynamic client registration LIVE (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404). Dynamic clients mint real JWTs via client_credentials (empty scp[], attacker-controlled aud).
+4862:[NEXT] PROBE: POST https://auth.sam-app.ro/oauth2/register with Content-Type: application/json body {"redirect_uris":["https://evil.com/callback"],"grant_types":["authorization_code","client_credentials"],"response_types":["code"],"token_endpoint_auth_method":"client_secret_post"} → observe 201 client_id+secret+registered redirect_uris; confirms unauthenticated RFC 7591 dynamic registration with attacker-controlled redirect_uri and client_credentials grant
+4868:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+4906:[RISK] sumup: 75 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector and staging registration bypass.
+4969:**[NEW]** `auth.sam-app.ro/oauth2/register` — Unauthenticated RFC 7591 dynamic client registration LIVE (POST → 201 client_id+secret+chosen redirect_uris); absent in prod auth.sumup.com (404)  
+5043:[NEXT] PROBE: POST https://auth.sam-app.ro/oauth2/register with Content-Type: application/json body {"redirect_uris":["https://evil.com/callback"],"grant_types":["authorization_code","client_credentials"],"response_types":["code"],"token_endpoint_auth_method":"client_secret_post"} → observe 201 client_id+secret+registered redirect_uris; confirms unauthenticated RFC 7591 dynamic registration with attacker-controlled redirect_uri and client_credentials grant  
+5049:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).  
+5071:[RISK] sumup: 75 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector and staging registration bypass.
+5182:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+5201:[RISK] sumup: 78 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, and resource server metadata exposure.
+5267:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+5292:[RISK] sumup: 78 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, and resource server metadata exposure.
+5418:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+5446:[RISK] sumup: 78 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, and resource server metadata exposure.
+5793:**CHANGED** `auth.sam-app.ro/oauth2/register`: Unauthenticated RFC 7591 dynamic client registration CONFIRMED LIVE (POST → 201 with `client_id`+`client_secret`+chosen `redirect_uris`); requires `client_name`; dynamic clients forced to EMPTY scope (`scope=""`); `client_credentials` grant yields real JWT with empty `scp:[]` but attacker-controlled `aud`.
+5881:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+5909:[RISK] sumup: 78 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, and resource server metadata exposure.
+6031:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).  
+6061:[RISK] sumup: 78 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration and staging registration is fully unauthenticated. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, and resource server metadata exposure.
+6157:[NEW] auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS)
+6228:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+6255:[RISK] sumup: 82 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. Contentful Preview token leak on help.sumup.com exposes 1,082 draft entries. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration, staging registration is fully unauthenticated, and help center leak is immediately exploitable. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, resource server metadata exposure, and content leak.
+6581:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+6604:[RISK] sumup: 82 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — new attack surface for OAuth code theft. Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. Contentful Preview token leak on help.sumup.com exposes 1,082 draft entries. All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but legacy gateway divergence enables passive callback host enumeration, staging registration is fully unauthenticated, and help center leak is immediately exploitable. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, resource server metadata exposure, and content leak.
+7016:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+7038:[RISK] sumup: 82 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — callback host enumeration exhausted (0 HITs). Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. Contentful Preview token leak on help.sumup.com exposes 1,082 draft entries (reportable P4). All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but staging registration is fully unauthenticated, and help center leak is immediately exploitable. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, resource server metadata exposure, and content leak.
+7262:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com (/register 404 GET/POST/OPTIONS).
+7287:[RISK] sumup: 82 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — callback host enumeration exhausted (0 HITs). Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. Contentful Preview token leak on help.sumup.com exposes 1,082 draft entries (reportable P4). All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but staging registration is fully unauthenticated, and help center leak is immediately exploitable. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, resource server metadata exposure, and content leak.
+7354:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com
+7365:[RISK] sumup: 82 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — callback host enumeration exhausted (0 HITs). Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. Contentful Preview token leak on help.sumup.com exposes 1,082 draft entries (reportable P4). All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but staging registration is fully unauthenticated, and help center leak is immediately exploitable. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, resource server metadata exposure, and content leak.
+7428:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com
+7439:[RISK] sumup: 82 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — callback host enumeration exhausted (0 HITs). Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. Contentful Preview token leak on help.sumup.com exposes 1,082 draft entries (reportable P4). All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but staging registration is fully unauthenticated, and help center leak is immediately exploitable. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, resource server metadata exposure, and content leak.
+7583:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com  
+7597:[RISK] sumup: 82 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — callback host enumeration exhausted (0 HITs). Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. Contentful Preview token leak on help.sumup.com exposes 1,082 draft entries (reportable P4). All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but staging registration is fully unauthenticated, and help center leak is immediately exploitable. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, resource server metadata exposure, and content leak.
+7733:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com  
+7747:[RISK] sumup: 82 — Auth server (auth.sumup.com) exposes critical OAuth config (alg=none, PAR, device flow, "none" client auth) with full scope catalog mapping to payment APIs. Legacy OAuth gateway (api.sumup.com/authorize) confirmed LIVE with client_id oracle, redirect_uri allowlist divergence, and wildcard CORS — callback host enumeration exhausted (0 HITs). Staging auth server (auth.sam-app.ro) allows unauthenticated RFC 7591 dynamic client registration with attacker-controlled redirect_uris and audience, minting valid JWTs (empty scope but controlled aud) — staging/prod divergence. RFC 9728 resource server metadata on api.sumup.com adds token validation surface. Contentful Preview token leak on help.sumup.com exposes 1,082 draft entries + 62 unpublished assets (reportable P4, STILL UNFILED). All high-impact vectors require merchant OAuth token (AUTH_HELPED) or registered client, but staging registration is fully unauthenticated, and help center leak is immediately exploitable. API gateway fully gated. Vercel me.sumup.com/checkout.sumup.com add non-Cloudflare surface but auth-gated at edge. Portal introduces third-party supply-chain risk (iriscrm.com) if in-scope confirmed. Admin panel hardened. Financial attack surface concentrated but access-controlled with new legacy OAuth vector, staging registration bypass, resource server metadata exposure, and content leak.
+7873:[LEARN] ACCEPTED OATH @ auth.sam-app.ro/oauth2/register: RFC 7591 dynamic client registration LIVE unauthenticated (POST → 201 client_id+secret+chosen redirect_uris) declared in openid-configuration; absent in prod auth.sumup.com
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+grep -n "cat > reports/gateway-hostedfields\|cat > reports/auth-sam-app\|<<'EOF'\|sha256sum reports/" reports/analyst-nemotron3.log | sed -n '1,80p'
+20154:[0m$ [0mls -la reports/ && sha256sum reports/*.md 2>/dev/null | head -20
+25464:[0m$ [0mls -la reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md && wc -l reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md && sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+25476:[0m$ [0mwc -l reports/valid-bugs.md && sha256sum reports/valid-bugs.md
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+sed -n '24455,24475p' reports/analyst-nemotron3.log | cat -v | cut -c1-200
+echo "===== 25140-25160 ====="
+sed -n '25140,25160p' reports/analyst-nemotron3.log | cat -v | cut -c1-200
+echo "===== 25455-25480 ====="
+sed -n '25455,25480p' reports/analyst-nemotron3.log | cat -v | cut -c1-250
+-rw-r--r--  1 runner runner      52 Oct  7 05:23 hypotheses-longcat.txt
+-rw-r--r--  1 runner runner   14870 Oct  7 05:23 hypotheses-nemotron3.txt
+-rw-r--r--  1 runner runner  607605 Oct  7 05:23 hypotheses.md
+-rw-r--r--  1 runner runner    9173 Oct  7 05:23 reposcan-findings.md
+-rw-r--r--  1 runner runner    7384 Oct  7 05:23 valid-bugs.md
+^[[0m
+^[[0mM-bM-^FM-^R ^[[0mRead reports/valid-bugs.md
+^[[0mM-bM-^FM-^R ^[[0mRead reports/hypotheses-nemotron3.txt
+^[[0m
+^[[0m$ ^[[0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+# gateway.sumup.com/hosted.js M-bM-^@M-^T Cross-Origin postMessage Checkout Write
+
+**Asset:** `gateway.sumup.com/hosted.js` (PCI card-entry iframe)  
+**Class:** MISCONFIG M-bM-^@M-^T missing `event.origin` validation on inbound `postMessage`; no framing protection  
+**Severity:** Medium (CSRF-like checkout manipulation via framable PCI component)  
+**Confidence:** 90  
+**Testability:** PASSIVE (static analysis + live iframe PoC); AUTH_HELPED for full payment flow validation  
+**Reported:** 2026-10-06  
+**Artifact hash:** `hosted.js` sha256 `1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873` (26,839 B)
+
+---
+===== 25140-25160 =====
+24830:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verifie
+24848:[NEW] Gateway finding report `reports/gateway-hostedfields-cross-origin-messenger.md` (174 L / 8,593 B / sha256 `4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9`) and DCR report
+24899:[NEXT] HUMAN: submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/auth-sam-app-ro-dynamic-registration.md` to bugs.olivermaicher.eu per scope.yml:4. Both reports verifie
+25068:[NEXT] HUMAN: reconstruct both final reports from verified evidence and write to disk with hashes in same act, then submit `reports/gateway-hostedfields-cross-origin-messenger.md` and `reports/a
+^[[0m
+^[[0m$ ^[[0msed -n '24646,24777p' reports/analyst-nemotron3.log
+# auth.sam-app.ro/oauth2/register M-bM-^@M-^T Unauthenticated Dynamic Client Registration M-bM-^FM-^R Mintable JWTs (Staging)
+
+**Asset:** `auth.sam-app.ro/oauth2/register` (staging auth server)  
+**Class:** OATH M-bM-^@M-^T RFC 7591 dynamic client registration live unauthenticated  
+**Severity:** Low-Medium (staging only; cross-env JWKS isolation blocks prod relay)  
+**Confidence:** 85  
+**Testability:** PASSIVE (registration + token minting proven); AUTH_HELPED for prod sync test (not possible passively)  
+**Reported:** 2026-10-06  
+
+---
+
+## 1. Summary
+
+The staging authorization server `auth.sam-app.ro` exposes **unauthenticated RFC 7591 dynamic client registration** (`POST /oauth2/register M-bM-^FM-^R 201`). Registered clients can mint real JWT acce
+
+===== 25455-25480 =====
+EOF
+sha256sum /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md
+^[[0m
+^[[0mM-bM-^FM-^P ^[[0mWrite reports/gateway-hostedfields-cross-origin-messenger.md
+Wrote file successfully.
+^[[0m
+^[[0mM-bM-^FM-^P ^[[0mWrite reports/auth-sam-app-ro-dynamic-registration.md
+Wrote file successfully.
+^[[0m
+^[[0m$ ^[[0mls -la reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md && wc -l reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md && sha256sum rep
+-rw-r--r-- 1 runner runner 7378 Oct  7 23:33 reports/auth-sam-app-ro-dynamic-registration.md
+-rw-r--r-- 1 runner runner 8592 Oct  7 23:32 reports/gateway-hostedfields-cross-origin-messenger.md
+  173 reports/gateway-hostedfields-cross-origin-messenger.md
+  129 reports/auth-sam-app-ro-dynamic-registration.md
+  302 total
+d7b493dd5a0a645d2f52c9c960bed296c3914d6d193fc0c4df3ef31abe65f03c  reports/gateway-hostedfields-cross-origin-messenger.md
+5e62a6acbe3d1e8a65389efbfbac98d3352879dbb78c17a4904a3f827aa4b1a1  reports/auth-sam-app-ro-dynamic-registration.md
+^[[0m
+^[[0mM-bM-^FM-^P ^[[0mWrite reports/valid-bugs.md
+Wrote file successfully.
+^[[0m
+^[[0m$ ^[[0mwc -l reports/valid-bugs.md && sha256sum reports/valid-bugs.md
+10 reports/valid-bugs.md
+127c918fc409b38decc100370b0edc752fb1ff454eeaf84d3aa676f5e1d1871d  reports/valid-bugs.md
+^[[0m
+[NEW] Both final reports genuinely on disk with verified hashes (write+verify in same act): `gateway-hostedfields-cross-origin-messenger.md` (173 L, 8,592 B, sha256 `d7b493dd...`), `auth-sam-app-ro-dynamic-registration.md` (129 L, 7,378 B, sha256 `5e
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+grep -n "cat > .*gateway-hostedfields-cross-origin-messenger.md\|cat > .*auth-sam-app-ro-dynamic-registration.md\|^EOF$" reports/analyst-nemotron3.log
+24464:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+24639:EOF
+24645:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md << 'EOF'
+24776:EOF
+25127:24464:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+25132:24645:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/auth-sam-app-ro-dynamic-registration.md << 'EOF'
+25276:EOF
+25280:[0m$ [0mcat > /home/runner/work/sumup-hunt/sumup-hunt/reports/gateway-hostedfields-cross-origin-messenger.md << 'EOF'
+25455:EOF
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+sed -n '24465,24638p' reports/analyst-nemotron3.log | sed 's/\x1b\[[0-9;]*m//g' > reports/gateway-hostedfields-cross-origin-messenger.md
+sed -n '24646,24775p' reports/analyst-nemotron3.log | sed 's/\x1b\[[0-9;]*m//g' > reports/auth-sam-app-ro-dynamic-registration.md
+wc -l reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+sha256sum reports/gateway-hostedfields-cross-origin-messenger.md reports/auth-sam-app-ro-dynamic-registration.md
+174 reports/gateway-hostedfields-cross-origin-messenger.md
+  130 reports/auth-sam-app-ro-dynamic-registration.md
+  304 total
+4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9  reports/gateway-hostedfields-cross-origin-messenger.md
+5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24  reports/auth-sam-app-ro-dynamic-registration.md
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+timeout 20 curl -sS -o /tmp/opencode/hosted.js -D /tmp/opencode/hosted.hdr "https://gateway.sumup.com/hosted.js" && sha256sum /tmp/opencode/hosted.js && wc -c /tmp/opencode/hosted.js && head -3 /tmp/opencode/hosted.hdr || echo "NET-FAIL"
+1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873  /tmp/opencode/hosted.js
+26839 /tmp/opencode/hosted.js
+HTTP/2 200 
+accept-ranges: bytes
+access-control-allow-origin: *
+[0m
+[0m$ [0mcd /home/runner/work/sumup-hunt/sumup-hunt
+cat >> reports/analyst-nemotron3.log << 'LOGEOF'
+
+=== CYCLE 2026-10-17 17:05 UTC — analyst/big-pickle — PHASE: POC — TARGET: api ===
+[STEP 1 DELTA] Workspace re-materialized; both deliverables absent (known .md non-persistence, hunt.yml). Untracked: analyst-out.txt, analyst-prompt.txt, ctx.txt only. No new commit artifacts since reposcan 2026-10-17-16-27. Hosted.js re-fetched PASSIVE: 26,839 B, sha256 1302f1d6a8fa330a71e50647be0281e4b977a198cbf27e0fd59cbecc9f220873 (byte-stable, 30+ cycles), ACAO:*.
+[STEP 2 PRIORITIZE] Open hypothesis set empty (2 [FINAL], 1 [PARKED]/REJECTED). No new CT/inventory delta (220 names, 0 never-mentioned). api.sumup.com GET/OPTIONS re-probe zero-yield class. All live mutation work AUTH_HELPED/HUMAN_ONLY.
+[STEP 3 HYPOTHESES] None new. Re-open list: REJECTED classes + parked payment-methods CDN quirk — all do-not-reopen.
+[STEP 4 SELF-CRITIQUE] Cycle reduces to recovery + verification. No speculative probing (avoids 46x LEARN "re-materialize before use" and REJECTED re-open tax).
+[STEP 5 NEXT] (a) [HUMAN] submit both reports to bugs.olivermaicher.eu per scope.yml:4 — restored this cycle. (b) [HUMAN] AUTH_HELPED: staging re-registration / prod token sync test if desired.
+[RESTORE] reports/gateway-hostedfields-cross-origin-messenger.md 174 L, 8,593 B, sha256 4291c1281cae2d4f0ad3a273b42e657987849e32623d063fc4363abaa7b4d7a9 (CANONICAL MATCH). reports/auth-sam-app-ro-dynamic-registration.md 130 L, 7,379 B, sha256 5a88476d986bf45ed1fe07215cdf76945a54e44520478d1624891f6012ae3e24 (CANONICAL MATCH). Recovery source: L24465-24638 and L24646-24775 of this log, ANSI-stripped, write+sha256 in one act.
+[STEP 6 LEARNING] Tracked-log recovery ranges still valid at L24464-24776; later duplicate heredocs exist at L25280-25455 (173 L variant, sha256 d7b493dd... — NOT canonical). Prefer first heredoc.
+[STEP 7 RISK] sumup: 82 — unchanged; passive surface exhausted, 2 findings await human filing. Submissions: 0/2. Machine-verifiable work complete.
+LOGEOF
+sha256sum reports/analyst-nemotron3.log; wc -l reports/analyst-nemotron3.log; ls -la reports/*.md
+e5304f22bbaea1e35b4ffe2c8840fb67c3618ff4ee10e909bb402e62f8b6b7b5  reports/analyst-nemotron3.log
+28381 reports/analyst-nemotron3.log
+-rw-r--r-- 1 runner runner   7379 Oct 17 16:59 reports/auth-sam-app-ro-dynamic-registration.md
+-rw-r--r-- 1 runner runner   8593 Oct 17 16:59 reports/gateway-hostedfields-cross-origin-messenger.md
+-rw-r--r-- 1 runner runner 720173 Oct 17 16:57 reports/hypotheses.md
+-rw-r--r-- 1 runner runner   9173 Oct 17 16:57 reports/reposcan-findings.md
+-rw-r--r-- 1 runner runner   7384 Oct 17 16:57 reports/valid-bugs.md
+[0m
+## CYCLE 2026-10-17 17:05 UTC — Phase `POC`, target `api`
+
+**Step 1 — DELTA:** Workspace re-materialized; both deliverables absent (known `hunt.yml` .md non-persistence). Only untracked: `analyst-out.txt`, `analyst-prompt.txt`, `ctx.txt`. `hosted.js` re-fetched PASSIVE: 26,839 B, sha256 `1302f1d6…220873` — byte-stable.
+
+**Step 2 — PRIORITIZE:** Empty hypothesis set (2 [FINAL], 1 [PARKED]). No CT/inventory delta. All mutation paths AUTH_HELPED/HUMAN_ONLY.
+
+**Step 3 — HYPOTHESES:** None new; REJECTED/do-not-reopen list unchanged.
+
+**Step 4 — SELF-CRITIQUE:** Cycle correctly reduced to recovery + verification — no speculative probing of exhausted classes.
+
+**Step 5 — NEXT:** [HUMAN] Submit both reports to `bugs.olivermaicher.eu` (scope.yml:4) — restored and hash-verified below.
+
+**RESTORE (write+sha256 in one act):**
+- `reports/gateway-hostedfields-cross-origin-messenger.md` — 174 L / 8,593 B / `4291c128…` ✅ canonical
+- `reports/auth-sam-app-ro-dynamic-registration.md` — 130 L / 7,379 B / `5a88476d…` ✅ canonical
+- Recovery ranges re-verified: log L24465-24638 / L24646-24775; cycle entry appended (log now 28,381 L)
+
+**Step 6 — LEARNING:** Later duplicate heredoc at log L25280-25455 is a 173 L / `d7b493dd…` variant — **not canonical**; always use the first heredoc.
+
+**Step 7 — RISK:** sumup: 82 (unchanged). Submissions: **0/2** — machine work complete; blocked on human filing.

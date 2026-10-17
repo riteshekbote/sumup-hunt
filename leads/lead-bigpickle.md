@@ -10344,3 +10344,5 @@ testability: PASSIVE.
 [NEXT] HUMAN-only: submit both reports to bugs.olivermaicher.eu per scope.yml:4. I have no machine action that can submit, and no remaining passive surface with positive expected value.
 [LEARN] The 220-name CT delta was already fully consumed by prior cycles — a "fresh" CT pull is not new breadth here; the repo references every name. Treat CT re-pulls as confirmation, not discovery.
 [RISK] 75 — the sole unresolved risk is delivery. 50+ cycles, two evidence-fresh [FINAL] reports, zero submissions. Further machine cycles now produce no new signal and merely re-confirm the same deliverables.
+## 2026-10-17 16:59:52 UTC [target] (model bigpickle)
+[NEW] Both final reports genuinely on disk with verified hashes (write+verify in same act): `gateway-hostedfields-cross-origin-messenger.md` (173 L, 8,592 B, sha256 `d7b493dd...`), `auth-sam-app-ro-dynamic-registration.md` (129 L, 7,378 B, sha256 `5e
